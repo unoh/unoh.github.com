@@ -21,7 +21,7 @@ Fedora 8の場合だと、次のようにしてインストールできます。
 <br />
 辞書用のディレクトリを作って、単語辞書(url.csv), 連接表(matrix.def), 未知語の文字定義(char.def), 未知語用品詞定義(unk.def), 設定ファイル(dicrc)の5つのファイルを用意します。<br />
 <br />
-<pre class="code"># mkdir /usr/lib/mecab/dic/autolink<br />
+<pre class="code"># mkdir /usr/lib/mecab/dic/autolink
 # cd /usr/lib/mecab/dic/autolink</pre><br />
 <br />
 まずキーワードとURLの対応を記述したファイル url.csv を作成します。文字コードに注意してください。ここでは、UTF-8で記述しました。<br />
@@ -47,22 +47,22 @@ Fedora 8の場合だと、次のようにしてインストールできます。
 <br />
 辞書のコンパイルを行います。<br />
 <br />
-<pre class="code"># /usr/libexec/mecab/mecab-dict-index -f utf-8 -c utf-8<br />
-./pos-id.def is not found. minimum setting is used<br />
-reading ./unk.def ... 2<br />
-emitting double-array: 100% |#################################| <br />
-./pos-id.def is not found. minimum setting is used<br />
-reading ./url.csv ... 4<br />
-emitting double-array: 100% |#################################| <br />
-./matrix.def is not found. minimum setting is used.<br />
-reading ./matrix.def ... 1x1<br />
-<br />
+<pre class="code"># /usr/libexec/mecab/mecab-dict-index -f utf-8 -c utf-8
+./pos-id.def is not found. minimum setting is used
+reading ./unk.def ... 2
+emitting double-array: 100% |#################################| 
+./pos-id.def is not found. minimum setting is used
+reading ./url.csv ... 4
+emitting double-array: 100% |#################################| 
+./matrix.def is not found. minimum setting is used.
+reading ./matrix.def ... 1x1
+
 done!</pre><br />
 <br />
 ここで、問題なく作成されているか確認します。次のようにリンクが張られば成功です。<br />
 <br />
-<pre class="code">$ mecab -d /usr/lib/mecab/dic/autolink<br />
-そうだ京都、行こう。<br />
+<pre class="code">$ mecab -d /usr/lib/mecab/dic/autolink
+そうだ京都、行こう。
 そうだ&lt;a href="http://www.city.kyoto.jp/"&gt;京都&lt;/a&gt;行こう。</pre><br />
 <br />
 <br />
@@ -72,13 +72,13 @@ done!</pre><br />
 <br />
 PHPからMecabを利用するための拡張モジュールは、<a href="http://d.hatena.ne.jp/rsky/">rskyさん</a>が作られているので、有り難く使わせて頂きます。<br />
 <br />
-<pre class="code">$ wget http://www.opendogs.org/pub/php_mecab-0.3.0.tgz<br />
-$ tar xzvf php_mecab-0.3.0.tgz<br />
-$ cd php_mecab-0.3.0<br />
-$ /usr/bin/phpize<br />
-$ ./configure --with-php-config=/usr/bin/php-config ¥<br />
---with-mecab=/usr/bin/mecab-config<br />
-$ make<br />
+<pre class="code">$ wget http://www.opendogs.org/pub/php_mecab-0.3.0.tgz
+$ tar xzvf php_mecab-0.3.0.tgz
+$ cd php_mecab-0.3.0
+$ /usr/bin/phpize
+$ ./configure --with-php-config=/usr/bin/php-config ¥
+--with-mecab=/usr/bin/mecab-config
+$ make
 $ sudo make install</pre><br />
 <br />
 <h3>4. 動作確認</h3><br />

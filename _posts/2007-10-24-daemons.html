@@ -12,40 +12,40 @@ daemonsは大まかに、サーバープログラムをstart/stop/restartなど�
 <br />
 puts_arg.rb:<br />
 <br />
-<pre class="code">#!/usr/bin/env ruby<br />
- <br />
-loop do<br />
-  puts ARGV.inspect<br />
-  sleep(1)<br />
+<pre class="code">#!/usr/bin/env ruby
+ 
+loop do
+  puts ARGV.inspect
+  sleep(1)
 end</pre><br />
 <br />
 実行結果。<br />
 <br />
-<pre class="code">$ ruby puts_arg.rb a b c<br />
-["a", "b", "c"]<br />
-["a", "b", "c"]<br />
-["a", "b", "c"]<br />
+<pre class="code">$ ruby puts_arg.rb a b c
+["a", "b", "c"]
+["a", "b", "c"]
+["a", "b", "c"]
 （略）</pre><br />
 <br />
 これにdaemonsを使ってラッパーを用意します。<br />
 <br />
 puts_arg_control.rb:<br />
 <br />
-<pre class="code">#!/usr/bin/env ruby<br />
- <br />
-require 'rubygems'<br />
-require 'daemons'<br />
- <br />
+<pre class="code">#!/usr/bin/env ruby
+ 
+require 'rubygems'
+require 'daemons'
+ 
 Daemons.run('puts_arg.rb')</pre><br />
 <br />
 これでputs_arg.rbにたいしてstart/stop/restart/runなどの操作ができるようになります。（runは非デーモンの状態で動かします）<br />
 <br />
 引数は下記のように'--'の後に渡せば管理対象のプログラムへの引数になります。<br />
 <br />
-<pre class="code">$ ./puts_arg_control.rb run -- a b c<br />
-["a", "b", "c"]<br />
-["a", "b", "c"]<br />
-["a", "b", "c"]<br />
+<pre class="code">$ ./puts_arg_control.rb run -- a b c
+["a", "b", "c"]
+["a", "b", "c"]
+["a", "b", "c"]
 （略）</pre><br />
 <br />
 restartやstopのためにデフォルトではプログラムのあるディレクトリにpidファイルが作成されます。（この場所もDaemons.runメソッドのオプションで細かく設定できます）<br />

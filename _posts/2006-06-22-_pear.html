@@ -17,13 +17,13 @@ title: "一番小さい PEAR パッケージって"
 Numbers_Roman はアラビア数字とローマ数字を相互に変換するパッケージで，<br />
 以下のように使います．<br />
 <br />
-<pre class="source_code"><br />
-&lt;?php<br />
-require_once "Numbers/Roman.php";<br />
-<br />
-echo Numbers_Roman::toNumeral(9); // IX が出力される<br />
-echo Numbers_Roman::toNumber('XII'); // 12 が出力される<br />
-?&gt;<br />
+<pre class="source_code">
+&lt;?php
+require_once "Numbers/Roman.php";
+
+echo Numbers_Roman::toNumeral(9); // IX が出力される
+echo Numbers_Roman::toNumber('XII'); // 12 が出力される
+?&gt;
 </pre><br />
 <br />
 Numbers_Roman の<a href="http://cvs.php.net/viewvc.cgi/pear/Math_Numbers/Roman.php?revision=1.17&view=markup">コード</a>は275行で，プロパティは無く，メソッドが3つ．<br />

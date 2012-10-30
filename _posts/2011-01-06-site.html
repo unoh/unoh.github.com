@@ -54,12 +54,12 @@ chunoです。</p><br />
 &nbsp;私はVimで開発を行っていますが、ケアレスミス防止のために、以下のようなスクリプトを「.vimrc」に書きました。<br /><br />
 ファイル書き込み時に自動でPHPの構文チェックをしてくれます。<br /><br />
 (同様なものは既に色々な方々がネット上で公開されていますが...)<br /><br />
-<pre class="code">autocmd BufWritePost *.php :call PHPLint()<br /><br />
-function PHPLint()  let result = system( &amp;ft . ' -l ' . bufname(""))<br /><br />
-  let headPart = strpart(result, 0, 16) <br /><br />
-  if headPart != "No syntax errors"<br /><br />
-    echo result<br /><br />
-  endif<br /><br />
+<pre class="code">autocmd BufWritePost *.php :call PHPLint()<br />
+function PHPLint()  let result = system( &amp;ft . ' -l ' . bufname(""))<br />
+  let headPart = strpart(result, 0, 16) <br />
+  if headPart != "No syntax errors"<br />
+    echo result<br />
+  endif<br />
 endfunction</pre><br />
 <br />
 <p></p><br />

@@ -14,111 +14,111 @@ Webアプリケーションのパフォーマンスの大半はデータベー�
 <br />
 また、その制約を考えたクエリの書き方として下記の様に書いてあります。<br />
 <br />
-<blockquote><pre>mysql&gt; EXPLAIN SELECT * FROM Headline<br />
-    -&gt; WHERER ExpireTime &gt;= 1012201600 OR Id &lt;= 5000000<br />
+<blockquote><pre>mysql&gt; EXPLAIN SELECT * FROM Headline
+    -&gt; WHERER ExpireTime &gt;= 1012201600 OR Id &lt;= 5000000
     -&gt; ORDER BY ExpireTime ASC LIMIT 10\G</pre><br />
 <br />
 何と、MySQLは完全なテーブルスキャンを実行すべきだと判断してしまった。（中略）このようなクエリを、UNIONを使用して書き換えることができる。そのためには、クエリを２つのクエリに分解し、それぞれのクエリで１つのインデックスを使用する。その後で、結果を結合してソートする。つまり、以下のようなクエリを実行すればよい。<br />
 <br />
-<pre>(SELECT * FROM Headline WHERE ExpireTime &gt;= 1081020749<br />
-ORDER BY ExpireTime ASC LIMIT 10)<br />
- <br />
-UNION<br />
- <br />
-(SELECT * FROM Headline WHERE Id &lt;= 50000<br />
-ORDER BY ExpireTime ASC LIMIT 10)<br />
- <br />
-ORDER BY ExpireTime ASC LIMIT 10<pre></blockquote><br />
-<br />
-こんな簡単なクエリでわざわざこんなことしなくちゃいけないのかよと思いました・・・。<br />
-<br />
-しかし本書はMySQL 4.0.14をベースにかかれていています。MySQLユーザー的には常識なのかもしれませんがMySQL 5.0からはインデックス結合という機能があるそうです。１テーブル１インデックス問題（勝手にそう呼んでいる）が解決するかもしれないと思って調べてみました。<br />
-<br />
-インデックス結合とはその名の通り複数のインデックスを結合して結果を返してくれるそうです。EXPLAINのtypeフィールドではindex_mergeというメソッド名で表されます。<br />
-<br />
-<a href="http://dev.mysql.com/doc/refman/5.1/ja/index-merge-optimization.html">マニュアル</a>に拠ればインデックス結合には3つのアルゴリズムがありそれぞれEXPLAINのExrtaフィールドで確認できます。（Using～というやつ）<br />
-<br />
-そしてそれぞれのアルゴリズムは下記のような時に選ばれるそうです。<br />
-<br />
-<ul><br />
-<li>共通集合アルゴリズム --- Using intersect(...)<br /><br />
-WHERE節で異なるインデックスをANDでつないだ時。</li><br />
-<li>ユニオンアクセスアルゴリズム --- Using union(...)<br /><br />
-WHERE節で異なるインデックスをORでつないだ時。</li><br />
-<li>ソートユニオンアクセスアルゴリズム --- Using sort_union(...)<br /><br />
-WHERE節で異なるインデックスをORでつないだ時でソートが必要な時。（前述のUNIONしなければならない例はこれに該当するんじゃないでしょうか）</li><br />
-</ul><br />
-<br />
-結合方法自体OPTIMIZERが選択するので必ず使われるわけではありません。<br />
-実際の効果の程を試してみました。<br />
-<br />
-試した環境：<br />
-<br />
-Debian etch<br />
-MySQL 4.1.22, MySQL 5.0.32<br />
-<br />
-テーブル：<br />
-<br />
-<pre class="code">CREATE TABLE `employees` (<br />
-  `id` int(11) NOT NULL auto_increment,<br />
-  `name` varchar(32) default NULL,<br />
-  `age` int(11) default NULL,<br />
-  PRIMARY KEY  (`id`),<br />
-  KEY `index_name` (`name`),<br />
-  KEY `index_age` (`age`)<br />
+<pre>(SELECT * FROM Headline WHERE ExpireTime &gt;= 1081020749
+ORDER BY ExpireTime ASC LIMIT 10)
+ 
+UNION
+ 
+(SELECT * FROM Headline WHERE Id &lt;= 50000
+ORDER BY ExpireTime ASC LIMIT 10)
+ 
+ORDER BY ExpireTime ASC LIMIT 10<pre></blockquote>
+
+こんな簡単なクエリでわざわざこんなことしなくちゃいけないのかよと思いました・・・。
+
+しかし本書はMySQL 4.0.14をベースにかかれていています。MySQLユーザー的には常識なのかもしれませんがMySQL 5.0からはインデックス結合という機能があるそうです。１テーブル１インデックス問題（勝手にそう呼んでいる）が解決するかもしれないと思って調べてみました。
+
+インデックス結合とはその名の通り複数のインデックスを結合して結果を返してくれるそうです。EXPLAINのtypeフィールドではindex_mergeというメソッド名で表されます。
+
+<a href="http://dev.mysql.com/doc/refman/5.1/ja/index-merge-optimization.html">マニュアル</a>に拠ればインデックス結合には3つのアルゴリズムがありそれぞれEXPLAINのExrtaフィールドで確認できます。（Using～というやつ）
+
+そしてそれぞれのアルゴリズムは下記のような時に選ばれるそうです。
+
+<ul>
+<li>共通集合アルゴリズム --- Using intersect(...)<br />
+WHERE節で異なるインデックスをANDでつないだ時。</li>
+<li>ユニオンアクセスアルゴリズム --- Using union(...)<br />
+WHERE節で異なるインデックスをORでつないだ時。</li>
+<li>ソートユニオンアクセスアルゴリズム --- Using sort_union(...)<br />
+WHERE節で異なるインデックスをORでつないだ時でソートが必要な時。（前述のUNIONしなければならない例はこれに該当するんじゃないでしょうか）</li>
+</ul>
+
+結合方法自体OPTIMIZERが選択するので必ず使われるわけではありません。
+実際の効果の程を試してみました。
+
+試した環境：
+
+Debian etch
+MySQL 4.1.22, MySQL 5.0.32
+
+テーブル：
+
+<pre class="code">CREATE TABLE `employees` (
+  `id` int(11) NOT NULL auto_increment,
+  `name` varchar(32) default NULL,
+  `age` int(11) default NULL,
+  PRIMARY KEY  (`id`),
+  KEY `index_name` (`name`),
+  KEY `index_age` (`age`)
 )</pre><br />
 <br />
 テストデータ（ランダムなデータ10万件)：<br />
 <br />
-<pre class="code">#!/usr/bin/env ruby<br />
- <br />
-100000.times do |i|<br />
-  puts "INSERT INTO employees (name, age) VALUES ('name_#{rand(100)}', #{rand(100)});"<br />
+<pre class="code">#!/usr/bin/env ruby
+ 
+100000.times do |i|
+  puts "INSERT INTO employees (name, age) VALUES ('name_#{rand(100)}', #{rand(100)});"
 end</pre><br />
 <br />
 <br />
 テストデータを投入し、ANALYZE TABLEした後のインデックスは下記の通りです。<br />
 <br />
-<pre class="code">mysql&gt; SHOW INDEX FROM employees\G<br />
-*************************** 1. row ***************************<br />
-       Table: employees<br />
-  Non_unique: 0<br />
-    Key_name: PRIMARY<br />
-Seq_in_index: 1<br />
- Column_name: id<br />
-   Collation: A<br />
- Cardinality: 160673<br />
-    Sub_part: NULL<br />
-      Packed: NULL<br />
-        Null:<br />
-  Index_type: BTREE<br />
-     Comment:<br />
-*************************** 2. row ***************************<br />
-       Table: employees<br />
-  Non_unique: 1<br />
-    Key_name: index_name<br />
-Seq_in_index: 1<br />
- Column_name: name<br />
-   Collation: A<br />
- Cardinality: 53557<br />
-    Sub_part: NULL<br />
-      Packed: NULL<br />
-        Null: YES<br />
-  Index_type: BTREE<br />
-     Comment:<br />
-*************************** 3. row ***************************<br />
-       Table: employees<br />
-  Non_unique: 1<br />
-    Key_name: index_age<br />
-Seq_in_index: 1<br />
- Column_name: age<br />
-   Collation: A<br />
- Cardinality: 99<br />
-    Sub_part: NULL<br />
-      Packed: NULL<br />
-        Null: YES<br />
-  Index_type: BTREE<br />
-     Comment:<br />
+<pre class="code">mysql&gt; SHOW INDEX FROM employees\G
+*************************** 1. row ***************************
+       Table: employees
+  Non_unique: 0
+    Key_name: PRIMARY
+Seq_in_index: 1
+ Column_name: id
+   Collation: A
+ Cardinality: 160673
+    Sub_part: NULL
+      Packed: NULL
+        Null:
+  Index_type: BTREE
+     Comment:
+*************************** 2. row ***************************
+       Table: employees
+  Non_unique: 1
+    Key_name: index_name
+Seq_in_index: 1
+ Column_name: name
+   Collation: A
+ Cardinality: 53557
+    Sub_part: NULL
+      Packed: NULL
+        Null: YES
+  Index_type: BTREE
+     Comment:
+*************************** 3. row ***************************
+       Table: employees
+  Non_unique: 1
+    Key_name: index_age
+Seq_in_index: 1
+ Column_name: age
+   Collation: A
+ Cardinality: 99
+    Sub_part: NULL
+      Packed: NULL
+        Null: YES
+  Index_type: BTREE
+     Comment:
 3 rows in set (0.00 sec)</pre><br />
 <br />
 この条件でMySQL 4.1.22, 5.0.32それぞれで上記のアルゴリズムが使われた場合（5.0.32）と使われない場合（4.1.22）でEXPLAIN結果と速度を計りました。<br />
@@ -127,36 +127,36 @@ Seq_in_index: 1<br />
 <br />
 MySQL 4.1.22の場合：<br />
 <br />
-<pre class="code">mysql&gt; EXPLAIN SELECT * FROM employees WHERE name = "name_1" AND age = 1\G<br />
-*************************** 1. row ***************************<br />
-           id: 1<br />
-  select_type: SIMPLE<br />
-        table: employees<br />
-         type: ref<br />
-possible_keys: index_name,index_age<br />
-          key: index_name<br />
-      key_len: 33<br />
-          ref: const<br />
-         rows: 571<br />
-        Extra: Using where<br />
+<pre class="code">mysql&gt; EXPLAIN SELECT * FROM employees WHERE name = "name_1" AND age = 1\G
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: employees
+         type: ref
+possible_keys: index_name,index_age
+          key: index_name
+      key_len: 33
+          ref: const
+         rows: 571
+        Extra: Using where
 1 row in set (0.00 sec)</pre><br />
 <br />
 普通にインデックスが一つだけ使われました。<br />
 <br />
 MySQL 5.0.32の場合：<br />
 <br />
-<pre class="code">mysql&gt; EXPLAIN SELECT * FROM employees WHERE `name` = 'name_1' AND `age` = 1\G<br />
-*************************** 1. row ***************************<br />
-           id: 1<br />
-  select_type: SIMPLE<br />
-        table: employees<br />
-         type: index_merge<br />
-possible_keys: index_name,index_age<br />
-          key: index_age,index_name<br />
-      key_len: 5,99<br />
-          ref: NULL<br />
-         rows: 5<br />
-        Extra: Using intersect(index_age,index_name); Using where<br />
+<pre class="code">mysql&gt; EXPLAIN SELECT * FROM employees WHERE `name` = 'name_1' AND `age` = 1\G
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: employees
+         type: index_merge
+possible_keys: index_name,index_age
+          key: index_age,index_name
+      key_len: 5,99
+          ref: NULL
+         rows: 5
+        Extra: Using intersect(index_age,index_name); Using where
 1 row in set (0.01 sec)</pre><br />
 <br />
 typeにindex_merge、ExtraにUsing intersect(index_age,index_name)と出ました。共通集合アルゴリズムを使って別々のインデックスがマージされて使われているようです。<br />
@@ -172,36 +172,36 @@ typeにindex_merge、ExtraにUsing intersect(index_age,index_name)と出まし�
 <br />
 MySQL 4.1.22の場合：<br />
 <br />
-<pre class="code">mysql&gt; EXPLAIN SELECT SQL_NO_CACHE * FROM employees WHERE `name` = 'name_1' OR `age` = 1\G<br />
-*************************** 1. row ***************************<br />
-           id: 1<br />
-  select_type: SIMPLE<br />
-        table: employees<br />
-         type: ALL<br />
-possible_keys: index_name,index_age<br />
-          key: NULL<br />
-      key_len: NULL<br />
-          ref: NULL<br />
-         rows: 100000<br />
-        Extra: Using where<br />
+<pre class="code">mysql&gt; EXPLAIN SELECT SQL_NO_CACHE * FROM employees WHERE `name` = 'name_1' OR `age` = 1\G
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: employees
+         type: ALL
+possible_keys: index_name,index_age
+          key: NULL
+      key_len: NULL
+          ref: NULL
+         rows: 100000
+        Extra: Using where
 1 row in set (0.01 sec)</pre><br />
 <br />
 対象レコードが多いのでALLになりました。<br />
 <br />
 MySQL 5.0.32の場合：<br />
 <br />
-<pre class="code">mysql&gt; EXPLAIN SELECT SQL_NO_CACHE * FROM employees WHERE `name` = 'name_1' OR `age` = 1\G<br />
-*************************** 1. row ***************************<br />
-           id: 1<br />
-  select_type: SIMPLE<br />
-        table: employees<br />
-         type: index_merge<br />
-possible_keys: index_name,index_age<br />
-          key: index_name,index_age<br />
-      key_len: 99,5<br />
-          ref: NULL<br />
-         rows: 2749<br />
-        Extra: Using union(index_name,index_age); Using where<br />
+<pre class="code">mysql&gt; EXPLAIN SELECT SQL_NO_CACHE * FROM employees WHERE `name` = 'name_1' OR `age` = 1\G
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: employees
+         type: index_merge
+possible_keys: index_name,index_age
+          key: index_name,index_age
+      key_len: 99,5
+          ref: NULL
+         rows: 2749
+        Extra: Using union(index_name,index_age); Using where
 1 row in set (0.00 sec)</pre><br />
 <br />
 typeにindex_merge、ExtraにUsing union(index_name,index_age)と出ました。ユニオンアクセスアルゴリズムを使って別々のインデックスがマージされて使われているようです。<br />
@@ -217,36 +217,36 @@ typeにindex_merge、ExtraにUsing union(index_name,index_age)と出ました。
 <br />
 MySQL 4.1.22の場合：<br />
 <br />
-<pre class="code">mysql&gt; EXPLAIN SELECT SQL_NO_CACHE * FROM employees WHERE `name` = 'name_1' AND `age` &lt; 5\G<br />
-*************************** 1. row ***************************<br />
-           id: 1<br />
-  select_type: SIMPLE<br />
-        table: employees<br />
-         type: ref<br />
-possible_keys: index_name,index_age<br />
-          key: index_name<br />
-      key_len: 33<br />
-          ref: const<br />
-         rows: 571<br />
-        Extra: Using where<br />
+<pre class="code">mysql&gt; EXPLAIN SELECT SQL_NO_CACHE * FROM employees WHERE `name` = 'name_1' AND `age` &lt; 5\G
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: employees
+         type: ref
+possible_keys: index_name,index_age
+          key: index_name
+      key_len: 33
+          ref: const
+         rows: 571
+        Extra: Using where
 1 row in set (0.01 sec)</pre><br />
 <br />
 普通にインデックスが一つだけ使われました。<br />
 <br />
 MySQL 5.0.32の場合：<br />
 <br />
-<pre class="code">mysql&gt; EXPLAIN SELECT SQL_NO_CACHE * FROM employees WHERE `name` = 'name_1' OR `age` &lt; 5\G<br />
-*************************** 1. row ***************************<br />
-           id: 1<br />
-  select_type: SIMPLE<br />
-        table: employees<br />
-         type: index_merge<br />
-possible_keys: index_name,index_age<br />
-          key: index_name,index_age<br />
-      key_len: 99,5<br />
-          ref: NULL<br />
-         rows: 11537<br />
-        Extra: Using sort_union(index_name,index_age); Using where<br />
+<pre class="code">mysql&gt; EXPLAIN SELECT SQL_NO_CACHE * FROM employees WHERE `name` = 'name_1' OR `age` &lt; 5\G
+*************************** 1. row ***************************
+           id: 1
+  select_type: SIMPLE
+        table: employees
+         type: index_merge
+possible_keys: index_name,index_age
+          key: index_name,index_age
+      key_len: 99,5
+          ref: NULL
+         rows: 11537
+        Extra: Using sort_union(index_name,index_age); Using where
 1 row in set (0.00 sec)</pre><br />
 <br />
 typeにindex_merge、ExtraにUsing sort_union(index_name,index_age)と出ました。ソートユニオンアクセスアルゴリズムを使って別々のインデックスがマージされて使われているようです。<br />

@@ -14,9 +14,9 @@ title: "5分でできるウェブサーバのセキュリティ向上施策"
 <br />
 <p>ウェブサーバ(Apache)で、404などのエラーページを表示したとき、ヘッダやページの下にApacheやOSのバージョンが表示されます。こういったサーバ情報をわざわざ表示する必要はありません。サーバ情報の表示しないようにするには、Apacheの設定ファイル(httpd.conf)に、次の設定を追加します。</p><br />
 <br />
-<pre class="code"><br />
-  ServerTokens ProductOnly<br />
-  ServerSignature Off<br />
+<pre class="code">
+  ServerTokens ProductOnly
+  ServerSignature Off
 </pre><br />
 <br />
 <p>この設定を追加後、Apacheを再起動するとServerヘッダにはApache、エラーページにもサーバの情報は表示されなくなります。</><br />
@@ -28,11 +28,11 @@ title: "5分でできるウェブサーバのセキュリティ向上施策"
 <br />
 <p>.svnディレクトリにはソースコードが入っているので、注意する必要があります。</p><br />
 <br />
-<pre class="code"><br />
-  &lt;Directory ~ "/\..+/"&gt;<br />
-        Order Deny,Allow<br />
-        Deny from All<br />
-  &lt;/Directory&gt;<br />
+<pre class="code">
+  &lt;Directory ~ "/\..+/"&gt;
+        Order Deny,Allow
+        Deny from All
+  &lt;/Directory&gt;
 </pre><br />
 <br />
 <br />
@@ -44,8 +44,8 @@ title: "5分でできるウェブサーバのセキュリティ向上施策"
 <br />
 <p>このヘッダを隠すには、PHPの設定ファイル(php.ini)に、次の設定を追加します。</p><br />
 <br />
-<pre class="code"><br />
-  expose_php = Off<br />
+<pre class="code">
+  expose_php = Off
 </pre><br />
 <br />
 <br />

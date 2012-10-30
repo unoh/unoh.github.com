@@ -38,7 +38,7 @@ title: "自力でUNIX TIMEを計算してみよう"
 グレゴリオ暦換算紀元0年1月1日からの経過日数の数え方<br />
 ここに「Fairfieldの公式(フェァフィールドのこうしき)」という非常に素晴らしい公式があります。こんなに素晴らしいのに、何故かマイナー。google先生にお伺いしても、あんまり情報がありませんが、今回はコレを使います。<br />
 <br />
-<pre class="code"><code>Fairfieldの公式による経過日数の算出<br />
+<pre class="code"><code>Fairfieldの公式による経過日数の算出
 365*（ｙ-1）+[ｙ/4]-[ｙ/100]+[ｙ/400]+31+28+1+[306*(ｍ+1)/10]-122+(d-1)</code></pre><br />
 <br />
 さぁ、ややこしいモノが出てまいりました。まずは、順を追って見ていきましょう。<br />
@@ -67,14 +67,14 @@ title: "自力でUNIX TIMEを計算してみよう"
 　これで、UNIX EPOCHは、グレゴリオ暦換算紀元元年1月1日から719161日経過している、という事がわかりました。<br />
 　次は、この719161を起点として、そこから何日経過しているかを計算します。<br />
 <br />
-<pre class="code"><code>_EPOC_TIME = 719161;<br />
-// Fairfieldの公式で算出した719161日からの経過秒数の算出<br />
+<pre class="code"><code>_EPOC_TIME = 719161;
+// Fairfieldの公式で算出した719161日からの経過秒数の算出
 diff = ((365 * year + int(year / 4) - int(year / 100) + int(year / 400) + int(306 * (month + 1) / 10) - 428 + day) -  _EPOC_TIME) * 24 *60 * 60;</code></pre><br />
 <br />
 せっかくなのでFlash Lite 1.1のActionScriptで書いてみました。<br />
 これに、時刻を足してあげれば、UNIX TIMEの完成です。<br />
 <br />
-<pre class="code"><code>_EPOC_TIME = 719161;<br />
+<pre class="code"><code>_EPOC_TIME = 719161;
 UNIX_TIME = ((365 * year + int(year / 4) - int(year / 100) + int(year / 400) + int(306 * (month + 1) / 10) - 428 + day) -  _EPOC_TIME) * 86400 + (hour * 3600) + (minute * 60) + second;</code></pre><br />
 <br />
 ほら1行でできた。エンジニアっぽいっ！<br />

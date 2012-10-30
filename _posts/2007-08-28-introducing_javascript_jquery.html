@@ -14,12 +14,12 @@ title: "JavaScriptライブラリといえば jQuery（入門編）"
 <br />
 また、標準では $ にショートカットが割り当てられるのですが、jQuery.noConflict()と書くことで prototype.js などと混ぜて使えます。<br />
 <br />
-<pre class="code"><br />
-&lt;script src="prototype.js"&gt;&lt;/script&gt;<br />
-&lt;script src="jquery.js"&gt;&lt;/script&gt;<br />
-&lt;script type="text/javascript"&gt;<br />
-    jQuery.noConflict();<br />
-&lt;/script&gt;<br />
+<pre class="code">
+&lt;script src="prototype.js"&gt;&lt;/script&gt;
+&lt;script src="jquery.js"&gt;&lt;/script&gt;
+&lt;script type="text/javascript"&gt;
+    jQuery.noConflict();
+&lt;/script&gt;
 </pre><br />
 <br />
 <br />
@@ -27,21 +27,21 @@ title: "JavaScriptライブラリといえば jQuery（入門編）"
 <br />
 これが私がjQueryを一番気に入っている理由なのですが、CSS 3と XPath をミックスしたような構文で要素を選択することができます。すべてのjQueryでの操作は、DOMからひとつまたは複数のノードを選択することから始まります。以下に要素選択の例を挙げますが、かなり直感的に理解できるのではないでしょうか。<br />
 <br />
-<pre class="code"><br />
-jQuery('div.panel')<br />
-    class="panel"なすべてのdiv要素<br />
-jQuery('p#intro')<br />
-    id="intro"なすべての段落<br />
-jQuery('div#content a:visible')<br />
-    id="content"のdivの中のすべてのvisibleなリンク<br />
-jQuery('input[@name=email]')<br />
-    name="email"なすべてのinput要素<br />
-jQuery('table.orders tr:odd')<br />
-    class="orders"な奇数行<br />
-jQuery('a[@href^="http://"]')<br />
-    すべての外部リンク（http://で始まる） <br />
-jQuery('p[a]')<br />
-　　1つ以上のリンクを含む段落<br />
+<pre class="code">
+jQuery('div.panel')
+    class="panel"なすべてのdiv要素
+jQuery('p#intro')
+    id="intro"なすべての段落
+jQuery('div#content a:visible')
+    id="content"のdivの中のすべてのvisibleなリンク
+jQuery('input[@name=email]')
+    name="email"なすべてのinput要素
+jQuery('table.orders tr:odd')
+    class="orders"な奇数行
+jQuery('a[@href^="http://"]')
+    すべての外部リンク（http://で始まる） 
+jQuery('p[a]')
+　　1つ以上のリンクを含む段落
 </pre><br />
 <br />
 <br />
@@ -58,31 +58,31 @@ jQuery('p[a]')<br />
 <br />
 click関数に引数を渡した場合はクリックされた際にその処理を行い、指定しなかった場合はクリックをシミュレートします。<br />
 <br />
-<pre class="code"><br />
-jQuery('p').click(function() {<br />
-   jQuery(this).css('background-color', 'red');<br />
-});<br />
-    pタグをクリックしたら、背景を赤に変更<br />
-jQuery('p:first').click()<br />
-    最初の段落をクリックした動作を行う<br />
+<pre class="code">
+jQuery('p').click(function() {
+   jQuery(this).css('background-color', 'red');
+});
+    pタグをクリックしたら、背景を赤に変更
+jQuery('p:first').click()
+    最初の段落をクリックした動作を行う
 </pre><br />
 <br />
 <br />
 次の例では、aタグにmouseoverとmouseoutのイベントを割り当てます。マウスカーソルが重なると背景色をオレンジに変更し、離れると白に変更します。hover()の最初の引数がmouseoverで2番目がmouseoutになります。<br />
 <br />
-<pre class="code"><br />
-jQuery('a').hover(function() {<br />
-    jQuery(this).css('background-color', 'orange');<br />
-}, function() {<br />
-    jQuery(this).css('background-color', 'white');<br />
-});<br />
+<pre class="code">
+jQuery('a').hover(function() {
+    jQuery(this).css('background-color', 'orange');
+}, function() {
+    jQuery(this).css('background-color', 'white');
+});
 </pre><br />
 <br />
 <br />
 one()関数は、1度だけ実行するイベントを割り当てます。最初に段落をクリックするとalertメッセージが表示されますが、もう一度クリックしても何も起こりません。<br />
 <br />
-<pre class="code"><br />
-jQuery('p').one('click', function() { alert(jQuery(this).html()); });<br />
+<pre class="code">
+jQuery('p').one('click', function() { alert(jQuery(this).html()); });
 </pre><br />
 <br />
 <br />
@@ -90,16 +90,16 @@ jQuery('p').one('click', function() { alert(jQuery(this).html()); });<br />
 <br />
 AjaxでHTMLの断片をサーバからGETして、divのinnerHTMLに流し込むのは、たったの1行で書けます。これだけです。<br />
 <br />
-<pre class="code"><br />
-jQuery('div#intro').load('/some/fragment.html');<br />
+<pre class="code">
+jQuery('div#intro').load('/some/fragment.html');
 </pre><br />
 <br />
 JSONデータもこんな感じで取得して自動的に変数に格納されるので、とても簡単です。<br />
 <br />
-<pre class="code"><br />
-jQuery.getJSON('/some.json', function(json) {<br />
-    alert('JSON rocks: ' + json.foo + ' ' + json.bar);<br />
-});<br />
+<pre class="code">
+jQuery.getJSON('/some.json', function(json) {
+    alert('JSON rocks: ' + json.foo + ' ' + json.bar);
+});
 </pre><br />
 <br />
 <br />

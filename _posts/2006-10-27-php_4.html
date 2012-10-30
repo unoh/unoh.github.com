@@ -20,9 +20,9 @@ PHPいいよ、PHP素敵だよ。<br />
 <b>1.  array_pushは遅い</b><br />
 いくつかのBlogで語られてることですが、array_pushは、次のような書き方のほうが早いそうです。<br />
 <br />
-<pre class="source_code"><br />
-	//array_puth($array, 'arraydata');<br />
-	$array[] = 'arraydata';<br />
+<pre class="source_code">
+	//array_puth($array, 'arraydata');
+	$array[] = 'arraydata';
 </pre><br />
 <br />
 PHPをいじってきた感想でいうと、全体的に組み込み系の関数の類を使うよりは、PHPの構文として定義されているものを利用するほうが早いことが多いです。<br />
@@ -32,16 +32,16 @@ array_searchは、毎回全データを検索するので遅いです。<br />
 データに配列の順序が関係ないなら、連想配列 + issetを使うほうが高速です。<br />
 連想配列の場合ハッシュの仕組みが使われるのでその分高速です。<br />
 同様に、array_key_existsよりissetのほうがはるかに高速です。<br />
-<pre class="source_code"><br />
-    //$array[] = 'arraydata';<br />
-    //if (array_search('arraydata', $array)) {<br />
-    //    echo 'あるよ。';<br />
-    //}<br />
-<br />
-    $array['arraydata'] = 'arraydata';<br />
-    if (isset($array['arraydata'])}<br />
-        echo 'あるよ。';<br />
-    }<br />
+<pre class="source_code">
+    //$array[] = 'arraydata';
+    //if (array_search('arraydata', $array)) {
+    //    echo 'あるよ。';
+    //}
+
+    $array['arraydata'] = 'arraydata';
+    if (isset($array['arraydata'])}
+        echo 'あるよ。';
+    }
 </pre><br />
 <br />
 <br />
@@ -61,22 +61,22 @@ PHP勉強会で、Dinoの<a href="http://pukiwiki.hnw.jp/index.php?PHP%CA%D9%B6%
 もし、仮に、パスワード処理でデータ側でMD5などのハッシュ化してない場合に、上記が真になっては非常にまずいのではないでしょうか。<br />
 さらにいえば、もっといろいろな形で、真となる場合があるので「==」は使わず、「===」を使いましょう。<br />
 <br />
-<pre class="source_code"><br />
-    if ($str === 'hoge') {<br />
-    if (! ($str === 'hoge')) {<br />
-    if (is_null($null) === false) {<br />
+<pre class="source_code">
+    if ($str === 'hoge') {
+    if (! ($str === 'hoge')) {
+    if (is_null($null) === false) {
 </pre><br />
 <s><br />
 <b>5. <strice>countは配列数を毎回数えてる</b><br />
 これを知ったのは、<a href="http://pukiwiki.sourceforge.jp/dev/?cmd=read&page=BugTrack%2F779">Pukiwkiのクリーンアップ</a>の記事を見たときなのですが。<br />
 countは配列の件数を数えるらしいので次のような書き方に直したほうが無難です。<br />
 <br />
-<pre class="source_code"><br />
-    // if(count($array))<br />
-   if(! empty($array))<br />
-   // for($i = 0; $i < count($array); $i++)<br />
-   $count = count($array);<br />
-   for($i = 0; $i  < $count; $i++)<br />
+<pre class="source_code">
+    // if(count($array))
+   if(! empty($array))
+   // for($i = 0; $i < count($array); $i++)
+   $count = count($array);
+   for($i = 0; $i  < $count; $i++)
 </pre><br />
 </s><br />
 ※毎回数えてるわけではないらしい。<br />

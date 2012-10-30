@@ -8,18 +8,18 @@ title: "5分でわかる PHP で書かれた Web サービスの国際化"
 <br />
 Web サービスを日本以外で使ってもらうためには、あたりまえの話ですが、表示されているテキストを翻訳しなければなりません。表示されるテキストをコードに直接書いてしまうと、翻訳するときが大変です。たとえば、簡単な例ですが、<br />
 <br />
-<pre><br />
-&lt;?<br />
-echo "こんにちは";<br />
-?&gt;<br />
+<pre>
+&lt;?
+echo "こんにちは";
+?&gt;
 </pre><br />
 <br />
 というファイルを英語に翻訳するとします。英語の翻訳者は英語に関してはプロ中のプロ、しかしプログラムのことは何もわからないとすると、<br />
 <br />
-<pre><br />
-&lt;?<br />
-echo Hello<br />
-?&gt;<br />
+<pre>
+&lt;?
+echo Hello
+?&gt;
 </pre><br />
 <br />
 と修正しましたが、" や ; を削除してしまって、プログラムを壊してしまうかもしれません。<br />
@@ -32,24 +32,24 @@ PHP でこれを実現するために、GNU gettext パッケージを利用し�
 <br />
 gettext を使えば、先ほどのプログラムのコードの部分は、<br />
 <br />
-<pre><br />
-&lt;?<br />
-echo gettext('Hello');<br />
-?&gt;<br />
+<pre>
+&lt;?
+echo gettext('Hello');
+?&gt;
 </pre><br />
 <br />
 で、テキストの部分は、別ファイルで用意し、日本語用は、<br />
 <br />
-<pre><br />
-msgid "Hello"<br />
-msgstr "こんにちは!!"<br />
+<pre>
+msgid "Hello"
+msgstr "こんにちは!!"
 </pre><br />
 <br />
 英語用は、<br />
 <br />
-<pre><br />
-msgid "Hello"<br />
-msgstr "Hello!!"<br />
+<pre>
+msgid "Hello"
+msgstr "Hello!!"
 </pre><br />
 <br />
 となります。gettext の引数がキーとなり、各言語用のファイル(メッセージファイル)の msgid に対応していて、表示されるのはその msgid に対応した msgstr の部分です。翻訳者は msgstr の部分だけを訳していけばよく、コード自体を触ることがないので、プログラムを壊してしまう危険性は減ります。<br />

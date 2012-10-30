@@ -82,20 +82,20 @@ JavaScriptで表示するかしないかを切り替えているような場合<
 </p><br />
 <br />
 <p><br />
-<pre class="code"><code>Foo = {};<br />
-Foo.images = [];<br />
-Foo.stopLoadingImages = function() {<br />
-  $$("#foo img").each(function(image) {<br />
-    image.orgSrc = image.src;<br />
-    image.src = "1x1.gif";   // 小さな画像に置き換え<br />
-    Foo.images.push(image);  // 置き換えた要素をとっておく<br />
-  });<br />
-};<br />
-Foo.loadImages = function() {<br />
-  Foo.images.each(function(image) {<br />
-    image.src = image.orgSrc;  // 元の値に戻す<br />
-  });<br />
-};<br />
+<pre class="code"><code>Foo = {};
+Foo.images = [];
+Foo.stopLoadingImages = function() {
+  $$("#foo img").each(function(image) {
+    image.orgSrc = image.src;
+    image.src = "1x1.gif";   // 小さな画像に置き換え
+    Foo.images.push(image);  // 置き換えた要素をとっておく
+  });
+};
+Foo.loadImages = function() {
+  Foo.images.each(function(image) {
+    image.src = image.orgSrc;  // 元の値に戻す
+  });
+};
 </code></pre><br />
 </p><br />
 <br />

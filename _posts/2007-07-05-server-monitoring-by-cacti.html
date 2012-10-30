@@ -22,8 +22,8 @@ Cacti Plugin Architecture<br />
 <br />
 インストール方法は、パッチを当てる方法とプログラムを入れ替える方法がありますが、後者のほうが簡単かと思います。プラグインのインストールは、cactiのpluginディレクトリにダウンロードしたファイルを解凍します。そして、include/config.phpを編集してプラグインを有効にします（下記参照）。<br />
 <br />
-<pre class="code">$plugins = array();<br />
-$plugins[] = 'thold';<br />
+<pre class="code">$plugins = array();
+$plugins[] = 'thold';
 $plugins[] = 'monitor';</pre><br />
 <br />
 現時点で利用可能なプラグインはそんなに多くないのですが、Tholdはかなり使えると思います。以下にいくつかプラグインを紹介します。<br />

@@ -37,22 +37,22 @@ apxs -i -a -c mod_bw.c</li><br />
 <br />
 <p>次に設定方法ですが、Apache の設定ファイル httpd.conf に、mod_bw を読み込むように、次の設定を追加します。</p><br />
 <br />
-<pre class="code"><br />
-LoadModule bw_module          /usr/lib/httpd/modules/mod_bw.so<br />
+<pre class="code">
+LoadModule bw_module          /usr/lib/httpd/modules/mod_bw.so
 </pre><br />
 <br />
 <p>次に、FLV に対して帯域制限する前に、通常の Apache の設定では FLV に対する MIME タイプは設定されてないので、次の設定を追加します。</p><br />
 <br />
-<pre class="code"><br />
+<pre class="code">
 AddType video/x-flv .flv</pre><br />
 <br />
 <p>次に実際の帯域制限ですが、例えば次のように追加します。この設定は、すべてクライアントに対して最大 1024 bytes/s の制限を行うという意味になります。この設定は、VirutalHost の中に追加します。</p><br />
 <br />
-<pre class="code"><br />
-       BandWidthModule On<br />
-       BandWidth all 102400<br />
-       MinBandWidth all -1<br />
-       AddOutputFilterByType MOD_BW video/x-flv<br />
+<pre class="code">
+       BandWidthModule On
+       BandWidth all 102400
+       MinBandWidth all -1
+       AddOutputFilterByType MOD_BW video/x-flv
 </pre><br />
 <br />
 <p>最後に動作確認は、ab (Apache Bench) か、実際にファイルをダウンロードしながら正しく帯域制限が行われているかチェックします。</p><br />

@@ -18,44 +18,44 @@ title: "DRBDで2TBのハードディスク容量を使う方法"
 <br />
 <p>ハードディスクは、二本ずつソフトウェアRAID0で組んでいます。</p><br />
 <br />
-<pre class="code"><br />
-# cat /proc/mdstat<br />
-Personalities : [raid0]<br />
-md1 : active raid0 sdb1[0] sdc1[1]<br />
-      1953519872 blocks 64k chunks<br />
-<br />
-md0 : active raid0 sda3[0] sdd1[1]<br />
-      1943639872 blocks 64k chunks<br />
-<br />
-unused devices: <none><br />
+<pre class="code">
+# cat /proc/mdstat
+Personalities : [raid0]
+md1 : active raid0 sdb1[0] sdc1[1]
+      1953519872 blocks 64k chunks
+
+md0 : active raid0 sda3[0] sdd1[1]
+      1943639872 blocks 64k chunks
+
+unused devices: <none>
 </pre><br />
 <br />
 <br />
 <p>この状態で、次のコマンドでDRBDを起動させてみました。</p><br />
 <br />
-<pre class="code"><br />
-# /etc/init.d/drbd start<br />
+<pre class="code">
+# /etc/init.d/drbd start
 </pre><br />
 <br />
 <p>そうすると、次のエラーメッセージが表示されてしまいました。</p><br />
 <br />
-<pre class="code"><br />
-/etc/init.d/drbd start<br />
-Starting DRBD resources:    [ d0 d1 d2 ioctl(,SET_DISK_CONFIG,)<br />
-failed: Cannot allocate memory<br />
-...<br />
+<pre class="code">
+/etc/init.d/drbd start
+Starting DRBD resources:    [ d0 d1 d2 ioctl(,SET_DISK_CONFIG,)
+failed: Cannot allocate memory
+...
 </pre><br />
 <br />
 <p>調べてみると、vmalloc sizeを192m割り当ててると、うまくいくそうなので、grubの設定ファイル(/etc/grub.conf)に、次の内容に変更してみました。</p><br />
 <br />
-<pre class="code"><br />
-...<br />
-  title Fedora Core (2.6.20-1.2320.fc5smp)<br />
-  root (hd0,0)<br />
-  uppermem 524288<br />
-  kernel /vmlinuz-2.6.20-1.2320.fc5smp ro vmalloc=192m root=LABEL=/<br />
-  initrd /initrd-2.6.20-1.2320.fc5smp.img<br />
-...<br />
+<pre class="code">
+...
+  title Fedora Core (2.6.20-1.2320.fc5smp)
+  root (hd0,0)
+  uppermem 524288
+  kernel /vmlinuz-2.6.20-1.2320.fc5smp ro vmalloc=192m root=LABEL=/
+  initrd /initrd-2.6.20-1.2320.fc5smp.img
+...
 </pre><br />
 <br />
 <p>vmallocの設定は、rootより後ろに書けないので注意してください。</p><br />

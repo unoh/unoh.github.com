@@ -26,13 +26,13 @@ webアプリケーションのバックエンドにMySQLを使っている場合
 MySQLにはスロークエリログといって、<br />
 実行に時間がかかったクエリを記録する機能が最初から付いています。<br />
 /etc/my.cnfに次のように設定を書けば実行時間が1秒を超えたクエリが出力されるようになります。<br />
-<pre class="code">slow_query_log = 1<br />
-slow_query_log_file = /path/to/mysql-slow.log<br />
+<pre class="code">slow_query_log = 1
+slow_query_log_file = /path/to/mysql-slow.log
 long_query_time = 1</pre><br />
 オンラインでset globalを使って変更する場合は次のようにします。<br />
-<pre class="code">set global slow_query_log = 1;<br />
-set global slow_query_log_file = '/path/to/mysql-slow.log';<br />
-set global long_query_time = 1;<br />
+<pre class="code">set global slow_query_log = 1;
+set global slow_query_log_file = '/path/to/mysql-slow.log';
+set global long_query_time = 1;
 </pre><br />
 </p><br />
 <p><br />
@@ -55,8 +55,8 @@ set global long_query_time = 1;<br />
 MySQL 5.1から1秒未満の値も設定できるようになりました。<br />
 つまり、次のように/etc/my.cnfで「0」を設定すれば<br />
 全てのクエリが記録できることになります。<br />
-<pre class="code">slow_query_log = 1<br />
-slow_query_log_file = /path/to/mysql-slow.log<br />
+<pre class="code">slow_query_log = 1
+slow_query_log_file = /path/to/mysql-slow.log
 long_query_time = 0</pre><br />
 </p><br />
 <p><br />
@@ -64,9 +64,9 @@ long_query_time = 0</pre><br />
 理解してから設定を行うようにしてください。<br />
 また、ログの容量も大きくなるので、ディスクの空き容量にも注意が必要です。<br />
 オンラインでset globalを使って一時的に値を0に変更し、すぐに元の値（1など）に戻すのがオススメです。<br />
-<pre class="code">set global slow_query_log = 1;<br />
-set global slow_query_log_file = '/path/to/mysql-slow.log';<br />
-set global long_query_time = 0;<br />
+<pre class="code">set global slow_query_log = 1;
+set global slow_query_log_file = '/path/to/mysql-slow.log';
+set global long_query_time = 0;
 # 後で set global long_query_time = 1; で元に戻す</pre><br />
 </p><br />
 <p><br />
@@ -91,14 +91,14 @@ mysqldumpslowは他にもいろいろ機能を持っているので、「--help�
 今現在インデックスを使用していないクエリはどれなのか知りたい場合があると思います。<br />
 次のように/etc/my.cnfに記述することでインデックスを使用していないクエリを<br />
 スロークエリログに記録することができるようになります。<br />
-<pre class="code">slow_query_log = 1<br />
-slow_query_log_file = /path/to/mysql-slow.log<br />
-long_query_time = 5<br />
+<pre class="code">slow_query_log = 1
+slow_query_log_file = /path/to/mysql-slow.log
+long_query_time = 5
 log_queries_not_using_indexes = 1</pre><br />
 オンラインでset globalを使って設定する場合は次のようにします。<br />
-<pre class="code">set global slow_query_log = 1;<br />
-set global slow_query_log_file = '/path/to/mysql-slow.log';<br />
-set global long_query_time = 5;<br />
+<pre class="code">set global slow_query_log = 1;
+set global slow_query_log_file = '/path/to/mysql-slow.log';
+set global long_query_time = 5;
 set global log_queries_not_using_indexes = 1;</pre><br />
 </p><br />
 <p><br />

@@ -48,256 +48,256 @@ WuのO(NP)アルゴリズム(以下Wuのアルゴリズム)や、それによく
 <br />
 <h3>LuaによるWuのアルゴリズムの実装 その1(編集距離のみ)</h3><br />
 <br />
-<pre class="code"><br />
--- editDistance.lua<br />
--- Lua5.1.4で動作確認<br />
-ONP = {}<br />
-function ONP.new (a, b)           -- ONPクラスのコンストラクタ<br />
-   local self = {                           -- メンバ変数<br />
-      A = a,<br />
-      B = b,<br />
-      M = string.len(a),<br />
-      N = string.len(b),<br />
-   }<br />
-   function self.editDistance ()  -- 編集距離を計算する<br />
-      offset = self.M + 1<br />
-      delta  = self.N - self.M<br />
-      size   = self.M + self.N + 3<br />
-      fp = {}<br />
-      for i = 0, size-1 do<br />
-	 fp[i] = -1<br />
-      end<br />
-      p = -1<br />
-      repeat<br />
-	 p = p + 1<br />
-	 for k=-p, delta-1, 1 do<br />
-	    fp[k+offset] = self.snake(k, math.max(fp[k-1+offset]+1, fp[k+1+offset]))<br />
-	 end<br />
-	 for k=delta+p,delta+1, -1 do<br />
-	    fp[k+offset] = self.snake(k, math.max(fp[k-1+offset]+1, fp[k+1+offset]))<br />
-	 end<br />
-	 fp[delta+offset] = self.snake(delta, math.max(fp[delta-1+offset]+1, fp[delta+1+offset]))<br />
-      until fp[delta+offset] >= self.N<br />
-      return delta + 2 * p<br />
-   end<br />
-   function self.snake (k, y)     -- 最遠点のy座標を計算する<br />
-      x = y - k<br />
-      while (x < self.M and y < self.N and <br />
-	     string.sub(self.A, x+1, x+1) == string.sub(self.B, y+1, y+1)) <br />
-      do<br />
-	 x = x + 1<br />
-	 y = y + 1<br />
-      end<br />
-      return y<br />
-   end<br />
-   if self.M >= self.N then       -- N >= Mになるように調整<br />
-      self.A, self.B = self.B, self.A<br />
-      self.M, self.N = self.N, self.M<br />
-   end<br />
-   return self<br />
-end<br />
-if #arg < 2 then<br />
-   error("few argument")<br />
-end<br />
-a = arg[1]<br />
-b = arg[2]<br />
-d = ONP.new(a, b)<br />
-print("editDistance:" .. d:editDistance())<br />
+<pre class="code">
+-- editDistance.lua
+-- Lua5.1.4で動作確認
+ONP = {}
+function ONP.new (a, b)           -- ONPクラスのコンストラクタ
+   local self = {                           -- メンバ変数
+      A = a,
+      B = b,
+      M = string.len(a),
+      N = string.len(b),
+   }
+   function self.editDistance ()  -- 編集距離を計算する
+      offset = self.M + 1
+      delta  = self.N - self.M
+      size   = self.M + self.N + 3
+      fp = {}
+      for i = 0, size-1 do
+	 fp[i] = -1
+      end
+      p = -1
+      repeat
+	 p = p + 1
+	 for k=-p, delta-1, 1 do
+	    fp[k+offset] = self.snake(k, math.max(fp[k-1+offset]+1, fp[k+1+offset]))
+	 end
+	 for k=delta+p,delta+1, -1 do
+	    fp[k+offset] = self.snake(k, math.max(fp[k-1+offset]+1, fp[k+1+offset]))
+	 end
+	 fp[delta+offset] = self.snake(delta, math.max(fp[delta-1+offset]+1, fp[delta+1+offset]))
+      until fp[delta+offset] >= self.N
+      return delta + 2 * p
+   end
+   function self.snake (k, y)     -- 最遠点のy座標を計算する
+      x = y - k
+      while (x < self.M and y < self.N and 
+	     string.sub(self.A, x+1, x+1) == string.sub(self.B, y+1, y+1)) 
+      do
+	 x = x + 1
+	 y = y + 1
+      end
+      return y
+   end
+   if self.M >= self.N then       -- N >= Mになるように調整
+      self.A, self.B = self.B, self.A
+      self.M, self.N = self.N, self.M
+   end
+   return self
+end
+if #arg < 2 then
+   error("few argument")
+end
+a = arg[1]
+b = arg[2]
+d = ONP.new(a, b)
+print("editDistance:" .. d:editDistance())
 </pre><br />
 <br />
 <h4><strong>実行</strong></h4><br />
 <br />
-<pre class="code"><br />
-narazuya@bokkko% lua editDistance.lua abcdef dacfea<br />
-6<br />
-narazuya@bokkko% lua e.editDistancelua abc abd<br />
-2<br />
-narazuya@bokkko% <br />
+<pre class="code">
+narazuya@bokkko% lua editDistance.lua abcdef dacfea
+6
+narazuya@bokkko% lua e.editDistancelua abc abd
+2
+narazuya@bokkko% 
 </pre><br />
 <br />
 <h3>LuaによるWuのアルゴリズムの実装 その2(編集距離、LCS、SES)</h3><br />
 <br />
-<pre class="code"><br />
--- onp.lua<br />
--- Lua5.1.4で動作確認<br />
-ONP = {}<br />
-SES_DELETE = -1<br />
-SES_COMMON = 0<br />
-SES_ADD    = 1<br />
-function ONP.new (a, b)          -- ONPクラスのコンストラクタ<br />
-   local self = {                          -- メンバ変数<br />
-      A = a,<br />
-      B = b,<br />
-      M = string.len(a),<br />
-      N = string.len(b),<br />
-      path       = {},<br />
-      pathposi   = {},<br />
-      P          = {},<br />
-      ses        = {},<br />
-      seselem    = {},<br />
-      lcs        = "",<br />
-      editdis    = 0,<br />
-      reverse    = false,<br />
-   }<br />
-   -- getter<br />
-   function self.geteditdistance () <br />
-      return self.editdis<br />
-   end<br />
-   function self.getlcs ()<br />
-      return self.lcs<br />
-   end<br />
-   function self.getses ()<br />
-      return self.ses<br />
-   end<br />
-   -- constructor<br />
-   function self.P.new (x_, y_, k_)<br />
-      local self = { x=x_, y=y_, k=k_ }<br />
-      return self<br />
-   end<br />
-   function self.seselem.new (elem_, type_)<br />
-      local self = { elem=elem_, type=type_}<br />
-      return self<br />
-   end<br />
-   -- 差分構築<br />
-   function self.compose ()<br />
-      offset = self.M + 1<br />
-      delta  = self.N - self.M<br />
-      size   = self.M + self.N + 3<br />
-      fp = {}<br />
-      for i = 0, size-1 do<br />
-	 fp[i]        = -1<br />
-	 self.path[i] = -1<br />
-      end<br />
-      p = -1<br />
-      repeat<br />
-	 p = p + 1<br />
-	 for k=-p, delta-1, 1 do<br />
-	    fp[k+offset] = self.snake(k, fp[k-1+offset]+1, fp[k+1+offset])<br />
-	 end<br />
-	 for k=delta+p,delta+1, -1 do<br />
-	    fp[k+offset] = self.snake(k, fp[k-1+offset]+1, fp[k+1+offset])<br />
-	 end<br />
-	 fp[delta+offset] = self.snake(delta, fp[delta-1+offset]+1, fp[delta+1+offset])<br />
-      until fp[delta+offset] >= self.N<br />
-      self.editdis = delta + 2 * p<br />
-      r    = self.path[delta+offset]<br />
-      epc  = {}<br />
-      while r ~= -1 do<br />
-	 epc[#epc+1] = self.P.new(self.pathposi[r+1].x, self.pathposi[r+1].y, nil)<br />
-	 r = self.pathposi[r+1].k<br />
-      end<br />
-      self.recordseq(epc)<br />
-   end<br />
-   function self.snake (k, p, pp)     -- 最遠点のy座標を計算する<br />
-      r = 0;<br />
-      if p > pp then<br />
-	 r = self.path[k-1+offset];<br />
-      else<br />
-	 r = self.path[k+1+offset];<br />
-      end<br />
-      y = math.max(p, pp);<br />
-      x = y - k<br />
-      while (x < self.M and y < self.N and <br />
-	     string.sub(self.A, x+1, x+1) == string.sub(self.B, y+1, y+1)) <br />
-      do<br />
-	 x = x + 1<br />
-	 y = y + 1<br />
-      end<br />
-      self.path[k+offset] = #self.pathposi<br />
-      p = self.P.new(x, y, r)<br />
-      self.pathposi[#self.pathposi+1] = p<br />
-      return y<br />
-   end<br />
-   function self.recordseq (epc)          -- LCS、SESを記録する<br />
-      x_idx,  y_idx  = 1, 1<br />
-      px_idx, py_idx = 0, 0<br />
-      for i=#epc, 1, -1 do<br />
-	 while (px_idx < epc[i].x or py_idx < epc[i].y) do<br />
-	    if (epc[i].y - epc[i].x) > (py_idx - px_idx) then<br />
-	       elem = string.sub(self.B, y_idx, y_idx)<br />
-	       if self.reverse then <br />
-		  type = SES_DELETE<br />
-	       else<br />
-		  type = SES_ADD<br />
-	       end<br />
-	       self.ses[#self.ses+1] = self.seselem.new(elem, type)<br />
-	       y_idx  = y_idx  + 1<br />
-	       py_idx = py_idx + 1<br />
-	    elseif epc[i].y - epc[i].x < py_idx - px_idx then<br />
-	       elem = string.sub(self.A, x_idx, x_idx)<br />
-	       if self.reverse then <br />
-		  type = SES_ADD<br />
-	       else<br />
-		  type = SES_DELETE<br />
-	       end<br />
-	       self.ses[#self.ses+1] = self.seselem.new(elem, type)<br />
-	       x_idx  = x_idx  + 1<br />
-	       px_idx = px_idx + 1<br />
-	    else <br />
-	       elem = string.sub(self.A, x_idx, x_idx)<br />
-	       type = SES_COMMON<br />
-	       self.lcs = self.lcs .. elem<br />
-	       self.ses[#self.ses+1] = self.seselem.new(elem, type)<br />
-	       x_idx  = x_idx  + 1<br />
-	       y_idx  = y_idx  + 1<br />
-	       px_idx = px_idx + 1<br />
-	       py_idx = py_idx + 1<br />
-	    end<br />
-	 end<br />
-      end<br />
-   end<br />
-   if self.M >= self.N then       -- N >= Mになるように調整<br />
-      self.A, self.B = self.B, self.A<br />
-      self.M, self.N = self.N, self.M<br />
-      self.reverse = true<br />
-   end<br />
-   return self<br />
-end<br />
-if #arg < 2 then<br />
-   error("few argument")<br />
-end<br />
-a = arg[1]<br />
-b = arg[2]<br />
-d = ONP.new(a, b)<br />
-d:compose()<br />
-print("editDistance:" .. d:geteditdistance()) -- 編集距離<br />
-print("LCS:"          .. d:getlcs())                    -- Longest Common Subsequence<br />
-print("SES")<br />
-ses = d:getses()                                          -- Shortest Edit Script<br />
-for i=1, #ses do<br />
-   if ses[i].type == SES_COMMON then<br />
-      print("  " .. ses[i].elem)<br />
-   elseif ses[i].type == SES_DELETE then<br />
-      print("- " .. ses[i].elem)<br />
-   elseif ses[i].type == SES_ADD then<br />
-      print("+ " .. ses[i].elem)<br />
-   end<br />
-end<br />
+<pre class="code">
+-- onp.lua
+-- Lua5.1.4で動作確認
+ONP = {}
+SES_DELETE = -1
+SES_COMMON = 0
+SES_ADD    = 1
+function ONP.new (a, b)          -- ONPクラスのコンストラクタ
+   local self = {                          -- メンバ変数
+      A = a,
+      B = b,
+      M = string.len(a),
+      N = string.len(b),
+      path       = {},
+      pathposi   = {},
+      P          = {},
+      ses        = {},
+      seselem    = {},
+      lcs        = "",
+      editdis    = 0,
+      reverse    = false,
+   }
+   -- getter
+   function self.geteditdistance () 
+      return self.editdis
+   end
+   function self.getlcs ()
+      return self.lcs
+   end
+   function self.getses ()
+      return self.ses
+   end
+   -- constructor
+   function self.P.new (x_, y_, k_)
+      local self = { x=x_, y=y_, k=k_ }
+      return self
+   end
+   function self.seselem.new (elem_, type_)
+      local self = { elem=elem_, type=type_}
+      return self
+   end
+   -- 差分構築
+   function self.compose ()
+      offset = self.M + 1
+      delta  = self.N - self.M
+      size   = self.M + self.N + 3
+      fp = {}
+      for i = 0, size-1 do
+	 fp[i]        = -1
+	 self.path[i] = -1
+      end
+      p = -1
+      repeat
+	 p = p + 1
+	 for k=-p, delta-1, 1 do
+	    fp[k+offset] = self.snake(k, fp[k-1+offset]+1, fp[k+1+offset])
+	 end
+	 for k=delta+p,delta+1, -1 do
+	    fp[k+offset] = self.snake(k, fp[k-1+offset]+1, fp[k+1+offset])
+	 end
+	 fp[delta+offset] = self.snake(delta, fp[delta-1+offset]+1, fp[delta+1+offset])
+      until fp[delta+offset] >= self.N
+      self.editdis = delta + 2 * p
+      r    = self.path[delta+offset]
+      epc  = {}
+      while r ~= -1 do
+	 epc[#epc+1] = self.P.new(self.pathposi[r+1].x, self.pathposi[r+1].y, nil)
+	 r = self.pathposi[r+1].k
+      end
+      self.recordseq(epc)
+   end
+   function self.snake (k, p, pp)     -- 最遠点のy座標を計算する
+      r = 0;
+      if p > pp then
+	 r = self.path[k-1+offset];
+      else
+	 r = self.path[k+1+offset];
+      end
+      y = math.max(p, pp);
+      x = y - k
+      while (x < self.M and y < self.N and 
+	     string.sub(self.A, x+1, x+1) == string.sub(self.B, y+1, y+1)) 
+      do
+	 x = x + 1
+	 y = y + 1
+      end
+      self.path[k+offset] = #self.pathposi
+      p = self.P.new(x, y, r)
+      self.pathposi[#self.pathposi+1] = p
+      return y
+   end
+   function self.recordseq (epc)          -- LCS、SESを記録する
+      x_idx,  y_idx  = 1, 1
+      px_idx, py_idx = 0, 0
+      for i=#epc, 1, -1 do
+	 while (px_idx < epc[i].x or py_idx < epc[i].y) do
+	    if (epc[i].y - epc[i].x) > (py_idx - px_idx) then
+	       elem = string.sub(self.B, y_idx, y_idx)
+	       if self.reverse then 
+		  type = SES_DELETE
+	       else
+		  type = SES_ADD
+	       end
+	       self.ses[#self.ses+1] = self.seselem.new(elem, type)
+	       y_idx  = y_idx  + 1
+	       py_idx = py_idx + 1
+	    elseif epc[i].y - epc[i].x < py_idx - px_idx then
+	       elem = string.sub(self.A, x_idx, x_idx)
+	       if self.reverse then 
+		  type = SES_ADD
+	       else
+		  type = SES_DELETE
+	       end
+	       self.ses[#self.ses+1] = self.seselem.new(elem, type)
+	       x_idx  = x_idx  + 1
+	       px_idx = px_idx + 1
+	    else 
+	       elem = string.sub(self.A, x_idx, x_idx)
+	       type = SES_COMMON
+	       self.lcs = self.lcs .. elem
+	       self.ses[#self.ses+1] = self.seselem.new(elem, type)
+	       x_idx  = x_idx  + 1
+	       y_idx  = y_idx  + 1
+	       px_idx = px_idx + 1
+	       py_idx = py_idx + 1
+	    end
+	 end
+      end
+   end
+   if self.M >= self.N then       -- N >= Mになるように調整
+      self.A, self.B = self.B, self.A
+      self.M, self.N = self.N, self.M
+      self.reverse = true
+   end
+   return self
+end
+if #arg < 2 then
+   error("few argument")
+end
+a = arg[1]
+b = arg[2]
+d = ONP.new(a, b)
+d:compose()
+print("editDistance:" .. d:geteditdistance()) -- 編集距離
+print("LCS:"          .. d:getlcs())                    -- Longest Common Subsequence
+print("SES")
+ses = d:getses()                                          -- Shortest Edit Script
+for i=1, #ses do
+   if ses[i].type == SES_COMMON then
+      print("  " .. ses[i].elem)
+   elseif ses[i].type == SES_DELETE then
+      print("- " .. ses[i].elem)
+   elseif ses[i].type == SES_ADD then
+      print("+ " .. ses[i].elem)
+   end
+end
 </pre><br />
 <br />
 <h4><strong>実行</strong></h4><br />
 <br />
-<pre class="code"><br />
-narazuya@bokkko% lua onp.lua abcdef dacfea<br />
-editDistance:6<br />
-LCS:acf<br />
-SES<br />
-+ d<br />
-  a<br />
-- b<br />
-  c<br />
-- d<br />
-- e<br />
-   f<br />
-+ e<br />
-+ a<br />
-narazuya@bokkko% lua a.lua abc abd<br />
-editDistance:2<br />
-LCS:ab<br />
-SES<br />
-  a<br />
-  b<br />
-- c<br />
-+ d<br />
-narazuya@bokkko%<br />
+<pre class="code">
+narazuya@bokkko% lua onp.lua abcdef dacfea
+editDistance:6
+LCS:acf
+SES
++ d
+  a
+- b
+  c
+- d
+- e
+   f
++ e
++ a
+narazuya@bokkko% lua a.lua abc abd
+editDistance:2
+LCS:ab
+SES
+  a
+  b
+- c
++ d
+narazuya@bokkko%
 </pre>

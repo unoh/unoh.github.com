@@ -20,15 +20,15 @@ windowsでもgvimつかってるけど、いろいろかえたい<br />
 <br />
 というわけでbashrc, vimrc, screenrcそれぞれについて別の場所のファイルを読み込む方法を検索してまとめしました。<br />
 <br />
-<pre class="code"># .bashrc<br />
-if [ -f $HOME/dotfiles/.bashrc ]; then<br />
-      source $HOME/dotfiles/.bashrc<br />
+<pre class="code"># .bashrc
+if [ -f $HOME/dotfiles/.bashrc ]; then
+      source $HOME/dotfiles/.bashrc
 fi</pre><br />
-<pre class="code"># .vimrc<br />
-if filereadable(expand('~/dotfiles/.vimrc'))<br />
-  source ~/dotfiles/.vimrc<br />
+<pre class="code"># .vimrc
+if filereadable(expand('~/dotfiles/.vimrc'))
+  source ~/dotfiles/.vimrc
 endif</pre><br />
-<pre class="code"># .screenrc<br />
+<pre class="code"># .screenrc
 source dotfiles/.screenrc</pre><br />
 <br />
 $HOME/dotfiles 以下にファイルがあるのは私の場合なので、適宜読み替えてください。<br />
@@ -39,13 +39,13 @@ $HOME/dotfiles 以下にファイルがあるのは私の場合なので、適�
 正確には再読み込みできるようにそれぞれのペケペケrcを書く必要があるのですが、そこまで手が回っていません。<br />
 単純な再読み込みを以下にあげます。<br />
 <br />
-<pre class="code"># .bashrc 再読み込み<br />
+<pre class="code"># .bashrc 再読み込み
 $ source ~/.bashrc</pre><br />
-<pre class="code"># .vimrc 再読み込み<br />
-vimのコマンドモードで<br />
+<pre class="code"># .vimrc 再読み込み
+vimのコマンドモードで
 :source $VIMRC</pre><br />
-<pre class="code"># .screenrc 再読み込み<br />
-screenのエスケープキーを入力して<br />
+<pre class="code"># .screenrc 再読み込み
+screenのエスケープキーを入力して
 :source $HOME/.screenrc</pre><br />
 <br />
 それでは楽しいプログラミングライフを！<br />
@@ -58,13 +58,13 @@ Vim-users.jp - Hack #108: vimrc で外部ファイルを取り込む</a><br />
 <a href="http://vim-users.jp/2009/09/hack74/">Vim-users.jp - Hack #74: 簡単にvimrcを編集する</a><br />
 <br />
 環境<br />
-<pre class="code">$ uname -a<br />
-Linux fri 2.6.32.9-70.fc12.i686 #1 SMP Wed Mar 3 05:14:32 UTC 2010 i686 i686 i386 GNU/Linux<br />
-$ bash --version<br />
-GNU bash, version 4.0.35(1)-release (i386-redhat-linux-gnu)<br />
-$ vim --version<br />
-VIM - Vi IMproved 7.2 (2008 Aug 9, compiled Dec  3 2009 08:50:41)<br />
-$ screen --version<br />
+<pre class="code">$ uname -a
+Linux fri 2.6.32.9-70.fc12.i686 #1 SMP Wed Mar 3 05:14:32 UTC 2010 i686 i686 i386 GNU/Linux
+$ bash --version
+GNU bash, version 4.0.35(1)-release (i386-redhat-linux-gnu)
+$ vim --version
+VIM - Vi IMproved 7.2 (2008 Aug 9, compiled Dec  3 2009 08:50:41)
+$ screen --version
 Screen version 4.00.03 (FAU) 23-Oct-06</pre><br />
 <br />
 以上デース<br />

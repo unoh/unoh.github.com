@@ -26,27 +26,27 @@ class="hoge foo bar"などのように複数指定できるメリットを生か
 <h3>レイアウトブロックごとに記述する</h3><br />
 サイトブロック構成は html, body, container, header, wrapperなど、ブロック毎に独立させている場合が多いと思います。使いまわせるものは使いまわし、出来るだけ階層に沿った形で記述します。<br />
 <br />
-<pre class="code"><code>/** header **/<br />
-#header{<br />
-...<br />
-}<br />
-/** wrapper **/<br />
-#wrapper{<br />
-...<br />
+<pre class="code"><code>/** header **/
+#header{
+...
+}
+/** wrapper **/
+#wrapper{
+...
 }</code></pre><br />
 <br />
 <h3>インデントを使う</h3><br />
 タグのDOM構成と同じように、ブロック内部のスタイル指定をする場合に役に立ちます。<br />
 親ノード&lt;ul&gt;の子要素&lt;li&gt;等の場合、以下のようなイメージです。<br />
-<pre class="code"><code>/** header **/<br />
-#header{<br />
-width:760px;<br />
-}<br />
-　　#header ul {<br />
-　　margin: 10px, 0<br />
-　　}<br />
-　　　　#header ul li{<br />
-　　　　line-height: 0.9em;<br />
+<pre class="code"><code>/** header **/
+#header{
+width:760px;
+}
+　　#header ul {
+　　margin: 10px, 0
+　　}
+　　　　#header ul li{
+　　　　line-height: 0.9em;
 　　　　}</code></pre><br />
 <br />
 <h3>圧縮する</h3><br />
@@ -57,10 +57,10 @@ width:760px;<br />
 <dd><a href="http://www.cleancss.com/">http://www.cleancss.com/</a></dd><br />
 </dl><br />
 特に16進数指定のcolorなど、直感的に読み解くのは結構面倒なものなので、私はいつもrgb()で指定しています。<br />
-<pre class="code"><code>body{<br />
-color:rgb(100%, 50%, 0);<br />
-color:rgb(255, 128, 0);<br />
-font-weight:bold;<br />
+<pre class="code"><code>body{
+color:rgb(100%, 50%, 0);
+color:rgb(255, 128, 0);
+font-weight:bold;
 }</code></pre><br />
 これらの最適化を行った結果、<br />
 <pre class="code"><samp>body{color:#ff8000;font-weight:700}</samp></pre><br />

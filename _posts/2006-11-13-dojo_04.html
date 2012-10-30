@@ -22,34 +22,34 @@ title: "Dojo 0.4の新機能を使っていろいろ遊んでみました"
 <br />
 上部のDockみたいな部分を簡単に説明すると、次のような感じです。FisheyeList widgetというのがこれで、基本的にdivタグの属性としてプロパティを書いておくだけです。FisheyeListItemがアイコン一つ一つに対応して、iconsrcで画像ファイル名、onClickでクリックした際の動作を指定します。<br />
 <br />
-<pre class="source_code"><br />
-&lt;div dojoType="FisheyeList"<br />
-    	itemWidth="50" itemHeight="50"<br />
-    	itemMaxWidth="100" itemMaxHeight="100"<br />
-    	orientation="horizontal"<br />
-    	effectUnits="2"<br />
-    	itemPadding="10"<br />
-    	attachEdge="top"<br />
-    	labelEdge="bottom"<br />
-    	enableCrappySvgSupport="false"&gt;<br />
-        <br />
-    	&lt;div dojoType="FisheyeListItem" onClick="load_app('mypane1');"<br />
-             iconsrc="images/icon_comment.png"&gt;<br />
-    	&lt;/div&gt;<br />
-    	&lt;div dojoType="FisheyeListItem" onClick="load_app('mypane2');"<br />
-             iconsrc="images/icon_calendar.png"&gt;<br />
-    	&lt;/div&gt;<br />
-    	&lt;div dojoType="FisheyeListItem" onClick="load_app('mypane3');"<br />
-             iconsrc="images/icon_graph.png"&gt;<br />
-    	&lt;/div&gt;<br />
-    	&lt;div dojoType="FisheyeListItem" onClick="alert('Monkey!');"<br />
-             iconsrc="images/icon_monkey.png"&gt;<br />
-    	&lt;/div&gt;<br />
-    	&lt;div dojoType="FisheyeListItem" onClick="load_app('mypane4');"<br />
-             iconsrc="images/icon_info.png"&gt;<br />
-    	&lt;/div&gt;<br />
-    &lt;/div&gt;<br />
-&lt;/div&gt;<br />
+<pre class="source_code">
+&lt;div dojoType="FisheyeList"
+    	itemWidth="50" itemHeight="50"
+    	itemMaxWidth="100" itemMaxHeight="100"
+    	orientation="horizontal"
+    	effectUnits="2"
+    	itemPadding="10"
+    	attachEdge="top"
+    	labelEdge="bottom"
+    	enableCrappySvgSupport="false"&gt;
+        
+    	&lt;div dojoType="FisheyeListItem" onClick="load_app('mypane1');"
+             iconsrc="images/icon_comment.png"&gt;
+    	&lt;/div&gt;
+    	&lt;div dojoType="FisheyeListItem" onClick="load_app('mypane2');"
+             iconsrc="images/icon_calendar.png"&gt;
+    	&lt;/div&gt;
+    	&lt;div dojoType="FisheyeListItem" onClick="load_app('mypane3');"
+             iconsrc="images/icon_graph.png"&gt;
+    	&lt;/div&gt;
+    	&lt;div dojoType="FisheyeListItem" onClick="alert('Monkey!');"
+             iconsrc="images/icon_monkey.png"&gt;
+    	&lt;/div&gt;
+    	&lt;div dojoType="FisheyeListItem" onClick="load_app('mypane4');"
+             iconsrc="images/icon_info.png"&gt;
+    	&lt;/div&gt;
+    &lt;/div&gt;
+&lt;/div&gt;
 </pre><br />
 <br />
 <br />

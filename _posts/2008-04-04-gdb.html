@@ -21,53 +21,53 @@ title: "gdbの使い方"
 <br />
 例えば、以下のように(ものすごく単純に)配列をランダムにソートするCのプログラムがあるとします。<br />
 <br />
-<pre class="code"><br />
-/* random_sort.c */<br />
-#include &lt;stdio.h&gt;<br />
-#include &lt;stdlib.h&gt;<br />
-#include &lt;time.h&gt;<br />
-#define COUNT(arr) (sizeof(arr)/sizeof(arr[0]))<br />
-void random_sort(int arr[], int n);<br />
-void random_sort(int arr[], int n){<br />
-  int i, rnd, temp;<br />
-  srand(time(NULL));<br />
-  for(i=0;i&lt;n;i++){<br />
-    rnd = rand() % n;<br />
-    temp = arr[i];<br />
-    arr[i] = arr[rnd];<br />
-    arr[rnd] = temp;<br />
-  }<br />
-}<br />
-int main(int argc, char *argv[]){<br />
-  int i, n;<br />
-  int nums[] = {1, 2, 3, 4, 5};<br />
-  n = COUNT(nums);<br />
-  random_sort(nums, n);<br />
-  for(i=0;i&lt;n;i++){<br />
-    printf(&quot;%d &quot;, nums[i]);<br />
-  }<br />
-  printf(&quot;\n&quot;);<br />
-  return 0;<br />
-}<br />
-<br /><br />
+<pre class="code">
+/* random_sort.c */
+#include &lt;stdio.h&gt;
+#include &lt;stdlib.h&gt;
+#include &lt;time.h&gt;
+#define COUNT(arr) (sizeof(arr)/sizeof(arr[0]))
+void random_sort(int arr[], int n);
+void random_sort(int arr[], int n){
+  int i, rnd, temp;
+  srand(time(NULL));
+  for(i=0;i&lt;n;i++){
+    rnd = rand() % n;
+    temp = arr[i];
+    arr[i] = arr[rnd];
+    arr[rnd] = temp;
+  }
+}
+int main(int argc, char *argv[]){
+  int i, n;
+  int nums[] = {1, 2, 3, 4, 5};
+  n = COUNT(nums);
+  random_sort(nums, n);
+  for(i=0;i&lt;n;i++){
+    printf(&quot;%d &quot;, nums[i]);
+  }
+  printf(&quot;\n&quot;);
+  return 0;
+}
+<br />
 </pre><br />
 <br />
 このプログラムをgccでコンパイルしてgdbで実行するためには例えば、<br />
 <br />
-<pre class="code"><br />
-$ gcc -g random_sort.c -o random_sort<br />
+<pre class="code">
+$ gcc -g random_sort.c -o random_sort
 </pre><br />
 <br />
 とします。-gはプログラムにデバッグ情報を含ませるためのオプションです。(実際にはCでプログラムを書く際は警告を見逃さないように、もっとオプションを付け足したりするのですが、ここでは割愛します)。作成した実行プログラムをgdbに引数で渡してやります。<br />
 <br />
-<pre class="code">$ gdb ./random_sort                         7165 (c/tips/random_sort)<br />
-GNU gdb 6.3.50-20050815 (Apple version gdb-768) (Tue Oct  2 04:07:49 UTC 2007)<br />
-Copyright 2004 Free Software Foundation, Inc.<br />
-GDB is free software, covered by the GNU General Public License, and you are<br />
-welcome to change it and/or distribute copies of it under certain conditions.<br />
-Type &quot;show copying&quot; to see the conditions.<br />
-There is absolutely no warranty for GDB.  Type &quot;show warranty&quot; for details.<br />
-This GDB was configured as &quot;i386-apple-darwin&quot;...Reading symbols for shared libraries ... done<br />
+<pre class="code">$ gdb ./random_sort                         7165 (c/tips/random_sort)
+GNU gdb 6.3.50-20050815 (Apple version gdb-768) (Tue Oct  2 04:07:49 UTC 2007)
+Copyright 2004 Free Software Foundation, Inc.
+GDB is free software, covered by the GNU General Public License, and you are
+welcome to change it and/or distribute copies of it under certain conditions.
+Type &quot;show copying&quot; to see the conditions.
+There is absolutely no warranty for GDB.  Type &quot;show warranty&quot; for details.
+This GDB was configured as &quot;i386-apple-darwin&quot;...Reading symbols for shared libraries ... done
 (gdb)</pre><br />
 <br />
 これでgdbを使う準備ができました。次はよく使うコマンドについて解説します。<br />
@@ -76,12 +76,12 @@ This GDB was configured as &quot;i386-apple-darwin&quot;...Reading symbols for s
 <br />
 プログラムを実行するにはrunコマンドを使います。<br />
 <br />
-<pre class="code">(gdb) run<br />
-Starting program: /Users/bokkko/programming/c/tips/random_sort/random_sort<br />
-Reading symbols for shared libraries ++. done<br />
-4 3 2 5 1<br />
-Program exited normally.<br />
-(gdb)<br />
+<pre class="code">(gdb) run
+Starting program: /Users/bokkko/programming/c/tips/random_sort/random_sort
+Reading symbols for shared libraries ++. done
+4 3 2 5 1
+Program exited normally.
+(gdb)
 </pre><br />
 <br />
 ただ単にrunコマンドを実行してもプログラムが正常、もしくは異常終了したり、ユーザからの入力待ちになったりするだけなので、この後は自分が挙動を調べたい関数にブレークポイントを設定したりします。<br />
@@ -90,39 +90,39 @@ Program exited normally.<br />
 <br />
 ブレークポイントを設定するにはbreakコマンドを使います。<br />
 <br />
-<pre class="code">(gdb) break random_sort<br />
-Breakpoint 1 at 0x1ef0: file random_sort.c, line 13.<br />
-(gdb)<br />
+<pre class="code">(gdb) break random_sort
+Breakpoint 1 at 0x1ef0: file random_sort.c, line 13.
+(gdb)
 </pre><br />
 <br />
 関数だけでなく、行単位で設定することもできます。<br />
 <br />
-<pre class="code">(gdb) b 15<br />
-Breakpoint 1 at 0x1f04: file random_sort.c, line 15.<br />
-(gdb) r<br />
-Starting program: /Users/bokkko/programming/c/tips/random_sort/random_sort<br />
-Reading symbols for shared libraries ++. done<br />
-Breakpoint 1, random_sort (arr=0xbfffed24, n=5) at random_sort.c:15<br />
-15        for(i=0;i&lt;n;i++){<br />
+<pre class="code">(gdb) b 15
+Breakpoint 1 at 0x1f04: file random_sort.c, line 15.
+(gdb) r
+Starting program: /Users/bokkko/programming/c/tips/random_sort/random_sort
+Reading symbols for shared libraries ++. done
+Breakpoint 1, random_sort (arr=0xbfffed24, n=5) at random_sort.c:15
+15        for(i=0;i&lt;n;i++){
 (gdb)</pre><br />
 <br />
 <h3>プログラムを1行ずつ実行する</h3><br />
 <br />
 プログラムを1行ずつ実行するにはnextコマンドを使います。<br />
 <br />
-<pre class="code">(gdb) b main<br />
-Breakpoint 1 at 0x1f77: file random_sort.c, line 26.<br />
-(gdb) r<br />
-Starting program: /Users/bokkko/programming/c/tips/random_sort/random_sort<br />
-Reading symbols for shared libraries ++. done<br />
-Breakpoint 1, main (argc=1, argv=0xbfffed74) at random_sort.c:26<br />
-26        int nums[] = {1, 2, 3, 4, 5};<br />
-(gdb) next<br />
-27        n = COUNT(nums);<br />
-(gdb) next<br />
-28        random_sort(nums, n);<br />
-(gdb) next<br />
-30        for(i=0;&lt;n;i++){<br />
+<pre class="code">(gdb) b main
+Breakpoint 1 at 0x1f77: file random_sort.c, line 26.
+(gdb) r
+Starting program: /Users/bokkko/programming/c/tips/random_sort/random_sort
+Reading symbols for shared libraries ++. done
+Breakpoint 1, main (argc=1, argv=0xbfffed74) at random_sort.c:26
+26        int nums[] = {1, 2, 3, 4, 5};
+(gdb) next
+27        n = COUNT(nums);
+(gdb) next
+28        random_sort(nums, n);
+(gdb) next
+30        for(i=0;&lt;n;i++){
 (gdb)</pre><br />
 <br />
 <h3>ソースコードを表示する</h3><br />
@@ -130,26 +130,26 @@ Breakpoint 1, main (argc=1, argv=0xbfffed74) at random_sort.c:26<br />
 listコマンドを使うと一部のソースコードを表示することができます。<br />
 引数なしで実行した場合、現在の行の前後合わせて10行を表示します。<br />
 <br />
-<pre class="code"><br />
-(gdb) b main<br />
-Breakpoint 1 at 0x1f77: file random_sort.c, line 26.<br />
-(gdb) r<br />
-Starting program: /Users/bokkko/programming/c/tips/random_sort/random_sort<br />
-Reading symbols for shared libraries ++. done<br />
-Breakpoint 1, main (argc=1, argv=0xbfffed74) at random_sort.c:26<br />
-26        int nums[] = {1, 2, 3, 4, 5};<br />
-(gdb) l<br />
-21      }<br />
-22<br />
-23      int main(int argc, char *argv[]){<br />
-24       <br />
-25        int i, n;<br />
-26        int nums[] = {1, 2, 3, 4, 5};<br />
-27        n = COUNT(nums);<br />
-28        random_sort(nums, n);<br />
-29<br />
-30        for(i=0;i&lt;n;i++){<br />
-(gdb)<br />
+<pre class="code">
+(gdb) b main
+Breakpoint 1 at 0x1f77: file random_sort.c, line 26.
+(gdb) r
+Starting program: /Users/bokkko/programming/c/tips/random_sort/random_sort
+Reading symbols for shared libraries ++. done
+Breakpoint 1, main (argc=1, argv=0xbfffed74) at random_sort.c:26
+26        int nums[] = {1, 2, 3, 4, 5};
+(gdb) l
+21      }
+22
+23      int main(int argc, char *argv[]){
+24       
+25        int i, n;
+26        int nums[] = {1, 2, 3, 4, 5};
+27        n = COUNT(nums);
+28        random_sort(nums, n);
+29
+30        for(i=0;i&lt;n;i++){
+(gdb)
 </pre><br />
 <br />
 引数には関数や行番号を指定することもできます。<br />
@@ -158,80 +158,80 @@ Breakpoint 1, main (argc=1, argv=0xbfffed74) at random_sort.c:26<br />
 <br />
 変数の内容を表示するにはprintコマンドを使います。<br />
 <br />
-<pre class="code">(gdb) print i<br />
-$5 = 0<br />
+<pre class="code">(gdb) print i
+$5 = 0
 (gdb)</pre><br />
 <br />
 また、単に変数を表示するだけでなく、計算もできます。<br />
 <br />
-<pre class="code">(gdb) pirnt i + 10<br />
-$5 = 10<br />
+<pre class="code">(gdb) pirnt i + 10
+$5 = 10
 (gdb)</pre><br />
 <br />
 配列の中身も以下のように表示できます。<br />
 <br />
-<pre class="code">(gdb) print nums<br />
-$1 = {1, 2, 3, 4, 5}<br />
+<pre class="code">(gdb) print nums
+$1 = {1, 2, 3, 4, 5}
 (gdb)</pre><br />
 <br />
 上記のソースコードにはありませんが、構造体の内容を表示することもできます。例えば、以下のような構造体とソースコードがあった場合、<br />
 <br />
-<pre class="code">typedef struct list {<br />
-  struct list *next;<br />
-  int data;<br />
+<pre class="code">typedef struct list {
+  struct list *next;
+  int data;
 } List;</pre><br />
 <br />
-<pre class="code">       ・<br />
-       ・<br />
-       ・<br />
-  List *l;<br />
-  l = (List *)malloc(sizeof(List));<br />
-  l->next = NULL;<br />
-  l->data = (int)NULL;<br />
-> return l;<br />
-       ・<br />
-       ・<br />
-       ・<br />
+<pre class="code">       ・
+       ・
+       ・
+  List *l;
+  l = (List *)malloc(sizeof(List));
+  l->next = NULL;
+  l->data = (int)NULL;
+> return l;
+       ・
+       ・
+       ・
 </pre><br />
 <br />
-<pre class="code">//>で↓を実行<br />
-(gdb) p *l<br />
-  $1 = {<br />
-  next = 0x0,<br />
-  data = 0<br />
-}<br />
+<pre class="code">//>で↓を実行
+(gdb) p *l
+  $1 = {
+  next = 0x0,
+  data = 0
+}
 (gdb)</pre><br />
 <br />
 pはprintのエイリアスです。gdbでは長かったり、よく使うコマンドにはエイリアスが用意されています。<br />
 <br />
 また、環境によっては構造体の内容が上記のように改行されず、1行で表示されてしまっているかもしれません。この場合、ホームディレクトリに.gdbinitというファイルを作成して、<br />
 <br />
-<pre class="code"><br />
-set print pretty on<br />
+<pre class="code">
+set print pretty on
 </pre><br />
 <br />
 と記述すれば幸せになれるかもしれません。ただ、構造体のメンバの数が多い場合、画面からはみ出ししまうことがあります。上記の設定はgdbを実行している途中で切り替えることもできるので、状況にあった表示を選択するといいでしょう。<br />
 <br />
-<pre class="code"><br />
-(gdb) set print pretty off<br />
-(gdb) p *l<br />
-$1 = {next = 0x0, data = 0}<br />
-(gdb) set print pretty on<br />
-(gdb) p *l<br />
-$2 = {<br />
-  next = 0x0,<br />
-  data = 0<br />
-}<br />
-(gdb) <br />
+<pre class="code">
+(gdb) set print pretty off
+(gdb) p *l
+$1 = {next = 0x0, data = 0}
+(gdb) set print pretty on
+(gdb) p *l
+$2 = {
+  next = 0x0,
+  data = 0
+}
+(gdb) 
 </pre><br />
 <br />
 <h3>バックトレースを表示する</h3><br />
 <br />
 自分が今、プログラムのどの関数を実行しているのか知りたい場合、backtraceコマンドを使います。以下はステップ実行してrandom_sort関数に入ってbacktraceを実行した様子です。<br />
 <br />
-<pre class="code">(gdb) backtrace<br />
-#0  random_sort (arr=0xbfffed24, n=5) at random_sort.c:15<br />
-#1  0x00001fb3 in main (argc=1, argv=0xbfffed74) at random_sort.c:28<br />
+<pre class="code">(gdb) backtrace
+#0  random_sort (arr=0xbfffed24, n=5) at random_sort.c:15
+#1  0x00001fb3 in main (argc=1, argv=0xbfffed74) at random_sort.c:28
 (gdb)</pre><br />
 <br />
 このように自分が実行している関数がどこから呼び出されているのかもわかります。<br />
@@ -242,39 +242,39 @@ $2 = {<br />
 <br />
 以下はforループ内でrand関数で生成した数値を監視している様子です。<br />
 <br />
-<pre class="code">(gdb) b random_sort<br />
-Breakpoint 1 at 0x1ef0: file random_sort.c, line 13.<br />
-(gdb) r<br />
-Starting program: /Users/bokkko/programming/c/tips/random_sort/random_sort<br />
-Reading symbols for shared libraries ++. done<br />
-Breakpoint 1, random_sort (arr=0xbfffed24, n=5) at random_sort.c:13<br />
-13        srand(time(NULL));<br />
-(gdb) display rnd<br />
-1: rnd = 0<br />
-(gdb) n<br />
-15        for(i=0;i&lt;n;i++){<br />
-1: rnd = 0<br />
-(gdb)<br />
-16          rnd = rand() % n;<br />
-1: rnd = 0<br />
-(gdb)<br />
-17          temp = arr[i];<br />
-1: rnd = 4<br />
-(gdb)<br />
-18          arr[i] = arr[rnd];<br />
-1: rnd = 4<br />
-(gdb)<br />
-19          arr[rnd] = temp;<br />
-1: rnd = 4<br />
-(gdb)<br />
-15        for(i=0;i&lt;n;i++){<br />
-1: rnd = 4<br />
-(gdb)<br />
-16          rnd = rand() % n;<br />
-1: rnd = 4<br />
-(gdb)<br />
-17          temp = arr[i];<br />
-1: rnd = 2<br />
+<pre class="code">(gdb) b random_sort
+Breakpoint 1 at 0x1ef0: file random_sort.c, line 13.
+(gdb) r
+Starting program: /Users/bokkko/programming/c/tips/random_sort/random_sort
+Reading symbols for shared libraries ++. done
+Breakpoint 1, random_sort (arr=0xbfffed24, n=5) at random_sort.c:13
+13        srand(time(NULL));
+(gdb) display rnd
+1: rnd = 0
+(gdb) n
+15        for(i=0;i&lt;n;i++){
+1: rnd = 0
+(gdb)
+16          rnd = rand() % n;
+1: rnd = 0
+(gdb)
+17          temp = arr[i];
+1: rnd = 4
+(gdb)
+18          arr[i] = arr[rnd];
+1: rnd = 4
+(gdb)
+19          arr[rnd] = temp;
+1: rnd = 4
+(gdb)
+15        for(i=0;i&lt;n;i++){
+1: rnd = 4
+(gdb)
+16          rnd = rand() % n;
+1: rnd = 4
+(gdb)
+17          temp = arr[i];
+1: rnd = 2
 (gdb)</pre><br />
 <br />
 このように変数の内容がどこでどう変更されたかがわかります。nはnextコマンドのエイリアスで、プログラムの次の行を実行します。<br />
@@ -305,24 +305,24 @@ gdbはコマンドラインで使っていると不便に思うことがあり�
 <br />
 上記の配列をランダムに並び替えるプログラムですが、ある方から上記のコードでは均等にランダムにならない、とのご指摘を頂きました。均等にランダムになるには関数random_sortの↓の部分を、<br />
 <br />
-<pre class="code"><br />
-  for(i=0;i&lt;n;i++){                                                                            <br />
-    rnd = rand() % n;                                                                          <br />
-    temp = arr[i];                                                                             <br />
-    arr[i] = arr[rnd];                                                                         <br />
-    arr[rnd] = temp;                                                                           <br />
-  }                                                                                            <br />
+<pre class="code">
+  for(i=0;i&lt;n;i++){                                                                            
+    rnd = rand() % n;                                                                          
+    temp = arr[i];                                                                             
+    arr[i] = arr[rnd];                                                                         
+    arr[rnd] = temp;                                                                           
+  }                                                                                            
 </pre><br />
 <br />
 ↓のようにするのが正しいです。すみませんでした。<br />
 <br />
-<pre class="code"><br />
-  for(i=0;i&lt;n-1;i++){<br />
-    rnd = rand() % (n - i) + i;<br />
-    temp = arr[i];<br />
-    arr[i] = arr[rnd];<br />
-    arr[rnd] = temp;<br />
-  }<br />
+<pre class="code">
+  for(i=0;i&lt;n-1;i++){
+    rnd = rand() % (n - i) + i;
+    temp = arr[i];
+    arr[i] = arr[rnd];
+    arr[rnd] = temp;
+  }
 </pre><br />
 <br />
 また、修正にあたり、<a href="http://www.hyuki.com/d/200510.html#i20051020190000">こちら</a>を参考にさせて頂きました。<br />

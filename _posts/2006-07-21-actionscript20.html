@@ -9,78 +9,78 @@ Flashではそれほど文字列処理をしないのですが、やっぱり、
 <br />
 そんなとき、汎用文字列処理クラスを作っておくと手軽にトークンの切り出しや置換を行うことができます。以下は、KStringクラスの使い方です。KStringクラスの内容は後述します。以下のように手軽に使えます。<br />
 <br />
-<table><tr><td bgcolor="#000000"><code><font color="white"><pre>// 置換<br />
-var s:String = KString.replaceAll("abc","a",-"); // 結果 : -bc<br />
-// トークンの切り出し<br />
-var k:KString = new KString("012-345-678");<br />
-trace(k.getToken("-")); // 結果 : 012 <br />
-trace(k.getToken("-")); // 結果 : 345 <br />
-trace(k.getToken("-")); // 結果 : 678 <br />
+<table><tr><td bgcolor="#000000"><code><font color="white"><pre>// 置換
+var s:String = KString.replaceAll("abc","a",-"); // 結果 : -bc
+// トークンの切り出し
+var k:KString = new KString("012-345-678");
+trace(k.getToken("-")); // 結果 : 012 
+trace(k.getToken("-")); // 結果 : 345 
+trace(k.getToken("-")); // 結果 : 678 
 </pre></font></code></td></tr></table><br />
 そして、以下がKStringクラスのないようです。Flashドキュメントと同じフォルダにコピーしておきます。<br />
-<table><tr><td bgcolor="#000000"><code><font color="white"><pre>// 必ず、"KString.as" という名前で保存。 <br />
-class KString<br />
-{<br />
-    var _str:String;<br />
-    <br />
-    function KString(s:String)<br />
-    {<br />
-        _str = s;<br />
-    }<br />
-    // splitter までの文字列を切り出す。<br />
-    function getToken(splitter:String):String<br />
-    {<br />
-        var i:Number;<br />
-        var ret:String;<br />
-        var len:Number;<br />
-        <br />
-        i   = _str.indexOf(splitter, 0);<br />
-        len = splitter.length;<br />
-        <br />
-        if (i == 0) {<br />
-            ret = _str;<br />
-            _str = "";<br />
-            return ret;<br />
-        } else {<br />
-            // 0123456<br />
-            // abcdefg<br />
-            // indexOf("de")=> 3 len = 2<br />
-            ret  = _str.substr(0, i);<br />
-            _str = _str.substr(i + len);<br />
-            return ret;<br />
-        }<br />
-    }<br />
-    // findStr を replaceStr に置換する（自身を非破壊）<br />
-    function replace(findStr:String, replaceStr:String):String<br />
-    {<br />
-        var i:Number;<br />
-        var len:Number;<br />
-        var ret:String;<br />
-        var tmp:String;<br />
-        len = findStr.length;<br />
-        ret = _str;<br />
-        for (;;) {<br />
-            i   = ret.indexOf(findStr);<br />
-            if (i >= 0) {<br />
-                tmp = ret.substr(0, i);<br />
-                tmp = tmp + replaceStr + ret.substr(i + len);<br />
-                ret = tmp;<br />
-            } else {<br />
-                break;<br />
-            }<br />
-        }<br />
-        return ret;<br />
-    }<br />
-    // findStr を replaceStr に置換する（自身を破壊的に置換）<br />
-    function replaceSelf(findStr:String, replaceStr:String):Void<br />
-    {<br />
-        _str = this.replace(findStr, replaceStr);<br />
-    }<br />
-    // 静的に使える汎用関数<br />
-    static function replaceAll(s:String, findStr:String, replaceStr:String):String<br />
-    {<br />
-        var k:KString = new KString(s);<br />
-        return k.replace(findStr, replaceStr);<br />
-    }<br />
-}<br />
+<table><tr><td bgcolor="#000000"><code><font color="white"><pre>// 必ず、"KString.as" という名前で保存。 
+class KString
+{
+    var _str:String;
+    
+    function KString(s:String)
+    {
+        _str = s;
+    }
+    // splitter までの文字列を切り出す。
+    function getToken(splitter:String):String
+    {
+        var i:Number;
+        var ret:String;
+        var len:Number;
+        
+        i   = _str.indexOf(splitter, 0);
+        len = splitter.length;
+        
+        if (i == 0) {
+            ret = _str;
+            _str = "";
+            return ret;
+        } else {
+            // 0123456
+            // abcdefg
+            // indexOf("de")=> 3 len = 2
+            ret  = _str.substr(0, i);
+            _str = _str.substr(i + len);
+            return ret;
+        }
+    }
+    // findStr を replaceStr に置換する（自身を非破壊）
+    function replace(findStr:String, replaceStr:String):String
+    {
+        var i:Number;
+        var len:Number;
+        var ret:String;
+        var tmp:String;
+        len = findStr.length;
+        ret = _str;
+        for (;;) {
+            i   = ret.indexOf(findStr);
+            if (i >= 0) {
+                tmp = ret.substr(0, i);
+                tmp = tmp + replaceStr + ret.substr(i + len);
+                ret = tmp;
+            } else {
+                break;
+            }
+        }
+        return ret;
+    }
+    // findStr を replaceStr に置換する（自身を破壊的に置換）
+    function replaceSelf(findStr:String, replaceStr:String):Void
+    {
+        _str = this.replace(findStr, replaceStr);
+    }
+    // 静的に使える汎用関数
+    static function replaceAll(s:String, findStr:String, replaceStr:String):String
+    {
+        var k:KString = new KString(s);
+        return k.replace(findStr, replaceStr);
+    }
+}
 </pre></font></code></tr></tr></table>

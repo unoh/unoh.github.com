@@ -8,43 +8,43 @@ title: "railsのテストをevalを駆使して楽しよう"
 <br />
 　　よく似たModel で Userと Admin があるとします。　二つの Model には confirm というメソッドが定義されていて、ユーザ登録をしてメールで送られてくる URLを　をクリックすると status が 'register' から 'confirm' に変更されます。<br />
 <br />
-<pre class="code"><br />
-  class UserTest < Test::Unit::TestCase<br />
-    def test_with_confirm<br />
-      user = User.find(:first, :conditions => ["status = ?", 'register'])<br />
-      user.confirm<br />
-      assert(user.status == 'confirm', 'confirm error')<br />
-    end<br />
-  end<br />
+<pre class="code">
+  class UserTest < Test::Unit::TestCase
+    def test_with_confirm
+      user = User.find(:first, :conditions => ["status = ?", 'register'])
+      user.confirm
+      assert(user.status == 'confirm', 'confirm error')
+    end
+  end
 </pre><br />
 <br />
 というテストをUserTest　と AdminTest に書きます。<br />
 <br />
 しかし以下のような moduleを継承しておくと DRYに書けます<br />
 <br />
-<pre class="code"><br />
-  module UserModelTestHelper<br />
-    def get_class<br />
-      k = self.class.to_s.gsub(/Test$/, '')<br />
-      eval k<br />
-    end<br />
-    def test_with_confirm<br />
-      user = get_class.find(:first, :conditions => ["status = ?", 'register'])<br />
-      user.confirm<br />
-      assert(user.status == 'confirm', 'confirm error')<br />
-    end<br />
-  end<br />
+<pre class="code">
+  module UserModelTestHelper
+    def get_class
+      k = self.class.to_s.gsub(/Test$/, '')
+      eval k
+    end
+    def test_with_confirm
+      user = get_class.find(:first, :conditions => ["status = ?", 'register'])
+      user.confirm
+      assert(user.status == 'confirm', 'confirm error')
+    end
+  end
 </pre><br />
 <br />
 このようなクラスを定義しておくと module を incude するだけで 勝手にテストが生成されます。<br />
 <br />
-<pre class="code"><br />
-  class TestUser < Test::Unit::TestCase<br />
-    include UserModelTestHelper <br />
-  end<br />
-  class TestAdmin < Test::Unit::TestCase<br />
-    include UserModelTestHelper<br />
-  end<br />
+<pre class="code">
+  class TestUser < Test::Unit::TestCase
+    include UserModelTestHelper 
+  end
+  class TestAdmin < Test::Unit::TestCase
+    include UserModelTestHelper
+  end
 </pre><br />
 <br />
 　同じような 共通のテストは UserModelTestHelperにどんどん追加するだけです。<br />

@@ -25,45 +25,45 @@ Pythonには標準でDocTestという仕組みが付いています。詳細は<
 <br />
 <p><br />
 さっそくDocTestを試してみましょう。次のようなFooクラスを用意します。<br />
-<pre class="code"><code>&lt;?php<br />
-class Foo<br />
-{<br />
-    function bar()<br />
-    {<br />
-        <span style="color:#F00;">/*** eq('bar', Foo::bar()); */</span><br />
-        return 'bar';<br />
-    }<br />
-    function baz()<br />
-    {<br />
-        <span style="color:#F00;">/*** #pass */</span><br />
-    }<br />
-}<br />
+<pre class="code"><code>&lt;?php
+class Foo
+{
+    function bar()
+    {
+        <span style="color:#F00;">/*** eq('bar', Foo::bar()); */</span>
+        return 'bar';
+    }
+    function baz()
+    {
+        <span style="color:#F00;">/*** #pass */</span>
+    }
+}
 </code></pre><br />
 「<code><span style="color:#F00;">/*** … */</span></code>」で囲まれた箇所がDocTestのテストケースとして処理されることになります。今はテストしないとか、テストコードをまだ書いていない場合は「#pass」と書いておけばスキップされます。<br />
 </p><br />
 <br />
 <p><br />
 次に、テストを実行するためのtest.phpを準備します。<br />
-<pre class="code"><code>&lt;?php<br />
-require_once 'path/to/rhaco/Rhaco.php';<br />
-Rhaco::import('util.DocTest');<br />
-DocTest::execute('Foo.php');<br />
+<pre class="code"><code>&lt;?php
+require_once 'path/to/rhaco/Rhaco.php';
+Rhaco::import('util.DocTest');
+DocTest::execute('Foo.php');
 </code></pre><br />
 </p><br />
 <br />
 <p><br />
 そして、test.phpを実行してみます。<br />
-<pre class="code"><code>$ php -q test.php<br />
-success: 1 / fail: 0 / pass: 1 / none: 0 / all: 2<br />
-<br />
+<pre class="code"><code>$ php -q test.php
+success: 1 / fail: 0 / pass: 1 / none: 0 / all: 2
+
 (Foo::baz:line. 9)PASS Foo.php</code></pre><br />
 テストが実行されましたね！　試しにFoo::barのテストコードを「<code>/*** eq('barrrr', Foo::bar()); */</code>」に書き換えて実行しなおすと、次のようにきちんとエラーになります。<br />
-<pre class="code"><code>$ php -q test.php<br />
-success: 0 / fail: 1 / pass: 1 / none: 0 / all: 2<br />
-<br />
-(Foo::bar:line. 4)FAIL expectation [string(6) "barrrr"<br />
-] : Result [string(3) "bar"<br />
-]<br />
+<pre class="code"><code>$ php -q test.php
+success: 0 / fail: 1 / pass: 1 / none: 0 / all: 2
+
+(Foo::bar:line. 4)FAIL expectation [string(6) "barrrr"
+] : Result [string(3) "bar"
+]
 (Foo::baz:line. 9)PASS Foo.php</code></pre><br />
 </p><br />
 <br />

@@ -40,50 +40,50 @@ KohanaのORMを紹介したいと思います。<br />
 <p><br />
 &gt;models/user.php&lt;<br />
 </p><br />
-<pre class="code"><br />
-class User_Model extends Base_Model<br />
-{<br />
-    protected $table_name='users';<br />
-    protected $primary_key='user_id';<br />
-    protected $table_columns=array(<br />
-        'user_id'=>'user_id',<br />
-        'category_id'=>'category_id',<br />
-        'status' =>'status',<br />
-        'type'   =>'type'<br />
-    );    <br />
-    protected $foreign_key=array('category_id');<br />
-    protected $has_one=array('user_profile'); //一対一のテーブル(モデル)を定義<br />
-    protected $has_many('user_item'); //一対多のテーブル(モデル)を定義<br />
-    const USER_STATUS_ACTIVE = 1;<br />
-    const USER_TYPE_ONE = 1;    <br />
-    //カラムのカプセル化<br />
-    public function get_user_id() {<br />
-        return $this->item_id;<br />
-    }<br />
-}<br />
+<pre class="code">
+class User_Model extends Base_Model
+{
+    protected $table_name='users';
+    protected $primary_key='user_id';
+    protected $table_columns=array(
+        'user_id'=>'user_id',
+        'category_id'=>'category_id',
+        'status' =>'status',
+        'type'   =>'type'
+    );    
+    protected $foreign_key=array('category_id');
+    protected $has_one=array('user_profile'); //一対一のテーブル(モデル)を定義
+    protected $has_many('user_item'); //一対多のテーブル(モデル)を定義
+    const USER_STATUS_ACTIVE = 1;
+    const USER_TYPE_ONE = 1;    
+    //カラムのカプセル化
+    public function get_user_id() {
+        return $this->item_id;
+    }
+}
 </pre><br />
 <br />
 <p><br />
 みたいなファイルをテーブルの数だけ増やしていきます。<br />
 </p><br />
 &gt;controllers/user.php&lt;<br />
-<pre class="code"><br />
-//一件のレコードを取得<br />
-$user_model = new User_Model();<br />
-$user = $user_model->where(array('user_id'=>$user_id))->find();<br />
-$user_id = $user->get_user_id(); <br />
-//複数のレコードを取得<br />
-$user_model = new User_Model();<br />
-$users = $user_model->where(array('status'=>User_Model::USER_STATUS_ACTIVE))->find_all();<br />
-//レコードをカウント<br />
-$user_model = new User_Model();<br />
-$users = $user_model->where(array('status'=>User_Model::USER_STATUS_ACTIVE))->count_all());<br />
-//クエリの連結<br />
-$user_model = new User_Model();<br />
-$user_model->where(array('status'=>User_Model::USER_STATUS_ACTIVE));<br />
-$user_model->where(array('type'=>User_Model::USER_TYPE_ONE));<br />
-$user_model->order_by('user_id','DESC');<br />
-$users = $user_model->find_all();<br />
+<pre class="code">
+//一件のレコードを取得
+$user_model = new User_Model();
+$user = $user_model->where(array('user_id'=>$user_id))->find();
+$user_id = $user->get_user_id(); 
+//複数のレコードを取得
+$user_model = new User_Model();
+$users = $user_model->where(array('status'=>User_Model::USER_STATUS_ACTIVE))->find_all();
+//レコードをカウント
+$user_model = new User_Model();
+$users = $user_model->where(array('status'=>User_Model::USER_STATUS_ACTIVE))->count_all());
+//クエリの連結
+$user_model = new User_Model();
+$user_model->where(array('status'=>User_Model::USER_STATUS_ACTIVE));
+$user_model->where(array('type'=>User_Model::USER_TYPE_ONE));
+$user_model->order_by('user_id','DESC');
+$users = $user_model->find_all();
 </pre><br />
 <br />
 <p><br />

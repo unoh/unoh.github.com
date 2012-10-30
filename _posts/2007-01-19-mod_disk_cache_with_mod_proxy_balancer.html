@@ -12,33 +12,33 @@ mod_proxy_balancerと mod_disk_cache を利用して、proxyサーバに<br />
 データをキャッシュする手順を紹介します<br />
 <br />
 <br />
-<pre class="code"><code>&lt;VirtualHost * *:443&gt;<br />
-    ServerName example.com   <br />
-    ProxyPass /img ! # cssやイメージファイルは proxyしないでローカル参照<br />
-    ProxyPass /css !<br />
-    &lt;Proxy balancer://web&gt;<br />
-        AddOutputFilterByType DEFLATE text/html text/css application/x-javascript<br />
-        BalancerMember http://10.0.0.1 loadfactor=10 keepalive=On<br />
-        BalancerMember http://10.0.0.2 loadfactor=10 keepalive=On<br />
-        BalancerMember http://10.0.0.3 loadfactor=10 keepalive=On<br />
-        BalancerMember http://10.0.0.4 loadfactor=10 keepalive=On<br />
-    &lt;/Proxy&gt;<br />
-    ProxyPass / balancer://web/ timeout=2<br />
-    # キャッシュの設定<br />
-    &lt;IfModule mod_cache.c&gt;<br />
-        &lt;IfModule mod_disk_cache.c&gt;<br />
-           CacheRoot /usr/local/apache2/cache<br />
-           CacheIgnoreCacheControl On<br />
-           CacheIgnoreHeaders Set-Cookie<br />
-           CacheEnable disk /bin/my_pic/<br />
-           CacheMaxFileSize 1024000<br />
-           CacheMinFileSize 64<br />
-           CacheDefaultExpire 86400<br />
-           CacheDirLevels 5<br />
-           CacheDirLength 3<br />
-        &lt;/IfModule&gt;<br />
-    &lt;/IfModule&gt;<br />
-&lt;/VirtualHost&gt;<br />
+<pre class="code"><code>&lt;VirtualHost * *:443&gt;
+    ServerName example.com   
+    ProxyPass /img ! # cssやイメージファイルは proxyしないでローカル参照
+    ProxyPass /css !
+    &lt;Proxy balancer://web&gt;
+        AddOutputFilterByType DEFLATE text/html text/css application/x-javascript
+        BalancerMember http://10.0.0.1 loadfactor=10 keepalive=On
+        BalancerMember http://10.0.0.2 loadfactor=10 keepalive=On
+        BalancerMember http://10.0.0.3 loadfactor=10 keepalive=On
+        BalancerMember http://10.0.0.4 loadfactor=10 keepalive=On
+    &lt;/Proxy&gt;
+    ProxyPass / balancer://web/ timeout=2
+    # キャッシュの設定
+    &lt;IfModule mod_cache.c&gt;
+        &lt;IfModule mod_disk_cache.c&gt;
+           CacheRoot /usr/local/apache2/cache
+           CacheIgnoreCacheControl On
+           CacheIgnoreHeaders Set-Cookie
+           CacheEnable disk /bin/my_pic/
+           CacheMaxFileSize 1024000
+           CacheMinFileSize 64
+           CacheDefaultExpire 86400
+           CacheDirLevels 5
+           CacheDirLength 3
+        &lt;/IfModule&gt;
+    &lt;/IfModule&gt;
+&lt;/VirtualHost&gt;
 </code></pre><br />
 <br />
 <br />

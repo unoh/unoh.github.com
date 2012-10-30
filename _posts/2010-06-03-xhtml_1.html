@@ -19,23 +19,23 @@ title: "携帯向けXHTML"
 <h3>よく使うものたち</h3><br />
 <ul><br />
 <li>フォントカラー</li><br />
-<pre class="code"><br />
-&lt;span style="color:red;"&gt;赤文字&lt;/span&gt;<br />
-&lt;div style="color:blue;"&gt;青文字&lt;/div&gt;<br />
+<pre class="code">
+&lt;span style="color:red;"&gt;赤文字&lt;/span&gt;
+&lt;div style="color:blue;"&gt;青文字&lt;/div&gt;
 </pre><br />
 <li>center</li><br />
-<pre class="code"><br />
-&lt;div style="text-align:center;"&gt;真ん中に来る文字&lt;/div&gt;<br />
+<pre class="code">
+&lt;div style="text-align:center;"&gt;真ん中に来る文字&lt;/div&gt;
 </pre><br />
 <li>blink</li><br />
-<pre class="code"><br />
-&lt;span style="text-decoration:blink;"&gt;点滅している文字&lt;/span&gt;<br />
+<pre class="code">
+&lt;span style="text-decoration:blink;"&gt;点滅している文字&lt;/span&gt;
 </pre><br />
 <li>ボックス</li><br />
-<pre class="code"><br />
-&lt;div style="background:yellow;margin:0px 5px;border:1px orange solid;"&gt;<br />
-文章<br />
-&lt;/div&gt;<br />
+<pre class="code">
+&lt;div style="background:yellow;margin:0px 5px;border:1px orange solid;"&gt;
+文章
+&lt;/div&gt;
 </pre><br />
 上記の場合、1pxのボーダーに囲まれた左右に少しマージンのあるボックスになりますが、marginとborderは機種によってはきちんと表示されません。<br /><br />
 正しく表示されない場合はただの黄色背景のボックスとして表示されます。<br />
@@ -48,14 +48,14 @@ title: "携帯向けXHTML"
 絵文字の色に注意する必要があります。<br /><br />
 docomoの絵文字のみ色を変更することが出来ますので、意図しない場所で勝手な色にならないよう、普通はspanタグのほうで絵文字以外の部分だけの色を変えるように心がけています。<br />
 <li>フォントサイズ</li><br />
-<pre class="code"><br />
-font-size:xx-large<br />
-font-size:x-large<br />
-font-size:large<br />
-font-size:medium<br />
-font-size:small<br />
-font-size:x-small<br />
-font-size:xx-small<br />
+<pre class="code">
+font-size:xx-large
+font-size:x-large
+font-size:large
+font-size:medium
+font-size:small
+font-size:x-small
+font-size:xx-small
 </pre><br />
 で指定することが多いかと思いますが、docomoの場合large,medium,smallの3パターンしかなかったり、機種によって文字の大きさが異なっていたり、pxで指定する必要があったりとバラバラです。<br /><br />
 ある程度妥協が必要な部分ですが、こだわる場合はいろいろなキャリアや機種で実際に表示させてみるのが一番かと思います。<br />
