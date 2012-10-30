@@ -15,14 +15,14 @@ Amazonなどで使われているような商品を☆の数で評価するス�
 <br />
 HTMLはとてもシンプルで、ULリストを使います。<br />
 <br />
-<pre class="code"><br />
-&lt;ul class="rating onestar"&gt;<br />
-&lt;li class="one"&gt;&lt;a href="#" title="1 Star"&gt;1&lt;/a&gt;&lt;/li&gt;<br />
-&lt;li class="two"&gt;&lt;a href="#" title="2 Stars"&gt;2&lt;/a&gt;&lt;/li&gt;<br />
-&lt;li class="three"&gt;&lt;a href="#" title="3 Stars"&gt;3&lt;/a&gt;&lt;/li&gt;<br />
-&lt;li class="four"&gt;&lt;a href="#" title="4 Stars"&gt;4&lt;/a&gt;&lt;/li&gt;<br />
-&lt;li class="five"&gt;&lt;a href="#" title="5 Stars"&gt;5&lt;/a&gt;&lt;/li&gt;<br />
-&lt;/ul&gt;<br />
+<pre class="code">
+&lt;ul class="rating onestar"&gt;
+&lt;li class="one"&gt;&lt;a href="#" title="1 Star"&gt;1&lt;/a&gt;&lt;/li&gt;
+&lt;li class="two"&gt;&lt;a href="#" title="2 Stars"&gt;2&lt;/a&gt;&lt;/li&gt;
+&lt;li class="three"&gt;&lt;a href="#" title="3 Stars"&gt;3&lt;/a&gt;&lt;/li&gt;
+&lt;li class="four"&gt;&lt;a href="#" title="4 Stars"&gt;4&lt;/a&gt;&lt;/li&gt;
+&lt;li class="five"&gt;&lt;a href="#" title="5 Stars"&gt;5&lt;/a&gt;&lt;/li&gt;
+&lt;/ul&gt;
 </pre><br />
 <br />
 ULタグ自体には、rating と onestar という2つのクラスが指定されていて、ratingは基本的なスタイル指定用です。2番目のonestarで初期値を設定しています。表示したい☆の数に応じて、onestar, twostar, threestar..といったように設定します。<br />
@@ -32,38 +32,38 @@ ULタグ自体には、rating と onestar という2つのクラスが指定さ�
 <br />
 基本的なスタイル指定は次のようになります。<br />
 <br />
-<pre class="code"><br />
-.rating{<br />
-    width:80px;<br />
-    height:16px;<br />
-    margin:0 0 20px 0;<br />
-    padding:0;<br />
-    list-style:none;<br />
-    clear:both;<br />
-    position:relative;<br />
-    background: url(images/star-matrix.gif) no-repeat 0 0;<br />
-}<br />
-ul.rating li {<br />
-    cursor: pointer;<br />
-    /*ie5 mac doesn't like it if the list is floated but ie6 does\*/<br />
-    float:left;<br />
-    /* end hide*/<br />
-    text-indent:-999em;/* hide text*/<br />
-}<br />
-ul.rating li a {<br />
-    position:absolute;<br />
-    left:0;<br />
-    top:0;<br />
-    width:16px;<br />
-    height:16px;<br />
-    text-decoration:none;<br />
-    z-index: 200;<br />
-}<br />
-ul.rating li.one a {left:0}<br />
-ul.rating li.two a {left:16px;}<br />
-ul.rating li.three a {left:32px;}<br />
-ul.rating li.four a {left:48px;}<br />
-ul.rating li.five a {left:64px;}<br />
+<pre class="code">
+.rating{
+    width:80px;
+    height:16px;
+    margin:0 0 20px 0;
+    padding:0;
+    list-style:none;
+    clear:both;
+    position:relative;
+    background: url(images/star-matrix.gif) no-repeat 0 0;
+}
+ul.rating li {
+    cursor: pointer;
+    /*ie5 mac doesn't like it if the list is floated but ie6 does\*/
+    float:left;
+    /* end hide*/
+    text-indent:-999em;/* hide text*/
+}
+ul.rating li a {
+    position:absolute;
+    left:0;
+    top:0;
+    width:16px;
+    height:16px;
+    text-decoration:none;
+    z-index: 200;
+}
+ul.rating li.one a {left:0}
+ul.rating li.two a {left:16px;}
+ul.rating li.three a {left:32px;}
+ul.rating li.four a {left:48px;}
+ul.rating li.five a {left:64px;}
 </pre><br />
 <br />
 ULタグの背景画像として☆を表示して、その上に16x16ピクセルのアンカーをそれぞれの☆の上に並べるイメージです。また、テキストは表示しないので、text-indent:-999em としておきます。以上は、次の画像を見ると少し分かりやすいかもしれません。<br />
@@ -74,33 +74,33 @@ ULタグの背景画像として☆を表示して、その上に16x16ピクセ�
 <br />
 初期状態で表示する☆の数を設定します。「1.HTMLを書く」でULクラスの2番目に指定したものです。表示する☆の数に応じて、背景画像を縦方向に16ピクセルずつずらして表示します。<br />
 <br />
-<pre class="code"><br />
-.nostar {background-position:0 0}<br />
-.onestar {background-position:0 -16px}<br />
-.twostar {background-position:0 -32px}<br />
-.threestar {background-position:0 -48px}<br />
-.fourstar {background-position:0 -64px}<br />
-.fivestar {background-position:0 -80px}<br />
+<pre class="code">
+.nostar {background-position:0 0}
+.onestar {background-position:0 -16px}
+.twostar {background-position:0 -32px}
+.threestar {background-position:0 -48px}
+.fourstar {background-position:0 -64px}
+.fivestar {background-position:0 -80px}
 </pre><br />
 <br />
 <h3>5.CSSを書く(3)</h3><br />
 <br />
 最後にここが最大のポイントなのですが、マウスオーバーで☆の表示が変わるようにhover属性を指定します。☆の数に応じて16ピクセルずつずらすのは先ほどと同じなのですが、widthを80ピクセルにして初期表示の背景画像に重ね合わせて表示します(そのためにz-indexを小さくしています)。<br />
 <br />
-<pre class="code"><br />
-ul.rating li a:hover {<br />
-    z-index:2;<br />
-    width:80px;<br />
-    height:16px;<br />
-    overflow:hidden;<br />
-    left:0;<br />
-    background: url(images/star-matrix.gif) no-repeat 0 0<br />
-}<br />
-ul.rating li.one a:hover {background-position:0 -96px;}<br />
-ul.rating li.two a:hover {background-position:0 -112px;}<br />
-ul.rating li.three a:hover {background-position:0 -128px}<br />
-ul.rating li.four a:hover {background-position:0 -144px}<br />
-ul.rating li.five a:hover {background-position:0 -160px}<br />
+<pre class="code">
+ul.rating li a:hover {
+    z-index:2;
+    width:80px;
+    height:16px;
+    overflow:hidden;
+    left:0;
+    background: url(images/star-matrix.gif) no-repeat 0 0
+}
+ul.rating li.one a:hover {background-position:0 -96px;}
+ul.rating li.two a:hover {background-position:0 -112px;}
+ul.rating li.three a:hover {background-position:0 -128px}
+ul.rating li.four a:hover {background-position:0 -144px}
+ul.rating li.five a:hover {background-position:0 -160px}
 </pre><br />
 <br />
 以上で完成したのが、このサンプルです。<br />

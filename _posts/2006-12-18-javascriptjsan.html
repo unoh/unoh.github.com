@@ -22,100 +22,100 @@ Collection & Copy - JSAN-0.10 - ドキュメント<br />
 <br />
 pprompt.jsという名前だったものをルールに従ってDialog.jsに変更して、lib/Widgetディレクトリに置きました。<br />
 <br />
-<pre class="code"><code>Widget.Dialog-0.01/<br />
- tests/<br />
- lib/<br />
-  Widget/<br />
-   Dialog.js<br />
- README<br />
+<pre class="code"><code>Widget.Dialog-0.01/
+ tests/
+ lib/
+  Widget/
+   Dialog.js
+ README
  MANIFEST</code></pre><br />
 <br />
 そしてDialog.js自体をExample.jsを参考にしながら変更します。といっても変更点はそれほどありませんでした。<br />
 <br />
-<pre class="code"><code>Widget.Dialog.VERSION = '0.01';<br />
+<pre class="code"><code>Widget.Dialog.VERSION = '0.01';
 Widget.Dialog.EXPORT = ['alert', 'confirm', 'prompt', 'close'];</code></pre><br />
 <br />
 バージョン番号と、JSAN.useなどでexportできる関数を指定するぐらいです。そして、Perlで良く使われるPOD(Plain Old Document)形式で各種コメントを書いておきます。<br />
 <br />
-<pre class="code"><code>/*<br />
- <br />
-=head1 NAME<br />
- <br />
-Widget.Dialog - Simple Dialog Library<br />
- <br />
-=head1 SYNOPSIS<br />
- <br />
-// Functional Example<br />
-Widget.Dialog.alert('Alert!!!');<br />
-Widget.Dialog.confirm('Confirm!!!');<br />
-Widget.Dialog.prompt('Prompt!!!');<br />
- <br />
-（略）<br />
- <br />
-=cut<br />
- <br />
+<pre class="code"><code>/*
+ 
+=head1 NAME
+ 
+Widget.Dialog - Simple Dialog Library
+ 
+=head1 SYNOPSIS
+ 
+// Functional Example
+Widget.Dialog.alert('Alert!!!');
+Widget.Dialog.confirm('Confirm!!!');
+Widget.Dialog.prompt('Prompt!!!');
+ 
+（略）
+ 
+=cut
+ 
 */</code></pre><br />
 <br />
 次にテストを書きます。JSANには便利なテスト用のライブラリが揃っていて、使い方は見た感じ簡単そうです。（というか難しい機能は分かってない）<br />
 <br />
-<pre class="code"><code>var test = new Test.Builder();<br />
-test.plan({tests: 1});<br />
- <br />
-Widget.Dialog.alert('Alert dialog');<br />
-test.ok(document.getElementById('dmsg').innerHTML == 'Alert dialog', 'open alert dialog');<br />
+<pre class="code"><code>var test = new Test.Builder();
+test.plan({tests: 1});
+ 
+Widget.Dialog.alert('Alert dialog');
+test.ok(document.getElementById('dmsg').innerHTML == 'Alert dialog', 'open alert dialog');
 Widget.Dialog.close();</code></pre><br />
 <br />
 Test.Builderのplanメソッドにテストの個数を指定します。そしてokメソッドの第一引数に結果がtrueになるようにテストを書き、第二引数にテストの名前（メッセージ）を書きます。<br />
 <br />
 上記のテストの場合、テスト結果はブラウザに下記のように出ました。<br />
 <br />
-<pre class="code"><code>1..1<br />
+<pre class="code"><code>1..1
 ok 1 - open alert dialog</code></pre><br />
 <br />
 おお、これは簡単だし便利そう。Widget.Dialogのテストをopen.htmlとして書いてみました。<br />
 <br />
-<pre class="code"><code>var test = new Test.Builder();<br />
-test.plan({tests: 4});<br />
- <br />
-Widget.Dialog.alert('Alert dialog');<br />
-test.ok(document.getElementById('dmsg').innerHTML == 'Alert dialog', 'open alert dialog');<br />
-Widget.Dialog.close();<br />
- <br />
-Widget.Dialog.confirm('Confirm dialog');<br />
-test.ok(document.getElementById('dmsg').innerHTML == 'Confirm dialog', 'open confirm dialog');<br />
-Widget.Dialog.close();<br />
- <br />
-Widget.Dialog.prompt('Prompt dialog');<br />
-test.ok(document.getElementById('dmsg').innerHTML == 'Prompt dialog', 'open prompt dialog');<br />
-Widget.Dialog.close();<br />
- <br />
-Widget.Dialog.prompt('Prompt dialog');<br />
-document.getElementById('dinput').value = 'foo bar baz';<br />
-test.ok(document.getElementById('dinput').value == 'foo bar baz', 'input value');<br />
+<pre class="code"><code>var test = new Test.Builder();
+test.plan({tests: 4});
+ 
+Widget.Dialog.alert('Alert dialog');
+test.ok(document.getElementById('dmsg').innerHTML == 'Alert dialog', 'open alert dialog');
+Widget.Dialog.close();
+ 
+Widget.Dialog.confirm('Confirm dialog');
+test.ok(document.getElementById('dmsg').innerHTML == 'Confirm dialog', 'open confirm dialog');
+Widget.Dialog.close();
+ 
+Widget.Dialog.prompt('Prompt dialog');
+test.ok(document.getElementById('dmsg').innerHTML == 'Prompt dialog', 'open prompt dialog');
+Widget.Dialog.close();
+ 
+Widget.Dialog.prompt('Prompt dialog');
+document.getElementById('dinput').value = 'foo bar baz';
+test.ok(document.getElementById('dinput').value == 'foo bar baz', 'input value');
 Widget.Dialog.close();</code></pre><br />
 <br />
 結果。<br />
 <br />
-<pre class="code"><code>1..4<br />
-ok 1 - open alert dialog<br />
-ok 2 - open confirm dialog<br />
-ok 3 - open prompt dialog<br />
+<pre class="code"><code>1..4
+ok 1 - open alert dialog
+ok 2 - open confirm dialog
+ok 3 - open prompt dialog
 ok 4 - input value</code></pre><br />
 <br />
 良さそうです。<br />
 さらに、このように作ったテストのHTMLを続けて実行できるのがTest.Harness.Browserです。index.htmlとして下記のように書いてみます。<br />
 <br />
-<pre class="code"><code>var jsan = new JSAN('lib');<br />
-jsan.use('Test.Harness.Browser');<br />
-new Test.Harness.Browser().runTests(<br />
-  'open.html'<br />
+<pre class="code"><code>var jsan = new JSAN('lib');
+jsan.use('Test.Harness.Browser');
+new Test.Harness.Browser().runTests(
+  'open.html'
 );</code></pre><br />
 <br />
 これだとopen.html一個しか無いのであんまり良さがわからないですが、runTestsメソッドにテストのhtmlをいくつも書けるのでテストが増えた場合は便利そうです。<br />
 <br />
 結果。<br />
 <br />
-<pre class="code"><code>open.html... ok<br />
+<pre class="code"><code>open.html... ok
 All tests successful. Files=1, Tests=4, 0.235 seconds</code></pre><br />
 <br />
 それぞれのテストページへのリンクも張られていて良さ気です。こんなに手軽なもんが存在するならJSANにアップするとか関係無く使いたかった。今頃知ったことを後悔しました・・・。<br />
@@ -124,54 +124,54 @@ All tests successful. Files=1, Tests=4, 0.235 seconds</code></pre><br />
 <br />
 Module::Build::JSANのインストール。<br />
 <br />
-<pre class="code"><code>$ perl -MCPAN -e shell<br />
+<pre class="code"><code>$ perl -MCPAN -e shell
 cpan&gt; install Module::Build::JSAN</code></pre><br />
 <br />
 Module::Build, Module::Build::JSANのドキュメントに従ってBuild.PLファイルを作成します。<br />
 <br />
-<pre class="code"><code>#!/usr/bin/env perl<br />
-use strict;<br />
-use Module::Build::JSAN;<br />
- <br />
-my $build = Module::Build::JSAN-&gt;new(<br />
-    module_name =&gt; 'Widget.Dialog',<br />
-    license     =&gt; 'gpl',<br />
-    dist_author =&gt; 'Masaki Komagata &lt;komagata@gmail.com&gt;',<br />
-    keywords    =&gt; [qw(Widget Dialog)],<br />
-    requires    =&gt; {},<br />
-);<br />
- <br />
+<pre class="code"><code>#!/usr/bin/env perl
+use strict;
+use Module::Build::JSAN;
+ 
+my $build = Module::Build::JSAN-&gt;new(
+    module_name =&gt; 'Widget.Dialog',
+    license     =&gt; 'gpl',
+    dist_author =&gt; 'Masaki Komagata &lt;komagata@gmail.com&gt;',
+    keywords    =&gt; [qw(Widget Dialog)],
+    requires    =&gt; {},
+);
+ 
 $build->create_build_script;</code></pre><br />
 <br />
 これで大体準備完了です。ディレクトリ構成はこんな感じです。<br />
 <br />
-<pre class="code"><code>$ tree<br />
-.<br />
-|-- Build.PL<br />
-|-- MANIFEST<br />
-|-- README<br />
-|-- doc<br />
-|-- lib<br />
-|   `-- Widget<br />
-|       `-- Dialog.js<br />
-`-- tests<br />
-    |-- index.html<br />
-    |-- lib<br />
-    |   |-- JSAN.js<br />
-    |   `-- Test<br />
-    |       |-- Base.js<br />
-    |       |-- Builder.js<br />
-    |       |-- Harness<br />
-    |       |   `-- Browser.js<br />
-    |       |-- Harness.js<br />
-    |       `-- Simple.js<br />
-    `-- open.html<br />
- <br />
+<pre class="code"><code>$ tree
+.
+|-- Build.PL
+|-- MANIFEST
+|-- README
+|-- doc
+|-- lib
+|   `-- Widget
+|       `-- Dialog.js
+`-- tests
+    |-- index.html
+    |-- lib
+    |   |-- JSAN.js
+    |   `-- Test
+    |       |-- Base.js
+    |       |-- Builder.js
+    |       |-- Harness
+    |       |   `-- Browser.js
+    |       |-- Harness.js
+    |       `-- Simple.js
+    `-- open.html
+ 
 7 directories, 12 files</code></pre><br />
 <br />
 そしてパッケージを作成します。<br />
 <br />
-<pre class="code"><code>$ perl Build.PL<br />
+<pre class="code"><code>$ perl Build.PL
 $ ./Build dist</code></pre><br />
 <br />
 できたパッケージを<a href="http://master.openjsan.org/jause/index.html">JAUSE</a>(JavaScript Authors Upload Server)を使ってアップします。（PerlのPAUSEみたいなもの）<br />

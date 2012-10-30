@@ -6,82 +6,82 @@ title: "サーバ情報を収集する Ruby スクリプトを書くには"
 <br />
 facter はサーバのホスト名、IP アドレス、OS、ハードウェアなど様々な情報を収集するためのツールです。RPM では「facter」というパッケージ名で提供されており 「yum install facter」 でインストールが可能です。インストール後はターミナルから 「facter」 というコマンド(※2) を実施するだけでサーバの色々な情報を一度に取得することができます。<br />
 <br />
-<pre class="code"><br />
-$ facter <br />
-(... snip ...)<br />
-architecture => x86_64<br />
-domain => local.hoge.bar.net<br />
-(... snip ...)<br />
-ipaddress_eth0 => 10.x.y.z<br />
-processor0 => Intel(R) Xeon(R) CPU           E5504  @ 2.00GHz<br />
-memorysize => 8.04 GB<br />
-(... snip ...)<br />
+<pre class="code">
+$ facter 
+(... snip ...)
+architecture => x86_64
+domain => local.hoge.bar.net
+(... snip ...)
+ipaddress_eth0 => 10.x.y.z
+processor0 => Intel(R) Xeon(R) CPU           E5504  @ 2.00GHz
+memorysize => 8.04 GB
+(... snip ...)
 </pre><br />
 <br />
 facter を rpm でインストールすると ruby 用のインターフェイスとして Facter というモジュールが /usr/lib/ruby/site_ruby/<version> 配下にインストールされます。Ruby スクリプトの中で使用するにはこの Facter モジュールを require した後に、任意のクラスに include すれば OK です。コマンドラインから取得できる情報は Facter.value(:要素名) で取得可能です。以下に基本的なサーバを示すクラスとして「BaseServer」を定義した後、そのサブクラスであるWeb サーバ専用クラス「HttpdServer」, Mysql サーバクラス「MysqldServer」を定義したコードを紹介します。<br />
 <br />
 ■facter を rpm でインストールすると Ruby 用に Facter module がインストールされる<br />
 <br />
-<pre class="code"><br />
-$ rpm -ql facter | grep rb$ <br />
-/usr/lib/ruby/site_ruby/1.8/facter.rb<br />
-(... snip ...)<br />
-$ grep -r Facter /usr/lib/ruby/site_ruby/1.8 | grep module<br />
-/usr/lib/ruby/site_ruby/1.8/facter.rb:module Facter<br />
+<pre class="code">
+$ rpm -ql facter | grep rb$ 
+/usr/lib/ruby/site_ruby/1.8/facter.rb
+(... snip ...)
+$ grep -r Facter /usr/lib/ruby/site_ruby/1.8 | grep module
+/usr/lib/ruby/site_ruby/1.8/facter.rb:module Facter
 </pre><br />
 <br />
 ■基本的なサーバを表すクラスとして「BaseServer」クラスを作成する<br />
 <br />
-<pre class="code"><br />
-require 'facter' <br />
-class BaseServer<br />
-  include Facter<br />
-  attr_accessor :name, :role, :ipaddress<br />
-  def initialize(*)<br />
-    @name = Facter.value(:fqdn)<br />
-    @role = self.class.name<br />
-    @ipaddress = Facter.value(:ipaddress)<br />
-  end<br />
-  def getKernel<br />
-    return Facter.value(:kernelrelease)<br />
-  end<br />
-  def getUptime<br />
-    return Facter.value(:uptime)<br />
-  end<br />
-end<br />
+<pre class="code">
+require 'facter' 
+class BaseServer
+  include Facter
+  attr_accessor :name, :role, :ipaddress
+  def initialize(*)
+    @name = Facter.value(:fqdn)
+    @role = self.class.name
+    @ipaddress = Facter.value(:ipaddress)
+  end
+  def getKernel
+    return Facter.value(:kernelrelease)
+  end
+  def getUptime
+    return Facter.value(:uptime)
+  end
+end
 </pre><br />
 <br />
 ■ Web サーバクラスを「BaseServer」のサブクラスとして作成する<br />
 <br />
-<pre class="code"><br />
-require 'BaseServer'<br />
-class BaseServer::HttpdServer < BaseServer<br />
-  def getApacheStatus<br />
-    (... snip ...)<br />
-  end<br />
-end<br />
+<pre class="code">
+require 'BaseServer'
+class BaseServer::HttpdServer < BaseServer
+  def getApacheStatus
+    (... snip ...)
+  end
+end
 </pre><br />
 <br />
 ■ Mysqld サーバクラスを「BaseServer」のサブクラスとして作成する(※別途 ruby-mysql を使用し、専用のインスタンス変数を準備する)<br />
 <br />
-<pre class="code"><br />
-require 'BaseServer'<br />
-require 'mysql'<br />
-class BaseServer::MysqldServer < BaseServer<br />
-  attr_accessor :host, :user, :pass, :database<br />
-  def initialize(host, user, pass, database)<br />
-    super<br />
-    @host = host<br />
-    @user = user<br />
-    @pass = pass<br />
-    @database = database<br />
-  end<br />
-  def countTable(table)<br />
-    my = Mysql::new(host, user, pass, database)<br />
-    res = my.query("select count(*) from #{table}")<br />
-    return res<br />
-  end<br />
-end<br />
+<pre class="code">
+require 'BaseServer'
+require 'mysql'
+class BaseServer::MysqldServer < BaseServer
+  attr_accessor :host, :user, :pass, :database
+  def initialize(host, user, pass, database)
+    super
+    @host = host
+    @user = user
+    @pass = pass
+    @database = database
+  end
+  def countTable(table)
+    my = Mysql::new(host, user, pass, database)
+    res = my.query("select count(*) from #{table}")
+    return res
+  end
+end
 </pre><br />
 <br />
 以上、サーバ情報収集ツールを Ruby で書いている方の参考になれば幸いです。<br />

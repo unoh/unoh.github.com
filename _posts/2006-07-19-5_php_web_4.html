@@ -12,50 +12,50 @@ title: "5分でわかる PHP で書かれた Web サービスの国際化(その
 <br />
 たとえば写真が複数並んでいる箇所の「写真」と写真がひとつしか表示されない部分の「写真」とでは、日本語では同じ「写真」ですが、英語版では、前者は Photos で後者は Photo と表示しなければなりません。メッセージファイルでは以下のように別々に定義しておく必要があります。<br />
 <br />
-<pre class="source_code"><br />
-#<br />
-# 日本語メッセージファイル<br />
-#<br />
-msgid "Photos"<br />
-msgstr "写真"<br />
-msgid "Photo"<br />
-msgstr "写真"<br />
+<pre class="source_code">
+#
+# 日本語メッセージファイル
+#
+msgid "Photos"
+msgstr "写真"
+msgid "Photo"
+msgstr "写真"
 </pre><br />
 <br />
 <strong>msgid には、そのまま表示されてしまっても大丈夫なように、意味の通る英語を使う</strong><br />
 <br />
-<pre class="source_code"><br />
-#<br />
-# 日本語メッセージファイル<br />
-#<br />
-msgid "menu1"<br />
-msgstr "ファイル"<br />
-msgid "menu2"<br />
-msgstr "編集"<br />
+<pre class="source_code">
+#
+# 日本語メッセージファイル
+#
+msgid "menu1"
+msgstr "ファイル"
+msgid "menu2"
+msgstr "編集"
 </pre><br />
 <br />
 のように定義したとします。「ファイル」と表示するブログラム部分では、gettext('menu1') を表示させるわけですが、万一対応する msgstr がメッセージファイルにみつからない場合、msgid である、意味がまったく不明な「menu1」が表示されてしまいます。そのようなことにならないよう、<br />
 <br />
-<pre class="source_code"><br />
-#<br />
-# 日本語メッセージファイル<br />
-#<br />
-msgid "File"<br />
-msgstr "ファイル"<br />
-msgid "Edit"<br />
-msgstr "編集"<br />
+<pre class="source_code">
+#
+# 日本語メッセージファイル
+#
+msgid "File"
+msgstr "ファイル"
+msgid "Edit"
+msgstr "編集"
 </pre><br />
 <br />
 のように、意味の通る英語で msgid を定義しておきます。英語メッセージファイルが<br />
 <br />
-<pre class="source_code"><br />
-#<br />
-# 英語メッセージファイル<br />
-#<br />
-msgid "File"<br />
-msgstr "File"<br />
-msgid "Edit"<br />
-msgstr "Edit"<br />
+<pre class="source_code">
+#
+# 英語メッセージファイル
+#
+msgid "File"
+msgstr "File"
+msgid "Edit"
+msgstr "Edit"
 </pre><br />
 <br />
 のように msgid と msgstr がまったく同じになるのが理想です。<br />

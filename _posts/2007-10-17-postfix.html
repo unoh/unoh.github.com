@@ -11,8 +11,8 @@ title: "PostfixでSMTP EHLOコマンドで送るドメイン名を変更する�
 <br />
 <p>設定方法は、とても簡単でPostfixの設定ファイルmain.cf（Fedora Coreの場合は、/etc/postfix/main.cf）に、次の行を追加するだけです。</p><br />
 <br />
-<pre class="code"><br />
-smtp_helo_name = ドメイン名<br />
+<pre class="code">
+smtp_helo_name = ドメイン名
 </pre><br />
 <br />
 <p>この設定を保存後、Postfixを再起動することで有効になります。</p><br />
@@ -22,16 +22,16 @@ smtp_helo_name = ドメイン名<br />
 <br />
 <p>設定方法は、Postfixのheader_checks（Fedora Coreの場合は、/etc/postfix/header_checks）というファイルに設定を追加する必要がありますが、例えば次のように追加します。</p><br />
 <br />
-<pre class="code"><br />
-/^Received: by s1.server.unoh.net.*/ IGNORE<br />
+<pre class="code">
+/^Received: by s1.server.unoh.net.*/ IGNORE
 </pre><br />
 <br />
 <p>この例は、Recevied by: s1.server.unoh.netで始めるメールヘッダを破棄するという設定例になります。もちろん見ての通り、破棄する対象のメールヘッダの設定は正規表現でも記述することができます。</p><br />
 <br />
 <p>あとは、main.cfにheader_checksを読み込むように追加するだけです。</p><br />
 <br />
-<pre class="code"><br />
-header_checks = regexp:/etc/postfix/header_checks<br />
+<pre class="code">
+header_checks = regexp:/etc/postfix/header_checks
 </pre><br />
 <br />
 <p>Postfixはこのような柔軟な設定に加えて、パフォーマンスも非常によいのでウノウでは頻繁に利用しています。</p><br />

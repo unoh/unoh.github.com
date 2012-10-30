@@ -10,54 +10,54 @@ title: "5分でわかる PHP で書かれた Web サービスの国際化(その
 <br />
 エラーメッセージで「○○は△△文字以上です。」と表示したいとき、<br />
 <br />
-<pre class="source_code"><br />
-msgid "%1$s has exceeded the limited capacity of %2$s characters."<br />
-msgstr "%1$sが%2$s文字以上です。"<br />
-msgid "Your Comment"<br />
-msgstr "コメント"<br />
+<pre class="source_code">
+msgid "%1$s has exceeded the limited capacity of %2$s characters."
+msgstr "%1$sが%2$s文字以上です。"
+msgid "Your Comment"
+msgstr "コメント"
 </pre><br />
 <br />
 という日本語のメッセージファイルを用意し、実際に表示するときは、プログラムで<br />
 <br />
-<pre class="source_code"><br />
-$message =  gettext('%1$s has exceeded the limited capacity of %2$s characters.');<br />
-$item = gettext('Your Comment')<br />
-printf($message, $item, 200);<br />
+<pre class="source_code">
+$message =  gettext('%1$s has exceeded the limited capacity of %2$s characters.');
+$item = gettext('Your Comment')
+printf($message, $item, 200);
 </pre><br />
 <br />
 というように printf を使います。printf の第1引数 $item が言語が日本語なら「コメント」になり、$format の %1$s に入るわけです。第2引数の200は %2$s に代入されるので、結果として日本語では、「コメントが200文字以上です。」と表示されます。<br />
 <br />
 gettext では msgid に対応するその言語の msgstr が呼びだされますが、もし対応するメッセージファイルがない場合、あるいは msgstr が定義されていないときには、msgid がそのまま表示されます。ですから、msgid は万一表示されてしまっても構わないように、きちんと意味の通じる英語にしておくべきです。たとえば、<br />
 <br />
-<pre class="source_code"><br />
-Add favorite msg1<br />
+<pre class="source_code">
+Add favorite msg1
 </pre><br />
 <br />
 といった無意味な msgid は避けるべきでしょう。<br />
 <br />
 次に、良く問題となる名前の表示部分。姓と名がどちらが先かという順番は国ごとに異なるので、表示部分をメッセージファイルで以下のように定義します。<br />
 <br />
-<pre class="source_code"><br />
-#<br />
-# 英語メッセージファイル<br />
-#<br />
-msgid "%1$s %2$s"<br />
-msgstr "%1$s %2$s"<br />
+<pre class="source_code">
+#
+# 英語メッセージファイル
+#
+msgid "%1$s %2$s"
+msgstr "%1$s %2$s"
 </pre><br />
 <br />
-<pre class="source_code"><br />
-#<br />
-# 日本語メッセージファイル<br />
-#<br />
-msgid "%1$s %2$s"<br />
-msgstr "%2$s %1$s"<br />
+<pre class="source_code">
+#
+# 日本語メッセージファイル
+#
+msgid "%1$s %2$s"
+msgstr "%2$s %1$s"
 </pre><br />
 <br />
 プログラム中では<br />
 <br />
-<pre class="source_code"><br />
-$name = gettext('%1$s %2$s')<br />
-printf($name, $first_name, $last_name);<br />
+<pre class="source_code">
+$name = gettext('%1$s %2$s')
+printf($name, $first_name, $last_name);
 </pre><br />
 <br />
 のように呼びだします。<br />

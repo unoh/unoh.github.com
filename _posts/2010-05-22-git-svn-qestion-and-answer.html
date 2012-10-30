@@ -61,7 +61,7 @@ git-svn利用時に.gitignoreをコミットしていいかについては話し
 私の場合、見えていたリポジトリと見えてないリポジトリがありました。<br />
 リポジトリ間の設定を目diffして見えていない側に追加したところ、見えていなかった側からshow-externalsが見えるようになりました。<br />
 ここはちょっとよくわからないです。svn側がtrunk決め打ちの人しか下記追加は当てはまらないと思います。<br />
-<pre class="code">$ git config --add svn-remote.svn.url svn+ssh://example.com/path/to/repository/trunk<br />
+<pre class="code">$ git config --add svn-remote.svn.url svn+ssh://example.com/path/to/repository/trunk
 $ git config --add svn-remote.svn.fetch :refs/remotes/git-svn</pre><br />
 <br />
 同じプロジェクトで同じ開発マシンを使っているのにshow-externalsが見えない人もいました。原因を探す余裕がない場合は別の手段をとるしかないでしょう。git submodule使うとか、git cloneして放り込んでignoreとか、動く手段を探してください。<br />
@@ -75,18 +75,18 @@ $ git config --add svn-remote.svn.fetch :refs/remotes/git-svn</pre><br />
 <br />
 ローカルのgitリポジトリにコミットしたあと、<br />
 <br />
-<pre class="code">$ git branch //今のブランチを確認<br />
- * 000_TOPIC_BRANCH<br />
-   master<br />
-$ git diff //差分ないことを確認<br />
-$ git checkout master<br />
-$ git branch //今のブランチを確認<br />
-   000_TOPIC_BRANCH<br />
- * master<br />
-$ git svn rebase //svn update相当<br />
-$ git merge --no-ff --no-commit 000_TOPIC_BRANCH<br />
-$ git add .<br />
-$ git commit -v<br />
+<pre class="code">$ git branch //今のブランチを確認
+ * 000_TOPIC_BRANCH
+   master
+$ git diff //差分ないことを確認
+$ git checkout master
+$ git branch //今のブランチを確認
+   000_TOPIC_BRANCH
+ * master
+$ git svn rebase //svn update相当
+$ git merge --no-ff --no-commit 000_TOPIC_BRANCH
+$ git add .
+$ git commit -v
 $ git svn dcommit</pre><br />
 <br />
 できました！<br />

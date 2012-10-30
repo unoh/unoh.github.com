@@ -23,8 +23,8 @@ monitは プロセスの監視を行うデーモンです。 条件とそれに�
 </ul><br />
 <br />
 <p>これらを組み合わせて、プロセスの監視を行います。とくにユーザが作成したプログラムの監視などに効果を発揮します。インストールは RedHat系なら</p><br />
-<pre class="code"><br />
-yum install monit<br />
+<pre class="code">
+yum install monit
 </pre><br />
 <p><br />
 で入ります。(CentOSや商用のRedHatはrpmforgeをリポジトリとして追加する必要があります)<br />
@@ -35,16 +35,16 @@ yum install monit<br />
 </ul><br />
 <p><br />
 になります。簡易的な postfixの監視ファイル postfix.conf は以下のような感じになります。<br />
-</p><pre class="code"><br />
- check process postfix with pidfile /var/run/postmaster.pid<br />
-   start program = "/etc/init.d/postfix start"<br />
-   stop  program = "/etc/init.d/postfix stop"<br />
-   if failed port 25 protocol smtp then restart<br />
+</p><pre class="code">
+ check process postfix with pidfile /var/run/postmaster.pid
+   start program = "/etc/init.d/postfix start"
+   stop  program = "/etc/init.d/postfix stop"
+   if failed port 25 protocol smtp then restart
 </pre><br />
 <br />
 <p>pidの場所を指定して、 startと stopを定義します。monitの起動は</p><br />
-<pre class="code"><br />
-/etc/init.d/monit start <br />
+<pre class="code">
+/etc/init.d/monit start 
 </pre><br />
 <p>で行います。<br />
 <br />

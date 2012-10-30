@@ -19,147 +19,147 @@ XMLの解析には、Googleの<a href="http://code.google.com/p/gdata-objectivec
 <br />
 <h3>リクエスト処理クラス</h3><br />
 リクエスト周りの処理はPosterousRequest.hとPosterousRequest.mにまとめました。<br />
-<pre class="code"><br />
-//<br />
-//  PosterousRequest.h<br />
-//<br />
-<br />
-#import &lt;Foundation/Foundation.h&gt;<br />
-#import "NSData+Additions.h" //Objective Resourceから<br />
-<br />
-@interface PosterousRequest : NSObject {<br />
-	//受信データを保存する変数<br />
-	NSMutableData *receivedData; <br />
-}<br />
-<br />
-@property(nonatomic,retain) NSMutableData *receivedData;<br />
-<br />
-//PosterousのgetSites APIコール<br />
-- (void)getSites:(NSString*)username password:(NSString*)password; <br />
-<br />
-- (void)dealloc;<br />
-<br />
-//受信する時に呼び出される関数<br />
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response;<br />
-<br />
+<pre class="code">
+//
+//  PosterousRequest.h
+//
+
+#import &lt;Foundation/Foundation.h&gt;
+#import "NSData+Additions.h" //Objective Resourceから
+
+@interface PosterousRequest : NSObject {
+	//受信データを保存する変数
+	NSMutableData *receivedData; 
+}
+
+@property(nonatomic,retain) NSMutableData *receivedData;
+
+//PosterousのgetSites APIコール
+- (void)getSites:(NSString*)username password:(NSString*)password; 
+
+- (void)dealloc;
+
+//受信する時に呼び出される関数
+- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response;
+
 @end</pre><br />
 <br />
 PosterousRequest.m<br />
 <br />
-<pre class="code"><br />
-//<br />
-//  PosterousRequest.m<br />
-//<br />
-<br />
-#import "PosterousRequest.h"<br />
-#import "PosterousAppDelegate.h"//アプリケーションのメインコントローラ<br />
-#import "GDataXMLNode.h" //GoogleのXML処理ライブラリ<br />
-<br />
-@implementation PosterousRequest<br />
-<br />
-//@synthesizeはクラスの基本的なgetやset関数を自動的に生成してくれます<br />
-@synthesize receivedData; <br />
-<br />
-/**<br />
- * リクエスト(requestObj)に認証情報をつける関数<br />
- * http://www.wetware.co.nz/blog/2009/02/iphone-uiwebview-http-basic-authentication/<br />
- */<br />
-- (void) addAuthToWebRequest:(NSMutableURLRequest*)requestObj username:(NSString*)username password:(NSString*)password{<br />
-	<br />
-	//ここでobjective resourceのライブラリが使われます<br />
-	NSString *authString = [[[NSString stringWithFormat:@"%@:%@", username, password] dataUsingEncoding:NSUTF8StringEncoding] base64Encoding];<br />
-	<br />
-	authString = [NSString stringWithFormat: @"Basic %@", authString];<br />
-	<br />
-	[requestObj setValue:authString forHTTPHeaderField:@"Authorization"];<br />
-}<br />
-<br />
-/**<br />
- * リクエストを送信する<br />
- */<br />
-- (void)sendRequest:(NSString*)address username:(NSString*)username password:(NSString*)password {<br />
-	<br />
-	//リクエストの初期設定<br />
-	NSString *urlString = [NSString stringWithFormat:address];<br />
-	NSMutableURLRequest *request = [[[NSMutableURLRequest alloc] init] autorelease];<br />
-	[request setURL:[NSURL URLWithString:urlString]];<br />
-	[request setHTTPMethod:@"POST"];<br />
-	<br />
-	//上記のaddAuthToWebRequestで認証情報をリクエストに追加します<br />
-	[self addAuthToWebRequest:request username:username password:password];<br />
-	<br />
-	/*<br />
-	  Bodyなどの設定<br />
-	*/<br />
-<br />
-	NSLog(@"connection attempted");<br />
-	//PS:"@"はchar*をObjective CのNSStringにコンバートします＋Unicode対応をつける<br />
-	<br />
-	[NSURLConnection connectionWithRequest:request delegate:self];<br />
-} <br />
-<br />
-//getSites APIリクエスト<br />
--(void)getSites:(NSString*)username password:(NSString*)password {<br />
-	[self sendRequest:@"https://posterous.com/api/getsites"username:username password:password];<br />
-}<br />
-<br />
-//最初にレスポンスが来たとき一度だけだけ実行されます<br />
-- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {<br />
-<br />
-	//receivedDataを初期化してデータ受信の準備をする<br />
-	receivedData = [[NSMutableData alloc]init];<br />
-	[receivedData setLength:0];<br />
-	NSLog(@"Set received data length to 0");<br />
-	<br />
-	//レスポンスのヘッダー情報をNSLogでコンソールに出力して確認する<br />
-	if ([response respondsToSelector:@selector(allHeaderFields)]) {<br />
-		NSLog(@"response header");<br />
-		NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)response;<br />
-		NSDictionary *dictionary = [httpResponse allHeaderFields];<br />
-		NSLog(@"%@", [dictionary description]);<br />
-	}<br />
-}<br />
-<br />
-//受信したデータをreceivedDataに保存する<br />
--(void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {<br />
-	[receivedData appendData:data];<br />
-}<br />
-<br />
-//レスポンスが終了したときに実行されます<br />
--(void)connectionDidFinishLoading:(NSURLConnection *)connection {<br />
-	NSError *error;<br />
-	NSLog(@"succeeded! received %d bytes of data", [receivedData length]);<br />
-	GDataXMLDocument *doc = [[GDataXMLDocument alloc] initWithData:receivedData options:0 error:&error];<br />
-	if (doc != nil) {<br />
-		/*<br />
-		 ...<br />
-		 レスポンス解析<br />
-		 ...<br />
-		 */<br />
-	}<br />
-<br />
-	/*  <br />
-	  ..<br />
-	  画面遷移処理など<br />
-	  ..<br />
-	*/<br />
-	[doc release];<br />
-	[receivedData release];<br />
-}<br />
-<br />
--(void)dealloc {<br />
-	[receivedData release];<br />
-	[super dealloc];<br />
-}<br />
-<br />
-@end<br />
+<pre class="code">
+//
+//  PosterousRequest.m
+//
+
+#import "PosterousRequest.h"
+#import "PosterousAppDelegate.h"//アプリケーションのメインコントローラ
+#import "GDataXMLNode.h" //GoogleのXML処理ライブラリ
+
+@implementation PosterousRequest
+
+//@synthesizeはクラスの基本的なgetやset関数を自動的に生成してくれます
+@synthesize receivedData; 
+
+/**
+ * リクエスト(requestObj)に認証情報をつける関数
+ * http://www.wetware.co.nz/blog/2009/02/iphone-uiwebview-http-basic-authentication/
+ */
+- (void) addAuthToWebRequest:(NSMutableURLRequest*)requestObj username:(NSString*)username password:(NSString*)password{
+	
+	//ここでobjective resourceのライブラリが使われます
+	NSString *authString = [[[NSString stringWithFormat:@"%@:%@", username, password] dataUsingEncoding:NSUTF8StringEncoding] base64Encoding];
+	
+	authString = [NSString stringWithFormat: @"Basic %@", authString];
+	
+	[requestObj setValue:authString forHTTPHeaderField:@"Authorization"];
+}
+
+/**
+ * リクエストを送信する
+ */
+- (void)sendRequest:(NSString*)address username:(NSString*)username password:(NSString*)password {
+	
+	//リクエストの初期設定
+	NSString *urlString = [NSString stringWithFormat:address];
+	NSMutableURLRequest *request = [[[NSMutableURLRequest alloc] init] autorelease];
+	[request setURL:[NSURL URLWithString:urlString]];
+	[request setHTTPMethod:@"POST"];
+	
+	//上記のaddAuthToWebRequestで認証情報をリクエストに追加します
+	[self addAuthToWebRequest:request username:username password:password];
+	
+	/*
+	  Bodyなどの設定
+	*/
+
+	NSLog(@"connection attempted");
+	//PS:"@"はchar*をObjective CのNSStringにコンバートします＋Unicode対応をつける
+	
+	[NSURLConnection connectionWithRequest:request delegate:self];
+} 
+
+//getSites APIリクエスト
+-(void)getSites:(NSString*)username password:(NSString*)password {
+	[self sendRequest:@"https://posterous.com/api/getsites"username:username password:password];
+}
+
+//最初にレスポンスが来たとき一度だけだけ実行されます
+- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
+
+	//receivedDataを初期化してデータ受信の準備をする
+	receivedData = [[NSMutableData alloc]init];
+	[receivedData setLength:0];
+	NSLog(@"Set received data length to 0");
+	
+	//レスポンスのヘッダー情報をNSLogでコンソールに出力して確認する
+	if ([response respondsToSelector:@selector(allHeaderFields)]) {
+		NSLog(@"response header");
+		NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)response;
+		NSDictionary *dictionary = [httpResponse allHeaderFields];
+		NSLog(@"%@", [dictionary description]);
+	}
+}
+
+//受信したデータをreceivedDataに保存する
+-(void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
+	[receivedData appendData:data];
+}
+
+//レスポンスが終了したときに実行されます
+-(void)connectionDidFinishLoading:(NSURLConnection *)connection {
+	NSError *error;
+	NSLog(@"succeeded! received %d bytes of data", [receivedData length]);
+	GDataXMLDocument *doc = [[GDataXMLDocument alloc] initWithData:receivedData options:0 error:&error];
+	if (doc != nil) {
+		/*
+		 ...
+		 レスポンス解析
+		 ...
+		 */
+	}
+
+	/*  
+	  ..
+	  画面遷移処理など
+	  ..
+	*/
+	[doc release];
+	[receivedData release];
+}
+
+-(void)dealloc {
+	[receivedData release];
+	[super dealloc];
+}
+
+@end
 </pre><br />
 <br />
 実際にコントローラでAPIをコールするときの例：<br />
-<pre class="code"><br />
-posterousRequest = [[PosterousRequest alloc] init];<br />
-[posterousRequest getSites:self.username.text password:self.password.text];<br />
-[posterousRequest release];<br />
+<pre class="code">
+posterousRequest = [[PosterousRequest alloc] init];
+[posterousRequest getSites:self.username.text password:self.password.text];
+[posterousRequest release];
 </pre><br />
 <br />
 以上です！<br />

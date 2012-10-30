@@ -10,19 +10,19 @@ title: "PHPでパスワード文字列を生成"
 <br />
 こんな感じで使えます：<br />
 <br />
-<pre class="source_code"><br />
-$passwd = Text_Password::create();<br />
-echo $passwd;<br />
-// 出力 :<br />
-// praimifrou<br />
+<pre class="source_code">
+$passwd = Text_Password::create();
+echo $passwd;
+// 出力 :
+// praimifrou
 </pre><br />
 <br />
 デフォルトでは覚えやすい（発音可能な）10 文字のパスワードを生成しますが，<br />
 以下のようにすると複雑なパスワードも生成できます：<br />
 <br />
-<pre class="source_code"><br />
-$passwd = Text_Password::create(16, 'unpronounceable');<br />
-echo $passwd;<br />
-// 出力（16文字の発音不可能なパスワード）: <br />
-// mArR99H3ZN#JsuK%<br />
+<pre class="source_code">
+$passwd = Text_Password::create(16, 'unpronounceable');
+echo $passwd;
+// 出力（16文字の発音不可能なパスワード）: 
+// mArR99H3ZN#JsuK%
 </pre>

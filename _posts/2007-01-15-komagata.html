@@ -12,14 +12,14 @@ Javascriptで何か書こうと思ったときにどのライブラリをベー�
 <br />
 どういうことかというと、例えばprototype.jsのObject.extendを使って以下のように書きたいところを・・・<br />
 <br />
-<pre class="code"><code>var dst = {'foo':1, 'bar':2};<br />
-var src = {'foo':100};<br />
+<pre class="code"><code>var dst = {'foo':1, 'bar':2};
+var src = {'foo':100};
 var result = <strong>Object.extend</strong>(dst, src);</code></pre><br />
 <br />
 こんな感じで同じ動作をする無名関数に置き換えるということです。<br />
 <br />
-<pre class="code"><code>var dst = {'foo':1, 'bar':2};<br />
-var src = {'foo':100};<br />
+<pre class="code"><code>var dst = {'foo':1, 'bar':2};
+var src = {'foo':100};
 var result = <strong>(function(d,s){for(var p in s)d[p]=s[p];return d})</strong>(dst, src);</code></pre><br />
 <br />
 コード量が増えるのでやりすぎると遅くなってしまいます。なるべく依存関数を使わずに書いて、どうしても使いたいところだけこうするのが良さそうです。<br />
@@ -44,8 +44,8 @@ var result = <strong>(function(d,s){for(var p in s)d[p]=s[p];return d})</strong>
 <br />
 後でソースを読む人が辛くなるのでこんな感じのコメントを入れておくのも良さそうです。<br />
 <br />
-<pre class="code"><code>var dst = {'foo':1, 'bar':2};<br />
-var src = {'foo':100};<br />
+<pre class="code"><code>var dst = {'foo':1, 'bar':2};
+var src = {'foo':100};
 var result = /** Object.extend */(function(d,s){for(var p in s)d[p]=s[p];return d})/**/(dst, src);</code></pre><br />
 <br />
 こういうセコい関数をたくさんストックしておいてコピペで使うと小さいプログラムを書くのが楽になりそうです。

@@ -67,33 +67,33 @@ title: "ベンチャー流のスパムメール対策術（前編）"
 スパムフィルターの学習を手動で毎回行うのは面倒のため、次のようなシェルスクリプトを作って cron で深夜 0 時に毎日実行するようにしました。<br />
 なお、下記のシェルスクリプトでは、MailDir 形式で spam ディレクトリにスパムメールが存在して、cur ディレクトリ（つまり Inbox）に通常のメールがある前提で作成されていますので注意してください。<br />
 <br />
-<pre class="code"><br />
-#!/bin/sh<br />
-BGFILTER=/usr/bin/bogofilter<br />
-BSFILTER=/opt/bsfilter/bsfilter/bsfilter<br />
-SALEARN=/usr/bin/sa-learn<br />
-MAILDIR=$HOME/Maildir<br />
-<br />
-# spam<br />
-echo "spam for bogofilter..."<br />
-find $MAILDIR/.spam/cur -name "*" -type f -exec nkf -Z -m -j {} \; | kakasi -w | $BGFILTER -Nsv<br />
-echo "spam for bsfilter..."<br />
-$BSFILTER -sv $MAILDIR/.spam/cur/*<br />
-echo "spam for SpamAssasin..."<br />
-$SALEARN --spam $MAILDIR/.spam/cur<br />
-<br />
-echo ""<br />
-<br />
-# not spam<br />
-echo "ham for bogofilter..."<br />
-find $MAILDIR/cur -name "*" -type f -exec nkf -Z -m -j {} \; | kakasi -w | $BGFILTER -Snv<br />
-echo "ham for bsfilter..."<br />
-$BSFILTER -cv $MAILDIR/cur/*<br />
-echo "ham for SpamAssasin..."<br />
-$SALEARN --ham $MAILDIR/cur<br />
-<br />
-# update database<br />
-$BSFILTER -u<br />
+<pre class="code">
+#!/bin/sh
+BGFILTER=/usr/bin/bogofilter
+BSFILTER=/opt/bsfilter/bsfilter/bsfilter
+SALEARN=/usr/bin/sa-learn
+MAILDIR=$HOME/Maildir
+
+# spam
+echo "spam for bogofilter..."
+find $MAILDIR/.spam/cur -name "*" -type f -exec nkf -Z -m -j {} \; | kakasi -w | $BGFILTER -Nsv
+echo "spam for bsfilter..."
+$BSFILTER -sv $MAILDIR/.spam/cur/*
+echo "spam for SpamAssasin..."
+$SALEARN --spam $MAILDIR/.spam/cur
+
+echo ""
+
+# not spam
+echo "ham for bogofilter..."
+find $MAILDIR/cur -name "*" -type f -exec nkf -Z -m -j {} \; | kakasi -w | $BGFILTER -Snv
+echo "ham for bsfilter..."
+$BSFILTER -cv $MAILDIR/cur/*
+echo "ham for SpamAssasin..."
+$SALEARN --ham $MAILDIR/cur
+
+# update database
+$BSFILTER -u
 </pre><br />
 <br />
 <p>このシェルスクリプトを約２週間ほど自動実行して Ham& Spam メールの学習を行いました。<br />

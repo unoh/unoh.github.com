@@ -14,18 +14,18 @@ Webアプリケーションではページングの処理を行うことがよ�
 <br />
 とりあえず、使ってみましょう。(動作確認したVersionは2.4.4です)<br />
 <br />
-<pre class="code"><br />
-require_once('Pager/Pager.php');<br />
-$params = array(<br />
-                'mode' => 'sliding',<br />
-                'delta' => 5,<br />
-                'perPage' => 5,<br />
-                'prevImg' => '&lt;&lt;',<br />
-                'nextImg' => '&gt;&gt;',<br />
-                'totalItems' => '1000'<br />
-                ); <br />
-$pager =& Pager::factory($params);<br />
-echo $pager->links;<br />
+<pre class="code">
+require_once('Pager/Pager.php');
+$params = array(
+                'mode' => 'sliding',
+                'delta' => 5,
+                'perPage' => 5,
+                'prevImg' => '&lt;&lt;',
+                'nextImg' => '&gt;&gt;',
+                'totalItems' => '1000'
+                ); 
+$pager =& Pager::factory($params);
+echo $pager->links;
 </pre><br />
 <br />
 上記のphpスクリプトをブラウザで表示すると、以下のように表示されます。<br />
@@ -55,64 +55,64 @@ PEAR::Pagerでは最初にインスタンスを生成する際にいろんなオ
 <br />
 PEAR::Pagerのソースを読んでみると、Parger.phpのほかにCommon.php、HtmlWidgets.php、Jumping.php、Sliding.phpなどがあります。Common.phpはファイル名が抽象的なのに対して、ほかのファイル名はより具体的です。また、PEAR::Pagerはページングのためのライブラリです。よって、コアとなる処理はCommon.phpにあると考えられます。そして、そのままCommon.phpを眺めていくと、buildという関数があります。<br />
 <br />
-<pre class="code"><br />
-function build()<br />
-{<br />
-    //reset<br />
-    $this->_pageData = array();<br />
-    $this->links = '';<br />
-    <br />
-    $this->_generatePageData();<br />
-    $this->_setFirstLastText();<br />
-    <br />
-    if ($this->_totalPages > (2 * $this->_delta + 1)) {<br />
-        $this->links .= $this->_printFirstPage();<br />
-    }<br />
-    <br />
-    $this->links .= $this->_getBackLink();<br />
-    $this->links .= $this->_getPageLinks();<br />
-    $this->links .= $this->_getNextLink();<br />
-    <br />
-    $this->linkTags .= $this->_getFirstLinkTag();<br />
-    $this->linkTags .= $this->_getPrevLinkTag();<br />
-    $this->linkTags .= $this->_getNextLinkTag();<br />
-    $this->linkTags .= $this->_getLastLinkTag();<br />
-    <br />
-    if ($this->_totalPages > (2 * $this->_delta + 1)) {<br />
-        $this->links .= $this->_printLastPage();<br />
-    }<br />
+<pre class="code">
+function build()
+{
+    //reset
+    $this->_pageData = array();
+    $this->links = '';
+    
+    $this->_generatePageData();
+    $this->_setFirstLastText();
+    
+    if ($this->_totalPages > (2 * $this->_delta + 1)) {
+        $this->links .= $this->_printFirstPage();
+    }
+    
+    $this->links .= $this->_getBackLink();
+    $this->links .= $this->_getPageLinks();
+    $this->links .= $this->_getNextLink();
+    
+    $this->linkTags .= $this->_getFirstLinkTag();
+    $this->linkTags .= $this->_getPrevLinkTag();
+    $this->linkTags .= $this->_getNextLinkTag();
+    $this->linkTags .= $this->_getLastLinkTag();
+    
+    if ($this->_totalPages > (2 * $this->_delta + 1)) {
+        $this->links .= $this->_printLastPage();
+    }
 }</pre><br />
 <br />
 linksという変数にgetにょろにょろLinksという関数の値をどんどん連結していってるところを見ると、これがリンクテキストを生成している部分だと想像できます。そして、_printFirstPage関数が呼ばれた後に_getBackLink関数が呼ばれていて、また、_getNextLink関数の後に_printLastPage関数が呼ばれているのが確認できます。ということはこの順序を入れ替えてやればうまくいきそうです。<br />
 <br />
 <p>書き換え後のbuild関数</p><br />
 <br />
-<pre class="code"><br />
-function build()<br />
-{<br />
-    //reset<br />
-    $this->_pageData = array();<br />
-    $this->links = '';<br />
-    <br />
-    $this->_generatePageData();<br />
-    $this->_setFirstLastText();<br />
-    <br />
-    $this->links .= $this->_getBackLink();<br />
-    if ($this->_totalPages > (2 * $this->_delta + 1)) {<br />
-        $this->links .= $this->_printFirstPage();<br />
-    }<br />
-    <br />
-    $this->links .= $this->_getPageLinks();<br />
-    <br />
-    $this->linkTags .= $this->_getFirstLinkTag();<br />
-    $this->linkTags .= $this->_getPrevLinkTag();<br />
-    $this->linkTags .= $this->_getNextLinkTag();<br />
-    $this->linkTags .= $this->_getLastLinkTag();<br />
-    <br />
-    if ($this->_totalPages > (2 * $this->_delta + 1)) {<br />
-        $this->links .= $this->_printLastPage();<br />
-    }<br />
-    $this->links .= $this->_getNextLink();<br />
+<pre class="code">
+function build()
+{
+    //reset
+    $this->_pageData = array();
+    $this->links = '';
+    
+    $this->_generatePageData();
+    $this->_setFirstLastText();
+    
+    $this->links .= $this->_getBackLink();
+    if ($this->_totalPages > (2 * $this->_delta + 1)) {
+        $this->links .= $this->_printFirstPage();
+    }
+    
+    $this->links .= $this->_getPageLinks();
+    
+    $this->linkTags .= $this->_getFirstLinkTag();
+    $this->linkTags .= $this->_getPrevLinkTag();
+    $this->linkTags .= $this->_getNextLinkTag();
+    $this->linkTags .= $this->_getLastLinkTag();
+    
+    if ($this->_totalPages > (2 * $this->_delta + 1)) {
+        $this->links .= $this->_printLastPage();
+    }
+    $this->links .= $this->_getNextLink();
 }</pre><br />
 <br />
 これでリンクを並び替えることができます。<br />

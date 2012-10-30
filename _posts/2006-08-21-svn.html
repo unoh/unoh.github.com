@@ -9,35 +9,35 @@ title: "SVN を使いやすくするシェルスクリプト"
 1)　プログラムのリビジョンを一つ前に戻す<br />
 誤ってプログラムしたり、プログラムを変更してコミットしたあと、一つ前のバージョンに戻したい場合がたまにあります。そんなときは、SVN コマンドの場合は、次のように入力します。<br />
 <br />
-<pre class="source_code"><br />
-svn merge -r 上書き対象のリビジョン番号:戻すリビジョン番号 対象のファイル名<br />
+<pre class="source_code">
+svn merge -r 上書き対象のリビジョン番号:戻すリビジョン番号 対象のファイル名
 </pre><br />
 <br />
 このコマンドを使うには、対象ファイルのリビジョン番号を svn info で調べないとリビジョンを指定することができないので、次のようなスクリプトを作ってみました。<br />
 <br />
-<pre class="source_code"><br />
-#!/bin/sh<br />
-<br />
-if [ $# == 0 ]; then<br />
-  echo "Usage:" svn_revert [svn target file name]<br />
-  exit -1<br />
-fi<br />
-<br />
-if [ ! -e $1 ]; then<br />
-  echo "Could not found file. -" $1<br />
-  exit -1<br />
-fi<br />
-<br />
-SVN=/usr/local/bin/svn<br />
-grep_rev='grep Revision:'<br />
-<br />
-export LANG=<br />
-revision=`$SVN info $1 | $grep_rev | awk '{printf "%s\n", $2}'`<br />
-prev_revision=`expr $revision - 1`<br />
-<br />
-$SVN merge -r $revision:$prev_revision $1<br />
-<br />
-echo "svn reverted '$prev_revision' done."<br />
+<pre class="source_code">
+#!/bin/sh
+
+if [ $# == 0 ]; then
+  echo "Usage:" svn_revert [svn target file name]
+  exit -1
+fi
+
+if [ ! -e $1 ]; then
+  echo "Could not found file. -" $1
+  exit -1
+fi
+
+SVN=/usr/local/bin/svn
+grep_rev='grep Revision:'
+
+export LANG=
+revision=`$SVN info $1 | $grep_rev | awk '{printf "%s\n", $2}'`
+prev_revision=`expr $revision - 1`
+
+$SVN merge -r $revision:$prev_revision $1
+
+echo "svn reverted '$prev_revision' done."
 </pre><br />
 <br />
 やっていることは、とても単純で対象のファイルのリビジョンを調べて、その一つ前のリビジョン番号のファイルにしています。（そのままですね。。。）<br />
@@ -49,17 +49,17 @@ echo "svn reverted '$prev_revision' done."<br />
 僕が今担当しているプロジェクトでは、トランクとブランチに別れて開発しています。僕はおもにブランチの開発を担当していますが、並行で行われているトランクの変更をブランチ側にマージしなければいけません。<br />
 僕は初めて SVN でブランチで開発していたので、トランク側での変更をブランチ側にマージするときに何度もミスをしてしまったのですが、やっと正しいマージの方法を理解したので忘れないように、次のようなシェルスクリプトを書いてみました。<br />
 <br />
-<pre class="source_code"><br />
-#!/bin/sh<br />
-<br />
-if [ $# == 0 ]; then<br />
-  echo "Usage:" svn_merge [trunk head revision]<br />
-  exit -1<br />
-fi<br />
-<br />
-cd ~/SVNリポジトリの場所<br />
-SVN=/usr/local/bin/svn<br />
-$SVN merge -r ブランチをしたときのトランクのリビジョン番号:$1 マージ元のトランクのURL<br />
+<pre class="source_code">
+#!/bin/sh
+
+if [ $# == 0 ]; then
+  echo "Usage:" svn_merge [trunk head revision]
+  exit -1
+fi
+
+cd ~/SVNリポジトリの場所
+SVN=/usr/local/bin/svn
+$SVN merge -r ブランチをしたときのトランクのリビジョン番号:$1 マージ元のトランクのURL
 </pre><br />
 <br />
 これは、シェルスクリプトで書くまでもなくコマンドのエイリアスでも十分だと思いますが、シェルに依存しないようにシェルスクリプトにしてみました。このシェルスクリプトのポイントは、ブランチをしたときのトランクのリビジョン番号を設定することです。<br />

@@ -27,10 +27,10 @@ nginxは高速軽量なWebサーバです。(えんじんえっくすと読み�
 <br />
 ソースコードからビルドします。(ここで使用しているバージョンは0.7.61です)<br />
 <br />
-<pre class="code"><br />
-$ ./configure<br />
-$ make<br />
-$ sudo make install<br />
+<pre class="code">
+$ ./configure
+$ make
+$ sudo make install
 </pre><br />
 <br />
 <h3>nginxが使用する外部モジュール</h3><br />
@@ -75,17 +75,17 @@ worker_processesとworker_connectionsはApacheのMaxClientsに相当するパラ
 worker_connectionsは1つのワーカーが扱えるクライアントの最大数になります。<br />
 つまりものすごく単純化すると、nginxのmax_clientsは、<br />
 <br />
-<pre class="code"><br />
-max_clients = worker_processes * worker_connections<br />
+<pre class="code">
+max_clients = worker_processes * worker_connections
 </pre><br />
 <br />
 ということになります。worker_connectionsはeventsディレクティブ内に以下のように記述します。<br />
 <br />
-<pre class="code"><br />
-events {<br />
-   worker_connections  1024;<br />
-   use epoll;<br />
-}<br />
+<pre class="code">
+events {
+   worker_connections  1024;
+   use epoll;
+}
 </pre><br />
 <br />
 useの部分にはnginxが使用するイベントモデルを指定します。<br />
@@ -97,20 +97,20 @@ useの部分にはnginxが使用するイベントモデルを指定します。
 nginxをリバースプロキシとして動作させる場合の設定例は以下のようになります。<br />
 プロキシの後ろにWebサーバ2台(10.0.0.11と10.0.0.12)がぶら下がってるとすると、($nameと$domain_nameは任意)<br />
 <br />
-<pre class="code"><br />
-http {<br />
-   upstream $name {<br />
-       server 10.0.0.11:80 weight=3;<br />
-       server 10.0.0.12:80 weight=3;<br />
-   }<br />
-   server {<br />
-       listen 80;<br />
-       server_name $domain_name;<br />
-       location / {<br />
-           proxy_pass http://$name;<br />
-       }<br />
-   }<br />
-}<br />
+<pre class="code">
+http {
+   upstream $name {
+       server 10.0.0.11:80 weight=3;
+       server 10.0.0.12:80 weight=3;
+   }
+   server {
+       listen 80;
+       server_name $domain_name;
+       location / {
+           proxy_pass http://$name;
+       }
+   }
+}
 </pre><br />
 <br />
 という風になります。<br />
@@ -124,10 +124,10 @@ Webサーバに記録されるIPアドレスはプロキシサーバのものと
 処理を振り分ける必要があるので、Webサーバには元のIPアドレスを渡したい<br />
 ケースがあります。これを実現するには以下の設定を記述します。<br />
 <br />
-<pre class="code"><br />
-proxy_set_header        Host            $host;<br />
-proxy_set_header        X-Real-IP       $remote_addr;<br />
-proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;<br />
+<pre class="code">
+proxy_set_header        Host            $host;
+proxy_set_header        X-Real-IP       $remote_addr;
+proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;
 </pre><br />
 <br />
 また、プロキシにぶら下がっているWebサーバがApacheの場合、<br />
@@ -136,32 +136,32 @@ mod_extract_forwardedやmod_rpaf等を使うことによって<br />
 mod_extract_forwardedを使う場合、<br />
 Apacheの設定ファイルには以下のように記述します。<br />
 <br />
-<pre class="code"><br />
-MEForder refuse,accept<br />
-MEFrefuse all<br />
-MEFaccept x.x.x.x # プロキシのIPアドレス<br />
+<pre class="code">
+MEForder refuse,accept
+MEFrefuse all
+MEFaccept x.x.x.x # プロキシのIPアドレス
 </pre><br />
 <br />
 <h3>nginxでSSL</h3><br />
 <br />
 nginxでSSLを使うにはhttpディレクティブ内に以下のような記述をします($nameと$domain_nameは任意)。<br />
 <br />
-<pre class="code"><br />
-server {<br />
-   listen       443;<br />
-   server_name  $domain_name;<br />
-   ssl                  on;<br />
-   ssl_certificate      (サーバ証明書へのパス)<br />
-   ssl_certificate_key  (秘密鍵へのパス)<br />
-   ssl_session_timeout  5m;<br />
-   ssl_protocols  SSLv2 SSLv3 TLSv1;<br />
-   ssl_ciphers  ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP;<br />
-   ssl_prefer_server_ciphers   on;<br />
-   location / {<br />
-       root    /usr/share/nginx/html;<br />
-       index  index.html index.htm;<br />
-   }<br />
-}<br />
+<pre class="code">
+server {
+   listen       443;
+   server_name  $domain_name;
+   ssl                  on;
+   ssl_certificate      (サーバ証明書へのパス)
+   ssl_certificate_key  (秘密鍵へのパス)
+   ssl_session_timeout  5m;
+   ssl_protocols  SSLv2 SSLv3 TLSv1;
+   ssl_ciphers  ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP;
+   ssl_prefer_server_ciphers   on;
+   location / {
+       root    /usr/share/nginx/html;
+       index  index.html index.htm;
+   }
+}
 </pre><br />
 <br />
 <h3>nginxで中間CA証明書を使用する</h3><br />

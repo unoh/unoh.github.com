@@ -10,53 +10,53 @@ FreeBSDを扱うときは、もちろんcshでした。</p><br />
 <p>そんなこんながありまして、zshを改めて設定してみました。<br /><br />
 皆さんも、導入を検討してみてはいかがでしょうか。</p><br />
 <p>まず、bashがデフォルトのOSであれば、$HOME/.bashrcに下記を追加しておきます。</p><br />
-<pre class="code"># use zsh<br />
-if [ -f /bin/zsh ]; then<br />
-    exec /bin/zsh<br />
+<pre class="code"># use zsh
+if [ -f /bin/zsh ]; then
+    exec /bin/zsh
 fi</pre><br />
 <p>こうすることによって、たとえzshが正常に動作しなくなったとしてもzshさえ消せば、OSデフォルトのbashで動作することができます。 </p><br />
 <p>ここからは、$HOME/.zshrcをだらだらと書き連ねていきます。</p><br />
-<pre class="code"><br />
-<br />
-# PROMPT<br />
-PS1="[@${HOST%%.*} %1~]%(!.#.$) " # この辺は好み<br />
-RPROMPT="%T"                      # 右側に時間を表示する<br />
-setopt transient_rprompt          # 右側まで入力がきたら時間を消す<br />
-setopt prompt_subst               # 便利なプロント<br />
-bindkey -e                        # emacsライクなキーバインド<br />
-<br />
-export LANG=ja_JP.UTF-8           # 日本語環境<br />
-export EDITOR=emacs               # エディタはemacs<br />
-<br />
-autoload -U compinit              # 強力な補完機能<br />
-compinit -u                       # このあたりを使わないとzsh使ってる意味なし<br />
-setopt autopushd		          # cdの履歴を表示<br />
-setopt pushd_ignore_dups          # 同ディレクトリを履歴に追加しない<br />
-setopt auto_cd                    # 自動的にディレクトリ移動<br />
-setopt list_packed 		  # リストを詰めて表示<br />
-setopt list_types                 # 補完一覧ファイル種別表示<br />
-<br />
-# 履歴<br />
-HISTFILE=~/.zsh_history           # historyファイル<br />
-HISTSIZE=10000                    # ファイルサイズ<br />
-SAVEHIST=10000                    # saveする量<br />
-setopt hist_ignore_dups           # 重複を記録しない<br />
-setopt hist_reduce_blanks         # スペース排除<br />
-setopt share_history              # 履歴ファイルを共有<br />
-setopt EXTENDED_HISTORY           # zshの開始終了を記録<br />
-<br />
-# history 操作まわり<br />
-autoload history-search-end<br />
-zle -N history-beginning-search-backward-end history-search-end<br />
-zle -N history-beginning-search-forward-end history-search-end<br />
-bindkey "^P" history-beginning-search-backward-end<br />
-bindkey "^N" history-beginning-search-forward-end<br />
-<br />
-# alias<br />
-alias ls="ls -G"<br />
-zstyle ':completion:*' list-colors 'di=34' 'ln=35' 'so=32' 'ex=31' 'bd=46;34' 'cd=43;34'<br />
-<br />
-[ -f ~/.zshrc.include ] &amp;&amp; source ~/.zshrc.include # 設定ファイルのinclude<br />
+<pre class="code">
+
+# PROMPT
+PS1="[@${HOST%%.*} %1~]%(!.#.$) " # この辺は好み
+RPROMPT="%T"                      # 右側に時間を表示する
+setopt transient_rprompt          # 右側まで入力がきたら時間を消す
+setopt prompt_subst               # 便利なプロント
+bindkey -e                        # emacsライクなキーバインド
+
+export LANG=ja_JP.UTF-8           # 日本語環境
+export EDITOR=emacs               # エディタはemacs
+
+autoload -U compinit              # 強力な補完機能
+compinit -u                       # このあたりを使わないとzsh使ってる意味なし
+setopt autopushd		          # cdの履歴を表示
+setopt pushd_ignore_dups          # 同ディレクトリを履歴に追加しない
+setopt auto_cd                    # 自動的にディレクトリ移動
+setopt list_packed 		  # リストを詰めて表示
+setopt list_types                 # 補完一覧ファイル種別表示
+
+# 履歴
+HISTFILE=~/.zsh_history           # historyファイル
+HISTSIZE=10000                    # ファイルサイズ
+SAVEHIST=10000                    # saveする量
+setopt hist_ignore_dups           # 重複を記録しない
+setopt hist_reduce_blanks         # スペース排除
+setopt share_history              # 履歴ファイルを共有
+setopt EXTENDED_HISTORY           # zshの開始終了を記録
+
+# history 操作まわり
+autoload history-search-end
+zle -N history-beginning-search-backward-end history-search-end
+zle -N history-beginning-search-forward-end history-search-end
+bindkey "^P" history-beginning-search-backward-end
+bindkey "^N" history-beginning-search-forward-end
+
+# alias
+alias ls="ls -G"
+zstyle ':completion:*' list-colors 'di=34' 'ln=35' 'so=32' 'ex=31' 'bd=46;34' 'cd=43;34'
+
+[ -f ~/.zshrc.include ] &amp;&amp; source ~/.zshrc.include # 設定ファイルのinclude
 </pre><br />
 <p>以上が僕の.zshrcです。コピペで使えば、それなりに幸せになれます。</p><br />
 <p>ポイントとしては、サーバ固有の設定やaliasに関しては、$HOME/.zshrc.includeというファイルを作って、こちらを個別に設定しています。本番サーバなんかはプロントを赤くしたり、特定のサーバにしかないコマンドはこのファイルに書いたりなど。</p><br />
