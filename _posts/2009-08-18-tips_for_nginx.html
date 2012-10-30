@@ -177,5 +177,30 @@ nginxには中間CA証明書を直接指定するための方法がありませ�
 サーバ証明書と中間証明書が以下のような形式だとすると、<br />
 <br />
 <h3>サーバ証明書</h3><br />
-<br />
 <pre class="code">
+-----BEGIN CERTIFICATE-----
+(サーバ証明書の内容)
+-----END CERTIFICATE-----
+</pre>
+<h3>中間CA証明書</h3><br />
+<pre class="code">
+-----BEGIN CERTIFICATE-----
+(中間CA証明書の内容)
+-----END CERTIFICATE-----
+</pre>
+サーバ証明書に中間証明書を追記する形で、サーバ証明書を以下のように編集します。
+<pre class="code">
+-----BEGIN CERTIFICATE-----
+(サーバ証明書の内容)
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+(中間CA証明書の内容)
+-----END CERTIFICATE-----
+</pre>
+<h3>参考</h3>
+
+<ul>
+<li><a href="http://wiki.nginx.org/Main">nginx wiki</a></li>
+<li><a href="http://unoh.github.com/2008/02/06/ruby_on_rails_mongrel_cluster.html">Ruby on Rails: mongrel_clusterのフロントエンドにnginxを使用する</a></li>
+<li>nginx に中間証明書をインストールする方法(<a href="http://jp.globalsign.com/support/index.php?sid=230898&lang=ja&action=artikel&cat=12&id=400&artlang=ja&highlight=cacert">リンク切れ</a>)</li>
+</ul>
