@@ -2,66 +2,66 @@
 layout: post
 title: "symfonyのfunctional testを携帯のUserAgentにしよう"
 ---
-<p><br />
-こんにちは市丸です。<br /><br />
-symfony コマンドで generate:module をすると、functional test用ファイルが自動生成されます。<br /><br />
-symfonyで携帯サービスを作る場合、frontendは携帯端末 backendではPCブラウザでアクセスすることがほとんだと思います。<br />
-<br />
-frontendのfunctional testを携帯のUserAgent<font class="Apple-style-span" face="monospace"><span class="Apple-style-span" style="white-space: pre;">に</span></font>する方法を紹介します。</p><meta charset="utf-8"><p><br />
-※試したのは、symfony 1.4です。<br />
-</p><br />
-<br />
-<p>まずスケルトンをコピー</p><br />
-<pre class="code">mkdir -p data/skeleton<br />
-cp -r lib/vendor/symfony/lib/task/generator/skeleton/module data/skeleton/<br />
-</pre><br />
-<br />
-<p>data/skeleton/module/test/actionsTest.phpを以下のように改変。</p><br />
-<pre class="code">&lt;?php<br />
-include(dirname(__FILE__).'/../../bootstrap/functional_##APP_NAME##.php');<br />
-<br />
-if (!$aBrowser){<br />
-  $aBrowser = new sfBrowser();<br />
-}<br />
-$browser = new sfTestFunctional($aBrowser);<br />
-<br />
-$browser-&gt;<br />
-  get('/##MODULE_NAME##')-&gt;<br />
-<br />
-  with('request')-&gt;begin()-&gt;<br />
-    isParameter('module', '##MODULE_NAME##')-&gt;<br />
-    isParameter('action', 'index')-&gt;<br />
-  end()-&gt;<br />
-<br />
-  with('response')-&gt;begin()-&gt;<br />
-    isStatusCode(200)-&gt;<br />
-  end()<br />
-;<br />
-</pre><br />
-<br />
-<p><br />
-test/bootstrap/functional.phpをApplicationごとに切り替えるため<br />
-コピーを作成します。<br />
-</p><br />
-<pre class="code">cp test/bootstrap/functional.php test/bootstrap/functional_frontend.php<br />
-cp test/bootstrap/functional.php test/bootstrap/functional_backend.php<br />
-</pre><br />
-<br />
-<p><br />
-functional_frontend.php の最後に以下を追加しましょう<br />
-</p><br />
-<pre class="code">$aBrowser = new sfBrowser();<br />
-$aBrowser-&gt;setVar('HTTP_USER_AGENT', 'DoCoMo/2.0 N06A3(c100;TB;W24H12)');<br />
-$aBrowser-&gt;setVar('REMOTE_ADDR','127.0.0.1');<br />
-$aBrowser-&gt;setVar('HTTP_X_DCMGUID', 'HOGEHOGE'); // iモードIDはこんなかんじ<br />
-</pre><br />
-<br />
-<p><br />
-さらに詳しいfunctional testを行いたい場合は<br /><br />
-<a href="http://www.symfony-project.org/jobeet/1_4/Propel/ja/09">symfony 機能テスト</a>を御覧下さい。</p><br />
-<br />
-<div style="margin:0;padding:.5em;border:2px solid<br />
-#ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br /><a<br />
-href="http://www.unoh.net/recruit.html">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください。<br/><a<br />
-href="http://www.find-job.net/fj/showjob.cgi?id=50212">Find<br />
+<p>
+こんにちは市丸です。<br />
+symfony コマンドで generate:module をすると、functional test用ファイルが自動生成されます。<br />
+symfonyで携帯サービスを作る場合、frontendは携帯端末 backendではPCブラウザでアクセスすることがほとんだと思います。
+
+frontendのfunctional testを携帯のUserAgent<font class="Apple-style-span" face="monospace"><span class="Apple-style-span" style="white-space: pre;">に</span></font>する方法を紹介します。</p><meta charset="utf-8"><p>
+※試したのは、symfony 1.4です。
+</p>
+
+<p>まずスケルトンをコピー</p>
+<pre class="code">mkdir -p data/skeleton
+cp -r lib/vendor/symfony/lib/task/generator/skeleton/module data/skeleton/
+</pre>
+
+<p>data/skeleton/module/test/actionsTest.phpを以下のように改変。</p>
+<pre class="code">&lt;?php
+include(dirname(__FILE__).'/../../bootstrap/functional_##APP_NAME##.php');
+
+if (!$aBrowser){
+  $aBrowser = new sfBrowser();
+}
+$browser = new sfTestFunctional($aBrowser);
+
+$browser-&gt;
+  get('/##MODULE_NAME##')-&gt;
+
+  with('request')-&gt;begin()-&gt;
+    isParameter('module', '##MODULE_NAME##')-&gt;
+    isParameter('action', 'index')-&gt;
+  end()-&gt;
+
+  with('response')-&gt;begin()-&gt;
+    isStatusCode(200)-&gt;
+  end()
+;
+</pre>
+
+<p>
+test/bootstrap/functional.phpをApplicationごとに切り替えるため
+コピーを作成します。
+</p>
+<pre class="code">cp test/bootstrap/functional.php test/bootstrap/functional_frontend.php
+cp test/bootstrap/functional.php test/bootstrap/functional_backend.php
+</pre>
+
+<p>
+functional_frontend.php の最後に以下を追加しましょう
+</p>
+<pre class="code">$aBrowser = new sfBrowser();
+$aBrowser-&gt;setVar('HTTP_USER_AGENT', 'DoCoMo/2.0 N06A3(c100;TB;W24H12)');
+$aBrowser-&gt;setVar('REMOTE_ADDR','127.0.0.1');
+$aBrowser-&gt;setVar('HTTP_X_DCMGUID', 'HOGEHOGE'); // iモードIDはこんなかんじ
+</pre>
+
+<p>
+さらに詳しいfunctional testを行いたい場合は<br />
+<a href="http://www.symfony-project.org/jobeet/1_4/Propel/ja/09">symfony 機能テスト</a>を御覧下さい。</p>
+
+<div style="margin:0;padding:.5em;border:2px solid
+#ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br /><a
+href="http://www.unoh.net/recruit.html">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください。<br/><a
+href="http://www.find-job.net/fj/showjob.cgi?id=50212">Find
 Job!</a>でも募集してます！</div>
