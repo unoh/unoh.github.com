@@ -16,28 +16,28 @@ Haml は XHTML Abstraction Markup Language の略で...という所から説明�
 以下のようにマークアップします。<br />
 <br />
 <h3>Haml</h3><br />
-<pre class="code">!!! XML<br />
-!!!<br />
-%html<br />
-  %head<br />
-    %meta{ 'http-equiv' => 'content', :content => 'text/html; charset=utf-8'}<br />
-  %body<br />
-    %div#container<br />
-      %a welcome to |<br />
+<pre class="code">!!! XML
+!!!
+%html
+  %head
+    %meta{ 'http-equiv' => 'content', :content => 'text/html; charset=utf-8'}
+  %body
+    %div#container
+      %a welcome to |
       labs.unoh.net |</pre><br />
 <br />
 <h3>出力</h3><br />
-<pre class="code">&lt;?xml version='1.0' encoding='utf-8' ?&gt;<br />
-&lt;!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"&gt;<br />
-&lt;html&gt;<br />
-  &lt;head&gt;<br />
-    &lt;meta content='text/html; charset=utf-8' http-equiv='content' /&gt;<br />
-  &lt;/head&gt;<br />
-  &lt;body&gt;<br />
-    &lt;div id='container'&gt;<br />
-      &lt;a&gt;welcome to labs.unoh.net&lt;/a&gt;<br />
-    &lt;/div&gt;<br />
-  &lt;/body&gt;<br />
+<pre class="code">&lt;?xml version='1.0' encoding='utf-8' ?&gt;
+&lt;!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd"&gt;
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;meta content='text/html; charset=utf-8' http-equiv='content' /&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;div id='container'&gt;
+      &lt;a&gt;welcome to labs.unoh.net&lt;/a&gt;
+    &lt;/div&gt;
+  &lt;/body&gt;
 &lt;/html&gt;</pre><br />
 <br />
 <h2>XML宣言</h2><br />
@@ -66,19 +66,19 @@ Haml は XHTML Abstraction Markup Language の略で...という所から説明�
 <strong>MEMO:</strong> %aと{}の間にスペースを空けない。シンボルに使えない文字を含めたい場合(http-equivの-等)は文字列にする。<br />
 <br />
 <h2>要素のネスト</h2><br />
-<pre class="code">%div<br />
+<pre class="code">%div
   %a{:href => 'http://labs.unoh.net/'} labs.unoh.net</pre><br />
-<pre class="code">&lt;div&gt;<br />
-  &lt;a href='http://labs.unoh.net/'&gt;labs.unoh.net&lt;/a&gt;<br />
+<pre class="code">&lt;div&gt;
+  &lt;a href='http://labs.unoh.net/'&gt;labs.unoh.net&lt;/a&gt;
 &lt;/div&gt;</pre><br />
 <strong>MEMO:</strong> ネストはインデントで表現する。 1インデントは2つのスペースで表現する。<br />
 <br />
 <h2>複数行分割</h2><br />
-<pre class="code">%span この行は長過ぎるので行分割したい |<br />
+<pre class="code">%span この行は長過ぎるので行分割したい |
 パイプで行分割できるんです。 |</pre><br />
 <pre class="code">&lt;span&gt;この行は長過ぎるので行分割したい パイプで行分割できるんです。&lt;/span&gt;</pre><br />
 これはテキストだけでなく、構文中に含める事が出来ます。<br />
-<pre class="code">%script{ :type => "textjavascript", |<br />
+<pre class="code">%script{ :type => "textjavascript", |
 :src => "/js/jquery.js" } |</pre><br />
 <strong>MEMO:</strong> |の前にスペースが必須。最終行の |を忘れないように。<br />
 <br />
@@ -104,43 +104,43 @@ id は属性の一つなので {} で表現する事も可能ですが、 id と
 :(コロン)+キーワードでインデントされたブロックにフィルタをかける事が出来ます。<br />
 フィルタは他にもいくつか用意されているので、マニュアルを見てください。<br />
 <h3>javascript</h3><br />
-<pre class="code">%head<br />
-  :javascript<br />
-    var string = 'hello';<br />
-    window.alert(string);<br />
+<pre class="code">%head
+  :javascript
+    var string = 'hello';
+    window.alert(string);
 </pre><br />
-<pre class="code">&lt;head&gt<br />
-&lt;script type='text/javascript'&gt<br />
-    //&lt;![CDATA[<br />
-      var string = 'hello';<br />
-      window.alert(string);<br />
-    //]]&gt<br />
-  &lt;/script&gt<br />
-&lt;/head&gt<br />
+<pre class="code">&lt;head&gt
+&lt;script type='text/javascript'&gt
+    //&lt;![CDATA[
+      var string = 'hello';
+      window.alert(string);
+    //]]&gt
+  &lt;/script&gt
+&lt;/head&gt
 </pre><br />
 <br />
 <h3>escaped</h3><br />
-<pre class="code">%div<br />
-  :escaped<br />
-    &lt;html&gt;<br />
-    &lt;head&gt;<br />
-    &lt;title&gt;title&lt;/title&gt;<br />
-    &lt;/head&gt;<br />
-    &lt;body&gt;<br />
-    &lt;h1&gt;h1&lt;/h1&gt;<br />
-    &lt;/body&gt;<br />
-    &lt;/html&gt;<br />
+<pre class="code">%div
+  :escaped
+    &lt;html&gt;
+    &lt;head&gt;
+    &lt;title&gt;title&lt;/title&gt;
+    &lt;/head&gt;
+    &lt;body&gt;
+    &lt;h1&gt;h1&lt;/h1&gt;
+    &lt;/body&gt;
+    &lt;/html&gt;
 </pre><br />
-<pre class="code">&lt;div&gt;<br />
-  &amp;lt;html&amp;gt;<br />
-  &amp;lt;head&amp;gt;<br />
-  &amp;lt;title&amp;gt;title&amp;lt;/title&amp;gt;<br />
-  &amp;lt;/head&amp;gt;<br />
-  &amp;lt;body&amp;gt;<br />
-  &amp;lt;h1&amp;gt;H1&amp;lt;/h1&amp;gt;<br />
-  &amp;lt;/body&amp;gt;<br />
-  &amp;lt;/html&amp;gt;<br />
-&lt;/div&gt;<br />
+<pre class="code">&lt;div&gt;
+  &amp;lt;html&amp;gt;
+  &amp;lt;head&amp;gt;
+  &amp;lt;title&amp;gt;title&amp;lt;/title&amp;gt;
+  &amp;lt;/head&amp;gt;
+  &amp;lt;body&amp;gt;
+  &amp;lt;h1&amp;gt;H1&amp;lt;/h1&amp;gt;
+  &amp;lt;/body&amp;gt;
+  &amp;lt;/html&amp;gt;
+&lt;/div&gt;
 </pre><br />
 <br />
 <h2>rubyコードを埋め込む</h2><br />
@@ -151,26 +151,26 @@ id は属性の一つなので {} で表現する事も可能ですが、 id と
 <h2>制御構文</h2><br />
 制御構文と題しましたが実際には ruby コードがかけます。 = との違いは評価結果を出力するか否かで、こちらは出力しないのでテンプレートとして使う場合は制御構文を書く場合が多いでしょう。<br />
 <br />
-<pre class="code">- (1..10).each do |i|<br />
-  %p= "値は#{i}です。"<br />
-  - if i >= 5<br />
+<pre class="code">- (1..10).each do |i|
+  %p= "値は#{i}です。"
+  - if i >= 5
     %span.big 5以上</pre><br />
-<pre class="code">    &lt;p&gt;値は1です。&lt;/p&gt;<br />
-    &lt;p&gt;値は2です。&lt;/p&gt;<br />
-    &lt;p&gt;値は3です。&lt;/p&gt;<br />
-    &lt;p&gt;値は4です。&lt;/p&gt;<br />
-    &lt;p&gt;値は5です。&lt;/p&gt;<br />
-    &lt;span class='big'&gt;5以上&lt;/span&gt;<br />
-    &lt;p&gt;値は6です。&lt;/p&gt;<br />
-    &lt;span class='big'&gt;5以上&lt;/span&gt;<br />
-    &lt;p&gt;値は7です。&lt;/p&gt;<br />
-    &lt;span class='big'&gt;5以上&lt;/span&gt;<br />
-    &lt;p&gt;値は8です。&lt;/p&gt;<br />
-    &lt;span class='big'&gt;5以上&lt;/span&gt;<br />
-    &lt;p&gt;値は9です。&lt;/p&gt;<br />
-    &lt;span class='big'&gt;5以上&lt;/span&gt;<br />
-    &lt;p&gt;値は10です。&lt;/p&gt;<br />
-    &lt;span class='big'&gt;5以上&lt;/span&gt;<br />
+<pre class="code">    &lt;p&gt;値は1です。&lt;/p&gt;
+    &lt;p&gt;値は2です。&lt;/p&gt;
+    &lt;p&gt;値は3です。&lt;/p&gt;
+    &lt;p&gt;値は4です。&lt;/p&gt;
+    &lt;p&gt;値は5です。&lt;/p&gt;
+    &lt;span class='big'&gt;5以上&lt;/span&gt;
+    &lt;p&gt;値は6です。&lt;/p&gt;
+    &lt;span class='big'&gt;5以上&lt;/span&gt;
+    &lt;p&gt;値は7です。&lt;/p&gt;
+    &lt;span class='big'&gt;5以上&lt;/span&gt;
+    &lt;p&gt;値は8です。&lt;/p&gt;
+    &lt;span class='big'&gt;5以上&lt;/span&gt;
+    &lt;p&gt;値は9です。&lt;/p&gt;
+    &lt;span class='big'&gt;5以上&lt;/span&gt;
+    &lt;p&gt;値は10です。&lt;/p&gt;
+    &lt;span class='big'&gt;5以上&lt;/span&gt;
 </pre><br />
 <br />
 いかがでしょうか？5分だと少しきついかもしれませんが、これを見ただけでもすぐ書けそうな気がしませんか？<br />

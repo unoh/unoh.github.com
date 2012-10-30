@@ -31,12 +31,12 @@ LCSはLongest Common Subsequenceの略で、最長共通部分列とも言いま
 <br />
 SESはShortest Edit Scriptの略で、その名のとおり、片方のシーケンスをもう片方のシーケンスに変換するための最小手順を表します。例えば、abc → abdのSESは、<br />
 <br />
-<pre class="code"><br />
-SES # C 共通, D 削除, A 追加<br />
-C a<br />
-C b<br />
-D c<br />
-A d<br />
+<pre class="code">
+SES # C 共通, D 削除, A 追加
+C a
+C b
+D c
+A d
 </pre><br />
 <br />
 となります。また上記の場合、LCSは「ab」、編集距離は1+1=2(「追加」と「削除」の合計数)になります。<br />
@@ -89,104 +89,104 @@ Unified Formatはバージョン管理システムを普段から使用してい
 <br />
 dtlは単一のヘッダファイル(dtl.hpp)から成っており、このファイルをインクルードするだけで使うことが出来ます。以下はdtlに含まれているサンプルプログラムであるstrdiff.cppです。<br />
 <br />
-<pre class="code"><br />
-#include "../dtl.hpp"<br />
-#include "common.hpp"<br />
-#include &lt;iostream&gt;<br />
-#include &lt;vector&gt;<br />
-#include &lt;cstdlib&gt;<br />
-int main(int argc, char *argv[]){<br />
-  if (isFewArgs(argc)) {<br />
-    perror("few argument.");<br />
-    return(EXIT_FAILURE);<br />
-  }<br />
-  std::string A(argv[1]);<br />
-  std::string B(argv[2]);<br />
-  typedef char elem;<br />
-  dtl::Diff&lt;elem, std::string&gt; d(A, B);<br />
-  d.compose();<br />
-  // editDistance<br />
-  std::cout &lt;&lt; "editDistance:" &lt;&lt; d.getEditDistance() &lt;&lt; std::endl;<br />
-  // Longest Common Subsequence<br />
-  dtl::Lcs&lt;elem&gt; lcs = d.getLcs();<br />
-  std::vector&lt;elem&gt; lcs_v = lcs.getSequence();<br />
-  std::vector&lt;elem&gt;::iterator vit;<br />
-  std::string lcs_s(lcs_v.begin(), lcs_v.end());<br />
-  std::cout &lt;&lt; "LCS:" &lt;&lt; lcs_s &lt;&lt; std::endl;<br />
-  // Shortest Edit Script<br />
-  std::cout &lt;&lt; "SES" &lt;&lt; std::endl;<br />
-  dtl::Ses&lt;elem&gt; ses = d.getSes();<br />
-  std::vector&lt; std::pair&lt;elem, dtl::elemInfo&gt; &gt; ses_v = ses.getSequence();<br />
-  std::vector&lt; std::pair&lt;elem, dtl::elemInfo&gt; &gt;::iterator it;<br />
-  it = ses_v.begin();<br />
-  for (it=ses_v.begin();it!=ses_v.end();++it) {<br />
-    switch (it-&gt;second.type) {<br />
-    case dtl::SES_ADD :<br />
-      std::cout &lt;&lt; "A " &lt;&lt; it-&gt;first &lt;&lt; std::endl;<br />
-      break;<br />
-    case dtl::SES_DELETE :<br />
-      std::cout &lt;&lt; "D " &lt;&lt; it-&gt;first &lt;&lt; std::endl;<br />
-      break;<br />
-    case dtl::SES_COMMON :<br />
-      std::cout &lt;&lt; "C " &lt;&lt; it-&gt;first &lt;&lt; std::endl;<br />
-      break;<br />
-    default :<br />
-      break;<br />
-    }<br />
-  }<br />
-  return 0;<br />
-}<br />
+<pre class="code">
+#include "../dtl.hpp"
+#include "common.hpp"
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include &lt;cstdlib&gt;
+int main(int argc, char *argv[]){
+  if (isFewArgs(argc)) {
+    perror("few argument.");
+    return(EXIT_FAILURE);
+  }
+  std::string A(argv[1]);
+  std::string B(argv[2]);
+  typedef char elem;
+  dtl::Diff&lt;elem, std::string&gt; d(A, B);
+  d.compose();
+  // editDistance
+  std::cout &lt;&lt; "editDistance:" &lt;&lt; d.getEditDistance() &lt;&lt; std::endl;
+  // Longest Common Subsequence
+  dtl::Lcs&lt;elem&gt; lcs = d.getLcs();
+  std::vector&lt;elem&gt; lcs_v = lcs.getSequence();
+  std::vector&lt;elem&gt;::iterator vit;
+  std::string lcs_s(lcs_v.begin(), lcs_v.end());
+  std::cout &lt;&lt; "LCS:" &lt;&lt; lcs_s &lt;&lt; std::endl;
+  // Shortest Edit Script
+  std::cout &lt;&lt; "SES" &lt;&lt; std::endl;
+  dtl::Ses&lt;elem&gt; ses = d.getSes();
+  std::vector&lt; std::pair&lt;elem, dtl::elemInfo&gt; &gt; ses_v = ses.getSequence();
+  std::vector&lt; std::pair&lt;elem, dtl::elemInfo&gt; &gt;::iterator it;
+  it = ses_v.begin();
+  for (it=ses_v.begin();it!=ses_v.end();++it) {
+    switch (it-&gt;second.type) {
+    case dtl::SES_ADD :
+      std::cout &lt;&lt; "A " &lt;&lt; it-&gt;first &lt;&lt; std::endl;
+      break;
+    case dtl::SES_DELETE :
+      std::cout &lt;&lt; "D " &lt;&lt; it-&gt;first &lt;&lt; std::endl;
+      break;
+    case dtl::SES_COMMON :
+      std::cout &lt;&lt; "C " &lt;&lt; it-&gt;first &lt;&lt; std::endl;
+      break;
+    default :
+      break;
+    }
+  }
+  return 0;
+}
 </pre><br />
 <br />
 上記のプログラムを実行すると2つの文字列をコマンドラインから入力として受け取って、編集距離とLCS、あとSESを表示します。<br />
 <br />
-<pre class="code"><br />
-narazuya@bokkko% make strdiff<br />
-narazuya@bokkko% ./strdiff acbdeacbed acebdabbabed<br />
-editDistance:6<br />
-LCS:acbdabed<br />
-SES<br />
-C a<br />
-C c<br />
-A e<br />
-C b<br />
-C d<br />
-D e<br />
-C a<br />
-D c<br />
-C b<br />
-A b<br />
-A a<br />
-A b<br />
-C e<br />
-C d<br />
-narazuya@bokkko%<br />
+<pre class="code">
+narazuya@bokkko% make strdiff
+narazuya@bokkko% ./strdiff acbdeacbed acebdabbabed
+editDistance:6
+LCS:acbdabed
+SES
+C a
+C c
+A e
+C b
+C d
+D e
+C a
+D c
+C b
+A b
+A a
+A b
+C e
+C d
+narazuya@bokkko%
 </pre><br />
 <br />
 また、int型のvector同士の差分を取るサンプルもあります。(ソースはintdiff.cppを参照)<br />
 <br />
-<pre class="code"><br />
-narazuya@bokkko% ./intdiff<br />
-1 2 3 4 5 6 7 8 9 10 <br />
-3 5 1 4 5 1 7 9 6 10 <br />
-editDistance:8<br />
-LCS: 3 4 5 7 9 10 <br />
-SES<br />
-D 1<br />
-D 2<br />
-C 3<br />
-A 5<br />
-A 1<br />
-C 4<br />
-C 5<br />
-D 6<br />
-A 1<br />
-C 7<br />
-D 8<br />
-C 9<br />
-A 6<br />
-C 10<br />
-narazuya@bokkko%<br />
+<pre class="code">
+narazuya@bokkko% ./intdiff
+1 2 3 4 5 6 7 8 9 10 
+3 5 1 4 5 1 7 9 6 10 
+editDistance:8
+LCS: 3 4 5 7 9 10 
+SES
+D 1
+D 2
+C 3
+A 5
+A 1
+C 4
+C 5
+D 6
+A 1
+C 7
+D 8
+C 9
+A 6
+C 10
+narazuya@bokkko%
 </pre><br />
 <br />
 サンプルプログラムは他に、2つのファイルの差分をUnified Formatで出力するunidiffや、差分を適用して片方の文字列からもう片方の文字列に変換できるか試すpatchとそのファイル版であるfpatchがあります。<br />

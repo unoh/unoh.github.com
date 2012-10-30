@@ -24,24 +24,24 @@ Web ApplicationはWSGIの仕様に沿ったAPIを使って作ればWeb Serverが
 <br />
 <strong>hello-rack.rb：</strong><br />
 <br />
-<pre class="code">#!/usr/bin/env ruby<br />
-require 'rubygems'<br />
-require 'rack'<br />
-include Rack<br />
- <br />
-class HelloRack<br />
-  def call(env)<br />
-    [200, {"Content-Type" => "text/plain"}, ["Hello, Rack"]]<br />
-  end<br />
-end<br />
- <br />
+<pre class="code">#!/usr/bin/env ruby
+require 'rubygems'
+require 'rack'
+include Rack
+ 
+class HelloRack
+  def call(env)
+    [200, {"Content-Type" => "text/plain"}, ["Hello, Rack"]]
+  end
+end
+ 
 <strong>Handler::WEBrick</strong>.run HelloRack.new, :Port => 3000</pre><br />
 <br />
 これを起動してみます。<br />
 <br />
-<pre class="code">$ ruby hello-rack.rb<br />
-[2007-05-07 18:43:31] INFO  WEBrick 1.3.1<br />
-[2007-05-07 18:43:31] INFO  ruby 1.8.5 (2006-08-25) [i486-linux]<br />
+<pre class="code">$ ruby hello-rack.rb
+[2007-05-07 18:43:31] INFO  WEBrick 1.3.1
+[2007-05-07 18:43:31] INFO  ruby 1.8.5 (2006-08-25) [i486-linux]
 [2007-05-07 18:43:31] INFO  WEBrick::HTTPServer#start: pid=19600 port=3000</pre><br />
 <br />
 ブラウザから3000番にアクセスしてみると・・・<br />
@@ -64,41 +64,41 @@ RequestやResponseはそれぞれRack::Request, Rack::Responseに分かりやす
 <br />
 <strong>rackupコマンド：</strong><br />
 <br />
-<pre class="code">$ rackup --help<br />
-Usage: rackup [ruby options] [rack options] [rackup config]<br />
- <br />
-Ruby options:<br />
-  -e, --eval LINE          evaluate a LINE of code<br />
-  -d, --debug              set debugging flags (set $DEBUG to true)<br />
-  -w, --warn               turn warnings on for your script<br />
-  -I, --include PATH       specify $LOAD_PATH (may be used more than once)<br />
-  -r, --require LIBRARY    require the library, before executing your script<br />
- <br />
-Rack options:<br />
-  -s, --server SERVER      serve using SERVER (webrick/mongrel)<br />
-  -o, --host HOST          listen on HOST (default: 0.0.0.0)<br />
-  -p, --port PORT          use PORT (default: 9292)<br />
-  -E, --env ENVIRONMENT    use ENVIRONMENT for defaults (default: development)<br />
- <br />
-Common options:<br />
-  -h, --help               Show this message<br />
+<pre class="code">$ rackup --help
+Usage: rackup [ruby options] [rack options] [rackup config]
+ 
+Ruby options:
+  -e, --eval LINE          evaluate a LINE of code
+  -d, --debug              set debugging flags (set $DEBUG to true)
+  -w, --warn               turn warnings on for your script
+  -I, --include PATH       specify $LOAD_PATH (may be used more than once)
+  -r, --require LIBRARY    require the library, before executing your script
+ 
+Rack options:
+  -s, --server SERVER      serve using SERVER (webrick/mongrel)
+  -o, --host HOST          listen on HOST (default: 0.0.0.0)
+  -p, --port PORT          use PORT (default: 9292)
+  -E, --env ENVIRONMENT    use ENVIRONMENT for defaults (default: development)
+ 
+Common options:
+  -h, --help               Show this message
       --version            Show version</pre><br />
 <br />
 まずアプリケーションの方からサーバー依存を取ります。<br />
 <br />
 <strong>hello-rackup.rb：</strong><br />
 <br />
-<pre class="code">require 'rack/request'<br />
-require 'rack/response'<br />
- <br />
-module Rack<br />
-  class HelloRackup<br />
-    def call(env)<br />
-      Response.new.finish do |res|<br />
-        res.write "Hello, Rackup"<br />
-      end<br />
-    end<br />
-  end<br />
+<pre class="code">require 'rack/request'
+require 'rack/response'
+ 
+module Rack
+  class HelloRackup
+    def call(env)
+      Response.new.finish do |res|
+        res.write "Hello, Rackup"
+      end
+    end
+  end
 end</pre><br />
 <br />
 （hello-rack.rbの例もそうですが、要はcallできてResponseっぽいものを返すものならば何でもいいみたいです。）<br />
@@ -111,14 +111,14 @@ Rackのexampleについているlobstericiousというふざけたアプリケ�
 <br />
 <strong>hello-rackup.ru：</strong><br />
 <br />
-<pre class="code">require 'hello-rackup'<br />
+<pre class="code">require 'hello-rackup'
 run Rack::HelloRackup.new</pre><br />
 <br />
 rackupコマンドをこの設定ファイルを指定して起動します。<br />
 <br />
-<pre class="code">$ rackup -s webrick -p 9292 hello-rackup.ru<br />
-[2007-05-07 19:27:29] INFO  WEBrick 1.3.1<br />
-[2007-05-07 19:27:29] INFO  ruby 1.8.5 (2006-08-25) [i486-linux]<br />
+<pre class="code">$ rackup -s webrick -p 9292 hello-rackup.ru
+[2007-05-07 19:27:29] INFO  WEBrick 1.3.1
+[2007-05-07 19:27:29] INFO  ruby 1.8.5 (2006-08-25) [i486-linux]
 [2007-05-07 19:27:29] INFO  WEBrick::HTTPServer#start: pid=22015 port=9292</pre><br />
 <br />
 これでブラウザから9292番にアクセスすると、<br />
@@ -131,12 +131,12 @@ rackupコマンドをこの設定ファイルを指定して起動します。<b
 <br />
 更に設定ファイルでは下記のようにProxyのように透過的に動作するMiddlewareを簡単に追加することが出来ます。（このuseというメソッド、Rubyに慣れていないのでPerlみたいに普通にあるのかと思ってKernelモジュールや予約語一覧を探し回ってしまいました・・・）<br />
 <br />
-<pre class="code">require 'hello-rackup'<br />
- <br />
-use Rack::ShowExceptions<br />
-use Rack::CommonLogger<br />
-use Rack::Lint<br />
- <br />
+<pre class="code">require 'hello-rackup'
+ 
+use Rack::ShowExceptions
+use Rack::CommonLogger
+use Rack::Lint
+ 
 run Rack::HelloRackup.new</pre><br />
 <br />
 例えば、Rack::ShowExceptionsを追加するとはエラーをPythonのフレームワークDjango風に表示にし、Rack::CommonLoggerを追加するとApache風のログを出力します。Rack（棚）にMiddlewareを積んでいって機能を追加していくイメージなのかもしれません。<br />
@@ -149,7 +149,7 @@ run Rack::HelloRackup.new</pre><br />
 <br />
 <strong>hello-rackup.fcgi：</strong><br />
 <br />
-<pre class="code">#!/bin/sh<br />
+<pre class="code">#!/bin/sh
 rackup hello-rackup.ru -s fastcgi</pre><br />
 <br />
 これはかなりヘボいのでどなたか正しいやり方を教えていただければ幸いです・・・。<br />

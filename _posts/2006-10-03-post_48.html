@@ -12,21 +12,21 @@ Keitaです。<br />
 <br />
 特に印象に残っているのがこのコードです。<br />
 <br />
-<pre><br />
-function input_filter($param)<br />
-{<br />
-    static $magic_quotes_gpc = NULL;<br />
-    if ($magic_quotes_gpc === NULL)<br />
-        $magic_quotes_gpc = get_magic_quotes_gpc();<br />
-<br />
-    if (is_array($param)) {<br />
-        return array_map('input_filter', $param);<br />
-    } else {<br />
-        $result = str_replace("\0", '', $param);<br />
-        if ($magic_quotes_gpc) $result = stripslashes($result);<br />
-        return $result;<br />
-    }<br />
-}<br />
+<pre>
+function input_filter($param)
+{
+    static $magic_quotes_gpc = NULL;
+    if ($magic_quotes_gpc === NULL)
+        $magic_quotes_gpc = get_magic_quotes_gpc();
+
+    if (is_array($param)) {
+        return array_map('input_filter', $param);
+    } else {
+        $result = str_replace("\0", '', $param);
+        if ($magic_quotes_gpc) $result = stripslashes($result);
+        return $result;
+    }
+}
 </pre><br />
 <br />
 僕がみたころのコードはもっとはるかに単純だったと思います。<br />

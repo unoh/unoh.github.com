@@ -8,31 +8,31 @@ title: "dir_walk_recursive？"
 <br />
 それはそれとして、アプリケーション内で、指定したディレクトリ以下のファイル全部に対して、何らかの処理を行いたい時がたまにあると思います。こういう場合、ディレクトリかファイルかで処理を分け、ループと再帰でぶん回したりしますが、去年、これを何回も書く機会があって面倒になったことがあったので、ディレクトリの規模があまり大きくない場合は、<br />
 <br />
-<pre class="code"><code>function divGeneric($dir, $f, $arg){<br />
-    if(!is_dir($dir)) return false;<br />
-    if($hd = opendir($dir)){<br />
-        while(false !== $file = readdir($hd)){<br />
-            if($file != "." && $file != ".."){<br />
-                $f($dir,$file,$arg,$f);<br />
-            }<br />
-        }<br />
-        closedir($hd);<br />
-    }<br />
-    return $arg;<br />
+<pre class="code"><code>function divGeneric($dir, $f, $arg){
+    if(!is_dir($dir)) return false;
+    if($hd = opendir($dir)){
+        while(false !== $file = readdir($hd)){
+            if($file != "." && $file != ".."){
+                $f($dir,$file,$arg,$f);
+            }
+        }
+        closedir($hd);
+    }
+    return $arg;
 }</code></pre><br />
 <br />
 ↑のような関数を用意して、実行したい処理を引数で渡すだけで済むようにしています。例えば、あるディレクトリ以下の全ファイルを1つの配列に入れるような場合は、以下のように書きます。<br />
 <br />
-<pre class="code"><code><br />
-$f = create_function('$dir,$file,&$array,$f', <br />
-                     'if(is_dir($dir."/".$file)){<br />
-                          $array = divGeneric($dir."/".$file, $f, $array);<br />
-                      }<br />
-                      else{<br />
-                          $array[] = $dir."/".$file;<br />
-                      }<br />
-                     ');<br />
-$ret = divGeneric($root_dir, $f, array());<br />
+<pre class="code"><code>
+$f = create_function('$dir,$file,&$array,$f', 
+                     'if(is_dir($dir."/".$file)){
+                          $array = divGeneric($dir."/".$file, $f, $array);
+                      }
+                      else{
+                          $array[] = $dir."/".$file;
+                      }
+                     ');
+$ret = divGeneric($root_dir, $f, array());
 </code></pre><br />
 <br />
 こんな感じで、array_walk_recursiveならぬ, dir_walk_recursiveっぽいことができます。関数の名前が全然違いますが、気にしないでください。ただ、このやり方はうまくいかなかったときのデバッグが面倒なので、create_function内に書く処理はあんまり長くならないようにした方がいいかもしれません。<br />

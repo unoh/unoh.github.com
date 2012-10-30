@@ -27,11 +27,11 @@ http://userscripts.org/scripts/show/8551<br />
 対応サイトは、Google、はてな、tumblr、Twitter、flickr、Yahoo、ニコニコ動画、livedoorなど現時点で約200個のサイトに対応しています。<br />
 私も<a href="http://www.eigaseikatu.com/">映画生活レビュー</a>用のSITEINFOを作ってみました。<br />
 <br />
-<pre class="code"><br />
-url:          http://www\.eigaseikatu\.com/imp/\d+/\d+/<br />
-nextLink:     (//ul[@class="commonPrevNextNavi"]/li[@class="next"]/a)[last()]<br />
-insertBefore: id("mainImpPostform")<br />
-pageElement:  id("mainImpEntry")/*[not(self::ul[@class="commonPrevNextNavi"])]<br />
+<pre class="code">
+url:          http://www\.eigaseikatu\.com/imp/\d+/\d+/
+nextLink:     (//ul[@class="commonPrevNextNavi"]/li[@class="next"]/a)[last()]
+insertBefore: id("mainImpPostform")
+pageElement:  id("mainImpEntry")/*[not(self::ul[@class="commonPrevNextNavi"])]
 </pre><br />
 <br />
 urlを正規表現、次ページへのリンクと挿入位置をXPath式で記述します。<s>spam対策のため、SITEINFO用のWikiに書き込めなくなっていたのですが、そのうち使えるようになるかと思います。</s> 登録して頂きました。どうもありがとうございます！<br />
@@ -47,16 +47,16 @@ urlを正規表現、次ページへのリンクと挿入位置をXPath式で記
 <li>classでautopagerize_page_element (複数指定可、指定したもの全てが挿入されます)</li><br />
 </ul><br />
 <br />
-<pre class="code"><code>&lt;html&gt;<br />
-  &lt;body&gt;<br />
-    &lt;div class="autopagerize_page_element"&gt;<br />
-      &lt;div&gt;foo foo foo&lt;/div&gt;<br />
-      &lt;div&gt;foo foo foo&lt;/div&gt;<br />
-      &lt;div&gt;foo foo foo&lt;/div&gt;<br />
-      &lt;div&gt;foo foo foo&lt;/div&gt;<br />
-      &lt;div&gt;foo foo foo&lt;/div&gt;<br />
-    &lt;/div&gt;<br />
-    &lt;div&gt;&lt;a href="ap_micro2.html" rel="next"&gt;next&lt;/a&gt;&lt;/div&gt;<br />
-    &lt;div class="autopagerize_insert_before"&gt;footer&lt;/div&gt;<br />
-  &lt;/body&gt;<br />
+<pre class="code"><code>&lt;html&gt;
+  &lt;body&gt;
+    &lt;div class="autopagerize_page_element"&gt;
+      &lt;div&gt;foo foo foo&lt;/div&gt;
+      &lt;div&gt;foo foo foo&lt;/div&gt;
+      &lt;div&gt;foo foo foo&lt;/div&gt;
+      &lt;div&gt;foo foo foo&lt;/div&gt;
+      &lt;div&gt;foo foo foo&lt;/div&gt;
+    &lt;/div&gt;
+    &lt;div&gt;&lt;a href="ap_micro2.html" rel="next"&gt;next&lt;/a&gt;&lt;/div&gt;
+    &lt;div class="autopagerize_insert_before"&gt;footer&lt;/div&gt;
+  &lt;/body&gt;
 &lt;/html&gt;</code></pre>

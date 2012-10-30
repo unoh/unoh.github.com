@@ -20,11 +20,11 @@ title: "いまさらコマンドラインの便利さを主張してみる"
 zshのワイルドカードを使うと、ちょっとしたfindコマンドのようなファイル名のマッチができます。<br />
 簡単に紹介すると次のようなことができます。<br />
 <br />
-<pre class="code"><br />
-echo **/foo # 再帰的に 'foo' にマッチ<br />
-echo *(/)    # ディレクトリだけマッチ<br />
-echo *(.)    # 標準ファイルだけマッチ<br />
-echo *(@)    # シンボリックリンクにだけマッチ<br />
+<pre class="code">
+echo **/foo # 再帰的に 'foo' にマッチ
+echo *(/)    # ディレクトリだけマッチ
+echo *(.)    # 標準ファイルだけマッチ
+echo *(@)    # シンボリックリンクにだけマッチ
 </pre><br />
 <br />
 <h3>パイプ処理</h3><br />
@@ -45,15 +45,15 @@ echo *(@)    # シンボリックリンクにだけマッチ<br />
 <br />
 例えば、subversionで新規ファイルを全てaddするとかは、こんな感じでできます。<br />
 <br />
-<pre class="code"><br />
-svn status|grep '^?'|awk '{print $2}'|xargs svn add<br />
+<pre class="code">
+svn status|grep '^?'|awk '{print $2}'|xargs svn add
 </pre><br />
 <br />
 これぐらいの機能ならGUIアプリでも提供されてるでしょうが、例えば画像ファイルだけ追加したい場合はどうでしょうか。<br />
 GUIアプリの場合はアプリ自体に機能がなければお手上げですが、コマンドラインならいとも簡単に実現できます。<br />
 <br />
-<pre class="code"><br />
-svn status|grep '^?'|grep '¥.gif$'|awk '{print $2}'|xargs svn add<br />
+<pre class="code">
+svn status|grep '^?'|grep '¥.gif$'|awk '{print $2}'|xargs svn add
 </pre><br />
 <br />
 <h3>パイプ処理で活用したい文字列処理ツール</h3><br />

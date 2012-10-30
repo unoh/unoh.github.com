@@ -12,77 +12,77 @@ cacti にはこういった設定をコマンドラインから行える php ス
 <br />
 ■cacti の設定をコマンドラインから行える php スクリプト<br />
 <br />
-<pre class="code"><br />
-$ rpm -ql cacti | grep cli | grep php$<br />
-/var/lib/cacti/cli/add_data_query.php<br />
-/var/lib/cacti/cli/add_device.php<br />
-/var/lib/cacti/cli/add_graph_template.php<br />
-/var/lib/cacti/cli/add_graphs.php<br />
-(...snip...)<br />
+<pre class="code">
+$ rpm -ql cacti | grep cli | grep php$
+/var/lib/cacti/cli/add_data_query.php
+/var/lib/cacti/cli/add_device.php
+/var/lib/cacti/cli/add_graph_template.php
+/var/lib/cacti/cli/add_graphs.php
+(...snip...)
 </pre><br />
 <br />
 ■上記 php スクリプトのヘルプドキュメント<br />
 <br />
-<pre class="code"><br />
-$ rpm -ql cacti | grep cli | grep html$<br />
-/usr/share/doc/cacti-0.8.7e/docs/html/cli_add_data_query.html<br />
-/usr/share/doc/cacti-0.8.7e/docs/html/cli_add_device.html<br />
-/usr/share/doc/cacti-0.8.7e/docs/html/cli_add_graph_template.html<br />
-/usr/share/doc/cacti-0.8.7e/docs/html/cli_add_graphs.html<br />
-(...snip...)<br />
+<pre class="code">
+$ rpm -ql cacti | grep cli | grep html$
+/usr/share/doc/cacti-0.8.7e/docs/html/cli_add_data_query.html
+/usr/share/doc/cacti-0.8.7e/docs/html/cli_add_device.html
+/usr/share/doc/cacti-0.8.7e/docs/html/cli_add_graph_template.html
+/usr/share/doc/cacti-0.8.7e/docs/html/cli_add_graphs.html
+(...snip...)
 </pre><br />
 <br />
 以下にこれらのスクリプトを使用して newserver というサーバを追加していく例を紹介いたします。<br />
 <br />
 1.まず、追加するサーバのタイプ(Web サーバだったり、DB サーバだったりします)を指定するための template の id を調べます。<br />
 <br />
-<pre class="code"><br />
-$ sudo -u cacti php /var/lib/cacti/cli/add_device.php --list-host-templates<br />
-Valid Host Templates: (id, name)<br />
-0	None<br />
-1	Generic SNMP-enabled Host<br />
-3	ucd/net SNMP Host<br />
-4	Karlnet Wireless Bridge<br />
-5	Cisco Router<br />
-6	Netware 4/5 Server<br />
-7	Windows 2000/XP Host<br />
-8	Local Linux Machine<br />
-9	X DB Server HT<br />
-10  	WebServer - Apache<br />
-11	Memcached Server<br />
-12	X Nginx Server HT<br />
+<pre class="code">
+$ sudo -u cacti php /var/lib/cacti/cli/add_device.php --list-host-templates
+Valid Host Templates: (id, name)
+0	None
+1	Generic SNMP-enabled Host
+3	ucd/net SNMP Host
+4	Karlnet Wireless Bridge
+5	Cisco Router
+6	Netware 4/5 Server
+7	Windows 2000/XP Host
+8	Local Linux Machine
+9	X DB Server HT
+10  	WebServer - Apache
+11	Memcached Server
+12	X Nginx Server HT
 </pre><br />
 <br />
 2. ここでは template としてシンプルな None を選びます。template が決まったので add_device.php で device を追加します。ここでの cacti の出力の device_id の 90 が以下に使う「--host-id」に渡す値になります。<br />
 <br />
-<pre class="code"><br />
-$ sudo -u cacti php add_device.php --description=newserver　--ip=10.0.0.123 --version=2 --avail=pingsnmp --community=public --template=0<br />
-　<br />
-Adding newserver (10.0.0.123) as "None" using SNMP v2 with community "public"<br />
+<pre class="code">
+$ sudo -u cacti php add_device.php --description=newserver　--ip=10.0.0.123 --version=2 --avail=pingsnmp --community=public --template=0
+　
+Adding newserver (10.0.0.123) as "None" using SNMP v2 with community "public"
 Success - new device-id: (90)</pre><br />
 <br />
 3. Data Query を追加します。サンプルとして以下 3 つ(SNMP interface, ucd/net Get Mount, SNMP Get Mount Partitions) を追加します。「--host-id」に先ほどの値 90 を使用します。<br />
 <br />
-<pre class="code"><br />
-$ sudo -u cacti php add_data_query.php --host-id=90 --data-query-id=1  --reindex-method=1 #SNMP interface<br />
-$ sudo -u cacti php add_data_query.php --host-id=90 --data-query-id=2  --reindex-method=1 #ucd/net Get Mount Partitions<br />
-$ sudo -u cacti php add_data_query.php --host-id=90 --data-query-id=8  --reindex-method=1 #SNMP Get Mont Partitions<br />
+<pre class="code">
+$ sudo -u cacti php add_data_query.php --host-id=90 --data-query-id=1  --reindex-method=1 #SNMP interface
+$ sudo -u cacti php add_data_query.php --host-id=90 --data-query-id=2  --reindex-method=1 #ucd/net Get Mount Partitions
+$ sudo -u cacti php add_data_query.php --host-id=90 --data-query-id=8  --reindex-method=1 #SNMP Get Mont Partitions
 </pre><br />
 <br />
 4. Graph Template を追加します。サンプルとして CPU 使用率、ロードアベレージ、メモリ使用量を追加します。グラフテンプレートIDは「--list-graph-templates」オプションで見ることができます。<br />
 <br />
-<pre class="code"><br />
-$ sudo -u cacti php add_graph_template.php --host-id=90 --graph-template-id=4  #ucd/net CPU Usage<br />
-$ sudo -u cacti php add_graph_template.php --host-id=90 --graph-template-id=11 #ucd/net Load Average<br />
-$ sudo -u cacti php add_graph_template.php --host-id=90 --graph-template-id=13 #uce/net Memory Usage<br />
+<pre class="code">
+$ sudo -u cacti php add_graph_template.php --host-id=90 --graph-template-id=4  #ucd/net CPU Usage
+$ sudo -u cacti php add_graph_template.php --host-id=90 --graph-template-id=11 #ucd/net Load Average
+$ sudo -u cacti php add_graph_template.php --host-id=90 --graph-template-id=13 #uce/net Memory Usage
 </pre><br />
 <br />
 5. Graph を追加します。サンプルとして CPU 使用率、ロードアベレージ、メモリ使用量を追加します。<br />
 <br />
-<pre class="code"><br />
-$ sudo -u cacti php add_graphs.php --host-id=90 --graph-template-id=4 --graph-type=cg<br />
-$ sudo -u cacti php add_graphs.php --host-id=90 --graph-template-id=11 --graph-type=cg<br />
-$ sudo -u cacti php add_graphs.php --host-id=90 --graph-template-id=13 --graph-type=cg<br />
+<pre class="code">
+$ sudo -u cacti php add_graphs.php --host-id=90 --graph-template-id=4 --graph-type=cg
+$ sudo -u cacti php add_graphs.php --host-id=90 --graph-template-id=11 --graph-type=cg
+$ sudo -u cacti php add_graphs.php --host-id=90 --graph-template-id=13 --graph-type=cg
 </pre><br />
 <br />
 使い方がわかればこれらをバッチ処理で実行するスクリプトを作成して更に効率化することも可能です。<br />

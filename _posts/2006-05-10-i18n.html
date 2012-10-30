@@ -14,18 +14,18 @@ title: "I18Nって何のこと？"
 <br />
 では I18N の一例を。<a href="http://kanabun.unoh.net">かなぶん</a>では一度日本語表示にした人が再度訪れたときにも日本語で表示されるように、クッキーに言語の値を保存しておきそれを見るようにしています。一番最初に訪れた人の場合には、その人が使っているブラウザの言語（IEでは「ツール」>「インターネットオプション」 の「言語」で設定できます）をチェックして、日本語があれば日本語表示を、なければ英語表示する、というロジックを使ってます。以下がその部分を表す php のコードです。<br />
 <br />
-<pre><br />
-if (!empty($_GET['lang'])) {<br />
-    $lang = $_GET['lang'];<br />
-} elseif (!empty($_COOKIE['kanabun_lang'])) {<br />
-    $lang = $_COOKIE['kanabun_lang'];<br />
-} elseif (ereg("ja", $_SERVER['HTTP_ACCEPT_LANGUAGE'])) {<br />
-    $lang = "ja";<br />
-} elseif ($_SERVER['HTTP_ACCEPT_LANGUAGE'] != '') {<br />
-    $lang = "en";<br />
-} else {<br />
-    $lang = "ja";<br />
-}<br />
+<pre>
+if (!empty($_GET['lang'])) {
+    $lang = $_GET['lang'];
+} elseif (!empty($_COOKIE['kanabun_lang'])) {
+    $lang = $_COOKIE['kanabun_lang'];
+} elseif (ereg("ja", $_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+    $lang = "ja";
+} elseif ($_SERVER['HTTP_ACCEPT_LANGUAGE'] != '') {
+    $lang = "en";
+} else {
+    $lang = "ja";
+}
 </pre><br />
 <br />
 インターネットで情報発信、というとき日本以外のユーザーにも少し配慮することで、思わぬところの思わぬ人があなたの情報を受け取って喜んで感謝してくれるかもしれません。

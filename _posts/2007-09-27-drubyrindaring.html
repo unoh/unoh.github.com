@@ -52,38 +52,38 @@ komagataです。<br />
 <br />
 <strong>jukebox_server.rb:</strong><br />
 <br />
-<pre class="code">#!/usr/bin/env ruby<br />
-require 'rinda/ring'<br />
-require 'rinda/tuplespace'<br />
-require 'tmpdir'<br />
- <br />
-class JukeboxServer<br />
-  def initialize<br />
-    @play_list = Rinda::TupleSpace.new<br />
-  end<br />
- <br />
-  def play<br />
-    puts "waiting..."<br />
-    name, music_file = @play_list.take([:music, nil])<br />
-    puts "playing..."<br />
-    system "mpg123 #{music_file}"<br />
-    File.delete "#{Dir.tmpdir}/#{music_file}"<br />
-  end<br />
- <br />
-  def request(file_name, music_data)<br />
-    open("#{Dir.tmpdir}/#{file_name}", "w") {|f| f.write music_data }<br />
-    @play_list.write([:music, "#{Dir.tmpdir}/#{file_name}"])<br />
-  end<br />
-end<br />
- <br />
-jukebox_server = JukeboxServer.new<br />
-DRb.start_service(nil, jukebox_server)<br />
- <br />
-provider = Rinda::RingProvider.new(:jukebox, DRbObject.new(jukebox_server), 'Jukebox Server')<br />
-provider.provide<br />
- <br />
-loop { jukebox_server.play }<br />
- <br />
+<pre class="code">#!/usr/bin/env ruby
+require 'rinda/ring'
+require 'rinda/tuplespace'
+require 'tmpdir'
+ 
+class JukeboxServer
+  def initialize
+    @play_list = Rinda::TupleSpace.new
+  end
+ 
+  def play
+    puts "waiting..."
+    name, music_file = @play_list.take([:music, nil])
+    puts "playing..."
+    system "mpg123 #{music_file}"
+    File.delete "#{Dir.tmpdir}/#{music_file}"
+  end
+ 
+  def request(file_name, music_data)
+    open("#{Dir.tmpdir}/#{file_name}", "w") {|f| f.write music_data }
+    @play_list.write([:music, "#{Dir.tmpdir}/#{file_name}"])
+  end
+end
+ 
+jukebox_server = JukeboxServer.new
+DRb.start_service(nil, jukebox_server)
+ 
+provider = Rinda::RingProvider.new(:jukebox, DRbObject.new(jukebox_server), 'Jukebox Server')
+provider.provide
+ 
+loop { jukebox_server.play }
+ 
 DRb.thread.join</pre><br />
 <br />
 クライアントはDRbオブジェクト経由でサーバ側のtmpディレクトリに音楽ファイルを保存し、そのパスをTubpleSpaceに保持して、サーバーが順次再生します。<br />

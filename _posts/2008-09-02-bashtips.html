@@ -21,8 +21,8 @@ UNIXを使う時にはシェルスクリプトをよく使います。<br />
 <br />
 例えばシェルスクリプト自身の絶対パスを取得するのは次のようにできます。<br />
 <br />
-<pre class="code"><br />
-echo $(cd $(dirname $0);pwd)<br />
+<pre class="code">
+echo $(cd $(dirname $0);pwd)
 </pre><br />
 <br />
 バッククオートだと一時変数に代入しないとできませんが、"$()"を使うとネストが可能なので、一発で取得する事ができます。<br />
@@ -43,25 +43,25 @@ echo $(cd $(dirname $0);pwd)<br />
 <li><strike>浮動小数点が扱える</strike>(bashでは使えなくて、zshの話でした。ご指摘ありがとうございます)</li><br />
 </ul><br />
 <br />
-<pre class="code"><br />
-if ((1)); then    # ((1))は終了ステータスが"0"なので"true"が表示される<br />
-  echo true<br />
-else<br />
-  echo false<br />
-fi<br />
+<pre class="code">
+if ((1)); then    # ((1))は終了ステータスが"0"なので"true"が表示される
+  echo true
+else
+  echo false
+fi
 </pre><br />
 <br />
-<pre class="code"><br />
-$ echo $((1+2))    # 演算子の間にスペースがいらない<br />
-3<br />
-$ echo $(expr 1+2)   # exprだと演算子の間にスペースが必要<br />
-1+2<br />
-$ echo $(expr 1 + 2)    # スペースあけるとうまくいく<br />
-3<br />
-<strike>$ echo $((1.1+2.2))    # 浮動小数点もいける<br />
-3.3000000000000003<br />
-$ echo $(expr 1.1 + 2.2)    # exprだと浮動小数点はダメ<br />
-expr: non-numeric argument</strike><br />
+<pre class="code">
+$ echo $((1+2))    # 演算子の間にスペースがいらない
+3
+$ echo $(expr 1+2)   # exprだと演算子の間にスペースが必要
+1+2
+$ echo $(expr 1 + 2)    # スペースあけるとうまくいく
+3
+<strike>$ echo $((1.1+2.2))    # 浮動小数点もいける
+3.3000000000000003
+$ echo $(expr 1.1 + 2.2)    # exprだと浮動小数点はダメ
+expr: non-numeric argument</strike>
 </pre><br />
 <br />
 <h3>read(Borne Shellでも使える?)</h3><br />
@@ -69,18 +69,18 @@ expr: non-numeric argument</strike><br />
 findの出力結果をベースに大量のファイルに一気に処理を行う時はどうやるでしょうか。<br />
 よくみかけるのが、こんなスクリプトです。<br />
 <br />
-<pre class="code"><br />
-for f in $(find ...); do<br />
-  echo $f<br />
-  echo $(basename $f)<br />
-done<br />
+<pre class="code">
+for f in $(find ...); do
+  echo $f
+  echo $(basename $f)
+done
 </pre><br />
 <br />
 これは"find"の実行結果が長くない時には、うまく動作します。<br />
 "find"の実行結果が長いときによく利用するのが"xargs"です。<br />
 <br />
-<pre class="code"><br />
-find ... | xargs command<br />
+<pre class="code">
+find ... | xargs command
 </pre><br />
 <br />
 xargsは僕も大好きなコマンドの1つで、1つのコマンドを複数ファイルに実行するのにとても便利です。<br />
@@ -90,11 +90,11 @@ xargsは僕も大好きなコマンドの1つで、1つのコマンドを複数�
 read は標準入力から読み込んだデータを引数に指定した変数に代入します。<br />
 "find"の出力結果をパイプで流して、"read"を使って順番に変数に代入すると、"find"の実行結果が長くても動作しますし、複数のコマンドの実行も簡単に行えます。<br />
 <br />
-<pre class="code"><br />
-find ... | while read f; do<br />
-  echo $f<br />
-  echo $(basename $f)<br />
-done<br />
+<pre class="code">
+find ... | while read f; do
+  echo $f
+  echo $(basename $f)
+done
 </pre><br />
 <br />
 <h3>まとめ</h3><br />

@@ -4,40 +4,40 @@ title: "rubyで手軽に暗号化文字列やハッシュ値を生成"
 ---
 こんにちは django派閥とrails派閥の争いが激しい最近のウノウです。ちなみに若干railsが優勢です。<br />
 <br />
-<pre class="code"><br />
-require 'openssl'<br />
-def encrypt(aaa, solt = 'solt')<br />
-  enc = OpenSSL::Cipher::Cipher.new('aes256')<br />
-  enc.encrypt<br />
-  enc.pkcs5_keyivgen(solt)<br />
-  ((enc.update(aaa) + enc.final).unpack("H*")).to_s<br />
-  rescue<br />
-    false<br />
-end<br />
-def decrypt(bbb, solt = 'solt')<br />
-  dec = OpenSSL::Cipher::Cipher.new('aes256') <br />
-  dec.decrypt <br />
-  dec.pkcs5_keyivgen(solt)<br />
-  (dec.update(Array.new([bbb]).pack("H*")) + dec.final)<br />
-  rescue  <br />
-    false <br />
-end <br />
-def hash(ccc)<br />
-    OpenSSL::Digest::SHA1.new(ccc)<br />
-end <br />
-    <br />
-secret = "himitsu"<br />
-solt   = "unoh"<br />
-enc = encrypt(secret, solt) <br />
-p enc <br />
-dec = decrypt(enc, solt)<br />
-p dec <br />
-p hash(secret)<br />
-<br />
-#--<br />
-#"2906e1eca22b8b74ab2a14cbf185185c"<br />
-#"himitsu"<br />
-#c44ade485240212403b41eba503fcb222d190cd0<br />
+<pre class="code">
+require 'openssl'
+def encrypt(aaa, solt = 'solt')
+  enc = OpenSSL::Cipher::Cipher.new('aes256')
+  enc.encrypt
+  enc.pkcs5_keyivgen(solt)
+  ((enc.update(aaa) + enc.final).unpack("H*")).to_s
+  rescue
+    false
+end
+def decrypt(bbb, solt = 'solt')
+  dec = OpenSSL::Cipher::Cipher.new('aes256') 
+  dec.decrypt 
+  dec.pkcs5_keyivgen(solt)
+  (dec.update(Array.new([bbb]).pack("H*")) + dec.final)
+  rescue  
+    false 
+end 
+def hash(ccc)
+    OpenSSL::Digest::SHA1.new(ccc)
+end 
+    
+secret = "himitsu"
+solt   = "unoh"
+enc = encrypt(secret, solt) 
+p enc 
+dec = decrypt(enc, solt)
+p dec 
+p hash(secret)
+
+#--
+#"2906e1eca22b8b74ab2a14cbf185185c"
+#"himitsu"
+#c44ade485240212403b41eba503fcb222d190cd0
 </pre><br />
 <br />
 便利ですね。<br />

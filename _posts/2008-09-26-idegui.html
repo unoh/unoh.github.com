@@ -54,15 +54,15 @@ wxMSWのインストーラをダウンロードしたら実行し、上でイン
 ファイルの展開が終わったら、MSYSから、たった今展開したwxWidgets-2.8.9のディレクトリにcdで移動し、./configureで makefileを設定した後、makeでコンパイル、make install でwxWidgetsをインストールします。<br />
 </p><br />
 <br />
-<pre class="code"><br />
-$ pwd<br />
-/home/gotanda　　(筆者の場合)<br />
-$ ls<br />
-wxWidgets-2.8.9<br />
-$ cd wxWidgets-2.8.9/<br />
-$ ./configure --disable-shared --disable-threads --enable-monolithic --enable-unicode<br />
-$ make<br />
-$ make install<br />
+<pre class="code">
+$ pwd
+/home/gotanda　　(筆者の場合)
+$ ls
+wxWidgets-2.8.9
+$ cd wxWidgets-2.8.9/
+$ ./configure --disable-shared --disable-threads --enable-monolithic --enable-unicode
+$ make
+$ make install
 </pre><br />
 <br />
 <p>これでインストールできるはずです。</p><br />
@@ -90,19 +90,19 @@ $ make install<br />
 <br />
 <p><br />
 MSYSから<br />
-<pre class="code"><br />
-$ pwd<br />
-/home/gotanda　(筆者の場合)<br />
-$ ls<br />
-test<br />
-$ cd test<br />
+<pre class="code">
+$ pwd
+/home/gotanda　(筆者の場合)
+$ ls
+test
+$ cd test
 </pre><br />
 <br />
 で、testディレクトリに移動し、<br />
 <br />
-<pre class="code"><br />
-g++ -c TestApp.cpp TestFrame.cpp `wx-config --cppflags`<br />
-g++ -o test.exe TestApp.o TestFrame.o `wx-config --libs`<br />
+<pre class="code">
+g++ -c TestApp.cpp TestFrame.cpp `wx-config --cppflags`
+g++ -o test.exe TestApp.o TestFrame.o `wx-config --libs`
 </pre><br />
 <br />
 でコンパイル&リンクします。これでtest.exeが生成され、正常に実行できればwxWidgetsのインストールに成功しています。<br />
@@ -153,9 +153,9 @@ MSYSからコンパイルする時は、`wx-config --cppflags`のようなコマ
 <p><br />
 最初に、コンパイル時の設定をします。 wx-config --cppflags で吐かれるオプション<br />
 <br />
-<pre class="code"><br />
--I/usr/local/lib/wx/include/msw-unicode-release-static-2.8<br />
--I/usr/local/include/wx-2.8 -D__WXMSW__<br />
+<pre class="code">
+-I/usr/local/lib/wx/include/msw-unicode-release-static-2.8
+-I/usr/local/include/wx-2.8 -D__WXMSW__
 </pre><br />
 <br />
 を、C:ドライブからのフルパス表記に変えて、それぞれ設定します。<br />
@@ -164,19 +164,19 @@ MSYSからコンパイルする時は、`wx-config --cppflags`のようなコマ
 <p><br />
 メニューのProjectからProperties→C/C++ Build→Settings→Tool Settings → GCC C++ Compiler と進み、<br />
 PreprocessorのDefined Symbolに<br />
-<pre class="code"><br />
-__WXMSW__<br />
+<pre class="code">
+__WXMSW__
 </pre><br />
 を、<br />
 <br />
 DirectoriesのInclude Paths(-I)に<br />
 </p><br />
-<pre class="code"><br />
-C:/msys/1.0/local/lib/wx/include/msw-unicode-release-static-2.8<br />
+<pre class="code">
+C:/msys/1.0/local/lib/wx/include/msw-unicode-release-static-2.8
 </pre><br />
 と<br />
-<pre class="code"><br />
-C:/msys/1.0/local/include/wx-2.8<br />
+<pre class="code">
+C:/msys/1.0/local/include/wx-2.8
 </pre><br />
 <p><br />
 を追加します。<br />
@@ -186,8 +186,8 @@ C:/msys/1.0/local/include/wx-2.8<br />
 <br />
 <p><br />
 そして、リンク時の設定です。wx-config --libs で吐かれるオプション<br />
-<pre class="code"><br />
--L/usr/local/lib   -Wl,--subsystem,windows -mwindows /usr/local/lib/libwx_mswu-2.8.a -lwxregexu-2.8 -lwxexpat-2.8 -lwxtiff-2.8 -lwxjpeg-2.8 -lwxpng-2.8 -lwxzlib-2.8 -lrpcrt4 -loleaut32 -lole32 -luuid -lwinspool -lwinmm -lshell32 -lcomctl32 -lcomdlg32 -lctl3d32 -ladvapi32 -lwsock32 -lgdi32<br />
+<pre class="code">
+-L/usr/local/lib   -Wl,--subsystem,windows -mwindows /usr/local/lib/libwx_mswu-2.8.a -lwxregexu-2.8 -lwxexpat-2.8 -lwxtiff-2.8 -lwxjpeg-2.8 -lwxpng-2.8 -lwxzlib-2.8 -lrpcrt4 -loleaut32 -lole32 -luuid -lwinspool -lwinmm -lshell32 -lcomctl32 -lcomdlg32 -lctl3d32 -ladvapi32 -lwsock32 -lgdi32
 </pre><br />
 を、コンパイル時の設定と同様、C:ドライブからのフルパス表記に変えてそれぞれ設定します。<br />
 </p><br />
@@ -195,8 +195,8 @@ C:/msys/1.0/local/include/wx-2.8<br />
 <p><br />
 メニューのProjectからProperties→C/C++ Build→Settings→Tool Settings → MinGW Linker と進み、<br />
 Libraries の Libraries (-l) に<br />
-<pre class="code"><br />
-wx_mswu-2.8 wxregexu-2.8 wxexpat-2.8 wxtiff-2.8 wxjpeg-2.8 wxpng-2.8 wxzlib-2.8 rpcrt4 oleaut32 ole32 uuid winspool winmm shell32 comctl32 comdlg32 ctl3d32 advapi32 wsock32 gdi32<br />
+<pre class="code">
+wx_mswu-2.8 wxregexu-2.8 wxexpat-2.8 wxtiff-2.8 wxjpeg-2.8 wxpng-2.8 wxzlib-2.8 rpcrt4 oleaut32 ole32 uuid winspool winmm shell32 comctl32 comdlg32 ctl3d32 advapi32 wsock32 gdi32
 </pre><br />
 を１つずつ追加、<br />
 <br />
@@ -204,14 +204,14 @@ wx_mswu-2.8 wxregexu-2.8 wxexpat-2.8 wxtiff-2.8 wxjpeg-2.8 wxpng-2.8 wxzlib-2.8 
 <br />
 <br />
 Librariy search path (-L) に<br />
-<pre class="code"><br />
-C:/msys/1.0/local/lib<br />
+<pre class="code">
+C:/msys/1.0/local/lib
 </pre><br />
 を追加、<br />
 <br />
 Miscellaneous の Linker Flags に<br />
-<pre class="code"><br />
--Wl,--subsystem,windows -mwindows<br />
+<pre class="code">
+-Wl,--subsystem,windows -mwindows
 </pre><br />
 を追加します。<br />
 <br />

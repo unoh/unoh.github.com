@@ -45,31 +45,31 @@ daemontoolsは異常終了してしまったデーモンプロセスを再起動
 <br />
 デーモンを登録するには/service以下に登録したいデーモンの起動スクリプトとログ収集のためのスクリプトを配置します。<br />
 <br />
-<pre class="code"><br />
-$ mkdir /var/daemon<br />
-$ mkdir /var/daemon/log<br />
-$ mkdir /var/daemon/log/main<br />
-$ chmod 1755 /var/daemon<br />
-$ chmod +x /var/daemon/run<br />
-$ chmod +x /var/daemon/log/run<br />
-$ chown hoge:fuga /var/daemon/log/main<br />
-$ ln -s /var/daemon /service<br />
+<pre class="code">
+$ mkdir /var/daemon
+$ mkdir /var/daemon/log
+$ mkdir /var/daemon/log/main
+$ chmod 1755 /var/daemon
+$ chmod +x /var/daemon/run
+$ chmod +x /var/daemon/log/run
+$ chown hoge:fuga /var/daemon/log/main
+$ ln -s /var/daemon /service
 </pre><br />
 <br />
 <h3>/var/daemon/run</h3><br />
 <br />
-<pre class="code"><br />
-#!/bin/sh<br />
-exec 2>&1 # エラー出力を標準出力へ<br />
-exec setuidgid hoge /usr/bin/daemon<br />
+<pre class="code">
+#!/bin/sh
+exec 2>&1 # エラー出力を標準出力へ
+exec setuidgid hoge /usr/bin/daemon
 </pre><br />
 <br />
 <h3>/var/daemon/log/run</h3><br />
 <br />
-<pre class="code"><br />
-#!/bin/sh<br />
-exec 2>&1 # エラー出力を標準出力へ<br />
-exec setuidgid hoge multilog t ./main<br />
+<pre class="code">
+#!/bin/sh
+exec 2>&1 # エラー出力を標準出力へ
+exec setuidgid hoge multilog t ./main
 </pre><br />
 <br />
 runを実行したプロセス自身をデーモン化しなければいかないので、必ずexecを付けます。また、runで実行するプロセスはフォアグラウンドで起動させなければいけません。<br />
@@ -82,40 +82,40 @@ runを実行したプロセス自身をデーモン化しなければいかな�
 <br />
 /service以下のデーモンを起動するにはsvscanを使うとよいでしょう。<br />
 <br />
-<pre class="code"><br />
-$ sh -c 'svscan /service &'<br />
+<pre class="code">
+$ sh -c 'svscan /service &'
 </pre><br />
 <br />
 ↑を実行すると/serviceディレクトリ以下にあるすべてのデーモンに対してsuperviseによるデーモンの監視が行えます。なんらかの原因でデーモンが終了してしまってもsuperviseが自動的にデーモンを再起動してくれます。ただ、デーモンプログラム自体に問題があって起動できない場合、何度も再起動を試み、ずっとログに起動失敗のメッセージを書き込み続けてしまうので注意しましょう。<br />
 <br />
 OS起動時からdaemontoolsに関連するプログラムを起動しておく場合は、/etc/inittabに以下の記述をしておくとよいでしょう。<br />
 <br />
-<pre class="code"><br />
-SV:123456:respawn:/command/svscanboot      <br />
+<pre class="code">
+SV:123456:respawn:/command/svscanboot      
 </pre>                                     <br />
 <br />
 <h3>svcでデーモンに命令を発行する</h3><br />
 <br />
 svcコマンドを使うと指定したデーモンに対して以下のような命令を発行することができます。<br />
 <br />
-<pre class="code"><br />
-$ svc -u /service/daemon # 起動<br />
-$ svc -d /service/daemon # 一時停止<br />
-$ svc -t /service/daemon # 再起動<br />
-               ・<br />
-               ・<br />
-               ・<br />
+<pre class="code">
+$ svc -u /service/daemon # 起動
+$ svc -d /service/daemon # 一時停止
+$ svc -t /service/daemon # 再起動
+               ・
+               ・
+               ・
 </pre><br />
 <br />
 <h3>svstatで状態確認</h3><br />
 <br />
 svstatを使うと指定したデーモンの状態を確認することができます。<br />
 <br />
-<pre class="code"><br />
-$ svstat /service/daemon # 起動中<br />
-/service/daemon: up (pid 8131) 3 seconds<br />
-$ svstat /service/daemon # 停止中<br />
-/service/daemon: down (pid 8131) 57 seconds, normally up<br />
+<pre class="code">
+$ svstat /service/daemon # 起動中
+/service/daemon: up (pid 8131) 3 seconds
+$ svstat /service/daemon # 停止中
+/service/daemon: down (pid 8131) 57 seconds, normally up
 </pre><br />
 <br />
 ただ、たまにdaemontools側から起動しているように見えているだけの時があるので注意しましょう。詳しくは後述します。<br />
@@ -136,17 +136,17 @@ $ svstat /service/daemon # 停止中<br />
 <br />
 <h3>superviseがエラーを吐く</h3><br />
 <br />
-<pre class="code"><br />
-supervise: fatal: unable to acquire daemon/supervise/lock: temporary failure<br />
+<pre class="code">
+supervise: fatal: unable to acquire daemon/supervise/lock: temporary failure
 </pre><br />
 <br />
 既に指定したデーモンに対してsupervise(もしくはsvscan)が起動していたり、操作ミスなどによりsupervise(もしくはsvscan)自体が異常終了した場合に上記のエラーメッセージが出ることがあります。<br />
 この場合、該当するデーモンに対して起動しているsuperviseを終了し(svscanが起動している場合は先にそっちを終了します)、以下のファイルを削除します。<br />
 <br />
-<pre class="code"><br />
-rm /var/daemon/supervise/lock<br />
-rm /var/daemon/log/supervise/lock<br />
-rm /var/daemon/log/main/lock<br />
+<pre class="code">
+rm /var/daemon/supervise/lock
+rm /var/daemon/log/supervise/lock
+rm /var/daemon/log/main/lock
 </pre><br />
 <br />
 追記:(2008/07/24)<br />
@@ -155,10 +155,10 @@ rm /var/daemon/log/main/lock<br />
 <br />
 修正箇所<br />
 <br />
-<pre class="code"><br />
-supervise(もしくはsvscan)自体が異常終了した場合に<br />
-↓<br />
-操作ミスなどによりsupervise(もしくはsvscan)自体が異常終了した場合に<br />
+<pre class="code">
+supervise(もしくはsvscan)自体が異常終了した場合に
+↓
+操作ミスなどによりsupervise(もしくはsvscan)自体が異常終了した場合に
 </pre><br />
 <br />
 また、lockファイルを削除するよりもいい方法があるようです(コメント<br />

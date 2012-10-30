@@ -22,25 +22,25 @@ Linux のインストールは最初の1台だけです。後は全てコピー�
 <br />
 コピー元のサーバにコピー先のサーバの HDD を接続します。後は次のシェルスクリプト1発でコピー完了です。<br />
 <br />
-<pre class="source_code"><br />
-#!/bin/sh<br />
-mkfs.ext3 /dev/sdb1 -L /boot<br />
-mkfs.xfs -f /dev/sdb2 -L /<br />
-mount /dev/sdb1 /w<br />
-cp -a /boot/* /w<br />
-umount /w<br />
-mount /dev/sdb2 /w<br />
-xfsdump -a - /| xfsrestore -r - /w<br />
-umount /w<br />
+<pre class="source_code">
+#!/bin/sh
+mkfs.ext3 /dev/sdb1 -L /boot
+mkfs.xfs -f /dev/sdb2 -L /
+mount /dev/sdb1 /w
+cp -a /boot/* /w
+umount /w
+mount /dev/sdb2 /w
+xfsdump -a - /| xfsrestore -r - /w
+umount /w
 </pre><br />
 <br />
 ものの10分でコピーできます。これでファイルシステムはコピーできたのですが、重要な MBR が書き換わってないので、このままでは起動することができません。そこで、GRUB の入った CD で起動して MBR を書き換えます。<br />
 <br />
 正確なコマンドは忘れましたが、GRUB が起動して次のようにタイプすると MBR が書き換えられて起動できるようになります。<br />
 <br />
-<pre class="source_code"><br />
-root (hd0,0)<br />
-setup (hd0)<br />
+<pre class="source_code">
+root (hd0,0)
+setup (hd0)
 </pre><br />
 <br />
 実はこれをもうちょっと発展させてネットワーク越しで dump, restore できないかなと考えています。<br />

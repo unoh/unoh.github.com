@@ -10,8 +10,8 @@ title: "Emacsを自分で拡張する際のTips"
 <br />
 Emacsを拡張する上で覚えておくべきなのは<strong>Emacs上で行える対話的な動作は「M-x 関数名」で実現できる</strong>ということです。例えば、C-bはカーソルを1文字分左へ戻しますが、これは「M-x backward-char」とタイプすることと同じです。もしC-bが押しにくい(多分私だけです)のであれば、以下のようなelispを評価してキーバインドを変更することができます。<br />
 <br />
-<pre class="code"><br />
-(global-set-key "\C-l" 'backward-char)<br />
+<pre class="code">
+(global-set-key "\C-l" 'backward-char)
 </pre><br />
 <br />
 Emacsではこのようなキーバインドに限らず、あらゆる操作をelispを使って変更したり、新たに定義することができます。関数名もしくはキーバインドの一方しかわからない場合は、「help-for-help f」(C-h f)とタイプして関数名を入力したり、「help-for-help k」(C-h k)とタイプしてキーを入力すると、それに対応する関数の説明やキーバインドが表示されますので、これで確かめましょう。<br />
@@ -24,13 +24,13 @@ Emacsではこのようなキーバインドに限らず、あらゆる操作を
 <br />
 elscreenは簡単に言うとEmacsをタブエディタっぽく使えるようにするものです。人によってはGNU SCREENのEmacs版と言えばしっくりくるかもしれません。ここではタブではなく、スクリーンと呼ぶようにします。find-tagはetagsで作成した関数のインデックスを利用して、指定した関数が定義されているファイルのポイントへジャンプする関数です。しかし、find-tagはデフォルトでは指定した関数が定義されているファイルを開く際、単に今開いているバッファを切り替えるだけです。elscreenを使っている場合、どうせならあたらしいスクリーンで開いてほしいものです。さらに言うと既にそのバッファを開いているスクリーンがあるなら、そっちのスクリーンにジャンプするとか、今開いているバッファが*scratch*バッファなら普通にswitch-to-bufferでバッファを切り替えるようにしたいところです。というわけで、find-tagの関数の中身を見てみます。(コメントは省いています)<br />
 <br />
-<pre class="code"><br />
-(defun find-tag (tagname &optional next-p regexp-p)<br />
-  (interactive (find-tag-interactive "Find tag: "))<br />
-  (let ((buf (find-tag-noselect tagname next-p regexp-p)))<br />
-    (condition-case nil<br />
-    (switch-to-buffer buf)<br />
-      (error (pop-to-buffer buf)))))<br />
+<pre class="code">
+(defun find-tag (tagname &optional next-p regexp-p)
+  (interactive (find-tag-interactive "Find tag: "))
+  (let ((buf (find-tag-noselect tagname next-p regexp-p)))
+    (condition-case nil
+    (switch-to-buffer buf)
+      (error (pop-to-buffer buf)))))
 </pre><br />
 <br />
 これを見るとswitch-to-bufferという関数にbufという変数を渡しています。プログラマならbufというのはバッファのことだと想像できると思います。switch-to-bufferは現在編集しているバッファを切り替える関数です。ここでしたいのは単にバッファを切り替えるのでなく、新しいスクリーンを作成してそのスクリーン上でバッファを開くことですので、この部分を別の関数に置き換えてやるとよさそうです。しかし、実際には以下のような手順を踏む必要があります。<br />
@@ -50,25 +50,25 @@ elscreenはデフォルトではC-z C-cでスクリーンを新規作成でき�
 <br />
 elscreenを使っていると画面上部に番号とファイル名がセットになったスクリーンのリストが表示されます。別のスクリーンにジャンプするには「C-z 番号」とタイプします。このキーバインドを「help-for-help k」(C-h k)で調べてみると、elscreen-jumpという関数があるのがわかります。試しに以下の関数を実行します。<br />
 <br />
-<pre class="code"><br />
-(elscreen-jump 1)<br />
+<pre class="code">
+(elscreen-jump 1)
 </pre><br />
 <br />
 これで番号1のスクリーンに移動できればいいのですが、エラーが出ます。なので、この関数をもう少し深い追いしてみましょう。elscreen-jumpの中身は以下のようになっています。<br />
 <br />
-<pre class="code"><br />
-(defun elscreen-jump ()<br />
-  "Switch to specified screen."<br />
-  (interactive)<br />
-  (let ((next-screen (string-to-number (string last-command-char))))<br />
-    (if (and (<= 0 next-screen) (<= next-screen 9))<br />
-        (elscreen-goto next-screen))))<br />
+<pre class="code">
+(defun elscreen-jump ()
+  "Switch to specified screen."
+  (interactive)
+  (let ((next-screen (string-to-number (string last-command-char))))
+    (if (and (<= 0 next-screen) (<= next-screen 9))
+        (elscreen-goto next-screen))))
 </pre><br />
 <br />
 変数名などから推測するに最後にタイプしたキーが0から9の間であればelscreen-gotoという関数が呼ばれるようです。実際に使ってみます。<br />
 <br />
-<pre class="code"><br />
-(elscreen-goto 1)<br />
+<pre class="code">
+(elscreen-goto 1)
 </pre><br />
 <br />
 上記のelispを実行すると、番号1のスクリーンにジャンプすることができます。<br />
@@ -77,57 +77,57 @@ elscreenを使っていると画面上部に番号とファイル名がセット
 <br />
 さきほどのelscreen-gotoの引数は数字でした。ということはスクリーンの番号からバッファを特定することができそうです。また、その逆のことをする関数もありそうです。こればかりはhelp-for-helpで探すわけにはいかないので、実際のコードを追ってみるしかありません。そんなわけでelscreenのソースを眺めてみると、elscreen-find-screen-by-bufferという関数が見付かりました。番号が2のスクリーンで開いているファイルがetags.elの場合、以下のelispを実行すると結果は以下の通りになります。<br />
 <br />
-<pre class="code"><br />
-(elscreen-find-screen-by-buffer "etags.el")<br />
-2<br />
+<pre class="code">
+(elscreen-find-screen-by-buffer "etags.el")
+2
 </pre><br />
 <br />
 また、さらに追っていくとelscreen-get-window-configurationという逆のことをする関数も見付かりました。<br />
 <br />
-<pre class="code"><br />
-(elscreen-get-window-configuration 2)<br />
-(#&lt;window-configuration&gt; #&lt;marker at 12071 in etags.el&gt;)<br />
+<pre class="code">
+(elscreen-get-window-configuration 2)
+(#&lt;window-configuration&gt; #&lt;marker at 12071 in etags.el&gt;)
 </pre><br />
 <br />
 結果を見る限り、etags.elのバッファに関する情報と見てよさそうです。あとはスクリーンの一覧が取得できれば、スクリーンからバッファを特定する処理が書けそうです。さらにelscreenのコードを見ていくとelscreen-get-screen-listという関数が見つかります。スクリーンが3つある状態でこの関数を評価すると、<br />
 <br />
-<pre class="code"><br />
-(elscreen-get-screen-list)<br />
-(2 1 0)<br />
+<pre class="code">
+(elscreen-get-screen-list)
+(2 1 0)
 </pre><br />
 <br />
 という風にスクリーン番号のリストが取得できます。<br />
 これらの関数を組み合わせて出来上がったのが以下の関数です。<br />
 <br />
-<pre class="code"><br />
-(defun switch-to-elscreen-create (buf)<br />
-  (defun create-new-buf (buf)<br />
-    (if (equal elscreen-default-buffer-name (buffer-name (window-buffer)))<br />
-        (switch-to-buffer buf)<br />
-      (elscreen-create)<br />
-      (switch-to-buffer buf)))<br />
-  (defun switch-to-elscreen-create-inner (screen-list buf)<br />
-    (cond ((null (elscreen-get-window-configuration (car screen-list)))<br />
-           nil)<br />
-          ((equal (car screen-list) (elscreen-find-screen-by-buffer (buffer-name buf)))<br />
-           (elscreen-goto (car screen-list)))<br />
-          (t<br />
-           (switch-to-elscreen-create-inner (cdr screen-list) buf))))<br />
-  (if (null (switch-to-elscreen-create-inner (elscreen-get-screen-list) buf))<br />
-      (create-new-buf buf)<br />
-    t))<br />
+<pre class="code">
+(defun switch-to-elscreen-create (buf)
+  (defun create-new-buf (buf)
+    (if (equal elscreen-default-buffer-name (buffer-name (window-buffer)))
+        (switch-to-buffer buf)
+      (elscreen-create)
+      (switch-to-buffer buf)))
+  (defun switch-to-elscreen-create-inner (screen-list buf)
+    (cond ((null (elscreen-get-window-configuration (car screen-list)))
+           nil)
+          ((equal (car screen-list) (elscreen-find-screen-by-buffer (buffer-name buf)))
+           (elscreen-goto (car screen-list)))
+          (t
+           (switch-to-elscreen-create-inner (cdr screen-list) buf))))
+  (if (null (switch-to-elscreen-create-inner (elscreen-get-screen-list) buf))
+      (create-new-buf buf)
+    t))
 </pre><br />
 <br />
 上記の処理ではさらに、今開いているバッファが*scratch*バッファなら単純にswitch-to-bufferでバッファを切り替えるようにしています。あとはfind-tag関数内のswitch-to-bufferをこの関数に置き換えてやれば完成です。もしくは、find-tag-elscreenという風に別の関数を定義した方がいいかもしれません。<br />
 <br />
-<pre class="code"><br />
-(defun find-tag (tagname &optional next-p regexp-p)<br />
-  (interactive (find-tag-interactive "Find tag: "))<br />
-  (let ((buf (find-tag-noselect tagname next-p regexp-p)))<br />
-    (condition-case<br />
-    nil<br />
-    (switch-to-elscreen-create buf)<br />
-      (error (pop-to-buffer buf)))))<br />
+<pre class="code">
+(defun find-tag (tagname &optional next-p regexp-p)
+  (interactive (find-tag-interactive "Find tag: "))
+  (let ((buf (find-tag-noselect tagname next-p regexp-p)))
+    (condition-case
+    nil
+    (switch-to-elscreen-create buf)
+      (error (pop-to-buffer buf)))))
 </pre><br />
 <br />
 <h3>TAGSファイルをプロジェクト名で指定できるようにする</h3><br />
@@ -140,80 +140,80 @@ TAGSファイルを作成しておくと、ソースコードの検索が楽に�
 <br />
 まず、visit-tags-tableの中身を見てみましょう。(find-tagと同じく、コメントは省いています)<br />
 <br />
-<pre class="code"><br />
-(defun visit-tags-table (file &optional local)<br />
-  (interactive (list (read-file-name "Visit tags table: (default TAGS) "<br />
-                     default-directory<br />
-                     (expand-file-name "TAGS"<br />
-                               default-directory)<br />
-                     t)<br />
-             current-prefix-arg))<br />
-  (or (stringp file) (signal 'wrong-type-argument (list 'stringp file)))<br />
- (let ((tags-file-name file))<br />
-    (save-excursion<br />
-      (or (visit-tags-table-buffer file)<br />
-      (signal 'file-error (list "Visiting tags table"<br />
-                    "file does not exist"<br />
-                    file)))<br />
-      (setq file tags-file-name)))<br />
-  (if local<br />
-      (set (make-local-variable 'tags-file-name) file)<br />
-    (setq-default tags-file-name file)))<br />
+<pre class="code">
+(defun visit-tags-table (file &optional local)
+  (interactive (list (read-file-name "Visit tags table: (default TAGS) "
+                     default-directory
+                     (expand-file-name "TAGS"
+                               default-directory)
+                     t)
+             current-prefix-arg))
+  (or (stringp file) (signal 'wrong-type-argument (list 'stringp file)))
+ (let ((tags-file-name file))
+    (save-excursion
+      (or (visit-tags-table-buffer file)
+      (signal 'file-error (list "Visiting tags table"
+                    "file does not exist"
+                    file)))
+      (setq file tags-file-name)))
+  (if local
+      (set (make-local-variable 'tags-file-name) file)
+    (setq-default tags-file-name file)))
 </pre><br />
 <br />
 visit-tags-tableを呼び出すとミニバッファにVisit tags table: (default TAGS)と表示されます。ここでTAGSファイルが置かれているディレクトリを指定するわけですが、指定したディレクトリの文字列を関数に渡してやる必要があります。Emacsでこの役目を務めるのはinteractiveという関数です。interactiveはその関数が対話的な動作であるということを宣言するための関数ですが、これにある形で引数を渡すと、関数に渡す引数をユーザが入力することができるようになります。ここでは、ディレクトリではなくプロジェクト名を入力してTAGSファイルを読み込むようにしたいので、visit-tags-tableに渡す引数の部分、つまりinteractiveの中を変えてみると良さそうです。<br />
 <br />
 まず、プロジェクト名から各プロジェクトのTAGSファイルを見つけられるようにする必要があります。elispでは連想配列(のようなもの？)が使えるので、プロジェクト名をインデックスに使います。<br />
 <br />
-<pre class="code"><br />
-(defvar tags-file-list '(<br />
-               ("eiga" . "/home/bokko/eiga/")<br />
-               ("photo" . "/home/bokko/photo/")<br />
-               ))<br />
+<pre class="code">
+(defvar tags-file-list '(
+               ("eiga" . "/home/bokko/eiga/")
+               ("photo" . "/home/bokko/photo/")
+               ))
 </pre><br />
 <br />
 次に、interactive関数の中身に注目します。<br />
 <br />
-<pre class="code"><br />
-(interactive (list (read-file-name "Visit tags table: (default TAGS) "<br />
-                   default-directory<br />
-                   (expand-file-name "TAGS"<br />
-                             default-directory)<br />
-                   t)<br />
-           current-prefix-arg))<br />
+<pre class="code">
+(interactive (list (read-file-name "Visit tags table: (default TAGS) "
+                   default-directory
+                   (expand-file-name "TAGS"
+                             default-directory)
+                   t)
+           current-prefix-arg))
 </pre><br />
 <br />
 パッと見ても何をやってるのかよくわかりませんが、default-directoryとexpand-file-nameが何なのかわかれば大体の見当は付きそうです。この2つを評価してみます。<br />
 <br />
-<pre class="code"><br />
-default-directory<br />
-"~/"<br />
-(expand-file-name "TAGS" default-directory)<br />
-"/home/bokko/TAGS"<br />
+<pre class="code">
+default-directory
+"~/"
+(expand-file-name "TAGS" default-directory)
+"/home/bokko/TAGS"
 </pre><br />
 <br />
 ~/はEmacsを起動したディレクトリです。また、expand-file-nameは相対パスを絶対パスに変換してくれるようです。以上のことからディレクトリを入力するのではなく、プロジェクト名を入力するようにして、そのプロジェクトに対応するディレクトリにあるTAGSファイルを読み込む関数は以下のように定義できます。<br />
 <br />
-<pre class="code"><br />
-(defun visit-tags-table-key (file &optional local)<br />
-  (interactive "sTags-key: ")<br />
-  (defun find-tags-directory (tags-key file-key-list)<br />
-    (if (equal tags-key (car (assoc tags-key file-key-list)))<br />
-    (cdr (assoc tags-key file-key-list))<br />
-      nil))<br />
-  (setq file (expand-file-name "TAGS"<br />
-                   (find-tags-directory file tags-file-list)))<br />
-  (or (stringp file) (signal 'wrong-type-argument (list 'stringp file)))<br />
-  (let ((tags-file-name file))<br />
-    (save-excursion<br />
-      (or (visit-tags-table-buffer file)<br />
-      (signal 'file-error (list "Visiting tags table"<br />
-                    "file does not exist"<br />
-                    file)))<br />
-      (setq file tags-file-name)))<br />
-  (if local<br />
-      (set (make-local-variable 'tags-file-name) file)<br />
-    (setq-default tags-file-name file)))<br />
+<pre class="code">
+(defun visit-tags-table-key (file &optional local)
+  (interactive "sTags-key: ")
+  (defun find-tags-directory (tags-key file-key-list)
+    (if (equal tags-key (car (assoc tags-key file-key-list)))
+    (cdr (assoc tags-key file-key-list))
+      nil))
+  (setq file (expand-file-name "TAGS"
+                   (find-tags-directory file tags-file-list)))
+  (or (stringp file) (signal 'wrong-type-argument (list 'stringp file)))
+  (let ((tags-file-name file))
+    (save-excursion
+      (or (visit-tags-table-buffer file)
+      (signal 'file-error (list "Visiting tags table"
+                    "file does not exist"
+                    file)))
+      (setq file tags-file-name)))
+  (if local
+      (set (make-local-variable 'tags-file-name) file)
+    (setq-default tags-file-name file)))
 </pre><br />
 <br />
 <h3>プログラミングしながら環境構築</h3><br />

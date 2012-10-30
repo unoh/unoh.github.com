@@ -14,32 +14,32 @@ PEAR package の作成と公開までの手順について，<br />
 まずはテストが正常に通る状態であることを確認．<br />
 Services_Delicious では .phpt 形式のテストを用意してあるので，これを実行します．<br />
 <br />
-<pre class="source_code"><br />
-$ cd /path/to/tests  # テストのあるディレクトリに移動<br />
-$ pear run-tests<br />
-Running 3 tests<br />
-PASS Services_Delicious:bug#8528[bug8528.phpt]<br />
-PASS Services_Delicious:Req#7293[req7293.phpt]<br />
-PASS Services_Delicious:Req#8044[req8044.phpt]<br />
-TOTAL TIME: 00:07<br />
-3 PASSED TESTS<br />
-0 SKIPPED TESTS<br />
+<pre class="source_code">
+$ cd /path/to/tests  # テストのあるディレクトリに移動
+$ pear run-tests
+Running 3 tests
+PASS Services_Delicious:bug#8528[bug8528.phpt]
+PASS Services_Delicious:Req#7293[req7293.phpt]
+PASS Services_Delicious:Req#8044[req8044.phpt]
+TOTAL TIME: 00:07
+3 PASSED TESTS
+0 SKIPPED TESTS
 </pre><br />
 <br />
 テストを個別に実行したいときは，実行するテストを指定します：<br />
 <br />
-<pre class="source_code"><br />
-$ pear run-tests bug8528.phpt<br />
+<pre class="source_code">
+$ pear run-tests bug8528.phpt
 </pre><br />
 <br />
 <strong><br />
 1. パッケージ定義ファイル（package.xml）の検証</strong><br />
 <br />
-<pre class="source_code"><br />
-$ cd /path/to/package  # パッケージのあるディレクトリに移動<br />
-$ pear pv<br />
-Analyzing Delicious.php<br />
-Validation: 0 error(s), 0 warning(s)<br />
+<pre class="source_code">
+$ cd /path/to/package  # パッケージのあるディレクトリに移動
+$ pear pv
+Analyzing Delicious.php
+Validation: 0 error(s), 0 warning(s)
 </pre><br />
 <br />
 pear pv は pear package-validate の省略形です．このコマンドによって package.xml 中のタグの閉じ忘れなどの構文エラーをチェックできます．<br />
@@ -47,8 +47,8 @@ pear pv は pear package-validate の省略形です．このコマンドによ�
 <br />
 <strong>2. Tarball を作成</strong><br />
 <br />
-<pre class="source_code"><br />
-$ pear package<br />
+<pre class="source_code">
+$ pear package
 </pre><br />
 <br />
 Services_Delicious-0.5.0.tgz が出来上がります．<br />
@@ -58,41 +58,41 @@ Services_Delicious-0.5.0.tgz が出来上がります．<br />
 <br />
 パッケージ情報の確認：<br />
 <br />
-<pre class="source_code"><br />
-$ pear info Services_Delicious-0.5.0.tgz<br />
-About Services_Delicious-0.5.0<br />
-==============================<br />
-Provides            Classes: Services_Delicious<br />
-Package             Services_Delicious<br />
-Summary             Client for the del.icio.us web service.<br />
-（中略）<br />
-Version             0.5.0<br />
-Release Date        2006-09-05<br />
-Release License     PHP License<br />
-Release State       beta<br />
-Release Notes       - Fixed bug #8528: Invalid response code<br />
-Release Deps        Package PEAR ==<br />
-                    Package HTTP_Request ==<br />
-                    Package XML_Serializer >= 0.12.0<br />
-                    ext openssl ==<br />
-Package.xml Version 1.0<br />
-Packaged With PEAR  1.4.9<br />
+<pre class="source_code">
+$ pear info Services_Delicious-0.5.0.tgz
+About Services_Delicious-0.5.0
+==============================
+Provides            Classes: Services_Delicious
+Package             Services_Delicious
+Summary             Client for the del.icio.us web service.
+（中略）
+Version             0.5.0
+Release Date        2006-09-05
+Release License     PHP License
+Release State       beta
+Release Notes       - Fixed bug #8528: Invalid response code
+Release Deps        Package PEAR ==
+                    Package HTTP_Request ==
+                    Package XML_Serializer >= 0.12.0
+                    ext openssl ==
+Package.xml Version 1.0
+Packaged With PEAR  1.4.9
 </pre><br />
 <br />
 Release Date, Release Notes をよく確認．<br />
 <br />
 インストールパスの確認：<br />
 <br />
-<pre class="source_code"><br />
-$ pear list Services_Delicious-0.5.0.tgz <br />
-Contents of Services_Delicious-0.5.0.tgz<br />
-========================================<br />
-Package File            Install Path<br />
-docs/api.txt            /usr/local/lib/php/doc/Services_Delicious/docs/api.txt<br />
-examples/addPost.php    /usr/local/lib/php/doc/Services_Delicious/examples/addPost.php<br />
-（中略）<br />
-examples/renameTag.php  /usr/local/lib/php/doc/Services_Delicious/examples/renameTag.php<br />
-Delicious.php           /usr/local/lib/php/Services/Delicious.php<br />
+<pre class="source_code">
+$ pear list Services_Delicious-0.5.0.tgz 
+Contents of Services_Delicious-0.5.0.tgz
+========================================
+Package File            Install Path
+docs/api.txt            /usr/local/lib/php/doc/Services_Delicious/docs/api.txt
+examples/addPost.php    /usr/local/lib/php/doc/Services_Delicious/examples/addPost.php
+（中略）
+examples/renameTag.php  /usr/local/lib/php/doc/Services_Delicious/examples/renameTag.php
+Delicious.php           /usr/local/lib/php/Services/Delicious.php
 </pre><br />
 <br />
 pear install したときにどこにファイルが配置されるか分かります．<br />
@@ -103,8 +103,8 @@ pear install したときにどこにファイルが配置されるか分かり�
 <br />
 パッケージを公開する前にまずはローカル環境にインストールします．<br />
 <br />
-<pre class="source_code"><br />
-# pear install -f Services_Delicious-0.5.0.tgz<br />
+<pre class="source_code">
+# pear install -f Services_Delicious-0.5.0.tgz
 </pre><br />
 <br />
 古いパッケージを上書きしてインストールするため -f オプションをつけてあります．<br />

@@ -158,14 +158,14 @@ Cassandraの主な特徴として<br />
 </ul><br />
 </div><br />
 <div>まずはCassandraを動かすために必要なJava環境を作るため、JDK 1.6をインストール。</div><br />
-<pre class="code"># wget http://www.FreeBSDFoundation.org/cgi-bin/download?download=diablo-caffe-freebsd7-i386-1.6.0_07-b02.tar.bz2<br />
+<pre class="code"># wget http://www.FreeBSDFoundation.org/cgi-bin/download?download=diablo-caffe-freebsd7-i386-1.6.0_07-b02.tar.bz2
 # make install clean</pre><br />
 <div>Cassandraのインストール。</div><br />
-<pre class="code"># cd /usr/ports/databases/cassandra<br />
+<pre class="code"># cd /usr/ports/databases/cassandra
 # make install clean</pre><br />
 <div>続いて初期設定。取りあえずサンプルで用意されているlog4j.properties.sampleとstorage-conf.xml.sampleをリネームして作成。設定ファイルの説明は後述します。</div><br />
-<pre class="code"># cd /usr/local/share/cassandra<br />
-# cp conf/log4j.properties.sample conf/log4j.properties<br />
+<pre class="code"># cd /usr/local/share/cassandra
+# cp conf/log4j.properties.sample conf/log4j.properties
 # cp conf/storage-conf.xml.sample conf/storage-conf.xml</pre><br />
 <div>準備完了なので、起動します。これでシングルノードではありますがCassandraクラスタのできあがりです。</div><br />
 <pre class="code"># /usr/local/share/cassandra/bin/cassandra</pre><br />
@@ -184,8 +184,8 @@ Cassandraの主な特徴として<br />
 <h3>Keyspace</h3><br />
 <p>キースペースを作成します。Name属性を指定して、カラムファミリはこのKeyspaceタグ内に記述します。<br><br />
 今回の設定例:</p><br />
-<pre class="code">&lt;Keyspace Name="Keyspace1"&gt;<br />
-...<br />
+<pre class="code">&lt;Keyspace Name="Keyspace1"&gt;
+...
 &lt;/Keyspace&gt;</pre><br />
 <br />
 <h3>ColumnFamily</h3><br />
@@ -212,10 +212,10 @@ Cassandraの主な特徴として<br />
 <p>Cassandraを起動した状態で、Cassandra-CLIを立ち上げます。</p><br />
 <pre class="code">/usr/local/share/cassandra/bin/cassandra-cli --host localhost --port 9160</pre><br />
 <div>すると</div><br />
-<pre class="code">Connected to: "Test Cluster" on localhost/9160<br />
-Welcome to cassandra CLI.<br />
-<br />
-Type 'help' or '?' for help. Type 'quit' or 'exit' to quit.<br />
+<pre class="code">Connected to: "Test Cluster" on localhost/9160
+Welcome to cassandra CLI.
+
+Type 'help' or '?' for help. Type 'quit' or 'exit' to quit.
 cassandra&gt; </pre><br />
 <div>と、Cassandra-CLIのコンソールに入ります。</div><br />
 <div>では、手始めにデータを書き込んでみましょう。今回はKeyspace1のStandard2カラムファミリを利用します。Keyspace1と Standard2自体はstorage-conf.xml.sampleに初めから定義されているキースペース・カラムファミリですので、特別なことをしなくてもそのまま利用できるはずです。</div><br />
@@ -225,24 +225,24 @@ cassandra&gt; </pre><br />
 <br />
 <p>実際にちゃんとデータの追加ができているかget文で確認してみます。</p><br />
 <br />
-<pre class="code">cassandra&gt; get Keyspace1.Standard2['unoh']            <br />
-=&gt; (column=age, value=25, timestamp=1281559772819000)<br />
+<pre class="code">cassandra&gt; get Keyspace1.Standard2['unoh']            
+=&gt; (column=age, value=25, timestamp=1281559772819000)
 Returned 1 results.</pre><br />
 <br />
 <div>Standard2カラムファミリの'unoh'キーにあるカラムが取得できました。カラム名、カラム値、タイムスタンプがきちんと挿入されているのが確認できます。<br><br />
 さらに追加してみましょう。</div><br />
 <br />
-<pre class="code">cassandra&gt; set Keyspace1.Standard2['unoh']['phone']='03-5766-3911'<br />
-Value inserted.<br />
-cassandra&gt; set Keyspace1.Standard2['unoh']['web']='www.unoh.net'  <br />
+<pre class="code">cassandra&gt; set Keyspace1.Standard2['unoh']['phone']='03-5766-3911'
+Value inserted.
+cassandra&gt; set Keyspace1.Standard2['unoh']['web']='www.unoh.net'  
 Value inserted.</pre><br />
 <br />
 <div>で、再度取り出してみる。</div><br />
 <br />
-<pre class="code">cassandra&gt; get Keyspace1.Standard2['unoh']                        <br />
-=&gt; (column=web, value=www.unoh.net, timestamp=1281560104883000)<br />
-=&gt; (column=phone, value=03-5766-3911, timestamp=1281560057868000)<br />
-=&gt; (column=age, value=25, timestamp=1281559772819000)<br />
+<pre class="code">cassandra&gt; get Keyspace1.Standard2['unoh']                        
+=&gt; (column=web, value=www.unoh.net, timestamp=1281560104883000)
+=&gt; (column=phone, value=03-5766-3911, timestamp=1281560057868000)
+=&gt; (column=age, value=25, timestamp=1281559772819000)
 Returned 3 results.</pre><br />
 <br />
 <div>完璧ですね。</div><br />
@@ -270,7 +270,7 @@ Returned 3 results.</pre><br />
 という流れになります。Thriftインターフェース（.thrift）は、Cassandraのインストール先ディレクトリ下のinterfaceディレクトリに"cassandra.thrift"ファイルを利用するので、1の作業は必要ありません。また、2,3のサーバー(Cassandra)側のコーディングも必要ありません。</div><br />
 <div>では、Thriftをインストールします。</div><br />
 <br />
-<pre class="code"># cd /usr/ports/devel/thrift/<br />
+<pre class="code"># cd /usr/ports/devel/thrift/
 # make install clean</pre><br />
 <br />
 <div>インストールが完了したら、まずはThriftプロジェクト用のディレクトリを適当な場所に作成しましょう。</div><br />
@@ -279,33 +279,33 @@ Returned 3 results.</pre><br />
 <br />
 <div>次に、Thriftプロトコルが実装されたPHPコードをThriftパッケージ内からコピーしてきます。このコードはPHPからThriftを扱うために必要な全プロジェクトで共通して使うライブラリです。</div><br />
 <br />
-<pre class="code"># wget http://ftp.riken.jp/net/apache/incubator/thrift/0.2.0-incubating/thrift-0.2.0-incubating.tar.gz<br />
-# tar zxvf thrift-0.2.0-incubating.tar.gz<br />
+<pre class="code"># wget http://ftp.riken.jp/net/apache/incubator/thrift/0.2.0-incubating/thrift-0.2.0-incubating.tar.gz
+# tar zxvf thrift-0.2.0-incubating.tar.gz
 # cp -R thrift-0.2.0/lib/php/src ~/thrift</pre><br />
 <br />
 <div>次に"cassandra.thrift"を使ってCassandra用Thriftクライントを生成します。サーバーごとのThriftクライントはsrcディレクトリ内のpackagesディレクトリに分けて入れておきましょう。</div><br />
 <br />
-<pre class="code"># cd thrift<br />
-# mkdir src/packages<br />
-# cp /usr/local/share/cassandra/interface/cassandra.thrift ~/thrift/cassandra.thrift<br />
-# thrift --gen php cassandra.thrift<br />
+<pre class="code"># cd thrift
+# mkdir src/packages
+# cp /usr/local/share/cassandra/interface/cassandra.thrift ~/thrift/cassandra.thrift
+# thrift --gen php cassandra.thrift
 # mv -R gen-php/cassandra src/packages</pre><br />
 <br />
 <div>これでCassandraをThriftから扱うための準備が整いました。ディレクトリ構成を以下にまとめます。</div><br />
 <br />
-<pre class="code">/thrift<br />
-  ├ /src・・・Thriftプロトコルの実装ファイル<br />
-　　　├ Thrift.php<br />
-      ├ autoload.php<br />
-      ├ /ext<br />
-      ├ /packages・・・各サーバごとのThriftクライアント(gen-phpとして生成されたコード)<br />
-           └ /cassandra・・・cassandra用Thriftクライアントが入ったディレクトリ<br />
-                ├ Cassandra.php<br />
-                ├ cassandra_constants.php<br />
-                └ cassandra_types.php<br />
-      ├ /protocol<br />
-      └ /transport<br />
-  └ /unoh・・・プロジェクトディレクトリ<br />
+<pre class="code">/thrift
+  ├ /src・・・Thriftプロトコルの実装ファイル
+　　　├ Thrift.php
+      ├ autoload.php
+      ├ /ext
+      ├ /packages・・・各サーバごとのThriftクライアント(gen-phpとして生成されたコード)
+           └ /cassandra・・・cassandra用Thriftクライアントが入ったディレクトリ
+                ├ Cassandra.php
+                ├ cassandra_constants.php
+                └ cassandra_types.php
+      ├ /protocol
+      └ /transport
+  └ /unoh・・・プロジェクトディレクトリ
       └sample.php・・・クライアントアプリケーション(ここで具体的にCassandraを操作するコードを書きます)</pre><br />
 <br />
 <h2>PHPによるクライアントアプリケーションを作る</h2><br />
@@ -313,85 +313,85 @@ Returned 3 results.</pre><br />
 <br />
 <h3>データを取得する簡単なプログラム</h3><br />
 <div>・~/thrift/unoh/sample.php</div><br />
-<pre class="code"> &lt;?php<br />
- $GLOBALS['THRIFT_ROOT'] = '../src';<br />
- require_once $GLOBALS['THRIFT_ROOT'].'/packages/cassandra/Cassandra.php';<br />
- require_once $GLOBALS['THRIFT_ROOT'].'/packages/cassandra/cassandra_types.php';<br />
- <br />
- require_once $GLOBALS['THRIFT_ROOT'].'/transport/TSocket.php';<br />
- require_once $GLOBALS['THRIFT_ROOT'].'/protocol/TBinaryProtocol.php';<br />
- require_once $GLOBALS['THRIFT_ROOT'].'/transport/TFramedTransport.php';<br />
- require_once $GLOBALS['THRIFT_ROOT'].'/transport/TBufferedTransport.php';<br />
- <br />
- try {<br />
-   // Thriftの接続用インスタンスの作成                 <br />
-   $socket = new TSocket('localhost', 9160);<br />
-   $transport = new TBufferedTransport($socket, 1024, 1024);<br />
-   $protocol = new TBinaryProtocolAccelerated($transport);<br />
- <br />
-   //Cassandraクライアントの作成                        <br />
-   $client = new CassandraClient($protocol);<br />
- <br />
-   //接続開始                                            <br />
-   $transport-&gt;open();<br />
- <br />
-   // ColumnFamilyの指定                                <br />
-   $columnParent = new cassandra_ColumnParent();<br />
-   $columnParent-&gt;column_family = "Standard2";<br />
- <br />
-   //スライスの指定。切り出すColumnの範囲を指定できる。<br />
-   $predicate = new cassandra_SlicePredicate();<br />
-   $sliceRange = new cassandra_SliceRange();<br />
-   //例えば、'age'から'phone'までのColumnを切り出す(Columnは昇順でソートされる)<br />
-   $sliceRange-&gt;start = "age";<br />
-   $sliceRange-&gt;finish = "phone";<br />
-   $predicate-&gt;slice_range = $sliceRange;<br />
- <br />
-   //クエリを投げる<br />
-   $result = $client-&gt;get_slice('Keyspace1', 'unoh', $columnParent,$predicate, cassandra_ConsistencyLevel::ONE);<br />
-   //中身を出力してみる<br />
-   var_dump($result);<br />
- <br />
-   //接続終了<br />
-   $transport-&gt;close();<br />
- }<br />
- catch (TException $tx) {<br />
-   print 'TException: '.$tx-&gt;why. ' Error: '.$tx-&gt;getMessage() . "\n";<br />
+<pre class="code"> &lt;?php
+ $GLOBALS['THRIFT_ROOT'] = '../src';
+ require_once $GLOBALS['THRIFT_ROOT'].'/packages/cassandra/Cassandra.php';
+ require_once $GLOBALS['THRIFT_ROOT'].'/packages/cassandra/cassandra_types.php';
+ 
+ require_once $GLOBALS['THRIFT_ROOT'].'/transport/TSocket.php';
+ require_once $GLOBALS['THRIFT_ROOT'].'/protocol/TBinaryProtocol.php';
+ require_once $GLOBALS['THRIFT_ROOT'].'/transport/TFramedTransport.php';
+ require_once $GLOBALS['THRIFT_ROOT'].'/transport/TBufferedTransport.php';
+ 
+ try {
+   // Thriftの接続用インスタンスの作成                 
+   $socket = new TSocket('localhost', 9160);
+   $transport = new TBufferedTransport($socket, 1024, 1024);
+   $protocol = new TBinaryProtocolAccelerated($transport);
+ 
+   //Cassandraクライアントの作成                        
+   $client = new CassandraClient($protocol);
+ 
+   //接続開始                                            
+   $transport-&gt;open();
+ 
+   // ColumnFamilyの指定                                
+   $columnParent = new cassandra_ColumnParent();
+   $columnParent-&gt;column_family = "Standard2";
+ 
+   //スライスの指定。切り出すColumnの範囲を指定できる。
+   $predicate = new cassandra_SlicePredicate();
+   $sliceRange = new cassandra_SliceRange();
+   //例えば、'age'から'phone'までのColumnを切り出す(Columnは昇順でソートされる)
+   $sliceRange-&gt;start = "age";
+   $sliceRange-&gt;finish = "phone";
+   $predicate-&gt;slice_range = $sliceRange;
+ 
+   //クエリを投げる
+   $result = $client-&gt;get_slice('Keyspace1', 'unoh', $columnParent,$predicate, cassandra_ConsistencyLevel::ONE);
+   //中身を出力してみる
+   var_dump($result);
+ 
+   //接続終了
+   $transport-&gt;close();
+ }
+ catch (TException $tx) {
+   print 'TException: '.$tx-&gt;why. ' Error: '.$tx-&gt;getMessage() . "\n";
  }</pre><br />
 <br />
 <div>出力結果</div><br />
 <br />
 <pre class="code"># php ~/thrift/unoh/sample.php</pre><br />
 <br />
-<pre class="code">array(2) {<br />
-  [0]=&gt;<br />
-  object(cassandra_ColumnOrSuperColumn)#9 (2) {<br />
-    ["column"]=&gt;<br />
-    object(cassandra_Column)#10 (3) {<br />
-      ["name"]=&gt;<br />
-      string(3) "age"<br />
-      ["value"]=&gt;<br />
-      string(2) "25"<br />
-      ["timestamp"]=&gt;<br />
-      float(1.281559772819E+15)<br />
-    }<br />
-    ["super_column"]=&gt;<br />
-    NULL<br />
-  }<br />
-  [1]=><br />
-  object(cassandra_ColumnOrSuperColumn)#11 (2) {<br />
-    ["column"]=&gt;<br />
-   object(cassandra_Column)#12 (3) {<br />
-      ["name"]=&gt;<br />
-      string(5) "phone"<br />
-      ["value"]=&gt;<br />
-      string(12) "03-5766-3911"<br />
-      ["timestamp"]=&gt;<br />
-      float(1.281560057868E+15)<br />
-    }<br />
-    ["super_column"]=&gt;<br />
-    NULL<br />
-  }<br />
+<pre class="code">array(2) {
+  [0]=&gt;
+  object(cassandra_ColumnOrSuperColumn)#9 (2) {
+    ["column"]=&gt;
+    object(cassandra_Column)#10 (3) {
+      ["name"]=&gt;
+      string(3) "age"
+      ["value"]=&gt;
+      string(2) "25"
+      ["timestamp"]=&gt;
+      float(1.281559772819E+15)
+    }
+    ["super_column"]=&gt;
+    NULL
+  }
+  [1]=>
+  object(cassandra_ColumnOrSuperColumn)#11 (2) {
+    ["column"]=&gt;
+   object(cassandra_Column)#12 (3) {
+      ["name"]=&gt;
+      string(5) "phone"
+      ["value"]=&gt;
+      string(12) "03-5766-3911"
+      ["timestamp"]=&gt;
+      float(1.281560057868E+15)
+    }
+    ["super_column"]=&gt;
+    NULL
+  }
 }</pre><br />
 <div>Cassandraからデータを取り出すだけの簡単なコードですが、Cassandraとうまく連携できているのが確認できました。</div><br />
 <br />

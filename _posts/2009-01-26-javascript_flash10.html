@@ -24,17 +24,17 @@ title: "JavaScript でクリップボードを扱う方法 (Flash10対応版)"
 <br />
 このライブラリを使うと、以下のように比較的簡単なコードで、テキストをコピーすることができます。<br />
 <br />
-<pre class="code">&lt;!-- テキストボックスを表示する div タグ --&gt;<br />
-&lt;div id=&quot;external_text&quot;&gt;&lt;/div&gt;<br />
-&lt;!-- 必ず必要なライブラリ --&gt;<br />
-&lt;script type=&quot;text/javascript&quot; src=&quot;swfobject.js&quot;&gt;&lt;/script&gt;<br />
-&lt;script type=&quot;text/javascript&quot; src=&quot;external_copy_text.js&quot;&gt;&lt;/script&gt;<br />
-&lt;script type=&quot;text/javascript&quot;&gt;&lt;!--<br />
-// プログラム本体<br />
-external_copy_text.show(&quot;external_text&quot;, &quot;ここにコピーしたい内容&quot;);<br />
---&gt;&lt;/script&gt;<br />
-&lt;!-- テキストの内容を動的に書き換える場合 --&gt;<br />
-&lt;input type=&quot;button&quot; value=&quot;change body&quot;<br />
+<pre class="code">&lt;!-- テキストボックスを表示する div タグ --&gt;
+&lt;div id=&quot;external_text&quot;&gt;&lt;/div&gt;
+&lt;!-- 必ず必要なライブラリ --&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;swfobject.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot; src=&quot;external_copy_text.js&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;&lt;!--
+// プログラム本体
+external_copy_text.show(&quot;external_text&quot;, &quot;ここにコピーしたい内容&quot;);
+--&gt;&lt;/script&gt;
+&lt;!-- テキストの内容を動的に書き換える場合 --&gt;
+&lt;input type=&quot;button&quot; value=&quot;change body&quot;
   onclick=&quot;javascript:external_copy_text.setText(&#039;test test test&#039;)&quot; /&gt;</pre><br />
 <br />
 後半で用意されているテキストの書き換えを行う場合には、いくつか注意するポイントがあります。というのも、動的な書き換えのために、ExteranalInterface を利用しているのですが、IE では、次のセキュリティ制約があるために、正しく ExternalInterface が動かない場合があるのです。<br />

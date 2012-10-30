@@ -12,19 +12,19 @@ USER_AGENT等は簡単に変更できてしまうので、携帯キャリアの�
 <br />
 CIDR表記はネットワーク部アドレス/ネットワークアドレス長で構成されていて、CIDRで表されるネットワークアドレスと比較IPのネットワークアドレス部分が一致すればIPがCIDRの範囲に属していると判断できます。文章で解説しても分かりにくいので、コードで見てください。<br />
 <br />
-<pre class="code"><br />
-&lt;?php<br />
-function inCIDR($ip, $cidr) {<br />
-    list($network, $mask_bit_len) = explode('/', $cidr);<br />
-    $host = 32 - $mask_bit_len;<br />
-    $net = ip2long($network) >> $host << $host; // 11000000101010000000000000000000<br />
-    $ip_net = ip2long($ip) >> $host << $host; // 11000000101010000000000000000000<br />
-    return $net === $ip_net;<br />
-}<br />
-<br />
-$cidr = '192.168.0.8/27'; // 11000000101010000000000000001000<br />
-$remote_addr = '192.168.0.20'; // 11000000101010000000000000010100<br />
-var_dump(inCIDR($remote_addr, $cidr)); // true<br />
+<pre class="code">
+&lt;?php
+function inCIDR($ip, $cidr) {
+    list($network, $mask_bit_len) = explode('/', $cidr);
+    $host = 32 - $mask_bit_len;
+    $net = ip2long($network) >> $host << $host; // 11000000101010000000000000000000
+    $ip_net = ip2long($ip) >> $host << $host; // 11000000101010000000000000000000
+    return $net === $ip_net;
+}
+
+$cidr = '192.168.0.8/27'; // 11000000101010000000000000001000
+$remote_addr = '192.168.0.20'; // 11000000101010000000000000010100
+var_dump(inCIDR($remote_addr, $cidr)); // true
 ?&gt;</pre><br />
 <br />
 コメントの2進数表記を見比べるとわかりやすいのですが、ネットワークアドレス長の27桁までは $cidr も $remote_addr も同じですね。サンプルコードではシフトして整えてから数値として比較していますが、2進数表記にしてネットワーク部27桁を切り出して文字列比較しても同様に判定できます。<br />

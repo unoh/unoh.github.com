@@ -8,29 +8,29 @@ title: "Valgrindを使って楽々PHP拡張モジュール開発のデバッグ"
 <br />
 <h3>1.PHP拡張モジュールの作成</h3><br />
 <p>まず開発用にPHPをデバッグモードでビルド。</p><br />
-<pre class="code">#cd ./php-5.x.x<br />
-#./configure --enable-debug<br />
-#make<br />
+<pre class="code">#cd ./php-5.x.x
+#./configure --enable-debug
+#make
 #make install</pre><br />
 <br />
 <p>PHP拡張モジュールを作成</p><br />
-<pre class="code">#cd ./ext<br />
-#./ext_skel --extname=zynga_func<br />
+<pre class="code">#cd ./ext
+#./ext_skel --extname=zynga_func
 #cd zynga_func</pre><br />
 <br />
 <p>16行目から18行目のコメントアウトを外す</p><br />
-<pre class="code">#emacs config.m<br />
-- dnl PHP_ARG_ENABLE(zynga_func, whether to enable zynga_func support,<br />
-- dnl Make sure that the comment is aligned:<br />
-- dnl [  --enable-zynga_func           Enable zynga_func support])<br />
-+ PHP_ARG_ENABLE(zynga_func, whether to enable zynga_func support,<br />
-+ Make sure that the comment is aligned:<br />
+<pre class="code">#emacs config.m
+- dnl PHP_ARG_ENABLE(zynga_func, whether to enable zynga_func support,
+- dnl Make sure that the comment is aligned:
+- dnl [  --enable-zynga_func           Enable zynga_func support])
++ PHP_ARG_ENABLE(zynga_func, whether to enable zynga_func support,
++ Make sure that the comment is aligned:
 + [  --enable-zynga_func           Enable zynga_func support])</pre><br />
 <br />
 <p>拡張モジュールのビルド</p><br />
-<pre class="code">#phpize<br />
-#./configure<br />
-#make<br />
+<pre class="code">#phpize
+#./configure
+#make
 #make install</pre><br />
 <br />
 <p>php.iniに以下を追加</p><br />
@@ -40,10 +40,10 @@ title: "Valgrindを使って楽々PHP拡張モジュール開発のデバッグ"
 <pre class="code">#php zynga_func.php</pre><br />
 <br />
 <p>以下のように出力されたらモジュールの正常な読み込みに成功。</p><br />
- <pre class="code">Functions available in the test extension:<br />
-confirm_zynga_func_compiled<br />
-<br />
-Congratulations! You have successfully modified ext/zynga_func/config.m4.<br />
+ <pre class="code">Functions available in the test extension:
+confirm_zynga_func_compiled
+
+Congratulations! You have successfully modified ext/zynga_func/config.m4.
 Module zynga_func is now compiled into PHP.</pre><br />
 <br />
 <p>これで正常にPHP拡張モジュールの生成と読み込みが確認できたので、Valgrindでデバッギングしてみましょう。</p><br />
@@ -51,21 +51,21 @@ Module zynga_func is now compiled into PHP.</pre><br />
 <h3>2.Valgrindによるデバッグ</h3><br />
 <p>Valgrindにはいくつかのツールが付属したツール群になっていますが、まず最も使用するであろうMemcheckによるメモリーリーク、初期化・開放などのメモリ周りのデバッグログを出力してみましょう。</p><br />
 <br />
-<pre class="code">#valgrind php zynga_func.php<br />
-==2107==<br />
-==2107== HEAP SUMMARY:<br />
-==2107==     in use at exit: 104,669 bytes in 9 blocks<br />
-==2107==   total heap usage: 10,973 allocs, 10,964 frees, 2,127,924 bytes  allocated<br />
-==2107==<br />
-==2107== LEAK SUMMARY:<br />
-==2107==    definitely lost: 0 bytes in 0 blocks<br />
-==2107==    indirectly lost: 0 bytes in 0 blocks<br />
-==2107==      possibly lost: 0 bytes in 0 blocks<br />
-==2107==    still reachable: 104,669 bytes in 9 blocks<br />
-==2107==         suppressed: 0 bytes in 0 blocks<br />
-==2107== Rerun with --leak-check=full to see details of leaked memory<br />
-==2107== <br />
-==2107== For counts of detected and suppressed errors, rerun with: -v<br />
+<pre class="code">#valgrind php zynga_func.php
+==2107==
+==2107== HEAP SUMMARY:
+==2107==     in use at exit: 104,669 bytes in 9 blocks
+==2107==   total heap usage: 10,973 allocs, 10,964 frees, 2,127,924 bytes  allocated
+==2107==
+==2107== LEAK SUMMARY:
+==2107==    definitely lost: 0 bytes in 0 blocks
+==2107==    indirectly lost: 0 bytes in 0 blocks
+==2107==      possibly lost: 0 bytes in 0 blocks
+==2107==    still reachable: 104,669 bytes in 9 blocks
+==2107==         suppressed: 0 bytes in 0 blocks
+==2107== Rerun with --leak-check=full to see details of leaked memory
+==2107== 
+==2107== For counts of detected and suppressed errors, rerun with: -v
 ==2107== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)</pre><br />
 <br />
 <p>※ログの見方</p><br />
@@ -80,53 +80,53 @@ Module zynga_func is now compiled into PHP.</pre><br />
 <p>次にわざとメモリーリークを起こすコードを関数内に埋め込んでみます。zynga_func.c内の、PHP_FUNCTION(confirm_zynga_func_compiled)関数が、先ほどzynga_func.phpで実行された関数になるので、その中の処理を書き換えます。</p><br />
 <br />
 <p>mallocで確保しているにも関わらずfreeで開放していないため、メモリーリークが起きるコード。</p><br />
-<pre class="code">#emacs zynga_func.c<br />
-void f(void)<br />
-{<br />
-    int* x = malloc(10 * sizeof(int));<br />
-    x[10] = 0;        // problem 1: heap block overrun<br />
-}                    // problem 2: memory leak -- x not freed<br />
-PHP_FUNCTION(confirm_zynga_func_compiled)<br />
-{<br />
-    f();<br />
+<pre class="code">#emacs zynga_func.c
+void f(void)
+{
+    int* x = malloc(10 * sizeof(int));
+    x[10] = 0;        // problem 1: heap block overrun
+}                    // problem 2: memory leak -- x not freed
+PHP_FUNCTION(confirm_zynga_func_compiled)
+{
+    f();
     ....</pre><br />
 <p>ビルドして反映。</p><br />
-<pre class="code">#make<br />
+<pre class="code">#make
 #make install</pre><br />
 <br />
 <p>valgrindで確認。</p><br />
-<pre class="code">#valgrind php zynga_func.php<br />
-==4934== Invalid write of size 4<br />
-==4934==    at 0x101231C14: f (in /usr/local/lib/php/extensions/debug-non-zts-20060613/zynga_func.so)<br />
-==4934==    by 0x101231C3B: zif_confirm_zynga_func_compiled (in /usr/local/lib/php/extensions/debug-non-zts-20060613/zynga_func.so)<br />
-==4934==    by 0x100308AF3: zend_do_fcall_common_helper_SPEC (in /usr/local/bin/php)<br />
-==4934==    by 0x100309A06: ZEND_DO_FCALL_BY_NAME_SPEC_HANDLER (in /usr/local/bin/php)<br />
-==4934==    by 0x1003084FB: execute (in /usr/local/bin/php)<br />
-==4934==    by 0x1002DD728: zend_execute_scripts (in /usr/local/bin/php)<br />
-==4934==    by 0x100279F64: php_execute_script (in /usr/local/bin/php)<br />
-==4934==    by 0x10036A507: main (in /usr/local/bin/php)<br />
-==4934==  Address 0x1010b1298 is 0 bytes after a block of size 40 alloc'd<br />
-==4934==    at 0x10062D79F: malloc (vg_replace_malloc.c:236)<br />
-==4934==    by 0x101231C07: f (in /usr/local/lib/php/extensions/debug-non-zts-20060613/zynga_func.so)<br />
-==4934==    by 0x101231C3B: zif_confirm_zynga_func_compiled (in /usr/local/lib/php/extensions/debug-non-zts-20060613/zynga_func.so)<br />
-==4934==    by 0x100308AF3: zend_do_fcall_common_helper_SPEC (in /usr/local/bin/php)<br />
-==4934==    by 0x100309A06: ZEND_DO_FCALL_BY_NAME_SPEC_HANDLER (in /usr/local/bin/php)<br />
-==4934==    by 0x1003084FB: execute (in /usr/local/bin/php)<br />
-==4934==    by 0x1002DD728: zend_execute_scripts (in /usr/local/bin/php)<br />
-==4934==    by 0x100279F64: php_execute_script (in /usr/local/bin/php)<br />
-==4934==    by 0x10036A507: main (in /usr/local/bin/php)<br />
-==4934==    Congratulations! You have successfully modified ext/zynga_func/config.m4. Module zynga_func is now compiled into PHP.<br />
-==4934== <br />
-==4934== HEAP SUMMARY:<br />
-==4934==     in use at exit: 104,709 bytes in 10 blocks<br />
-==4934==   total heap usage: 10,974 allocs, 10,964 frees, 2,127,964 bytes allocated<br />
-==4934== <br />
-==4934== LEAK SUMMARY:<br />
-==4934==    definitely lost: 40 bytes in 1 blocks<br />
-==4934==    indirectly lost: 0 bytes in 0 blocks<br />
-==4934==      possibly lost: 0 bytes in 0 blocks<br />
-==4934==    still reachable: 104,669 bytes in 9 blocks<br />
-==4934==         suppressed: 0 bytes in 0 blocks<br />
+<pre class="code">#valgrind php zynga_func.php
+==4934== Invalid write of size 4
+==4934==    at 0x101231C14: f (in /usr/local/lib/php/extensions/debug-non-zts-20060613/zynga_func.so)
+==4934==    by 0x101231C3B: zif_confirm_zynga_func_compiled (in /usr/local/lib/php/extensions/debug-non-zts-20060613/zynga_func.so)
+==4934==    by 0x100308AF3: zend_do_fcall_common_helper_SPEC (in /usr/local/bin/php)
+==4934==    by 0x100309A06: ZEND_DO_FCALL_BY_NAME_SPEC_HANDLER (in /usr/local/bin/php)
+==4934==    by 0x1003084FB: execute (in /usr/local/bin/php)
+==4934==    by 0x1002DD728: zend_execute_scripts (in /usr/local/bin/php)
+==4934==    by 0x100279F64: php_execute_script (in /usr/local/bin/php)
+==4934==    by 0x10036A507: main (in /usr/local/bin/php)
+==4934==  Address 0x1010b1298 is 0 bytes after a block of size 40 alloc'd
+==4934==    at 0x10062D79F: malloc (vg_replace_malloc.c:236)
+==4934==    by 0x101231C07: f (in /usr/local/lib/php/extensions/debug-non-zts-20060613/zynga_func.so)
+==4934==    by 0x101231C3B: zif_confirm_zynga_func_compiled (in /usr/local/lib/php/extensions/debug-non-zts-20060613/zynga_func.so)
+==4934==    by 0x100308AF3: zend_do_fcall_common_helper_SPEC (in /usr/local/bin/php)
+==4934==    by 0x100309A06: ZEND_DO_FCALL_BY_NAME_SPEC_HANDLER (in /usr/local/bin/php)
+==4934==    by 0x1003084FB: execute (in /usr/local/bin/php)
+==4934==    by 0x1002DD728: zend_execute_scripts (in /usr/local/bin/php)
+==4934==    by 0x100279F64: php_execute_script (in /usr/local/bin/php)
+==4934==    by 0x10036A507: main (in /usr/local/bin/php)
+==4934==    Congratulations! You have successfully modified ext/zynga_func/config.m4. Module zynga_func is now compiled into PHP.
+==4934== 
+==4934== HEAP SUMMARY:
+==4934==     in use at exit: 104,709 bytes in 10 blocks
+==4934==   total heap usage: 10,974 allocs, 10,964 frees, 2,127,964 bytes allocated
+==4934== 
+==4934== LEAK SUMMARY:
+==4934==    definitely lost: 40 bytes in 1 blocks
+==4934==    indirectly lost: 0 bytes in 0 blocks
+==4934==      possibly lost: 0 bytes in 0 blocks
+==4934==    still reachable: 104,669 bytes in 9 blocks
+==4934==         suppressed: 0 bytes in 0 blocks
 ==4934== Rerun with --leak-check=full to see details of leaked memory</pre><br />
 <br />
 <p>今度はリークしている箇所と、byte数・block数がログに出力されるのを確認できました。</p><br />

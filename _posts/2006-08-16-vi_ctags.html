@@ -7,8 +7,8 @@ title: "vi + ctags : 関数等の定義位置にジャンプ"
 <br />
 vi で PHP のコードを見ているときに，<br />
 <br />
-<pre class="source_code"><br />
-myhogefunc($foo, CONST_BAR);<br />
+<pre class="source_code">
+myhogefunc($foo, CONST_BAR);
 </pre><br />
 <br />
 のような処理があって，myhogefunc() や定数 CONST_BAR がどんな定義になっているか知りたいときには，ctags が使えます．<br />
@@ -24,8 +24,8 @@ ctags をインストールしたら，<br />
 <br />
 カレントディレクトリ以下の PHP (*.php) のクラス，関数，定数から，タグファイルを作成：<br />
 <br />
-<pre class="source_code"><br />
- $ ctags -R --langmap=PHP:.php --php-types=c+f+d ./<br />
+<pre class="source_code">
+ $ ctags -R --langmap=PHP:.php --php-types=c+f+d ./
 </pre><br />
 <br />
 あとは，普通に PHP のファイルを開き，調べたい対象の上にカーソルを置いて， CTRL + ] で OK です．<br />

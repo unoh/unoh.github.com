@@ -31,15 +31,15 @@ Parallel::Prefork の使い方は作者の<a href="http://labs.cybozu.co.jp/blog
 <br />
 10行目のコンストラクタで Parallel_Prefork のオブジェクトを生成しています。max_workers は生成したい子プロセスを指定します。このコンストラクタで重要な引数の trap_signals には<br />
 <br />
-<pre class="code">trap_signals => array(<br />
-    親プロセスで捕捉したいシグナル => そのシグナルを捕捉した場合に子プロセスに送りたいシグナル<br />
+<pre class="code">trap_signals => array(
+    親プロセスで捕捉したいシグナル => そのシグナルを捕捉した場合に子プロセスに送りたいシグナル
 )</pre><br />
 <br />
 といった配列を指定します。例では、<br />
 <br />
-<pre class="code">trap_signals => array(<br />
-    SIGHUP  => SIGTERM,<br />
-    SIGTERM => SIGTERM,<br />
+<pre class="code">trap_signals => array(
+    SIGHUP  => SIGTERM,
+    SIGTERM => SIGTERM,
 )</pre><br />
 <br />
 と指定いるので SIGHUP, SIGTERM を親プロセスが捕捉したら子プロセスに SIGTERM を送ることになります。Parallel_Prefork では内部でシグナルハンドラを上書きしているので上記の例だと親プロセスが SIGHUP, SIGTERM を捕捉してもそれ自体でプロセスが終了してしまうことはありません。<br />

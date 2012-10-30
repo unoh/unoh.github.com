@@ -17,25 +17,25 @@ title: "mod_expires と mod_rewrite を使ってウェブサーバへのアク�
 <br />
 <p>1. Apahce に mod_expires と mod_rewrite が組み込まれていることを確認するため、Apache の設定ファイル httpd.conf を確認します。次のような設定がない場合は、追加してください。</p><br />
 <br />
-<pre class="code"><br />
-  LoadModule expires_module modules/mod_expires.so<br />
-  LoadModule rewrite_module modules/mod_rewrite.so<br />
+<pre class="code">
+  LoadModule expires_module modules/mod_expires.so
+  LoadModule rewrite_module modules/mod_rewrite.so
 </pre><br />
 <br />
 <p>2. mod_rewrite を使って、CSS と JavaScript のファイル名が一意になるので、実際の CSS と JavaScript ファイル名でアクセスできるように URL の変換ルールを次のように設定します。/css や /js は、フォト蔵の CSS と JavaScript ファイルのパスなので、環境に応じて置き換えてください。</p><br />
 <br />
-<pre class="code"><br />
-  RewriteEngine on<br />
-  RewriteRule  ^/css/(.*?)\.v\d+\.(.*)$ /css/$1.$2 [QSA,L]<br />
-  RewriteRule  ^/js/(.*?)\.v\d+\.(.*)$ /js/$1.$2 [QSA,L]<br />
+<pre class="code">
+  RewriteEngine on
+  RewriteRule  ^/css/(.*?)\.v\d+\.(.*)$ /css/$1.$2 [QSA,L]
+  RewriteRule  ^/js/(.*?)\.v\d+\.(.*)$ /js/$1.$2 [QSA,L]
 </pre><br />
 <br />
 <p>3. mod_expires の設定を有効にして、CSS と JavaScript の Expired Date を設定します。</p><br />
 <br />
-<pre class="code"><br />
-  ExpiresActive On<br />
-  ExpiresByType text/css "access plus 1 days"<br />
-  ExpiresByType application/x-javascript "access plus 1 days"<br />
+<pre class="code">
+  ExpiresActive On
+  ExpiresByType text/css "access plus 1 days"
+  ExpiresByType application/x-javascript "access plus 1 days"
 </pre><br />
 <br />
 <p>4. ページで読み込んでいる CSS と JavaScript のファイル名を一意に変更します。<a href="http://photozou.jp">フォト蔵</a> では、すべて SVN で管理しているため、SVN リビジョンをつけて、常に一意になるように変更しました。</p><br />

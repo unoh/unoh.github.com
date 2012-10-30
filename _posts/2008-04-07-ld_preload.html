@@ -30,19 +30,19 @@ libhookwriteはその名の通りwrite(2)にフックをかけることができ
 <br />
 お約束通り<br />
 <br />
-<pre class="code"><br />
-tar zxvf libhookwrite-0.0.1.tar.gz<br />
-cd libhookwrite-0.0.1<br />
-./configure<br />
-make<br />
-sudo make install<br />
+<pre class="code">
+tar zxvf libhookwrite-0.0.1.tar.gz
+cd libhookwrite-0.0.1
+./configure
+make
+sudo make install
 </pre><br />
 <br />
 rpmでもいけます。<br />
 <br />
-<pre class="code"><br />
-rpmbuild -ta libhookwrite-0.0.1.tar.gz<br />
-sudo rpm -ivh libhookwrite-0.0.1-1.i386.rpm<br />
+<pre class="code">
+rpmbuild -ta libhookwrite-0.0.1.tar.gz
+sudo rpm -ivh libhookwrite-0.0.1-1.i386.rpm
 </pre><br />
 <br />
 <h2>使い方</h2><br />
@@ -56,12 +56,12 @@ HOOKWRITE_COMMANDに任意のコマンドを指定すると、write(2)が呼ば�
 <br />
 例えば、次のようなシェルスクリプトcat.shを実行すると、write(2)が呼ばれた時点で$HOME/tmp/catというファイルのタイムスタンプを現在の時刻に更新して、"hoge"と出力します。<br />
 <br />
-<pre class="code"><br />
-#!/bin/sh<br />
-HOOKWRITE_UPDATE_FILE=$HOME/tmp/cat ¥<br />
-  HOOKWRITE_COMMAND='echo hoge' ¥<br />
-  LD_PRELOAD=/usr/lib/libhookwrite.so ¥<br />
-  /bin/cat $@<br />
+<pre class="code">
+#!/bin/sh
+HOOKWRITE_UPDATE_FILE=$HOME/tmp/cat ¥
+  HOOKWRITE_COMMAND='echo hoge' ¥
+  LD_PRELOAD=/usr/lib/libhookwrite.so ¥
+  /bin/cat $@
 </pre><br />
 <br />
 <h2>使い道</h2><br />
@@ -72,28 +72,28 @@ HOOKWRITE_UPDATE_FILE=$HOME/tmp/cat ¥<br />
 <br />
 vimを使ってsymfonyプロジェクトの開発をやってて、ファイルを保存したい瞬間にsymfony ccを走らせてキャッシュクリアしたい場合はこんな感じのaliasを作ればいいでしょうか。<br />
 <br />
-<pre class="code"><br />
-alias vim="LD_PRELOAD=/usr/lib/libhookwrite.so HOOKWRITE_COMMAND='/symfony/project/symfony cc' /usr/bin/vim"<br />
+<pre class="code">
+alias vim="LD_PRELOAD=/usr/lib/libhookwrite.so HOOKWRITE_COMMAND='/symfony/project/symfony cc' /usr/bin/vim"
 </pre><br />
 <br />
 <h2>プログラム</h2><br />
 <br />
 プログラム自体は非常に簡単です。<br />
 <br />
-<pre class="code"><br />
-static ssize_t (*write_org) (int fd, const void *buf, size_t count) = NULL;<br />
+<pre class="code">
+static ssize_t (*write_org) (int fd, const void *buf, size_t count) = NULL;
 </pre><br />
 <br />
 write(2)と同じプロトタイプ宣言を持つ関数ポインタwrite_orgを定義しています。<br />
 オリジナルのwriteを保存するのに使います。<br />
 <br />
-<pre class="code"><br />
-__attribute__((constructor))<br />
-void<br />
-_save_original_functions()<br />
-{<br />
-    write_org = (ssize_t(*)(int, const void *, size_t)) dlsym(RTLD_NEXT, "write");<br />
-}<br />
+<pre class="code">
+__attribute__((constructor))
+void
+_save_original_functions()
+{
+    write_org = (ssize_t(*)(int, const void *, size_t)) dlsym(RTLD_NEXT, "write");
+}
 </pre><br />
 <br />
 dlsym(3)を使ってwriteのアドレスを取り出して、write_orgに保存しています。<br />

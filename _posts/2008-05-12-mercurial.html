@@ -37,13 +37,13 @@ Mercurialに対する僕の印象です。というのもCVSやSVNでは、ま�
 例えば、以下のディレクトリでバージョン管理を行いたいとします。<br />
 </p><br />
 <br />
-<pre class="code">$ pwd<br />
-/Users/username/mercurialSample<br />
-$ ls<br />
-test.txt<br />
-$ cat test.txt<br />
-test<br />
-$<br />
+<pre class="code">$ pwd
+/Users/username/mercurialSample
+$ ls
+test.txt
+$ cat test.txt
+test
+$
 </pre><br />
 <br />
 <h2><strong>リポジトリの初期化</strong></h2><br />
@@ -52,7 +52,7 @@ $<br />
 リポジトリの初期化は下記のコマンドを実行するだけです。<br />
 </p><br />
 <br />
-<pre class="code">$ hg init<br />
+<pre class="code">$ hg init
 $</pre><br />
 <br />
 <p><br />
@@ -60,29 +60,29 @@ $</pre><br />
 バージョン管理をやめたくなったらこのディレクトリを削除するだけでOKです。<br />
 </p><br />
 <br />
-<pre class="code">$ ls -a<br />
-.               ..              .hg             test.txt<br />
+<pre class="code">$ ls -a
+.               ..              .hg             test.txt
 </pre><br />
 <br />
 <p><br />
 また、initコマンドで初期化しただけでは、test.txtはリポジトリには追加されていません。<br />
 </p><br />
 <br />
-<pre class="code">$ hg status<br />
-? test.txt<br />
-$<br />
+<pre class="code">$ hg status
+? test.txt
+$
 </pre><br />
 <br />
 <p><br />
 addとcommitでリポジトリにtest.txtを追加します。<br />
 </p><br />
 <br />
-<pre class="code">$ hg add test.txt<br />
-$ hg status<br />
-A test.txt<br />
-$ hg commit -m &quot;test&quot; test.txt<br />
-$ hg status<br />
-$<br />
+<pre class="code">$ hg add test.txt
+$ hg status
+A test.txt
+$ hg commit -m &quot;test&quot; test.txt
+$ hg status
+$
 </pre><br />
 <br />
 <h2><strong>基本的なコマンド</strong></h2><br />
@@ -92,11 +92,11 @@ $<br />
 CVSやSVNを使ったことのある人なら特に困ることなく、使えるでしょう。<br />
 </p><br />
 <br />
-<pre class="code">$ hg add test.txt<br />
-$ hg remove test.txt<br />
-$ hg update test.txt<br />
-$ hg commit test.txt<br />
-$ hg diff test.txt<br />
+<pre class="code">$ hg add test.txt
+$ hg remove test.txt
+$ hg update test.txt
+$ hg commit test.txt
+$ hg diff test.txt
 </pre><br />
 <br />
 <h2><strong>リポジトリの複製</strong></h2><br />
@@ -112,10 +112,10 @@ Mercurialを使って設定ファイル等の同期を取っているからで�
 リポジトリを複製するにはcloneコマンドを使います。<br />
 </p><br />
 <br />
-<pre class="code"><br />
-$ pwd<br />
-/home/username<br />
-$ hg clone ssh://username@mac//Users/username/mercurialSample mercurialSample<br />
+<pre class="code">
+$ pwd
+/home/username
+$ hg clone ssh://username@mac//Users/username/mercurialSample mercurialSample
 </pre><br />
 <br />
 <p><br />
@@ -126,16 +126,16 @@ macがホスト名、/を一つ挟んだ後の文字列がリポジトリのル�
 どこからリポジトリを複製したのかが記録されています。<br />
 </p><br />
 <br />
-<pre class="code">[paths]<br />
+<pre class="code">[paths]
 default = ssh://username@mac//Users/username/mercurialSample</pre><br />
 <br />
 <p><br />
 pathsコマンドで確認することも可能です。<br />
 </p><br />
 <br />
-<pre class="code">$ hg paths<br />
-default = ssh://username@mac//Users/username/mercurialSample<br />
-<br />
+<pre class="code">$ hg paths
+default = ssh://username@mac//Users/username/mercurialSample
+
 </pre><br />
 <br />
 <h2><strong>ローカルリポジトリの内容をリモートリポジトリに反映</strong></h2><br />
@@ -151,12 +151,12 @@ Mercurialでは通常、コミットはローカルのリポジトリに対し�
 例えば、さっき複製したubuntu側のリポジトリの内容を変更してみます。<br />
 </p><br />
 <br />
-<pre class="code">$ cat test.txt<br />
-test<br />
-ubuntu<br />
-$ hg status test.txt<br />
-M test.txt<br />
-$ hg commit -m &quot;add ubuntu&quot; test.txt<br />
+<pre class="code">$ cat test.txt
+test
+ubuntu
+$ hg status test.txt
+M test.txt
+$ hg commit -m &quot;add ubuntu&quot; test.txt
 $</pre><br />
 <br />
 <p><br />
@@ -164,19 +164,19 @@ $</pre><br />
 これをmac側のリポジトリにubuntu側から反映させるにはpushコマンドを使用します。<br />
 </p><br />
 <br />
-<pre class="code">$ hg push ssh://username@mac//Users/username/mercurialSample<br />
+<pre class="code">$ hg push ssh://username@mac//Users/username/mercurialSample
 </pre><br />
 <br />
 <p><br />
 pushコマンドが成功したら、mac側のリポジトリでupdateコマンドを使用します。<br />
 </p><br />
 <br />
-<pre class="code">$ hg update<br />
-1 files updated, 0 files merged, 0 files removed, 0 files unresolved<br />
-$ cat test.txt<br />
-test<br />
-ubuntu<br />
-$<br />
+<pre class="code">$ hg update
+1 files updated, 0 files merged, 0 files removed, 0 files unresolved
+$ cat test.txt
+test
+ubuntu
+$
 </pre><br />
 <br />
 <h2><strong>リモートリポジトリの内容をローカルリポジトリに反映</strong></h2><br />
@@ -186,36 +186,36 @@ $<br />
 pullコマンドを使用します。ubuntu側で変更された内容をmac側から取り込んで見ましょう。<br />
 </p><br />
 <br />
-<pre class="code">$ hostname<br />
-ubunutu<br />
-$ cat test.txt<br />
-test<br />
-ubuntu<br />
-more ubuntu<br />
-$ hg status<br />
-M test.txt<br />
-$ hg commit -m &quot;add more ubuntu&quot; test.txt<br />
-$<br />
+<pre class="code">$ hostname
+ubunutu
+$ cat test.txt
+test
+ubuntu
+more ubuntu
+$ hg status
+M test.txt
+$ hg commit -m &quot;add more ubuntu&quot; test.txt
+$
 </pre><br />
 <br />
-<pre class="code">$ hostname<br />
-mac<br />
-$ pwd<br />
-/Users/username/mercurialSample<br />
-$ hg pull ssh://username@ubuntu//home/username/mercrurialSample<br />
+<pre class="code">$ hostname
+mac
+$ pwd
+/Users/username/mercurialSample
+$ hg pull ssh://username@ubuntu//home/username/mercrurialSample
 </pre><br />
 <br />
 <p><br />
 pullコマンドが成功したら、updateコマンドを実行します。<br />
 </p><br />
 <br />
-<pre class="code">$ hg update<br />
-1 files updated, 0 files merged, 0 files removed, 0 files unresolved<br />
-$ cat test.txt<br />
-test<br />
-ubuntu<br />
-more ubuntu<br />
-$<br />
+<pre class="code">$ hg update
+1 files updated, 0 files merged, 0 files removed, 0 files unresolved
+$ cat test.txt
+test
+ubuntu
+more ubuntu
+$
 </pre><br />
 <br />
 <h2><strong>ファイル無視の設定</strong></h2><br />
@@ -232,19 +232,19 @@ Mercurialでは.hgignoreというファイルをリポジトリのルートデ�
 <br />
 <h3>.hgignore</h3><br />
 <br />
-<pre class="code">syntax: glob<br />
-*~<br />
-.semantic.cache<br />
-.DS_Store<br />
-TAGS<br />
+<pre class="code">syntax: glob
+*~
+.semantic.cache
+.DS_Store
+TAGS
 </pre><br />
 <br />
 <p><br />
 また、僕は使っていませんが、正規表現による指定もできます。<br />
 </p><br />
 <br />
-<pre class="code">syntax: regexp<br />
-^t<br />
+<pre class="code">syntax: regexp
+^t
 </pre><br />
 <br />
 <h2><strong>.hgignoreの設定を共有する</strong></h2><br />
@@ -257,8 +257,8 @@ TAGS<br />
 <br />
 <h3>.hgrc</h3><br />
 <br />
-<pre class="code">[ui]<br />
-ignore=~/.hgignore<br />
+<pre class="code">[ui]
+ignore=~/.hgignore
 </pre><br />
 <br />
 <p><br />
