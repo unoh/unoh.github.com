@@ -1,0 +1,7 @@
+---
+layout: post
+title: "ニンテンドーDSブラウザーにあわせてサイトを作るときの軽い覚書"
+---
+{% raw %}
+こんにちは。matsudaです。<br /><br />以前、こちらでも紹介させていただきました犬・猫写真でカワイイか投票する「<a href="http://cute.demos.unoh.net/">Cute or Not</a>」ですが、これはもともとNintendoDSで遊べるように作っていました。DSブラウザはいまさらな感が否めないですが、上画面に写真・下画面に投票ボタンにして、タッチパネルでポチポチできて、暇つぶしにはもってこいな気がしたからです。<br /><br />簡単にデザインできるだろう…とはじめは思っていましたが、実はそうでもなく、ちょっと苦戦したところがあったので、メモ程度に残しておきます。<br /><br /><b>※以下、DSブラウザー特有の“縦長モード”での場合です。</b><br /><br /><h3>■画面のデザインは1画面：縦176px×横247px</h3>NintendoDS の液晶は1画面192px×256pxになっています。そのうち上画面は上16pxがURL表示、下画面は下16pxが機能表示に利用されています。横幅はスクロールバー用に9px使用されているので、結局1画面の有効範囲は176px×247pxになります。<br /><br /><h3>■CSSはhandheld</h3>当初、CSSが反映されず悪戦苦闘しました。<br />&lt;link rel="stylesheet" href="style.css" <b>media="handheld"</b> type="text/css"&gt;<br />とmedia="handheld"を入れるとうまくいきます。<br /><br /><h3>■CSSのfont-sizeは3段階</h3>x-small、small、mediumのみでした。あの小さな画面ではこれくらいでちょうどいいのでしょうね。<br /><br /><br />などど悪戦苦闘している時に見つけた、とても便利なサイトがありましたので最後にご紹介します。（もっと早くに見つけておくべきでした…）<br /><br />●ニンテンドーDSブラウザーWiki - 開発/html仕様 <br /><a href="http://hammerspace.squares.net/DS/wiki.cgi?page=%B3%AB%C8%AF%2Fhtml%BB%C5%CD%CD">http://hammerspace.squares.net/DS/wiki.cgi?page=%B3%AB%C8%AF%2Fhtml%BB%C5%CD%CD</a><br /><br />●DSブラウザ実験ページ<br /><a href="http://ds.wakufactory.jp/dev/">http://ds.wakufactory.jp/dev/</a><br />こちらの“縦画面モード用テンプレ”を利用すると便利です！<br /><br />そのほかTipsをご存知であればぜひ教えてください。<br />
+{% endraw %}

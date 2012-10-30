@@ -1,0 +1,206 @@
+---
+layout: post
+title: "Gearsはウェブの未来を変えたか"
+---
+{% raw %}
+<div style="margin:0;padding:.5em;border:2px solid #ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br />
+ご興味のある方は<a href="http://www.unoh.net/recruit.html">求人ページ</a>から、ぜひご応募ください！！</div>
+
+
+<p>おはようございます、五十川です。</p>
+
+<p>先日GmailがGearsに対応してオフラインサポートを開始したのはご存知の通りですが、このとき久しぶりにGearsという名前を聞いたというかたも多いのではないでしょうか。<br />
+2007年5月のデベロッパーデーで鳴り物入りで登場したGears（当時の名称はGoogle Gears）でしたが、その後Gearsを積極的にサポートしたという話を聞く機会は決して多くありませんし、実際ウェブを検索しても決して多くの情報が見つかるわけではありません。</p>
+
+<p>先日社内の定例のコードレビューで、<del>他にネタがなかったのでしょうがなく</del>Gearsのデモアプリを作ってみたのですが、やはりGearsそのものに対する反応は芳しいものではありませんでした。</p>
+
+<p>ちなみにそのとき作ったデモアプリは、モバイル端末を想定したオフライン対応のフィードリーダーで、データはローカルのSQLiteデータベースに保存され、、その更新はバックグラウンドで行われます。また、データがローカルにあるので、そのデモとして全文のインクリメンタル検索を用意していました（下図）。</p>
+
+<div><a href="http://photozou.jp/photo/show/784/18265041"><img src="http://art7.photozou.jp/pub/784/784/photo/18265041.png" alt="Gears Go Local Example" width="240" height="320" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/18265041">Gears Go Local Example</a> posted by <a href="http://photozou.jp/user/top/784">(C)フォト蔵</a></div>
+
+<h3>なぜGearsはこれまで流行らなかったのか</h3>
+
+<p>デベロッパーがGearsでの開発に二の足を踏む理由のひとつは、別途にインストールが必要なブラウザプラグインであるという点でしょう。あるいはGearsの特徴のひとつであるオフラインサポートにしても、決してGearsが唯一無二の選択肢ではありません。</p>
+
+<p>しかし最大の理由は、初期のGearsはそのオフラインサポートがあまりにも喧伝され、しかしこれを有効活用するアイデアが、なかなか思い浮かばないというところであったかと思います。</p>
+
+<p>2008年6月11日付けでInfoQ Japanに掲載されている、&ldquo;<a href="http://www.infoq.com/jp/news/2008/06/gears-adds-features-to-the-web">Google Gearsは、Webに機能を付け加えると言う位置づけになったのか？</a>&rdquo;という記事には、登場から1年経った当時のGearsに対する興味深いコメントが集められています（この記事の翻訳は、現時点で国内唯一のGearsに関する書籍である&ldquo;<a href="http://www.amazon.co.jp/dp/477413287X/unoh-22">Google Gearsスタートガイド</a>&rdquo;を著された白石俊平さんです）。</p>
+
+<blockquote cite="http://www.infoq.com/jp/news/2008/06/gears-adds-features-to-the-web">
+  <p>しかし、Dare（Obasanjo）は次のように主張する。</p>
+  <blockquote cite="http://www.25hoursaday.com/weblog/2008/05/30/GoogleGearsAsTheNextFlash.aspx">
+    <p>この一年間 ... アプリケーションをオフライン利用可能にする、と言う進化や熱意はそれほどなかった ...</p>
+  </blockquote>
+</blockquote>
+
+<blockquote cite="http://www.infoq.com/jp/news/2008/06/gears-adds-features-to-the-web">
+  <p>Sarah Perezは、同じような主張を展開している。</p>
+  <blockquote cite="http://www.readwriteweb.com/archives/how_important_is_offline_access.php">
+    <p>今日の世界では、インターネット接続から遠く切り離される、と言う事がほとんどない。... 加えて、オフライン利用可能にする事は簡単ではない - それが、Webベースのアプリからデスクトップの世界への移行を行う、Web2.0開発者をあまり見かけない理由である... [そして]オフラインアプリは、オンライン状態ほどには良いサービスを提供できない。</p>
+  </blockquote>
+</blockquote>
+
+<p>ちなみに初期のGearsには不具合も多かったようです。<a href="http://nydd.org/">溝畑考史さん</a>はGears登場直後の2007年7月のブログエントリー&ldquo;<a href="http://blogs.grf-design.com/archives/2007/07/google_gears_ga_1.html">Google Gears を使って Game of Life を作る: その2 - Workerpool について</a>&rdquo;で、GearsのWorkerPoolについて以下のように書かれています。</p>
+
+<blockquote cite="http://blogs.grf-design.com/archives/2007/07/google_gears_ga_1.html">
+<p>（WorkerPoolは）エラーがあるときは、基本的に無言で Firefox ごと落ちます。それが精神的にも良くないし、問題の特定を難しくしています</p>
+</blockquote>
+
+<p>そんなことされたら自分ならソッコー投げ出してますね。幸い今はこうした点は改善されていますが、もし今でもそうならこんなエントリーを書くこともなかったでしょう。</p>
+
+<h3>今やGearsはオフラインサポートのためだけのものではない</h3>
+
+<p>現時点でのGearsのバージョンは0.5.xとなっており、バージョン番号が示す通り初期のリリース以降主要なバージョンアップが5度行われ、その都度新しい機能が次々と追加されています。</p>
+
+<h4>初期リリース時（バージョン0.1）のAPI</h4>
+<table summary="初期リリース時（バージョン0.1）のAPI">
+  <tbody>
+    <tr><td><a href="http://code.google.com/intl/ja/apis/gears/api_database.html">Database</a></td><td>ローカルデータベース（SQLite）</td></tr>
+    <tr><td><a href="http://code.google.com/apis/gears/api_localserver.html">LocalServer</a></td><td>キャッシュ</td></tr>
+    <tr><td><a href="http://code.google.com/apis/gears/api_workerpool.html">WorkerPool</a></td><td>バックグラウンド処理</td></tr>
+  </tbody>
+</table>
+<h4>以降バージョン0.5までで追加されたAPI</h4>
+<table summary="以降バージョン0.5までで追加されたAPI">
+  <tbody>
+    <tr><td><a href="http://code.google.com/apis/gears/api_httprequest.html">HttpRequest</a></td><td>標準XmlHttpRequestの代替（主にWorkerPool用）</td></tr>
+    <tr><td><a href="http://code.google.com/apis/gears/api_timer.html">Timer</a></td><td>標準Timerの代替（主にWorkerPool用）</td></tr>
+    <tr><td><a href="http://code.google.com/apis/gears/api_desktop.html">Desktop</a></td><td>デスクトップ操作</td></tr>
+    <tr><td><a href="http://code.google.com/apis/gears/api_geolocation.html">Geolocation</a></td><td>位置情報</td></tr>
+    <tr><td><a href="http://code.google.com/apis/gears/api_blob.html">Blob</a></td><td>バイナリ処理</td></tr>
+  </tbody>
+</table>
+
+<p>このうちオフラインサポートで主に利用するのは初期からあるLocalServerとDatabaseだと思いますが（もちろんDatabaseはオフラインサポートだけに用途が限定されるわけではありませんが）、以降に追加された機能は、いずれもオフラインサポートに直接関わるものではありません。</p>
+
+<p>また、<a href="http://code.google.com/p/gears/w/list">Gears Wiki</a>には今後予定されている/検討中のAPIがリストされており、Canvas、Notification、Audio、Camera、Database2などが挙げられていますが、その名称からも知れる通り、多くはやはりオフラインサポートとは無縁のものです。</p>
+
+<p>これらのAPI群は一見それぞれバラバラな機能の寄せ集めのようですが、共通しているのは、オフラインサポートはもちろん、WorkerPoolによるバックグラウンド処理にしても、もっとわかりやすい例では、Desktop APIのopenFilesによる複数ファイルを選択可能なファイルオープンダイアログにしても、いずれも現在のブラウザの実装のままでは不可能なことを可能にするものであるという点です。</p>
+
+<p>前述のInfoQ Japanの記事には以下の引用があります。</p>
+
+<blockquote cite="http://www.infoq.com/jp/news/2008/06/gears-adds-features-to-the-web">
+  <p>Googleのテクノロジーエバンジェリストを含む、Google Gearsを支持する多くの人たちが、ブラウザを強化しWebに機能を付け加えるものとして（ちょうど、Flashがそうであったように）、Gearsを位置づけるようだんだんと切り替わってきている。</p>
+</blockquote>
+
+<p>TechCrunchの2008年10月8日の記事&ldquo;<a href="http://jp.techcrunch.com/archives/20081004googles-gears-not-just-for-offline-accessibility/">Google Gearsを改めて検討する―狙いはオフライン機能だけではない</a>&rdquo;は、以下のような挑発的な書き出しで始まっています。</p>
+
+<blockquote cite="http://jp.techcrunch.com/archives/20081004googles-gears-not-just-for-offline-accessibility/">
+  <p>Gearsについては、ウェブ・アプリケーションをオフラインで利用することだけが（あるいは主にそれが）目的だという誤解が広まっているようだ。事実は、 Googleの野望はとてもそんなところに収まってはいない。Gearsのブラウザ拡張機能はそのような誤解をはるかに超えて多機能であり、広範囲な影響を与えるものだ。</p>
+</blockquote>
+
+<p>ここで述べられているように、現在のGearsが志向しているのは、ブラウザの実装に不足している点を補う機能群の集合体です。さらに言えば、TechCrunchが指摘しているように、デスクトップアプリケーションが不要になる程の機能をブラウザに与えることであり、かつそれを、ブラウザベンダーの意向に左右されずに、あるいはGeolocation APIのように、モバイルキャリアへの配慮なしになし得るものとなることなのです。</p>
+
+<p>今でも魅力的な機能を取り揃えているGearsですが、今後機能がより拡充されていくとやがてはGearsなしのウェブ開発など考えられない時代が来るかもしれません。</p>
+
+<h3>Gears入門</h3>
+
+<p>さてここまでコードがなくて寂しいので、以下GearsのDatabase APIとWorkerPool APIの簡単なサンプルを紹介しておきます。</p>
+
+<h4><a href="http://code.google.com/intl/ja/apis/gears/design.html#detecting">Gearsを使う場合のお約束</a></h4>
+
+<p>Gearsを使う場合は初めに<a href="http://code.google.com/intl/ja/apis/gears/tools.html#gears_init">gears_init.js</a>を読み込ませます。これでGearsがインストールされていればwindow.google.gearsが生成されるので、なければインストールされていないと判断して<a href="http://gears.google.com/">Gearsのインストールページ</a>へユーザを誘導してください。Gearsのインストールページは、クエリーストリングにパラメータを指定して表示をカスタマイズできます（<a href="http://gears.google.com/?action=install&amp;return=http%3A%2F%2Flabs.unoh.net%2F&amp;name=%E3%82%A6%E3%83%8E%E3%82%A6%E3%83%A9%E3%83%9C&amp;message=%E3%82%A6%E3%83%8E%E3%82%A6%E3%83%A9%E3%83%9C%E3%82%92%E3%81%94%E8%A6%A7%E3%81%AB%E3%81%AA%E3%82%8B%E3%81%AB%E3%81%AFGears%E3%81%AF%E5%BF%85%E8%A6%81%E3%81%82%E3%82%8A%E3%81%BE%E3%81%9B%E3%82%93%E3%81%8C%E3%80%81%E3%81%93%E3%81%AE%E6%A9%9F%E4%BC%9A%E3%81%AB%E3%82%A4%E3%83%B3%E3%82%B9%E3%83%88%E3%83%BC%E3%83%AB%E3%81%95%E3%82%8C%E3%81%A6%E3%81%BF%E3%81%A6%E3%81%AF%E3%81%84%E3%81%8B%E3%81%8C%E3%81%A7%E3%81%97%E3%82%87%E3%81%86%EF%BC%9F&amp;icon_src=http%3A%2F%2Flabs.unoh.net%2Fimages%2Fisogawa_s.jpg">カスタマイズ例</a>）。</p>
+
+<pre class="code">&lt;script type=&quot;text/javascript&quot; src=&quot;<a href="http://code.google.com/intl/ja/apis/gears/tools.html#gears_init">gears_init.js</a>&quot;&gt;&lt;/script&gt;
+&lt;script type=&quot;text/javascript&quot;&gt;
+if (!window.google || !google.gears) {
+  var appName    = 'Your application name';
+  var appMsg     = 'Your message to users';
+  var appUrl     = 'http://your-application-url';
+  var appIconUrl = 'http://your-application-icon-url';
+  location.href  = 'http://gears.google.com/?action=install'
+                    + '&amp;name='     + encodeURIComponent(appName)
+                    + '&amp;message='  + encodeURIComponent(appMsg)
+                    + '&amp;return='   + encodeURIComponent(appUrl)
+                    + '&amp;icon_src=' + encodeURIComponent(appIconUrl);
+}
+&lt;/script&gt;</pre>
+
+<h4><a href="http://code.google.com/apis/gears/api_database.html">Database API</a></h4>
+
+<p>GearsにはSQLiteが組み込まれており、Database APIによってJavaScriptから操作できるローカルのリレーショナルデータベースが利用できるようになります。以下のように、データベースの操作はお馴染みのSQL文で行います。プレースホルダーを使用する場合は、db.executeの二番目のパラメータにその値を配列で指定します。</p>
+
+<pre class="code">var db = google.gears.factory.create('beta.database');
+db.open('test-db');
+db.execute(
+  'CREATE TABLE IF NOT EXISTS test_table'
+    + ' (id integer PRIMARY KEY, content text, created_at integer)'
+);
+db.execute(
+  'INSERT INTO test_table VALUES(NULL, ?, ?)',
+  ['Hello World!', new Date().getTime()]
+);
+var resultSet = db.execute(
+  'SELECT * FROM test_table'
+);
+while (resultSet.isValidRow()) {
+  console.log(resultSet.fieldByName('content'));
+  resultSet.next();
+}
+resultSet.close();
+</pre>
+
+<p>上は素のGearsのコードですがGears対応のO/Rマッパーも幾つか登場しています。<a href="http://activerecordjs.org/">ActiveRecord.js</a>は名前の通りJavaScriptによるActiveRecordの実装で、GearsのみならずアドビAir、アプタナJaxer、及びiPhoneなどのHTML5のデータストレージ対応プラットフォームに対応しています。</p>
+
+<p>またGearsはアドビAirでも動作しますが、<a href="http://coenraets.org/blog/2007/05/flex-based-sqladmin-for-google-gears/">AirベースのGears用SQLite管理ツール</a>が作られています。</p>
+
+<h4><a href="http://code.google.com/apis/gears/api_workerpool.html">WorkerPool API</a></h4>
+
+<p>WorkerPoolはJavaScriptで非同期のバックグラウンド処理を可能にするAPIです。バックグラウンド処理の効果については、マイコミジャーナル掲載の&ldquo;<a href="http://journal.mycom.co.jp/articles/2007/06/08/gears/002.html">&quot;重たいJavaScript処理&quot;もこれで解決! - Google Gearsのワーカプールを試す</a>&rdquo;にあるサンプルプログラムがわかりやすいので、お試しになってみてください。</p>
+
+<p>以下のサンプルでは、ワーカーはワーカープールから送信されたテキストファイルのURL（以下では「fetch-me.txt」）にアクセスし、その内容をローカルデータベースに保存します。</p>
+
+<p>まずワーカープール側のコードです。ワーカーは処理が完了すると、データが保存されているレコードIDとHTTPステータスコードから成るハッシュをワーカープールに送信するのですが、<del>ワーカーとワーカープールがやり取りできるのは文字列だけなので、ハッシュはあらかじめ送信時にシリアライズされており、ワーカープールはeval()で文字列からハッシュを復元しています。</del>2009年2月27日訂正: 現在は文字列以外にもBlobを含むさまざまな型をやり取りすることが可能になっており、またonmessageハンドラでは、第1パラメータ（メッセージ文字列）と第2パラメータ（送信者ID）の利用はdeprecatedで、代わって第3パラメータのメッセージオブジェクトを利用することになっています。以下コードはこれに合わせて修正しました。</p>
+
+<pre class="code">var workerPool = google.gears.factory.create('beta.workerpool');
+workerPool.onmessage = function(messageText, senderId, messageObject) {
+  var db = google.gears.factory.create('beta.database');
+  db.open('test_db');
+  var resultSet = db.execute(
+    'SELECT * FROM test_table WHERE id = ?',
+    [messageObject.body.rowId]
+  );
+  if (resultSet.isValidRow()) {
+    console.log(resultSet.fieldByName('content'));
+  }
+  resultSet.close();
+};
+
+var url = 'fetch-me.txt';
+var worker = workerPool.createWorkerFromUrl('worker.js');
+workerPool.sendMessage({url: url}, worker);</pre>
+
+<p>以前はワーカーを作成する際は、ワーカーの処理コード（つまり以下のworker.jsの内容）を文字列で指定する必要がありましたが、現在は処理コードを別のJavaScriptファイルに記述し、そのURLをcreateWorkerFromUrlで指定することができます。</p>
+
+<p>以下は上のコード中で指定されている「worker.js」ファイルの内容で、これがこのワーカーの処理内容になります。</p>
+
+<pre class="code">google.gears.workerPool.onmessage = function(messageText, senderId, messageObject) {
+  var req = google.gears.factory.create('beta.httprequest');
+  req.onreadystatechange = function() {
+    if (req.readyState == 4) {
+      var db = google.gears.factory.create('beta.database');
+      db.open('test_db');
+      db.execute(
+        'CREATE TABLE IF NOT EXISTS test_table'
+          + ' (id integer PRIMARY KEY, content text, created_at integer)'
+      );
+      db.execute(
+        'INSERT INTO test_table VALUES(NULL, ?, ?)',
+        [req.responseText, new Date().getTime()]
+      );
+      google.gears.workerPool.sendMessage(
+        {status: req.status, rowId: db.lastInsertRowId},
+        messageObject.sender
+      );
+    }
+  };
+  req.open('GET', messageObject.body.url);
+  req.send();
+}</pre>
+
+<p>ワーカーはバックグラウンドで動作するためwindowオブジェクトが存在しません。つまり普段常用している多くの機能が、ワーカーのコード中では使えません。そこでGearsでは主にワーカーで使用されることを想定した、こうした機能の代替となるAPIがいくつか提供されています。ここではXmlHttpRequestに代わるGearsのHttpRequest APIを使って、指定されたURLへのリクエストを行っています。また、HttpRequest APIはワーカーで使用されることを前提としているため、XmlHttpRequestに対して、responseXMLが存在しない、同期通信が行えないなどの制約がある一方で、バイナリーデータの送受信などの機能が追加されています。</p>
+
+<hr />
+
+<p>2009年2月27日訂正: WorkerPoolのサンプルがdeprecatedなコードだったので修正しました。</p>
+{% endraw %}

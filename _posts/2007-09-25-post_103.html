@@ -1,0 +1,51 @@
+---
+layout: post
+title: "携帯キャリアで画像を転送させない方法"
+---
+{% raw %}
+Keitaです。<br />
+<br />
+携帯画像で待ち受け画像などで、ダウンロードはできるけどメールに添付できないタイプの画像があるとおもいます。<br />
+ここらへんどうやるか、気になって調べてみると、<br />
+<br />
+Docomoと、AUは画像のコメント部分に、それぞれ、特定の文字列を入れれればいいようで、
+<a href="http://www.nttdocomo.co.jp/service/imode/make/content/drm/redistribution/index.html">Docomoの場合「copy="NO"」</a>、<a href="http://au.kddi.com/ezfactory/tec/spec/gif.html">KDDIの場合「kddi_copyright=on」</a>を追加することでで、携帯でダウンロードできるが、メールなどで転送できない画像が作れました。<br />
+<br />
+具体的に、MagickWand For PHPを使う場合には以下のような感じでヘッダを埋め込みます。<br />
+<pre class="code">
+&lt;?php
+    $image =  NewMagickWand();
+    MagickReadImage($image, 'Keita_s.jpg');
+    MagickCommentImage($image, 'kddi_copyright=on,copy="NO"');
+    MagickWriteImage($image, 'Keita_s_Copy.jpg');
+</pre>
+<br />
+SoftBankに関しては、次のようなヘッダを出力追加してやれば再配布を禁止することができるようです。<br />
+「x-jphone-copyright: no-transfer」<br />
+<a href="http://www2.developers.softbankmobile.co.jp/dp/tool_dl/download.php?docid=119&companyid=">技術資料 HTTP編のPDF</a>の「3.15.38」の項目に、詳細が乗っています。<br />
+<br />
+<br />
+動的に出力したい場合には、こんな感じのコードを書いてやるとよさそうです。<br />
+<pre class="code">
+&lt;?php
+    $image =  NewMagickWand();
+    MagickReadImage($image, 'Keita_s.jpg');
+    MagickCommentImage($image, 'kddi_copyright=on,copy="NO"');
+    header("Content-type: " . MagickGetImageMimeType($image));
+    header('x-jphone-copyright: no-transfer');
+    MagickEchoImageBlob($image);
+</pre>
+
+なお、3キャリアを1機種ずつ確認し問題のないことを確認しましたが、責任を取れるほど詳しくは検証していませんので、厳密にやりたい場合は、必ず検証ののちご利用ください。<br />
+<br />
+あと当然ですが、上記の3キャリア以外からアクセスできると、画像は取り放題ですのでご注意ください。<br />
+<br />
+参考にさせていただいたサイト<br />
+<ul>
+<li><a href="http://minic.press.ne.jp/blogs/web/000056.html">携帯用の待ち受けに保護機能を付ける方法</a></li>
+<li><a href="http://blog.loaferz.com/?eid=22851">WEB制作の覚書|再配布不可識別子の入れ方</a></li>
+<li><a href="http://dspt.blog59.fc2.com/blog-entry-10.html">画像の再配布を禁止する （コピーや転送を不可にする） 携帯ホームページを作ろう！</a></li>
+</ul>
+<br />
+以上、ご参考になれば幸いです。
+{% endraw %}

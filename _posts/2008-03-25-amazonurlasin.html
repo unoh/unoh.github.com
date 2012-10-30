@@ -1,0 +1,116 @@
+---
+layout: post
+title: "Amazonの商品個別ページのURLからASINを取得する"
+---
+{% raw %}
+<p>isogawaです。</p>
+
+<p>題名のままのコードを書く用事があったので、できたものを晒します。とはいえ、ググれば多くの先達が既にさまざまなコードを書いておられ、目新しいものではないんですが。ついでなんで、大昔の「ISBN=～」を含めて、自分の知ってるURLのパターンを洗いなおしてみました（それでも、まだ他のパターンがありそうな気がしますが…）。</p>
+
+<p>例えば、「The Elements of Style」という書籍の個別商品URLとして思いつくものには、以下のようなパターンがあります（細かいバリエーションは適宜省略）。</p>
+
+<ul>
+<li><a href="http://www.amazon.co.jp/exec/obidos/ASIN/020530902X">http://www.amazon.co.jp/exec/obidos/ASIN/020530902X</a></li>
+<li><a href="http://www.amazon.co.jp/o/ASIN/020530902X">http://www.amazon.co.jp/o/ASIN/020530902X</a></li>
+<li><a href="http://www.amazon.co.jp/exec/obidos/ISBN=020530902X">http://www.amazon.co.jp/exec/obidos/ISBN=020530902X</a></li>
+<li><a href="http://www.amazon.co.jp/exec/obidos/ISBN%3D020530902X">http://www.amazon.co.jp/exec/obidos/ISBN%3D020530902X</a></li>
+<li><a href="http://www.amazon.co.jp/o/ISBN=020530902X">http://www.amazon.co.jp/o/ISBN=020530902X</a></li>
+<li><a href="http://www.amazon.co.jp/exec/obidos/tg/detail/-/020530902X">http://www.amazon.co.jp/exec/obidos/tg/detail/-/020530902X</a></li>
+<li><a href="http://www.amazon.co.jp/exec/obidos/tg/detail/-/Elements-Style/020530902X">http://www.amazon.co.jp/exec/obidos/tg/detail/-/Elements-Style/020530902X</a></li>
+<li><a href="http://www.amazon.co.jp/o/tg/detail/-/020530902X">http://www.amazon.co.jp/o/tg/detail/-/020530902X</a></li>
+<li><a href="http://www.amazon.co.jp/o/tg/detail/-/Elements-Style/020530902X">http://www.amazon.co.jp/o/tg/detail/-/Elements-Style/020530902X</a></li>
+<li><a href="http://www.amazon.co.jp/gp/product/020530902X">http://www.amazon.co.jp/gp/product/020530902X</a></li>
+<li><a href="http://www.amazon.co.jp/gp/product/product-description/020530902X">http://www.amazon.co.jp/gp/product/product-description/020530902X</a></li>
+<li><a href="http://www.amazon.co.jp/dp/020530902X">http://www.amazon.co.jp/dp/020530902X</a></li>
+<li><a href="http://www.amazon.co.jp/Elements-Style/dp/020530902X">http://www.amazon.co.jp/Elements-Style/dp/020530902X</a></li>
+<li><a href="http://www.amazon.co.jp/Elements-Style/dp/product-description/020530902X">http://www.amazon.co.jp/Elements-Style/dp/product-description/020530902X</a></li>
+</ul>
+
+<p>スキームがhttpの場合とhttpsの場合、ホストの「www.」の有無、及び日本のサイトについては「.co.jp」と「.jp」の両ドメイン名で、表示内容に違いは見られないようです。</p>
+
+<p>なお、ASIN以降スラッシュに続けて、アソシエイトIDを初めとした各種パラメータが付与されますが、必ずASIN以降であるようなので、ここでは無視します。</p>
+
+<p>というわけでコードですが。以下はJavaScriptですが、やってることはパスをバラして正規表現で評価してるだけなので、他の言語にもサクっと置き換えられるかなと。</p>
+
+<pre class="code"><code>/**
+ * Retrieves ASIN value from the given Amazon product page URL.
+ *
+ * @param  string   url   Amazon product page URL
+ * @return string         ASIN value contained in the given URL
+ *                        Returns empty string if no match
+ */
+function getAsinFromUrl(url) {
+  if (!/^https?:\/\/(?:www\.)?amazon\.(?:com|ca|co\.uk|de|co\.jp|jp|fr|cn)\/(.+)$/.test(url)) {
+    return '';
+  }
+  var path = RegExp.$1;
+  var paths = path.split('/');
+  if (paths[0].toLowerCase() == 'exec') {
+    paths = paths.slice(1);
+  }
+  if (paths.length &lt;= 1 || paths[1] == '') {
+    return '';
+  }
+  switch (paths[0]) {
+  case 'OBIDOS':
+  case 'obidos':
+  case 'o':
+    /**
+     * May match the following examples:
+     * - http://www.amazon.co.jp/exec/obidos/ASIN/020530902X
+     * - http://www.amazon.co.jp/o/ASIN/020530902X
+     */
+    if (paths[1].toLowerCase() == 'asin' &amp;&amp; paths.length &gt;= 3 &amp;&amp; paths[2] != '') {
+      return paths[2];
+    /**
+     * May match the following examples:
+     * - http://www.amazon.co.jp/exec/obidos/ISBN=020530902X
+     * - http://www.amazon.co.jp/exec/obidos/ISBN%3D020530902X
+     * - http://www.amazon.co.jp/o/ISBN=020530902X
+     */
+    } else if (/^isbn(?:=|%3d)(.+)$/i.test(paths[1])) {
+      return RegExp.$1;
+    /**
+     * May match the following examples:
+     * - http://www.amazon.co.jp/exec/obidos/tg/detail/-/020530902X
+     * - http://www.amazon.co.jp/exec/obidos/tg/detail/-/Elements-Style/020530902X
+     * - http://www.amazon.co.jp/o/tg/detail/-/020530902X
+     * - http://www.amazon.co.jp/o/tg/detail/-/Elements-Style/020530902X
+     */
+    } else if (paths[1].toLowerCase() == 'tg'
+      &amp;&amp; paths.length &gt;= 5
+      &amp;&amp; paths[2].toLowerCase() == 'detail'
+      &amp;&amp; paths[3] == '-') {
+      if (/^[0-9a-zA-Z]{10}$/.test(paths[4])) {
+        return paths[4];
+      } else if (paths.length &gt;= 6 &amp;&amp; paths[5] != '') {
+        return paths[5];
+      }
+    }
+    break;
+  /**
+   * May match the following examples:
+   * - http://www.amazon.co.jp/gp/product/020530902X
+   * - http://www.amazon.co.jp/gp/product/product-description/020530902X
+   */
+  case 'gp':
+    if (/^gp\/product(?:\/product-description)?\/([0-9a-zA-Z]{10})/.test(path)) {
+      return RegExp.$1;
+    }
+    break;
+  /**
+   * May match the following examples:
+   * - http://www.amazon.co.jp/dp/020530902X
+   * - http://www.amazon.co.jp/Elements-Style/dp/020530902X
+   * - http://www.amazon.co.jp/Elements-Style/dp/product-description/020530902X
+   */
+  default:
+    if (/\/?dp(?:\/product-description)?\/([0-9a-zA-Z]{10})/.test(path)) {
+      return RegExp.$1;
+    }
+  }
+  return '';
+}</code></pre>
+
+<p>なお、個別商品ページを表示した状態でブックマークレットとかでASINを拾うとか、ページのDOMが利用できる状況なら、URLをいぢくるよりdocument.getElementById('ASIN')のほうが確実なのは、これもググればさまざまなに述べられている通りなので、念のため。</p>
+{% endraw %}

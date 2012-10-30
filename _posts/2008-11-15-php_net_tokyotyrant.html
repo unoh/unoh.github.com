@@ -1,0 +1,83 @@
+---
+layout: post
+title: "PHPライブラリ Net_TokyoTyrantの紹介"
+---
+{% raw %}
+
+皆さんopenpearしてますか！<br />
+最近、インフルエンザの予防接種を受けたKeitaです。<br />
+<br />
+ずいぶん前にですが、PHPからTokyoTyrantをネイティブに操作するライブラリを<a href="http://openpear.org/">openpear</a>にてリリースしたので、簡単に紹介したいと思います。<br />
+
+<h2>Net_TokyoTyrantとは？</h2>
+PurePHPで書かれた、TokyoTyrantのネイティブなインターフェースを叩くライブラリです。<br />
+memcache互換のインターフェースなどとは違い、TokyoTyrantの<a href="http://tokyocabinet.sourceforge.net/tyrantdoc/#luaext">LUA拡張</a>などTokyoTyrant本来の機能をほぼすべて使えるというのが特徴です。<br />
+
+<h2>インストール</h2>
+PEARライブラリとして公開されているので非常に簡単にインストール可能です。<br />
+
+openpearのチャンネルを追加します。<br />
+<pre class="code">
+pear channel-discover openpear.org
+</pre>
+<br />
+PEARコマンドでインストールを行います。<br />
+<pre class="code">
+pear install openpear/Net_TokyoTyrant
+</pre>
+
+<h2>サンプルコード</h2>
+
+概ねですが下記のような感じで利用できると思います。<br />
+
+関数などは、<a href="http://tokyocabinet.sourceforge.net/tyrantdoc/#protocol">TokyoTyrantの本家ページ</a>にあるものすべてをサポートしています。<br />
+
+<pre class="code">
+require_once 'Net/TokyoTyrant.php';
+
+$tt = new Net_TokyoTyrant();
+$tt->connect('localhost', 1978); //接続
+
+
+$tt->put('oyomesan', 'nounai');
+var_dump($tt->get('oyomesan'));
+$tt->put('kanozyo', 'pc no naka');
+$tt->put('kareshi', 'otoko ha chotto');
+var_dump($tt->mget(array('oyomesan', 'kanozyo')));
+var_dump($tt->fwmkeys('ka', 100)); //kanozyo, kareshiが返ってくる
+
+$tt->close() //切断
+</pre>
+
+
+<h2>作成した経緯</h2>
+当初、memcachedのインターフェースからTokyoTyrantを操作していたのですが、PHPのmemcache拡張は、複数の値を一括して取得するmgetや情報取得用の機能がないため、ついカッとなって一晩で作りました。<br />
+<br />
+※今では、gree labsさんで公開されているlibmemcached用のインターフェースなどに備わっているので、memcachedをPHPから使うという場合限っては他の言語と同様に、PHPはまったく機能が不足しているといことはありません。<br />
+<br />
+テストコードを書いたので休日のストレス解消に時々リファクタをしていますがほとんどインターフェースは変わってません。
+<br />
+<h2>今後について</h2>
+以下をやってみたいなーとおもってます。<br />
+<ul>
+<li>コメントをまったく書いてないのでコメントを書く</li>
+<li>例外周りの実装が美しくないので直す</li>
+<li>TokyoTyrantが64bit整数を返してくるものがあるがそこらへんの扱いをPHPでどうするか考えてないので考える</li>
+<li>実践投入してみる</li>
+</ul>
+<br />
+もしくはopenpearの設定で登録してあれば修正できるようになっているので誰かが修正してくれたらなーともおもっています。<br />
+また、ベンチマークコードも、<a href="http://openpear.org/repository/Net_TokyoTyrant/trunk/tests/benchmark">oepanpear</a>にて公開しているのでそこらへんの調査もきっちりできればなーというか誰かしてくれないかなぁなどと思っております。
+
+<h2>最後に</h2>
+Net_TokyoTyrantは、id:riafさんとid:sotarokさんが作られている、<a href="http://openpear.org/">openpear</a>にて公開されています。<br />
+<br />
+実際に利用してみるとわかりますが、初めてでも1時間程度で、pearとして自分のライブラリを公開することができます。
+なおかつsvnなどの面倒も見てくれるので個人でものを作るには非常に便利な環境です。<br />
+<br />
+このサイト自体が、PHPフレームワーク（正確にはPHP libraries & Setup Framework)<a href="http://rhaco.org/">rhaco</a>で書かれておりここらへんの話だけでも興味深いサイトといえると思います。<br />
+<br />
+誰かのライブラリが公開されたら実際に使ってみて本ブログや個人のブログでご紹介というか他人のふんどしで相撲とらせていただこうかと思います。<br />
+<br />
+長々と書きましたが要するに<a href="http://openpear.org/">openpear</a>の宣伝をして皆さんのライブラリが公開されればいいな！というエントリでございました。ご参考になれば幸いです。<br />
+{% endraw %}

@@ -1,0 +1,56 @@
+---
+layout: post
+title: "NetBeansでConsolasフォントを使う"
+---
+{% raw %}
+<p>
+yamaokaです。
+</p>
+
+<p>
+<a href="http://ja.netbeans.org/">NetBeans</a>の6.5がリリースされましたね。もともとNetBeansはJava用のIDEですが、今ではPHPやRuby、C/C++の開発にも使えるようになっています。PHPをバンドルしたものを試しているのですが、入力補完など基本的な動作はもちろん、Subversionなどバージョン管理ツールとの連携も便利で個人的な開発にはすっかり手放せないものとなってしまいました。
+</p>
+
+<p>
+さて、新しいIDEやエディタを導入したとき、皆さんは初めに何をするでしょうか。私の場合はフォントの設定を行う場合が多いです。<a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=22e69ae4-7e40-4807-8a86-b3d36fab68d3&DisplayLang=en">Consolasフォント</a>がお気に入りなのですが、Windows環境に導入したNetBeansでエディタのフォントにConsolasを指定すると
+日本語が正しく表示されません（豆腐文字になってしまいます）。Windowsのフォントリンクの機能なども試してみましたが、うまく表示されないようです。
+</p>
+
+<p><a href="http://photozou.jp/photo/show/784/15376028"><img src="http://art1.photozou.jp/pub/784/784/photo/15376028.png" alt="NetBeans" width="450" height="404" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/15376028">NetBeans</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a></p>
+
+<p>
+NetBeansはSwingで動作しているので、Java側で設定されている論理フォント「Monospaced」の設定を書き換え、「Monospaced」を使うようにすれば表示することができるようになります。ということで、Java側の設定を変更してしまいます。ちなみに、今回NetBeansはJava SDK 1.6.0_10に付属のJREで動作しています。
+</p>
+
+<p>
+Javaの設定はプロパティファイルで変更することができます。JDKをインストールしたフォルダに「jre」というフォルダがあるので、その中にある「fontconfig.properties.src」をコピーして同じ場所に「fontconfig.properties」というファイルを作り、エディタで編集します。
+</p>
+
+<p>
+まず、Consolasフォントが使えるように末尾に次の内容を追記します。
+<pre class="code"><code>filename.Consolas=CONSOLA.TTF
+filename.Consolas_Bold=CONSOLAB.TTF
+filename.Consolas_Italic=CONSOLAI.TTF
+filename.Consolas_Bold_Italic=CONSOLAZ.TTF
+</code></pre>
+また、なぜかWindows環境で「Monospaced」が指定された場合に英字フォントより日本語のフォントを優先して使うようになっているので、「sequence.monospaced.windows-31j」の値を「alphabetic」と「japanese」を逆にして次のように変更します。
+<pre class="code"><code>sequence.monospaced.windows-31j=alphabetic,japanese,dingbats,symbol</code></pre>
+最後に、「Monospaced」の英字フォント設定を変更します。デフォルトでは「Courier New」になっているので、「Consolas」に変更していきます。変更箇所は4ヶ所です。
+<pre class="code"><code>monospaced.plain.alphabetic=Consolas</code></pre>
+<pre class="code"><code>monospaced.bold.alphabetic=Consolas Bold</code></pre>
+<pre class="code"><code>monospaced.italic.alphabetic=Consolas Italic</code></pre>
+<pre class="code"><code>monospaced.bolditalic.alphabetic=Consolas Bold Italic</code></pre>
+変更が終わったら「fontconfig.properties」を保存してNetBeansを起動しましょう。エディタのフォントはMonospacedに設定します。
+</p>
+
+<p><a href="http://photozou.jp/photo/show/784/15375859"><img src="http://art1.photozou.jp/pub/784/784/photo/15375859.png" alt="NetBeansでConsolasフォント" width="450" height="404" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/15375859">NetBeansでConsolasフォント</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a></p>
+
+<p>
+英字部分はConsolasで、日本語部分はMSゴシックで表示されるようになるかと思います。日本語の表示を他のフォントに変更する場合は、同じように「fontconfig.properties」の値を書き換えることで変更できます。
+</p>
+
+<p>
+フォントの変更方法について書いてきましたが、NetBeansはかなり便利です。何より、体感的にEclipseより動作が軽い気がします。XDebugを使ったリモートデバッグもできるようなので、そのうち試してみたいところです。
+</p>
+
+{% endraw %}

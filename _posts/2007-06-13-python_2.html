@@ -1,0 +1,278 @@
+---
+layout: post
+title: "Pythonでメールを送信したい人のためのサンプル集"
+---
+{% raw %}
+<p>chihiroです。</p>
+
+<p>最近Pythonでのメールを送受信に試行錯誤することがあり、ようやく分かってきたので、ここにまとめておきたいと思います。</p>
+
+<h3>Pythonでメールを送信する</h3>
+<p>Python標準ライブラリでメールを送信する場合、</p>
+<ol>
+<li>emailパッケージを使ってMIME文書を作成</li>
+<li>smtplibを使って送信</li>
+</ol>
+<p>という手順を踏みます。</p>
+<p>emailパッケージははじめはとっつきにくいのですが、
+各クラスのインターフェイスは統一感があり、よく練られているので、一度分かってしまえば明快です。
+国際化されたヘッダーやテキスト以外のコンテンツの扱いに関しても問題ないので、
+"battery inside"なPythonのありがたみを実感できるパッケージだと思います。
+</p>
+
+<h3>基本的な例</h3>
+<p>テキスト形式のメッセージをlocalhost:25から送信する例です。</p>
+
+<pre class="code"><code># -*- coding: utf-8 -*-
+import smtplib
+from email.MIMEText import MIMEText
+from email.Utils import formatdate
+
+def create_message(from_addr, to_addr, subject, body):
+    msg = MIMEText(body)
+    msg['Subject'] = subject
+    msg['From'] = from_addr
+    msg['To'] = to_addr
+    msg['Date'] = formatdate()
+    return msg
+
+def send(from_addr, to_addr, msg):
+    # SMTPの引数を省略した場合はlocalhost:25
+    s = smtplib.SMTP()
+    s.sendmail(from_addr, [to_addr], msg.as_string())
+    s.close()
+
+if __name__ == '__main__':
+    from_addr = 'spam@example.com'
+    to_addr = 'egg@example.com'
+    msg = create_message(from_addr, to_addr, 'test subject', 'test body')
+    send(from_addr, to_addr, msg)
+</code></pre>
+
+<p>MIMETextクラスのインスタンスを作って、text/plainなMIME文書を作ります。
+smtplibによる接続・送信は、認証がない場合は単純明快です。</p>
+
+<h3>gmailを使って送信してみる</h3>
+<p>gmailはTLSを使って接続しなくてはならないので、接続と認証の手順が上の例とは異なります。</p>
+
+<pre class="code"><code># -*- coding: utf-8 -*-
+import smtplib
+from email.MIMEText import MIMEText
+
+def create_message(from_addr, to_addr, subject, body):
+    # 上と同じ
+    pass
+
+def send_via_gmail(from_addr, to_addr, msg):
+    s = smtplib.SMTP('smtp.gmail.com', 587)
+    s.ehlo()
+    s.starttls()
+    s.ehlo()
+    s.login('yourname@gmail.com', 'password')
+    s.sendmail(from_addr, [to_addr], msg.as_string())
+    s.close()
+
+if __name__ == '__main__':
+    from_addr = 'yourname@gmail.com'
+    to_addr = 'egg@example.com'
+    msg = create_message(from_addr, to_addr, 'test subject', 'test body')
+    send_via_gmail(from_addr, to_addr, msg)
+</code></pre>
+
+<h3>日本語を含んだメール</h3>
+<p>emailパッケージのデフォルトの文字セットは'us-ascii'なので、
+日本語を含んだメールを送信する場合は、明示的に指定する必要があります。</p>
+<p>plain/textのMIME文書の場合は、MIMETextオブジェクトのコンストラクタで文字セットを指定するのが一番簡単です。
+それに加えて、メールのヘッダーは、email.HeaderのHeaderオブジェクトを使って国際化しなくてはなりません。</p>
+
+<pre class="code"><code># -*- coding: utf-8 -*-
+import smtplib
+from email.MIMEText import MIMEText
+from email.Header import Header
+from email.Utils import formatdate
+
+def send(from_addr, to_addr, msg):
+    # 上に同じ
+    pass
+
+def create_message2(from_addr, to_addr, subject, body, encoding):
+    # 'text/plain; charset="encoding"'というMIME文書を作ります
+    msg = MIMEText(body, 'plain', encoding)
+    msg['Subject'] = Header(subject, encoding)
+    msg['From'] = from_addr
+    msg['To'] = to_addr
+    msg['Date'] = formatdate()
+    return msg
+
+if __name__ == '__main__':
+    from_addr = 'spam@example.com'
+    to_addr = 'egg@example.com'
+    msg = create_message2(from_addr, to_addr, u'テスト', u'本文', 'ISO-2022-JP')
+    send(from_addr, to_addr, msg)
+</code></pre>
+
+<h3>DoCoMoに絵文字入りのメールを送る</h3>
+<p>文字セットにShift_JISを使用すると、DoCoMo端末に対して絵文字を含んだメールを送信することができます。</p>
+<p>ただし、Pythonのemailパッケージは、入力文字コードとしてShift_JIS, EUC-JPを選択した場合、
+自動的に出力文字コードをISO-2022-JPに変換しようとするので、強制的にShift_JISで送信するには追加の処理が必要です。</p>
+<p>以下は、"NO Erlang[絵文字:ひらめき] NO Life[絵文字:ハート(複数)]"というメールを送信するサンプルです。
+DoCoMoでは、"0xf90xa0"が「ひらめき」の絵文字、"0xf90x94"が「ハート(複数)」の絵文字です。</p>
+
+<pre class="code"><code># -*- coding: utf-8 -*-
+import smtplib
+from email.MIMEText import MIMEText
+from email.Header import Header
+from email.Utils import formatdate
+from email import Charset
+
+# ヘッダーをQuoted-Printable, ボディーをbase64でエンコードします
+Charset.add_charset('shift_jis', Charset.QP, Charset.BASE64, 'shift_jis')
+
+# 文字コードの変換には、"shift_jis"ではなく"cp932"を使っています
+Charset.add_codec('shift_jis', 'cp932')
+
+def send(from_addr, to_addr, msg):
+    # 上に同じ
+    pass
+
+def create_message_for_docomo(from_addr, to_addr, subject, body):
+    msg = MIMEText(body, 'plain', 'shift_jis')
+    msg['Subject'] = Header(subject, 'shift_jis')
+    msg['From'] = from_addr
+    msg['To'] = to_addr
+    msg['Date'] = formatdate()
+    return msg
+
+if __name__ == '__main__':
+    from_addr = 'spam@example.com'
+    to_addr = 'your_email_address@docomo.ne.jp'
+    body = 'NO Erlang\xf9\xa0No Life\xf9\x94'
+    subject = 'test'
+    msg = create_message_for_docomo(from_addr, to_addr, subject, body)
+    send(from_addr, to_addr, msg)
+</code></pre>
+
+<p>ポイントは、Charset.add_charsetでshift_jisの設定を上書きしていることと、
+Charset.add_codecで明示的にコーデックを指定することで、shift_jisのエンコード、
+デコードにcp932を使用するようにしていることです。</p>
+
+<h3>SoftBankに絵文字入りのメールを送る</h3>
+<p>一方、SoftBankには、UTF-8を使うと絵文字入りメールを送信できるようです。
+<a href="http://developers.softbankmobile.co.jp/dp/tool_dl/web/picword_top.php">SoftBankの技術資料「絵文字一覧」</a>に、各絵文字のユニコードが公開されているので、これを参考に、ユニコード文字列の本文をUTF-8にエンコードしてMIME文書を作ります。
+これさえ分かってしまえば、難しいことはありません。</p>
+<p>例えば、蛇の絵文字はユニコードだとU+E52Dなので、"アイ ラブ Python[絵文字:蛇]"という文書ならば、次のようにします。</p>
+
+<pre class="code"><code># -*- coding: utf-8 -*-
+import smtplib
+from email.MIMEText import MIMEText
+from email.Header import Header
+from email.Utils import formatdate
+
+def send(from_addr, to_addr, msg):
+    # 上に同じ
+    pass
+
+def create_message_for_softbank(from_addr, to_addr, subject, body):
+    msg = MIMEText(body, 'plain', 'utf-8')
+    msg['Subject'] = Header(subject, 'utf-8')
+    msg['From'] = from_addr
+    msg['To'] = to_addr
+    msg['Date'] = formatdate()
+    return msg
+
+if __name__ == '__main__':
+    from_addr = 'spam@example.com'
+    to_addr = 'your_email_address@softbank.ne.jp'
+    body = u'アイラブ Python\ue52d'.encode('utf-8')
+    subject = 'test'
+    msg = create_message_for_softbank(from_addr, to_addr, subject, body)
+    send(from_addr, to_addr, msg)
+</code></pre>
+
+<p>DoCoMoの例と違い、Charset.add_charsetを行っていませんが、これは、UTF-8を使用した場合、
+初めから「ヘッダーにはQuoted-Printableかbase64, 本文にはbase64」でエンコードするように定義されているためです。
+</p>
+
+<h3>添付付きメール・デコメール</h3>
+<p>添付ファイル付きのメールを送るには、MIMEMultipartクラスのインスタンスをつくり、
+MIMEText, MIMEAudio, MIMEImage等のMIMEオブジェクトをattachしていきます。</p>
+<p>添付付きメールを送るだけでは捻りがないので、HTMLメール(DoCoMoのデコメール)の送信例を紹介します。</p>
+
+<pre class="code"><code># -*- coding: utf-8 -*-
+import smtplib
+from email.MIMEText import MIMEText
+from email.MIMEMultipart import MIMEMultipart
+from email.Header import Header
+from email.Utils import formatdate
+
+def send(from_addr, to_addr, msg):
+    # 上に同じ
+    pass
+
+HTML_BODY = """&lt;html&gt;
+&lt;body&gt;
+&lt;img src="cid:a"&gt;&lt;br&gt;
+Hello World&lt;br&gt;
+&lt;img src="cid:c"&gt;&lt;br&gt;
+Welcome to the world of Python&lt;br&gt;
+&lt;img src="cid:b"&gt;&lt;br&gt;
+&lt;body&gt;
+&lt;/html&gt;"""
+
+def create_deco(from_addr, to_addr):
+    msg = MIMEMultipart()
+    msg['Subject'] = Header(u"デコメ", 'ISO-2022-JP')
+    msg['From'] = from_addr
+    msg['To'] = to_addr
+    msg['Date'] = formatdate()
+
+    related = MIMEMultipart('related')
+    alt = MIMEMultipart('alternative')
+    related.attach(alt)
+
+    content = MIMEText(HTML_BODY, 'html', 'ISO-2022-JP')
+    alt.attach(content)
+
+    for filename in ['a', 'b', 'c']:
+        fp = file('%s.gif' % filename, 'rb')
+        
+        # Content-Type: image/gif; name="a.gif"
+        img = MIMEImage(fp.read(), 'gif', name=filename)
+        
+        # HTMLからイメージを参照するにはContent-IDが必要です
+        img['Content-ID'] = '&lt;%s&gt;' % filename
+        related.attach(img)
+
+    msg.attach(related)
+    return msg
+
+if __name__ == '__main__':
+    from_addr = 'spam@example.com'
+    to_addr = 'your_email_address@docomo.ne.jp'
+    msg = create_deco(from_addr, to_addr)
+    send(from_addr, to_addr, msg)
+</code></pre>
+
+<p>送信結果は次のようになります。</p>
+
+<div>
+<a href="http://photozou.jp/photo/show/784/3640148"><img src="http://art5.photozou.jp/pub/784/784/photo/3640148.jpg" alt="deco_using_python" width="240" height="320" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/784/3640148">deco_using_python</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a>
+</div>
+
+<p>デコメールに関しては以前に<a href="http://www.unoh.net/mt32/mt-search.cgi?tag=haruk&blog_id=2">harukiさん</a>が
+<a href="http://labs.unoh.net/2007/04/deco.html">詳しい資料</a>を公開していますので、興味のある方はこちらもご覧下さい。</p>
+
+<h3>おまけ</h3>
+<p>泥臭いサンプル集になってしまいましたが、それなりに動くWebアプリケーション、
+Webサイトを作ろうとするならば、もう少し洗練された解決策が必要です。</p>
+<ul>
+<li><a href="http://twistedmatrix.com/trac/">Twisted</a>の<a href="http://twistedmatrix.com/projects/mail/documentation/tutorial/smtpclient/smtpclient.xhtml">twisted.mail.smtp</a>を使えば、非同期IOを利用して効率よくメールの送信を行えそうです。</li>
+<li>開発版<a href="http://www.djangoproject.com/">Django</a>の<a href="http://code.djangoproject.com/browser/django/trunk/django/core/mail.py">django.core.mailモジュール</a>は大幅にリファクタリングされて、メッセージの作成と送信を分離できるようになりました。Djangoをインストールしておけば、もちろんDjangoのテンプレートエンジンを利用できるので、「テンプレートからメッセージの作成」「MIME文書作成」「送信」という処理をきれいに行うことができそうです。email, smtplibパッケージの使用例としても参考になります。</li>
+</ul>
+<p>僕自身まだ研究中で、いろいろ試行錯誤している段階なのですが、
+もう少し整理できたならば、またこのブログで紹介したいと思います。</p>
+<p>また、自分自身いろいろ調査していて、
+<a href="http://www.python.jp/doc/release/lib/module-email.html">Python標準の「ライブラリリファレンス」</a>
+がやはり一番参考になると実感しています。こちらも合わせてどうぞ。
+</p>
+{% endraw %}

@@ -1,0 +1,330 @@
+---
+layout: post
+title: "ブログパーツ貼り付けタグのまとめ＋Googleガジェット＠はてな"
+---
+{% raw %}
+<p>こんばんわ、isogawaです。</p>
+
+<p>ウェブサービスのブログパーツを提供しようと思ったときに、ブログサービスによっては利用可能なHTMLタグが制限されていて、ブログパーツの貼り付けタグをどういったものにするべきか悩む場合があります。そこでいくつかのブログサービスについて、ブログパーツ類の扱いがどうなっているかサクっと調べてみました。大雑把な調査なので、間違ってたりするかもしれません。お気づきの点があれば訂正させていただきますので、お気軽に突っ込んでいただければ幸いです。</p>
+
+<h3>Flash貼り付け用HTMLタグの利用可否</h3>
+
+<p>まずは、ブログパーツの多くで利用されているFlashオブジェクトを表示するHTMLタグの選択肢としては、OBJECT/EMBED、SCRIPT、そしてIFRAMEがあると思いますが、以下はこれらのタグが各ブログサービスで利用できるかどうか（裏技による例外は除く）の一覧表です。</p>
+
+<table summary="各ブログサービスで利用可能なFlash貼り付け用のHTMLタグ">
+  <thead>
+    <tr>
+      <th>ブログ</th>
+      <th>ちなみに文字コード</th>
+      <th>OBJECT/EMBED</th>
+      <th>SCRIPT</th>
+      <th>IFRAME</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>アメブロ</td>
+      <td>UTF-8</td>
+      <td>×</td>
+      <td>×</td>
+      <td>×</td>
+    </tr>
+    <tr>
+      <td>ウェブリブログ</td>
+      <td>Shift_JIS</td>
+      <td>○</td>
+      <td>○</td>
+      <td>○</td>
+    </tr>
+    <tr>
+      <td>エキサイトブログ</td>
+      <td>UTF-8</td>
+      <td>×</td>
+      <td>×</td>
+      <td>×</td>
+    </tr>
+    <tr>
+      <td>FC2ブログ</td>
+      <td>EUC-JP</td>
+      <td>○</td>
+      <td>○</td>
+      <td>○</td>
+    </tr>
+    <tr>
+      <td>gooブログ</td>
+      <td>EUC-JP</td>
+      <td>×</td>
+      <td>×</td>
+      <td>×</td>
+    </tr>
+    <tr>
+      <td>ココログ</td>
+      <td>UTF-8</td>
+      <td>○</td>
+      <td>○</td>
+      <td>○</td>
+    </tr>
+    <tr>
+      <td>Seesaaブログ</td>
+      <td>Shift_JIS</td>
+      <td>○</td>
+      <td>○</td>
+      <td>○</td>
+    </tr>
+    <tr>
+      <td>JUGEM</td>
+      <td>EUC-JP</td>
+      <td>○</td>
+      <td>○</td>
+      <td>○</td>
+    </tr>
+    <tr>
+      <td>So-net blog</td>
+      <td>UTF-8</td>
+      <td>○</td>
+      <td>○</td>
+      <td>○</td>
+    </tr>
+    <tr>
+      <td>TypePadファミリー</td>
+      <td>UTF-8</td>
+      <td>○</td>
+      <td>○</td>
+      <td>○</td>
+    </tr>
+    <tr>
+      <td>ドリコム</td>
+      <td>Shift_JIS</td>
+      <td>○</td>
+      <td>○</td>
+      <td>○</td>
+    </tr>
+    <tr>
+      <td>はてなダイアリー</td>
+      <td>EUC-JP</td>
+      <td>△</td>
+      <td>△</td>
+      <td>△</td>
+    </tr>
+    <tr>
+      <td>Yahoo!ブログ</td>
+      <td>UTF-8</td>
+      <td>△</td>
+      <td>×</td>
+      <td>×</td>
+    </tr>
+    <tr>
+      <td>ヤプログ</td>
+      <td>Shift_JIS</td>
+      <td>○</td>
+      <td>○</td>
+      <td>○</td>
+    </tr>
+    <tr>
+      <td>livedoorブログ</td>
+      <td>EUC-JP</td>
+      <td>○</td>
+      <td>○</td>
+      <td>○</td>
+    </tr>
+    <tr>
+      <td>楽天広場</td>
+      <td>EUC-JP</td>
+      <td>×</td>
+      <td>×</td>
+      <td>×</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>ごらんの通りこれらのタグは、一部例外を除き少なくとも上表にあるブログサービスでは、すべてOKかすべてNGかのどちらかで、つまりこれらのひとつがNGなら他のタグもNGであるようなので、どのタグを選択するか、ブログサービス側の制限を考慮して悩む必要はないようです。</p>
+
+<p>そうするとFlashオブジェクトの表示は、「Internet Explorerでの<a href="http://www.microsoft.com/japan/msdn/workshop/author/dhtml/overview/activating_activex.aspx">ActiveXコントロールのアクティブ化</a>問題」を考慮するなら、OBJECTタグを直接記述するのは避けて、JavaScriptで行ったほうがよいのかなと。</p>
+
+
+<h3>全般的な留意点</h3>
+
+<p>貼り付けコードはブログの投稿設定などに影響されないように配慮しておく必要があります。特に、サイドバーだけではなく記事本文中にも貼り付けられることを想定している場合は、以下の設定は、殆どのブログサービスで記事本文の投稿についてはデフォルトでONの筈なので、こうした設定に影響を受けないものであるか要確認です。</p>
+
+<ul>
+  <li>改行を&lt;BR&gt;に変換する</li>
+  <li>URLをリンクに変換する</li>
+</ul>
+
+<p>また、稀な例ですが、記事本文ではタグ自体はOKでも属性がNGというブログサービスがありました（入力は可能で保存もされていますが、ウェブブラウザへの出力時に除去されます）。どうやらここでは、ID属性はとにかくNGのようなので、例えば、貼り付けコード中にID属性を付けたDIV要素があって、それをJavaScriptから操作するといったコードは正常に動作しません。</p>
+
+<p>以下、特殊な対応が必要なケース。</p>
+
+<h3>Yahoo!ブログ</h3>
+
+<p>HTMLタグとしてのOBJECT/EMBEDは使用できませんが、記事本文の投稿に「Wiki文法」を使用する場合は、以下のような記述でFlashオブジェクトを挿入できます（サイドバーでは利用できません）。</p>
+
+<pre class="code"><code>[[item(http://i.yimg.jp/i/topics/blogparts/topics.swf,222,240)]]</code></pre>
+
+<p>Flashオブジェクトを挿入する際の記述は、以前は非公式のembed記法が知られていましたが、現在は新たに追加された公式のitem記法を使用します（embed記法も引き続き使用可能です）。</p>
+
+<p>Wiki文法を記述する場合は、記事の新規投稿時に「Wiki文法使用」をチェックしておく必要があります。このチェックを付けずに投稿してしまった記事は、以降の編集時にWiki文法を使用することはできません。またWiki文法を使用する記事で、HTMLタグを併用することはできません。</p>
+
+<ul>
+  <li><a href="http://help.yahoo.co.jp/help/jp/blog/blog-47.html">Yahoo!ブログ ヘルプ - Wiki文法について</a></li>
+</ul>
+
+<h3>ココログ and TypePadファミリー</h3>
+
+<p>ココログや、typepad.jp及び<a href="http://www.sixapart.jp/typepad/asp/">TypePad ASP</a>を利用した各ブログサービス、それにtypepad.comでは、以下の例のようなHTMLフォームで貼り付けコードをPOSTすることで、各ブログサービスの管理画面でブログパーツ（TypePadでは「ウィジェット」と呼ばれます）が簡単に設定できる仕組みが用意されています。</p>
+
+<pre class="code"><code>&lt;form action=&quot;https://www.typepad.jp/t/app/weblog/design/widgets&quot; method=&quot;post&quot;&gt;
+  &lt;div&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;service_key&quot;  value=&quot;(ウィジェットAPI Key)&quot; /&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;long_name&quot;    value=&quot;サンプルウィジェット&quot; /&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;short_name&quot;   value=&quot;widget_example&quot; /&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;service_name&quot; value=&quot;example_org&quot; /&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;service_url&quot;  value=&quot;http://www.example.org/&quot; /&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;return_url&quot;   value=&quot;http://www.example.org/widgets/return-page.html&quot; /&gt;
+    &lt;input type=&quot;hidden&quot; name=&quot;content&quot;      value=&quot;&amp;lt;script type=&amp;quot;text/javascript&amp;quot; src=&amp;quot;http://www.example.org/widgets/example.js&amp;quot;&amp;gt;&amp;lt;/script&amp;gt;&quot; /&gt;
+    &lt;input type=&quot;submit&quot; value=&quot;ウィジェットを追加する&quot; /&gt;
+  &lt;/div&gt;
+&lt;/form&gt;
+</code></pre>
+
+<p>ブログサービスによってPOST先のURLが異なる場合があるものの、ウィジェットAPI Keyも含めてそれ以外は基本的に同じなので、合計20近くのブログサービスにまとめて対応できます（ただしTypePad ASPを利用したすべてのサービスがこの仕組みをサポートしているわけではありません）。</p>
+
+<ul>
+  <li><a href="http://www.sixapart.jp/typepad/widgets/developer.html">Six Apart - TypePad ウィジェット開発者プログラム</a></li>
+</ul>
+
+<h3>はてなダイアリー and Googleガジェット</h3>
+
+<p><a href="http://d.hatena.ne.jp/hatenadiary/20070814/1187089752">自分のはてなダイアリーにブログパーツを設置できるようになりました</a>、ということで、はてなが許可したものについては、従来禁止されていたHTMLタグがそのまま挿入できるようになりました。そしてその「はてなが許可したもの」の中にGoogleガジェットが含まれているため、事実上あらゆブログパーツが利用できるようになっています。</p>
+
+<p>既存のブログパーツをGoogleガジェット化すると、はてなダイアリーはもちろん、iGoogleやGoogleデスクトップなどにも貼り付けることができるようになります。ブログパーツのガジェット化は（凝ったことをしなければ）非常に簡単なので、ガジェットをまだ提供していなければ、この機会に検討するといいかもしれません。</p>
+
+<ul>
+  <li><a href="http://www.google.co.jp/apis/gadgets/">Google ガジェット API - 概要</a></li>
+  <li><a href="http://igooglecon.jp/chapter03/">iGoogleガジェットコンテスト｜ガジェットを作ってみよう</a></li>
+</ul>
+
+<h3>Googleガジェットの基本</h3>
+
+<p>既存のブログパーツをGoogleガジェット化するには、以下のような内容のXMLを作成します。</p>
+
+<pre class="code"><code>&lt;?xml version="1.0" encoding="UTF-8" ?&gt;
+&lt;Module&gt;
+  &lt;ModulePrefs title="(ブログパーツのタイトル)" /&gt;
+  &lt;Content type="html"&gt;
+    (CDATAセクションに納めた、またはエスケープ処理を施したブログパーツの貼り付けコード)
+  &lt;/Content&gt;
+&lt;/Module&gt;</code></pre>
+
+<p>これはガジェットXMLの最小構成ですが、多くのブログパーツはこれだけでイケると思います。ただしGoogleガジェットでは、その本体はIFRAME内に表示されるので、ブログパーツにリンクが設定してある場合、リンクターゲットを変更する必要があるかもしれません。</p>
+
+<p>このXMLをインターネットに公開すればガジェットの提供準備は完了です。</p>
+
+<p>iGoogleなどではこのXMLのURLを指定してガジェットを追加します。はてなダイアリーなど、Google以外のウェブページで利用する（Googleでは「シンジケーション」と呼ばれます）には、XMLのURLとその他のパラメータをクエリーストリングに含めた、gmodules.comのURLをSRC属性値に指定したSCRIPTタグを貼り付けます。</p>
+
+<p>ガジェットXMLのロケーションは任意ですが、このXMLを取得しにやってくるのはエンドユーザのウェブブラウザではなく、Google Readerなどと同じ<a href="http://www.google.com/support/webmasters/bin/answer.py?answer=33583&amp;topic=8460">Feedfetcher</a>ロボットなので、XMLはこのロボットがアクセス可能なロケーションに配置する必要があります。つまり、localhostや認証が必要なURLはNGです。なお、Feedfetcherはrobots.txtを無視するので、robots.txtによるアクセス制限については配慮する必要はありません。</p>
+
+<p>ちなみにFeedfetcherロボットのUser-Agentは以下です。</p>
+
+<pre class="code"><code>FeedFetcher-Google; (+http://www.google.com/feedfetcher.html)</code></pre>
+
+<h3>Googleガジェットの貼り付けコード</h3>
+
+<p>はてなダイアリーなどへのGoogleガジェットの貼り付けコードは以下のようなものになりますが、はてなダイアリーに貼り付ける場合、コードの内容には注意が必要です。</p>
+
+<pre class="code"><code>&lt;script src=&quot;http://gmodules.com/ig/ifr?url=(XMLのURL)
+&amp;amp;(その他のクエリーパラメータ)&quot;&gt;&lt;/script&gt; </code></pre>
+
+<p>はてなダイアリーでは、貼り付けられたコードがGoogleガジェットのものであるか検証が行われますが、現時点ではこの検証は非常に厳格（？）です。</p>
+
+<p>上の例では、SCRIPT要素にTYPE属性が欠落していますが、これを付け足したコードは、現時点ではGoogleガジェットのものとはみなしてくれません。また、クエリーストリングに指定するパラメータは下表の通りですが、これが<strong>この順番通りに</strong>並んでいないと、やはりNGとなります。パラメータが足りなくてもダメです。</p>
+
+<table summary="シンジケーション用Googleガジェットのクエリーパラーメータ">
+  <thead>
+    <tr>
+      <th>キー</th>
+      <th>説明</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>url</td>
+      <td>ガジェットXMLのURL。この値はエンコードしてはいけませんマジで。エンコードされてると、現時点のはてなダイアリーではGoogleガジェットのコードとはみなしてくれません。</td>
+    </tr>
+    <tr>
+      <td>up_なんとか</td>
+      <td>この使い途は後述します。このパラメータは無しでもOKです。up_なんとかを複数指定する場合はここに（「url」と「synd」の間に）並べます。</td>
+    </tr>
+    <tr>
+      <td>synd</td>
+      <td>「open」で固定。</td>
+    </tr>
+    <tr>
+      <td>w</td>
+      <td>ガジェットの本体を表示するIFRAME要素の幅（ピクセル値）。本来は数値の他に「auto」を指定して、幅を親要素のものに揃えられますが、これが「auto」だと、現時点のはてなダイアリーではGoogleガジェットのコードとはみなしてくれません。</td>
+    </tr>
+    <tr>
+      <td>h</td>
+      <td>ガジェットの本体を表示するIFRAME要素の高さ（ピクセル値）。</td>
+    </tr>
+    <tr>
+      <td>title</td>
+      <td>ガジェットの上部に表示されるガジェットのタイトル。日本語文字が含まれる場合、現時点のはてなダイアリーではIE6で文字化けます。</td>
+    </tr>
+    <tr>
+      <td>border</td>
+      <td>ガジェット全体を囲む外枠のデザイン指定。指定方法は<a href="http://www.google.co.jp/apis/gadgets/publish.html#Borders">こちら</a>。</td>
+    </tr>
+    <tr>
+      <td>output</td>
+      <td>ガジェットXMLのContent要素内にJavaScriptコードが含まれる場合は「js」。そうでなければ「html」。</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>この、現時点でのはてなダイアリーの貼り付けコードの検証は、<a href="http://www.google.com/ig/directory?synd=open">ガジェットディレクトリ</a>から「自分のウェブページに追加」ボタンをクリックして遷移するページ（http://gmodules.com/ig/creator?～）で取得する貼り付けコードの構成に則ったものでないとダメ、という仕様のようです。</p>
+
+<p>IFRAMEの横幅に「auto」を指定できないのは、単純にこのページの「幅」入力欄に数値以外は入力できない（正確に言うと入力はできますが「NaN」と表示されますｗ）ためだと思われ、同様にTYPE属性が欠落していなければならないのも、XMLのURLをエンコードしてはいけないのも、単純にここで表示される貼り付けコードがそうなっているからなのだろうなと。なので、「ここでscriptは使用出来ません」とか怒られた場合は、ここのコードと見比べてみるのが吉です。</p>
+
+<h3>ガジェットの動作を動的に変更させる</h3>
+
+<p>ブログパーツによっては、設定に応じてその動作を変更する必要がある場合に、あらかじめその設定値を貼り付けコードに含めている場合があると思います。しかしGoogleガジェットではXMLをホスティングする必要があるため、同じ方法は採り難く、別の仕組みが必要になります。</p>
+
+<p>もちろんXMLをホスティングするサーバが、XMLの内容を動的に出力してもよいのですが、Googleガジェット自体にこうした仕組みが用意されており、これを利用すればXMLは静的なもので済ませられます。</p>
+
+<p>以下はこの機能を利用した至極簡単なガジェットのXMLです。</p>
+
+<pre class="code"><code>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;Module&gt;
+  &lt;ModulePrefs title=&quot;Hello __UP_myname__&quot; /&gt;
+  &lt;UserPref name=&quot;myname&quot; display_name=&quot;Name&quot; required=&quot;true&quot; /&gt;
+  &lt;Content type=&quot;html&quot;&gt;&lt;![CDATA[
+    &lt;div id=&quot;hello__MODULE_ID__&quot;&gt;&lt;/div&gt;
+    &lt;script type=&quot;text/javascript&quot;&gt;
+    var prefs = new _IG_Prefs(__MODULE_ID__);
+    _gel(&quot;hello__MODULE_ID__&quot;).appendChild(
+      document.createTextNode(
+        &quot;Hello &quot; + prefs.getString(&quot;myname&quot;)
+      )
+    );
+    &lt;/script&gt;
+  ]]&gt;&lt;/Content&gt;
+&lt;/Module&gt;</code></pre>
+
+<p>iGoogleにこのガジェットを追加すると、「Name」入力欄と、「ガジェットは必要な設定がすべて完了するまで表示できません」というメッセージが表示されます。名前を入力すると「Hello (入力した名前)」と表示されます。</p>
+
+<p>はてなダイアリーなどでは、貼り付けタグ中のクエリーストリングに、「up_myname=(表示したい名前)」を追加すると、「Hello (表示したい名前)」と表示されます。</p>
+
+<p>ガジェットXMLのUserPref要素は、ユーザの設定値を指定できるようにするためのもので、そのname属性値に合致する入力値やクエリーパラメータ（「up_(name属性値)」キーの値）が格納されます。その値は、上の例にあるように、「__UP_(name属性値)__」という記述やGoogleガジェットの<a href="http://www.google.co.jp/apis/gadgets/reference.html#JS_Ref" rel="nofollow">JavaScript ライブラリ</a>を使って取得できます。これを利用して、ガジェットの動作を動的に変更することができるというわけです。</p>
+
+<h3>ガジェット開発のメモ</h3>
+
+<p>UserPref要素を利用した設定変更時の動作確認は、iGoogleでやったほうがいいっぽい。そしてiGoogleでの動作確認では<a href="http://www.google.com/apis/gadgets/tools.html#Dev_Gadget" rel="nofollow">デベロッパー ガジェット</a>はマストアイテム。</p>
+
+<p>いったん取得されたガジェットXMLは1～2時間程度のサイクルでキャッシュされます。開発時にキャッシュを無効にする方法は以下。</p>
+
+<ul>
+  <li>iGoogle上では<a href="http://www.google.com/apis/gadgets/tools.html#Dev_Gadget" rel="nofollow">デベロッパー ガジェット</a>を利用する。</li>
+  <li>シンジケーションの場合はクエリーストリングに「nocache=1」を追加する（でも、はてなダイアリーではもちろんNG）。</li>
+</ul>
+{% endraw %}

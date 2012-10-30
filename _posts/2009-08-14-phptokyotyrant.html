@@ -1,0 +1,103 @@
+---
+layout: post
+title: "PHPでTokyoTyrantのストリームラッパーを書く"
+---
+{% raw %}
+<p>
+浴衣の女の子は大好きですが、僕が近づくと逃げいていきます。
+Keitaです。
+</p>
+
+<p>さて、ちょっと前にNet_TokyoTyrantを公開しましたがぽつぽつと修正をかけて
+いたります。外国の方もちょくちょくTokyoTyrantを使ってる人がいるようで、2，3回
+バグ報告をいただきました。Openpearに移動し誰でもコミットできるような状態になっ
+てますのでバグとか見つけたりしたら、遠慮なくコミットしてください。</p>
+
+<p>
+さて、とある方にPHPのストリームラッパが結構簡単に書けることを教えていただいたのでTokyoTyrantで試してみたいと思います。
+</p>
+<p>
+簡単に説明すると以下のようにファイルとしてfopenとかfile_get_contentsが使うための仕組みががPHPで簡単にできます。
+</p>
+<pre class="code">
+&lt;?php
+//こんなphpのコードをあらかじめ書き込んでおいて
+$test1 ='&lt?php $a = 11;';
+$tt->put('test1.php', $test1);
+
+//allow_url_openがonならrequire
+require "tokyotyrant://localhost:1978/test1.php";
+
+
+//ファイル書き込んで
+file_put_contents("tokyotyrant://localhost:1978/test3.php", 'himote');
+//himoteってでたら成功
+file_get_contents("tokyotyrant://localhost:1978/test3.php");
+
+</pre>
+<p>こんなことしてみたいです。</p>
+
+<p>拡張書かなくちゃできないんじゃない？とか思ってたんですが、結構昔から、phpだけでできるようで、<a href="http://jp.php.net/manual/ja/book.stream.php">マニュアルにもちゃんと記載</a>があります。まぁよく考えてみれば、ほかの言語やってたときはばりばりストリームクラスとか作ってたなーと思い反省することしきりなのです。</p>
+
+<p>
+さて、作り方についてですが、ざっくりいってしまうと、stream_wrapper_registerで特定のメソッドを用意したクラスを登録してあげるだけです。</p>
+<p>
+拙作の<a href="http://openpear.org/package/Net_TokyoTyrant">Net_TokyoTyrant</a>をインストールして、読み込めるパスに配置したあとに、<a href="http://github.com/cocoiti/Stream_TokyoTyrant/tree/65f71ad67610758fcf678b2e72d159b0f2de500e/Stream">Stream_TokyoTyrant</a>を落としてきてつかってみてください。たぶん最初のコードが動くと思います。</p>
+
+<p>実にその作りも単純でソースをはしょって説明すると、</p>
+<pre class="code">
+&lt;?php
+class Stream_TokyoTyrant
+{
+//---中略---
+//　ファイルオープンして
+    public function stream_open($path, $mode, $options, &$opened_path)
+    {
+        $url = parse_url($path);
+        $port = $url['port'];
+        $server = $url['host'];
+        try {
+            $this->tt = $this->getTokyoTyrant($port, $server);
+        } catch (Exception $e){
+            return false;
+        }
+        $this->key = $this->nomalizePath($url['path']);
+        $this->data = $this->tt->get($this->key);//面倒なのでここで全部データ読み込んじゃう
+        $this->position = 0;
+        return true;
+    }
+//
+// ファイルを読み込んだ結果を返す（少しずつ読み込むのが本当のストリームだけどね！)
+    function stream_read($count)
+    {
+        $ret = substr($this->data, $this->position, $count);
+        $this->position += strlen($ret);
+        return $ret;
+    }
+}
+</pre>
+<p>
+ほとんどのコードが本家のサンプルにある<a href="http://jp.php.net/manual/ja/class.streamwrapper.php">コード</a>そのままです。</p>
+
+<p>簡単ですね。</p>
+
+<p>ざっくり適当につくっただけなのでバグいっぱいありそうですが（接続きってないし・・）かなり簡単に使えることがわかっていただけたかと思います。</p>
+
+<p>最初、下記のよなコードを書きたかったんです。</p>
+<pre class="code">
+//allow_url_openがonならrequire
+require "tokyotyrant://localhost:1978/test1.php";
+</pre>
+<p>でも、たぶん気がついた人はたくさんいると思いますがTokyoTyrantはhttpプロトコルもしゃべるので</p>
+<pre class="code">
+//allow_url_openがonならrequire
+require "http://localhost:1978/test1.php";
+</pre>
+<p>ふつーにこういうコードも動くんですね。あとで気がつきました。</p>
+
+<p>まぁ消えたらこまる（php的な）キャッシュファイル置き場として使うと早そうと思いました。</p>
+<p>ご参考になれば幸いです。</p>
+
+<p>追記: 調べたら、<a href="http://pear.php.net/package/Stream_Var/">Stream_Var</a>というPearのパッケージがあるみたいです。なんかしばらくメンテナンスされてない風味だったんですが最近更新されてるようですね。試してはいないですのでなんらかのヒントになれば幸いです。</p>
+
+{% endraw %}

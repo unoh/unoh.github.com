@@ -1,0 +1,121 @@
+---
+layout: post
+title: "OpenSocialを始めよう！第1回"
+---
+{% raw %}
+<p>こんにちは五十川です。</p>
+
+<p>先日、<a href="http://developer.home.goo.ne.jp/">gooホーム</a>と<a href="http://developer.mixi.co.jp/">mixiアプリ</a>が立て続けに公開され、いよいよ日本でもOpenSocialが注目を集めるようになりました。そこで今回は、これからOpenSocialアプリケーションの開発を始めるにあたっての基礎的な内容をまとめてみたいと思います。</p>
+
+<h3>OpenSocialとは</h3>
+
+<p><a href="http://code.google.com/intl/ja/apis/opensocial/">Google Code - OpenSocial</a>の冒頭には、<q cite="http://code.google.com/intl/ja/apis/opensocial/">OpenSocial は複数のウェブサイト間で使用可能な、ソーシャル アプリケーションの共通 API</q>の定義であると書かれています。</p>
+
+<p>あるOpenSocial対応のウェブサイトで動作するプログラムは、他のOpenSocial対応アプリケーションでも動作する &mdash; 例えばmixiアプリ用のプログラムは、gooホームやMySpaceなどでもそのまま動作する可能性があるというのがOpenSocialの重要な点です。もちろんウェブサイトごとに細部の実装は異なる場合があり、まったく同じプログラムがすべてのプラットフォームでそのまま動作するとは限りませんが、各ウェブサイトが独自の規格を用意していて、それぞれにいちから開発しなければならない状況に比べれば遥かに少ない労力で、多くのプラットフォームに対応できるというのは、実に魅力的です。</p>
+
+<h3>OpenSocial対応SNS</h3>
+
+<p><a href="http://wiki.opensocial.org/index.php?title=Containers">OpenSocial Community Wiki - Containers</a>に、OpenSocial対応SNSの一覧があります。各SNSの「details」をクリックしたページでは、SNSごとの特徴や、開発にあたっての注意点などの概要が記載されています。クロスプラットフォームでの開発の際には、対象となるSNSについて、あらかじめ目を通しておくとよいでしょう。ちなみに、<a href="http://code.google.com/p/opensocial-resources/wiki/ComplianceTests">OpenSocial Compliance Tests</a>にあるテストガジェットを使って、SNSの実装の互換性を詳しく確認できたりもします。</p>
+
+<h3>JavaScript APIとRESTful API</h3>
+
+<p>下図はopensocial.orgに掲載されているOpenSocialの概要図です。中央に位置している緑の部分が、mixiやgooホームなどのSNSプラットフォームです。左の青いグループはSNSのウェブページ上に表示されるアプリケーション群です（これらはガジェットと呼ばれます）。OpenSocialは外部のウェブサイトやデスクトップアプリケーションなどからSNSのデータを利用することも想定されています。右の赤い部分がこれに当たります。</p>
+
+<div><a href="http://photozou.jp/photo/show/784/20361757"><img src="http://art7.photozou.jp/pub/784/784/photo/20361757.png" alt="OpenSocial Overview" width="450" height="174" /></a></div>
+<div><a href="http://www.opensocial.org/photo/opensocial-overview">OpenSocial Overview</a></div>
+
+<p>ガジェットの基本的な実体はXMLです。XMLはガジェットの設定情報などと、実際に表示されるコンテンツとなるHTMLやJavaScript、CSSなどで構成されます。SNSのOpenSocialコンテナがこのXMLを処理したコンテンツが、SNSのウェブページ中のIFRAME内に表示されます。こうしたガジェットがSNSとのやり取りを行うためのAPIが、OpenSocialのJavaScript APIです。</p>
+
+<p>一方、外部サイトやデスクトップアプリケーションなど、SNSの外部からSNSのデータにアクセスするために用意されているのが、OpenSocialのRESTful APIです。あるいは、例えば携帯電話のような、JavaScriptが利用できない端末向けのウェブサイトやアプリケーションもRESTful APIを利用することになるでしょう。携帯電話端末専用のSNSであるgumiが提供している<a href="http://gu3.jp/platform.html">gumi Platform</a>は、この例です。</p>
+
+<h3>OpenSocialコンテナ</h3>
+
+<p>SNSの本体とガジェットや外部のアプリケーションとのやり取りを仲介し、あるいはガジェットXMLを処理してウェブページにコンテンツを表示するといった、OpenSocialの中核として機能するのがコンテナです。</p>
+
+<p>OpenSocialコンテナは、ガジェットとSNS本体とのやり取りのみならず、ガジェットとSNSの外部とのやり取りも仲介します。複雑なガジェットは往々にして外部のサーバとやり取りをする必要が生じますが、通常のJavaScriptでは外部リソースへのアクセスの際に生じるクロスドメインの問題は、コンテナがプロキシとして動作することで、ガジェットのプログラミングでは意識する必要がありません。あるいは、コンテナはガジェットXMLを含む各種リソースをキャッシュし、これらの配信サーバへのアクセスの負荷を軽減するといった役割も担います。</p>
+
+<h3>Shindig!</h3>
+
+<p>OpenSocialはその名前の通りオープンであり、コンテナの実装もオープンソースでの開発が行われています。それがApache Incubatorによる<a href="http://incubator.apache.org/shindig/">Shindig</a>です。ウェブサイトはShindigを採用することで、自前でいちからコンテナを実装する労力を省いてOpenSocialに対応することができます。実際、現在OpenSocialに対応しているSNSの多くがShindigを採用しています。また、開発者にとっては、ソースが公開されているので、それに目を通すことでコンテナ実装の理解を深めることができます。現時点でのShindigにはJava/Servlet版とPHP版があります。</p>
+
+<h3>ガジェットXML</h3>
+
+<p>以下はシンプルなガジェットXMLの例です。</p>
+<p>このガジェットは、SNSのプロフィールページ（PROFILEビュー）で表示された場合、「これはPROFILEビューです。こんにちは○○さん」と表示します。○○の部分には、そのページを見ているユーザ（VIEWER）のニックネームが入ります。</p>
+
+<p>ガジェットXMLはModule要素をルートとして、ガジェットの設定などが記述されたModulePrefs要素と、HTMLやJavaScriptなどによるコンテンツが記述されたContent要素で構成されます（この構造はiGoogleのガジェットXMLと同じです）。</p>
+
+<pre class="code">&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;Module&gt;
+  &lt;ModulePrefs
+    title=&quot;テスト&quot;
+    description=&quot;お試しガジェット&quot;
+    author_email=&quot;test@example.com&quot;&gt;
+    &lt;Require feature=&quot;opensocial-0.8&quot;/&gt;
+  &lt;/ModulePrefs&gt;
+  &lt;Content type=&quot;html&quot; view=&quot;profile&quot;&gt;&lt;![CDATA[
+    &lt;script type=&quot;text/javascript&quot;&gt;
+    gadgets.util.registerOnLoadHandler(function() {
+
+      var req = opensocial.newDataRequest();
+
+      // VIEWERの情報をリクエストする
+      req.add(req.newFetchPersonRequest('VIEWER'), 'viewer');
+
+      // リクエストを実行
+      req.send(function(response) {
+
+        // VIEWERの情報を取得
+        var viewer = response.get('viewer').getData();
+        var msg = 'こんにちは' + viewer.getDisplayName() + 'さん';
+        document.getElementsByTagName('p').item(0)
+          .appendChild(document.createTextNode(msg));
+      });
+    });
+    &lt;/script&gt;
+    &lt;p&gt;これはPROFILEビューです。&lt;/p&gt;
+  ]]&gt;&lt;/Content&gt;
+  &lt;Content type=&quot;html&quot; view=&quot;home&quot;&gt;&lt;![CDATA[
+    &lt;p&gt;これはHOMEビューです。&lt;/p&gt;
+  ]]&gt;&lt;/Content&gt;
+  &lt;Content type=&quot;html&quot; view=&quot;canvas&quot;&gt;&lt;![CDATA[
+    &lt;p&gt;これはCANVASビューです。&lt;/p&gt;
+  ]]&gt;&lt;/Content&gt;
+&lt;/Module&gt;</pre>
+
+<p>ご覧のように、Content要素の中身は通常のウェブコンテンツと同様のHTMLです。違いは、JavaScriptプログラミングにおいてOpenSocial JavaScript API及びGadgets APIが利用可能である点と、通常のJavaScriptプログラミングとはいくつか異なる手段を用いる必要がある点です。</p>
+
+<p>コンテナがこのXMLを処理して出力するHTMLは、HTMLのBODY要素内に、XMLのContent要素の中身が埋め込まれたものになります。</p>
+
+<h3>ビュー</h3>
+
+<p>上のXMLにはContent要素が3ヶあり、view属性値がそれぞれ、profile、home、canvasとなっています。</p>
+
+<p>SNSウェブサイトにはガジェットが表示されるページがいくつかあります。ガジェットが表示されるページを「ビュー」と呼びます。OpenSocial標準では以下の4ヶのビューが定義されています（ただし、すべてのSNSでこの4ヶが存在しているわけではありません。例えば、gooホームにはPREVIEWビューはありません）。</p>
+
+<p>HOMEビューはいわゆるマイページ/マイホームです。PROFILEビューはプロフィールページです。HOMEビューとPROFILEビューでは、ガジェットは通常サイドバーの一部などサイズの小さいエリアに、他のガジェットと共に表示されます。CANVASビューでは（共通ヘッダ/フッタなどを除く）画面全体にガジェットが表示されます。PREVIEWビューはガジェットのインストールページなど、ガジェットのデモを表示するページです（PREVIEWビューではVIEWERやOWNERの情報は取得できません）。</p>
+
+<p>Content要素のview属性値にビュー名を指定すると、そのContent内のHTMLは指定したビューで表示されます。複数のビューで共通のContentは「view=&quot;home,profile&quot;」のようにビュー名をカンマ区切りで記述します。例えば、homeとprofileで共通のJavaScriptコードはContent@view=&quot;home,profile&quot;に記述しておき、それぞれで異なる部分をContent@view=&quot;home&quot;とContent@view=&quot;profile&quot;にそれぞれ記述するということが可能です。</p>
+
+<h3>スタイル指定の注意点</h3>
+
+<p>Content要素内のHTMLには、もちろんCSSも記述することができます。ガジェットはIFRAME内に表示されるので、SNS側のスタイル指定を意識する必要はありません。なお、<a href="http://code.google.com/apis/gadgets/docs/spec.html#gadgetrenderingrequest">ガジェットの仕様</a>では、コンテナの出力するHTMLは<q cite="http://code.google.com/apis/gadgets/docs/spec.html#gadgetrenderingrequest">ブラウザ固有のモード</q>（Quirksモード）で描画されると規定されていますので、スタイル指定を行う際は注意してください。</p>
+
+<hr />
+
+<p>第1回はここまでです。<del>次回は以下のような話題を取り上げると思います。多分。</del></p>
+
+<ul>
+  <li><del>OpenSocialの開発環境について<del></li>
+  <li><del>JavaScript API/Gadgets API<del></li>
+  <li><del>ガジェットと外部サーバの連携</del></li>
+</ul>
+
+<p>ではでは</p>
+
+<h3>追記＠2009-10-01</h3>
+
+<p>第2回はなくなり、続きは<a href="http://www.amazon.co.jp/exec/obidos/ASIN/4839933219/unoh-22/ref=nosim/">『システム開発ジャーナル』vol.11</a>の特集記事『OpenSocial Web & モバイル開発入門』の一部となりました。続きが気になるかたは、是非お買い求めください（笑）</p>
+
+<div class="amazlet-box" style="margin-bottom:0px;"><div class="amazlet-image" style="float:left;"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4839933219/unoh-22/ref=nosim/" name="amazletlink" target="_blank"><img src="http://ecx.images-amazon.com/images/I/51dJ-tU19fL._SL160_.jpg" alt="システム開発ジャーナル Vol.11" style="border: none;" /></a></div><div class="amazlet-info" style="float:left;margin-left:15px;line-height:120%"><div class="amazlet-name" style="margin-bottom:10px;line-height:120%"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4839933219/unoh-22/ref=nosim/" name="amazletlink" target="_blank">システム開発ジャーナル Vol.11</a><div class="amazlet-powered-date" style="font-size:7pt;margin-top:5px;font-family:verdana;line-height:120%">posted with <a href="http://www.amazlet.com/browse/ASIN/4839933219/unoh-22/ref=nosim/" title="システム開発ジャーナル Vol.11" target="_blank">amazlet</a> at 09.10.02</div></div><div class="amazlet-detail">システム開発ジャーナル編集部 <br />毎日コミュニケーションズ <br />売り上げランキング: 49893<br /></div><div class="amazlet-link" style="margin-top: 5px"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4839933219/unoh-22/ref=nosim/" name="amazletlink" target="_blank">Amazon.co.jp で詳細を見る</a></div></div><div class="amazlet-footer" style="clear: left"></div></div>
+{% endraw %}

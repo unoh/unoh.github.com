@@ -1,0 +1,7 @@
+---
+layout: post
+title: "mecabのユーザ辞書を追加した時にはまったメモ"
+---
+{% raw %}
+こんにちは satoです。mecabのユーザ辞書を追加したのですが，いろいろはまったので誰かがはまった時のためにメモっておきます。<br /><br /><h2>1)<a href="http://p0t.jp/mt/archives/2007/06/mecab.html">品詞IDの取り方</a></h2><br /><br /><h2>2)<a href="http://mecab.sourceforge.net/dic.html">ユーザ辞書の追加方法</a></h2><br /><br /><h2>3)禁止語句とか独自の要素を付けたい</h2><br /><p>　csvファイルの最後に追加すればOK</p><br /><br /><h2>4)context_id.cpp(88) [it != left_.end()] cannot find LEFT-... ってエラーが出る</h2><br /><p>　left-id right-id の文字コードが csvファイルの文字コードと違うのが原因 nkf --utf8とかで文字コードをそろえる</p><br /><br /><h2>5)CHECK_CLOSE_FALSE(sysdic->isCompatible(*d)) << "incompatible dictionary: " << _dic[i]; って出る</h2><br /><p>　sys.dic と ユーザ辞書の文字コードが違うと出るエラー utf8とUTF8は違うと判定されるのでutf-8と書く</p><br /><br /><h2>6)追加した辞書に品詞IDが付かない or 65535になる</h2><br /><p>　pos-id.def の文字コードと ユーザ辞書の文字コードが違う。nkf --utf8とかで文字コードをそろえる</p><br /><br />
+{% endraw %}

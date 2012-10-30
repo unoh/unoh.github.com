@@ -1,0 +1,427 @@
+---
+layout: post
+title: "ウェブ開発の共同作業でパーミッションを有効活用する"
+---
+{% raw %}
+<style type="text/css">
+div.entry-jokagi p
+{
+  text-indent: 1em;
+}
+
+div.entry-jokagi h3
+{
+  border-left: 10px white solid;
+  margin-top: 30px;
+  padding-left: 8px;
+}
+div.entry-jokagi h4
+{
+  border-left: 4px white solid;
+  margin-top: 4px;
+  margin-left: 6px;
+  padding-left: 8px;
+}
+
+div.entry-jokagi div.comment
+{
+  margin-left: 30%;
+  border: gray 1px dotted;
+  padding: 4px 8px;
+  font-size: 85%;
+}
+
+div.entry-jokagi div.caution
+{
+    border: #C44 solid 1px;
+    margin: auto 20px;
+    padding: 4px 8px;
+}
+
+div.entry-jokagi table.matrix
+{
+    border-collapse: collapse;
+    border: 1px gray solid;
+    margin: 8px 20px;
+}
+
+div.entry-jokagi table.matrix th,
+div.entry-jokagi table.matrix td
+{
+    border: 1px gray solid;
+}
+
+div.entry-jokagi table.matrix thead
+{
+    background: #444;
+}
+
+div.entry-jokagi table.matrix thead th
+{
+    text-align: center;
+}
+
+div.entry-jokagi table.matrix tbody th
+{
+    background: #666;
+}
+
+div.entry-jokagi del
+{
+    color: darkgray;
+    font-size: 90%;;
+}
+</style>
+
+<div class="entry-jokagi">
+<p>
+前回カメラをなくした!!とかいってたら見つかってホッとしているjokagiです．
+前回のエントリの書き上げはかなりサボってしまったので，その影響で今回はすぐに順番が回ってきてしまいました．
+今回も負けずにロングエントリで行きます!!
+</p>
+
+<h3>このエントリの目的</h3>
+
+<p>
+複数人でウェブコンテンツを<del>作成</del><ins datetime="2007-02-26T10:30:00+09:00">運用管理</ins>する場合，<ins datetime="2007-02-26T10:30:00+09:00">特に本番サーバーの</ins>ファイルのパーミッションで悩んでいる人をよく見かけます．
+あまりパーミッションを積極的に有効活用できない人は挙句に誰でも読み書きできる<ins datetime="2007-02-26T10:30:00+09:00">(いわゆる0666や0777)</ins>ザルにすることが多いでしょう．
+いや待ってください．
+もうちょっと丁寧に設定してみませんか? というお話です．
+</p>
+
+<h3>必須環境</h3>
+
+<p>
+少なくとも初期作業においてはroot権限が必要になります．
+また，ある程度最低限のコマンドやその実行結果についての知識，あるいは調べる能力が必要になるかもしれません．
+</p>
+</div>
+
+
+<div class="entry-jokagi">
+<h3>UNIXの一般的なファイルシステムのパーミッションについて</h3>
+
+<h4>基本的なこと</h4>
+
+<p>
+UNIXのファイルシステムはいろいろありますが，おおむねパーミッション(アクセス権限)は3段階のレベルがあります．
+</p>
+
+<dt>
+<dt>User</dt>
+<dd>
+ファイル・ディレクトリの所有者自身についての権限を現します．
+</dd>
+<dt>Group</dt>
+<dd>
+アカウント情報で同じグループに所属する人たちの権限をあらわします．
+</dd>
+<dt>Other</dt>
+<dd>
+前述のどれでもない人たちの権限をあらわします．
+Otherは「UserとGroupを含むすべてのアカウント」でなく，「UserとGroupに所属''しない''すべてのアカウント」であることに注意してください．
+</dd>
+
+<table class="matrix">
+<thead>
+<tr><th>レベル</th><th>対象</th><th>ls -la のイメージ</th></tr>
+</thead>
+<tbody>
+<tr><th>User</th><td>ファイルのオーナーの権限</td><td>rwx------</td></tr>
+<tr><th>Group</th><td>ファイルやディレクトリのオーナーグループに所属するユーザーの権限</td><td>---rwx---</td></tr>
+<tr><th>Other</th><td>上記のいずれでもないユーザーの</td><td>------rwx</td></tr>
+</tbody>
+</table>
+
+<h4>特殊なパーミッション</h4>
+
+<p>
+余談からですが，パーミッションを3桁の8進数(755とか666とか)で表す人がいますが，実はそもそもパーミッションは<del datetime="2007-02-26T10:30:00+09:00">24ビット</del><ins datetime="2007-02-26T10:30:00+09:00">9ビット</ins>ではなく，もっと多い桁数なので4桁必要です．
+</p>
+
+<p>
+さて本題ですが特殊なパーミッションというのは何があるのか? ですが，<a href="http://www.linux.or.jp/JM/html/gnumaniak/man1/chmod.1.html" target="_blank">chmodコマンドの日本語マニュアル</a>を参照するとこういう記述があります．
+</p>
+
+<blockquote>
+<pre>
+ 特別なアクセス権
+ 
+     1000 プログラムコードをスワップに維持
+     2000 実行時にグループ ID を設定
+     4000 実行時にユーザー ID を設定
+</pre>
+</blockquote>
+
+<p>
+1000は使ったことがないのでコメントかトラックバックでいい例題を教えてください(苦笑
+2000と4000はそれぞれオーナーユーザーあるいはグループはディレクトリに付加すると，中でファイルやディレクトリを作成するとオーナー情報を継承するというイメージになります．
+</p>
+
+<div class="comment">
+本当に正確な意味はファイルシステムを専門に勉強したわけじゃないのでわかりませんが(苦笑
+</div>
+
+<p>
+つまり，共同作業のとき，共通のグループを用意し，関係者をすべてそのグループに追加し，ディレクトリに2000を付加すればそのディレクトリ以下のオーナーグループが共通になるはずということです．
+</p>
+
+<h3>とりあえず試してみる</h3>
+
+<h4>テスト条件</h4>
+
+<p>
+テストにはjokagiというユーザーを作成し，グループにunohを追加，unohにjokagiを追加します．
+</p>
+
+<table class="matrix">
+<tbody>
+<tr><th>ユーザー名:</th><td>jokagi elf</td></tr>
+<tr><th>グループ名:</th><td>jokagi elf unoh(jokagiとelfはこちらにも所属する)</td></tr>
+<tr><th>ウェブ作業ディレクトリ:</th><td>/home/web/</td></tr>
+</tbody>
+</table>
+
+<h4>アカウントとグループを作成する</h4>
+
+<p>
+useraddとgroupaddでユーザーとグループを作成し，グループunohにユーザーjokagiを登録します．
+下記作業はroot権限で作業を行ってください．
+</p>
+
+<div class="command">
+<pre>
+# /usr/bin/useradd jokagi
+# /usr/bin/useradd elf
+# /usr/bin/groupadd unoh
+# /usr/bin/usermod -G unoh jokagi
+# /usr/bin/usermod -G unoh elf
+</pre>
+</div>
+
+<p>
+ここで注意すべきことは，usermodなど，アカウント情報の修正をした場合，ログアウトをしなければその情報が反映されない場合があるということです．
+ここではusermodをした場合はjokagiは一旦ログアウトするようにします．
+</p>
+
+<div class="comment">
+余談ですがusermodで別グループの追加ができるんですね．いつもvigrで作業をしていました．
+</div>
+
+<p>
+上記のようにすると例えばアカウント情報を表示するコマンドidの表示は下記のようになります．
+</p>
+
+<div class="command">
+<pre>
+$ id jokagi
+uid=500(jokagi) gid=500(jokagi) 500(jokagi),502(unoh)
+$ id elf
+uid=501(elf) gid=501(elf) 501(elf),502(unoh)
+</pre>
+</div>
+
+<h3>やっと実験開始!!</h3>
+
+<p>
+さてそれでは実際にディレクトリを作成して試して見ましょう．
+</p>
+
+<h4>大まかな流れ</h4>
+
+<p>
+大まかには下記のような流れで作業をします．
+</p>
+
+<ul>
+<li>ルートになるディレクトリ(ここでは/home/webとします)を用意する</li>
+<li>/home/webのオーナーを共通グループにする</li>
+<li>/home/webのパーミッションは少なくともディレクトリは「u+rwx g+rwx」に，ファイルは「u+rw g+rw」にする</li>
+<li>/home/webを触るアカウントのumaskは0002にする</li>
+</ul>
+
+<h4>基本的な作業手順</h4>
+
+<p>
+それでは実際の作業を行います．作業はroot権限で下記のように行います．
+</p>
+
+<p>
+まずディレクトリを作成します．
+</p>
+
+<div class="command">
+<pre>
+# /bin/mkdir /home/web
+# ls -lad /home/web
+drwxr-xr-x 2 root root 4096 Feb 23 13:12 /home/web
+</pre>
+</div>
+
+<p>
+作成されたディレクトリのオーナーとパーミッションを設定します．
+</p>
+
+<div class="command">
+<pre>
+# /bin/chgrp unoh /home/web
+# /bin/ls -lad /home/web
+drwxrwxr-x 2 root unoh 4096 Feb 23 13:12 /home/web
+# /bin/chmod u+rwx,g+srwx /home/web
+drwxrwsr-x 2 root unoh 4096 Feb 23 13:12 /home/web
+</pre>
+</div>
+
+<p>
+これでOKです．
+それではユーザーjokagiになってテストをしてみましょう．
+</p>
+
+<p>
+まずユーザーjokagiになってオーナーとパーミッションの確認をしてみます．
+</p>
+
+<div class="command">
+<pre>
+# /bin/su - jokagi
+$ ls -lad /home/web
+drwxrwsr-x 2 root unoh 4096 2007-02-23 13:12 /home/web
+</pre>
+</div>
+
+<p>
+次に/home/webに移動してオーナーとパーミッションの確認をします．
+</p>
+
+<div class="command">
+<pre>
+$ cd /home/web
+$ ls -la
+total 8
+drwxrwsr-x 2 root   unoh    4096 Feb 23 13:12 .
+drwxr-xr-x 3 jokagi jokagi  4096 Feb 23 13:12 ..
+</pre>
+</div>
+
+<p>
+それではファイルとディレクトリを作成してオーナーとパーミッションの確認をしてみましょう．
+</p>
+
+<div class="command">
+<pre>
+$ touch file
+$ mkdir directory
+$ ls -la
+total 12
+drwxrwsr-x 3 root   unoh   4096 Feb 23 13:44 .
+drwxr-xr-x 3 jokagi jokagi 4096 Feb 23 13:12 ..
+drwxr-sr-x 2 jokagi unoh   4096 Feb 23 13:44 directory
+-rw-r--r-- 1 jokagi unoh      0 Feb 23 13:44 file
+</pre>
+</div>
+
+<p>
+どうでしょう? グループがunohになっていますね．
+それではユーザーelfで同様な作業をしてみましょう．
+</p>
+
+<div class="command">
+<pre>
+# /bin/su - elf
+$ touch file2
+$ mkdir directory2
+$ ls -la
+total 16
+drwxrwsr-x 3 root   unoh   4096 Feb 23 13:44 .
+drwxr-xr-x 3 jokagi jokagi 4096 Feb 23 13:12 ..
+drwxr-sr-x 2 jokagi unoh   4096 Feb 23 13:44 directory
+drwxr-sr-x 2 elf    unoh   4096 Feb 23 13:45 directory2
+-rw-r--r-- 1 jokagi unoh      0 Feb 23 13:44 file
+-rw-r--r-- 1 elf    unoh      0 Feb 23 13:45 file2
+</pre>
+</div>
+
+<p>
+いかがでしょうか? オーナーユーザーはそれぞれ作成ユーザーに，グループは共通になっているのがわかるでしょうか?
+</p>
+
+<h3>応用</h3>
+
+<p>
+これの応用としてapacheの実行ユーザー(通常apacheやnobody)を共通グループに登録するという技があります．
+apacheのファイルやディレクトリ操作もコマンドラインでの操作と基本的には変わらないので，上記内容と同様の処理が行われ，その結果apacheで作成したディレクトリやファイルを一般ユーザーが編集削除できるということになります．
+</p>
+
+<div class="caution">
+逆に言うとapacheからウェブコンテンツのファイル(HTMLや画像)の改ざんもできるということになりますので，セキュリティリスクが高まるともいえますので使用するという決定には細心の注意をすべきです．
+</div>
+
+<h3>注意すること</h3>
+
+<p>
+今回はグループを活用したファイル管理になるので，グループライタブルでない(グループ権限ベースで書き込めない状態)ファイルやディレクトリがでてくると，そのファイルはオーナーユーザーしか編集ができなくなります．
+</p>
+
+<p>
+また前述のようにユーザーやグループデータベースの編集を行った場合，ログアウトしなければ反映されない場合があります．
+</p>
+
+<h4>GUIを使用している場合</h4>
+
+<p>
+こういう状態になるパターンの多くはumaskが0022になっている状態，例えばGUIのftpクライアントやsftpクライアントなどを使用している場合に発生している気がします．
+特にGUIで作業をしている方はどういうパーミッションをソフトウェアが設定するか再確認をしておくに越したことはありません．
+</p>
+
+<h4>別の場所にあるファイルやディレクトリを移動する場合</h4>
+
+<p>
+また，ディレクトリやファイルの移動を行うときにも注意してください．
+それらの移動時にはg+sな指定の影響は受けないので，オーナーグループが期待したものと異なる状態になるでしょう．
+</p>
+
+<h4>事後対処</h4>
+
+<p>
+対策は上記作業を行ったユーザーならできます．
+例えばパーミッションの問題ならコマンドラインで下記のようにします．
+</p>
+
+<div class="command">
+<pre>
+$ cd .../target/path/to
+$ chgrp -R unoh *
+$ find . -type d -exec chmod u+rwx,g+rwx {} \;
+$ find . -type f -exec chmod u+rw,g+rw {} \;
+</pre>
+</div>
+
+<p>
+対象にドットで始まるファイルやディレクトリがあるときはchgrpでは下記のようにしましょう．
+</p>
+
+<div class="command">
+<pre>
+$ chgrp -R .??*
+</pre>
+</div>
+
+<h3>終わり</h3>
+
+<p>
+いかがでしょうか?
+共同開発を行う場合，パーミッションをオールライタブル(誰でも読み書きできる)な状態で行っていたり，共通アカウント(webmasterなど)を用意して吹く数人で共用している人は意外と多いんじゃないでしょうか?
+</p>
+
+<p>
+前者は本当にパーミッションという概念が破綻してしまうのである意味ありえませんし，後者は個人情報保護を見据えるとあまりいただけない判断になると思います．
+それらは今回のようにグループを活用することで十分回避することができます．
+</p>
+
+<p>
+ウェブアプリケーションを共同で開発する場合，ファイルの権限などの問題は誰しもが一度は悩むところだと思います．
+もし心当たりがあり，試す環境がある方はぜひ一度お試しください．
+それではあでゅー
+</p>
+</div>
+{% endraw %}

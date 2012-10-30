@@ -1,0 +1,419 @@
+---
+layout: post
+title: "コマンドラインで作業する上で知っておくといいテクニック"
+---
+{% raw %}
+<style type="text/css">
+div.entry-jokagi p
+{
+  text-indent: 1em;
+}
+
+div.entry-jokagi h3
+{
+  border-left: 10px white solid;
+  border-bottom: 1px white solid;
+  margin-top: 30px;
+  padding-left: 8px;
+}
+
+div.entry-jokagi h4
+{
+  border-left: 4px white solid;
+  margin-top: 4px;
+  margin-left: 6px;
+  padding-left: 8px;
+}
+
+div.entry-jokagi div.comment
+{
+  margin-left: 30%;
+  border: gray 1px dotted;
+  padding: 4px 8px;
+  font-size: 85%;
+}
+
+div.entry-jokagi div.caution
+{
+    border: #C44 solid 1px;
+    margin: auto 20px;
+    padding: 4px 8px;
+}
+
+table.matrix
+{
+    border-collapse: collapse;
+    border: 1px gray solid;
+    margin: 8px 20px;
+}
+
+table.matrix th,
+table.matrix td
+{
+    border: 1px gray solid;
+}
+
+table.matrix thead
+{
+    background: #444;
+}
+
+table.matrix thead th
+{
+    text-align: center;
+}
+
+table.matrix tbody th
+{
+    background: #666;
+}
+
+div.command div.title
+{
+    border-bottom: #888 1px solid;
+    text-align: center;
+    font-size: 80%
+}
+
+</style>
+
+<div class="entry-jokagi">
+<p>
+ちょうど入社から半年で有給発生しつつも本日が退職日になりましたjokagiです．もう花見の季節ですね!!
+</p>
+<p>
+ちょうどラボブログの当番のようで，退職記念にjokagiが普段の開発で使っているテクニックとは呼ぶにはおこがましい小手先の技をつらつら書いてみたいと思います．
+これを覚えればjokagi程度には仕事をこなせるかも!?
+</p>
+</div>
+
+<div class="entry-jokagi">
+<h3>コマンドの使い方を覚えよう</h3>
+
+<p>
+基本的なコマンドの使い方やコンソールなどの使い方は<a href="http://www.amazon.co.jp/s/ref=sr_nr_i_0/249-5289550-8841954?ie=UTF8&keywords=%E3%82%B3%E3%83%9E%E3%83%B3%E3%83%89%20Linux&rh=i%3Aaps%2Ck%3A%E3%82%B3%E3%83%9E%E3%83%B3%E3%83%89%20Linux%2Ci%3Astripbooks" target="_blank">書籍</a>や<a href="http://www.google.co.jp/search?q=Linux+%E3%82%B3%E3%83%9E%E3%83%B3%E3%83%89&lr=lang_ja&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:ja:official&client=firefox-a" target="_blank">いろんなサイトで</a>覚えてください．
+ここでは一応一通りなんとなくでもコマンドを扱える人がさらに覚えるといいかもしれないことだけを記述します．
+</p>
+<ins datetime="2007<em>-03-20T23:59+0900">
+<p>
+また，これからの解説はシェルはbash，その他のコマンドの多くはGNU Toolsと呼ばれることのあるGNU findやcoreutilsなどを用いた環境でのオプション例や実行例になります．
+</p>
+</ins>
+
+<h4>echo</h4>
+
+<p>
+いわゆる指定された文字列を出力するコマンドですね．
+知らない人も多いみたいですが，echoも実はいくつかのオプションを受け付けます．
+</p>
+
+<table class="matrix">
+  <tbody>
+    <tr><th>-e</th><td>バックスラッシュ(半角円記号)に続く文字を特別視する</td></tr>
+    <tr><th>-n</th><td>最後に改行文字を入れない</td></tr>
+  </tbody>
+</table>
+
+<h4>grep(egrep，fgrep，pgrep)，fgrep，zgrep</h4>
+
+<p>
+grepはファイル内をパターン検索(意訳的にいうと文字列検索)を行うコマンドです．
+ここで覚えておくべきオプションは下記のとおりになります．
+</p>
+
+<table class="matrix">
+  <tbody>
+    <tr><th>-i</th><td>英大小文字を等価に扱う．いわゆる「A」と「a」が同じということを表す</td></tr>
+    <tr><th>-r</th><td>検索対象にディレクトリを指定した場合，ディレクトリ内を再帰的に検索する</td></tr>
+    <tr><th>-E -F -P</th><td>パターンの扱いを変える．egrep，fgrep，pgrepはそれぞれ-E，-F，-Pが指定されたときと等価の処理を行う</td></tr>
+    <tr><th>-v</th><td>指定キーワードが含まれる行を除外する</td></tr>
+    <tr><th>-l</th><td>条件に一致するファイル名だけを出力する</td></tr>
+  </tbody>
+</table>
+
+<p>
+grepはアプリケーションの解析では(多分)非常に基本的かつ重要なコマンドです．
+当然これだけでは見つからないものもでてきますが，結構有効です．
+</p>
+
+<h4>find</h4>
+
+<table class="matrix">
+  <tbody>
+    <tr><th>-type &lt;TYPE&gt;</th><td>「-type f」でファイルだけを対象に，「-type d」でディレクトリだけを対象にする</td></tr>
+    <tr><th>-name &lt;NAME&gt;</th><td>&lt;NAME&gt;と一致する名前を対象にする．ワイルドカードを使うことができる</td></tr>
+    <tr><th>-uid &lt;UID&gt;</th><td>オーナーユーザーのIDが&lt;UID&gt;のものを対称にする</td></tr>
+    <tr><th>-gid &lt;GID&gt;</th><td>オーナーグループのIDが&lt;GID&gt;のものを対称にする</td></tr>
+    <tr><th>-exec &lt;COMMAND-LINE&gt; \;</th><td>対象毎に「&lt;COMMAND-LINE&gt;」を実行する．「{}」を含ませると対象が展開される</td></tr>
+  </tbody>
+</table>
+
+<h4>sed</h4>
+
+<p>
+sedは通常行指向でテキストの置換などを行うときに使用します．
+しかし，通常その結果は標準出力に出てくるだけですが，-iを使用することで実際に入力に使用したファイルを置換することができます．
+</p>
+
+<table class="matrix">
+  <tbody>
+    <tr><th>-i</th><td>実行された置換を読み込んだファイルに実際に適用する</td></tr>
+  </tbody>
+</table>
+
+
+<h4>diff</h4>
+
+<table class="matrix">
+  <tbody>
+    <tr><th>-u</th><td>CVSやsvnなどと近い書式で差分情報を出力する</td></tr>
+    <tr><th>-r</th><td>比較として指定された対象がディレクトリだった場合，再帰的に中身を評価する</td></tr>
+    <tr><th>-N</th><td>いずれの比較先にだけ存在するファイルも対象とする</td></tr>
+  </tbody>
+</table>
+
+<h4>od</h4>
+
+<p>
+オプションに「-tx1」と指定すると1バイトずつ16進数で表示します．
+なぜそういう挙動になるかはマニュアルなどで調べてください．
+</p>
+
+<h4>sendmail</h4>
+
+<p>
+個人的にはメーラーとしてコマンドsendmailをオプション「-t -i」としてよく使います．
+その理由はPHPのmail()は通常内部で/同オプションをあわせてusr/sbin/sendmailを使用するからです．
+この辺について興味がある方は <a href="http://wiki.poyo.jp/read/PHP/tips/mail/function_mail" target="_blank">mail()でメールが送信できるかどうかの確認手順 - よくきたWiki</a> やPHPのソースなどを参照してください．
+</p>
+
+<h4>vi，emacs</h4>
+
+<p>
+サーバー上で作業はできるほうがいいですね．
+使ったことがないのに好みでどうぞってのは判断がなかなかつかないですね．
+jokagiはemacsとviは7:3位の割合で併用していますが，emacsは入っていない場合があるので，どっちがいいか判断がつかない方はviをお勧めします．
+</p>
+
+<h4>その他大体の覚えるべきオプション</h4>
+
+<p>
+すべてのコマンドが対応しているわけではないですが，おおよそのコマンドで有効なオプションです．
+</p>
+
+<table class="matrix">
+  <tbody>
+    <tr><th>--</th><td>オプションの終了を表す</td></tr>
+    <tr><th>--help</th><td>コマンドの使い方を出力する</td></tr>
+  </tbody>
+</table>
+
+<h3>実用例</h3>
+
+<h4>メールを送ってみる</h4>
+
+<div class="command">
+<div class="title">コマンドsendmailと併用してメールを送るテストをする</div>
+<pre>
+$ echo -e 'From: &lt;from@example.com&gt;\nTo: &lt;to@example.com&gt;\nSubject: test\n\ntest' | /usr/sbin/sendmail -t -i -ffrom@example.com
+</pre>
+</div>
+
+<h4>マルチバイトの中身(バイトストリーム)を見る</h4>
+
+<p>
+ここではechoとodを併用します．余計な改行文字が含まれないようにするためにechoには-nを，バイト表示をするためにodには-tx1を使用します．
+</p>
+
+<div class="command">
+<div class="title">マルチバイト文字のバイトストリームを16進数表記で調べる</div>
+<pre>
+$ echo -n '在籍中お世話になりました' | od -tx1
+ 0000000 e5 9c a8 e7 b1 8d e4 b8 ad e3 81 8a e4 b8 96 e8
+ 0000020 a9 b1 e3 81 ab e3 81 aa e3 82 8a e3 81 be e3 81
+ 0000040 97 e3 81 9f
+</pre>
+</div>
+
+<p>
+<a href="http://www.poderosa.org/" target="_blank">Poderosa</a>など，比較的簡単に文字エンコードを変更できる場合，Poderosa側で16進数にしたい文字エンコードに変更した上で上記のようにコマンドを実行するとお手軽に調べることができる場合があります(環境によってはできない可能性もあります)
+また，iconvやその他を併用してもいいでしょう．
+</p>
+
+<div class="command">
+<div class="title">さらに文字エンコードを変更する</div>
+<pre>
+$ echo -n '在籍中お世話になりました' | iconv --from UTF-8 --to EUC-JP | od -tx1
+ 0000000 ba df c0 d2 c3 e6 a4 aa c0 a4 cf c3 a4 cb a4 ca
+ 0000020 a4 ea a4 de a4 b7 a4 bf
+ 0000030
+</pre>
+</div>
+
+<h4>HTMLの生成をしているファイルを特定する</h4>
+
+<div class="command">
+<div class="title">「class="header"」というHTMLタグの属性っぽいものを扱っているファイルを探して出力する</div>
+<pre>
+$ fgrep -r 'class="header"' .
+</pre>
+</div>
+
+<p>
+あるウェブアプリケーションが出力するHTMLの処理がおかしいときに上記のようにして調べます．
+おおよそそれっぽいのがでてきたら-lも併用します．
+</p>
+
+<div class="command">
+<div class="title">上記に引っかかるファイルのファイル名だけを出力する</div>
+<pre>
+$ fgrep -lr 'class="header"' .
+</pre>
+</div>
+
+<h4>ハードコーディングされた値があるファイルを特定する</h4>
+
+<div class="command">
+<div class="title">メールアドレスやドメイン名を固定で記述しているファイルを探して出力する</div>
+<pre>
+$ fgrep -r 'example.com' .
+$ fgrep -r 'support@example.com' .
+</pre>
+</div>
+
+<p>
+適当に開発されたウェブアプリケーションはえてして値がハードコーディングされていることが多いです．
+それらを定数に置き換えるときも上記のような検索が有効です．
+</p>
+
+<h4>脆弱性を調べる</h4>
+
+<div class="command">
+<div class="title">XSSになりそうなファイルを探して出力する</div>
+<pre>
+$ fgrep -ir '&lt;input' . | egrep -i '\$(_GET|_POST)'
+</pre>
+</div>
+
+<p>
+よくあるこういう出力をしているファイルを探します．
+</p>
+
+<div class="source-code">
+&lt;input type="name" value="&lt;?=$_GET['name']?&gt;"&gt;
+</div>
+
+<p>
+上記grepでこういうフォーム要素を出力している可能性のあるファイルを探します．
+</p>
+
+<div class="command">
+<div class="title">XSSになりそうなファイルを探して出力する</div>
+<pre>
+$ egrep -ir '(select|update|insert)[ \t]+\$' . | grep -iv '&lt;/?select'
+</pre>
+</div>
+
+<p>
+これでたとえば「select * from users where id = $id」のようなSQL文字列を検索します．
+これらはプレースフォルダーなどを使用すれば「select ～ where id = ?」などとなるはずなので，変数名は基本的にSQL中に出てくることがないことに着目しています．
+また，「&lt;select～」などのHTMLは除外しています．
+</p>
+
+<h4>ある名前のファイルやディレクトリを調べる</h4>
+
+<div class="command">
+<div class="title">カレントディレクトリ配下でファイルindex.htmlを調べる</div>
+<pre>
+$ find . -type f | fgrep index.html
+</pre>
+</div>
+
+<h4>あるファイルだけ，ディレクトリだけ何々をする</h4>
+
+<div class="command">
+<div class="title">emacsのバックアップを見つける，削除する</div>
+<pre>
+$ find . -name '*~'
+$ find . -name '*~' -exec rm {} \;
+</pre>
+</div>
+
+<div class="command">
+<div class="title">ディレクトリ.svnを削除する</div>
+<pre>
+$ find . -name .svn -type d -exec rm -rf {} \;
+</pre>
+</div>
+
+<div class="command">
+<div class="title">オーナーがrootなファイルやディレクトリを探す</div>
+<pre>
+$ find -uid 0
+</pre>
+</div>
+
+<div class="command">
+<div class="title">ついrootで作ってしまったファイルなどのオーナーユーザーをjokagiにする</div>
+<pre>
+$ find -uid 0 -exec chown jokagi {} \;
+</pre>
+</div>
+
+<h4>複数のファイルの内容を一気に置換する</h4>
+
+<div class="command">
+<div class="title">「sjis」をすべて「Shift_JIS」にする</div>
+<pre>
+$ sed -i 's/sjis/Shift_JIS/g' `grep -irl sjis .`
+</pre>
+</div>
+
+<h3>多分覚えておくといいこと</h3>
+
+<h4>文字列のクォートについて</h4>
+
+<p>
+文字列をダブルクォートすると，シェルが文字列を評価する場合があるので(「$」とか)個人的にはなるべくシングルクォートを使うことをお勧めします．
+また，クォート文字を含んだ検索をする正規表現など，エスケープ処理が複雑になってくるとシェルのためのエスケープか正規表現(あるいはその他のための)正規表現かわからなくなってしまうことがあります．
+そういう時は素直にオプション値をファイルにして読み込むという手段もあります．
+</p>
+
+<h4>コマンドの実行結果をオプション値として取り込む</h4>
+
+<p>
+上記のようにコマンドの実行結果をオプション値で取り込むと便利なことがまれにあります．
+実行結果をコマンドラインに取り込む方法はそれ自体をバッククォートでくくることで実現できます．
+</p>
+
+<p>
+jokagiがよくやるのは下記のようなパターンです．
+</p>
+
+<div class="command">
+<div class="title">拡張子が「.html」のファイルを全部emacsで読み込む</div>
+<pre>
+$ emacs `find -name '*.html'`
+</pre>
+</div>
+
+<p>
+ファイルがあまりに多いときはより厳密に絞り込むほうがいい場合もあります．
+</p>
+
+<h3>最後に</h3>
+
+<p>
+半年間ではありますが，ウノウでは多くのことを勉強をさせていただきました．
+jokagiは本日で退職ですが，<a href="http://www.knocking.co.jp" target="_blank">ノッキングオン</a>という会社に移籍をすることになります．
+ノッキングオンは<a href="http://www.knocking.co.jp/service/emarketing.html" target="_blank">広告キャンペーン</a>や<a href="http://www.knocking.co.jp/service/movile.html" target="_blank">携帯アフェリエイト</a>などを運営している企業です．
+今後ウノウとノッキングオンはいろいろな面で協力をしていこうということになっていて，今後は両社でいろいろな価値を作って行くことになると思います．
+</p>
+
+<p>
+また，jokagi個人もノッキングオンでもウノウ，あるいはこのウノウラボのように自分たちが考えたことを，自分のノウハウを世間と共有できるようなコンテンツや価値を作って行きたいなぁと思います．
+これから改めてみなさまよろしくお願いいたします．
+それではあでゅー．
+</p>
+</div>
+{% endraw %}

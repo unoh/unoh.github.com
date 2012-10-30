@@ -1,0 +1,98 @@
+---
+layout: post
+title: "Tokyo Tyrantを使ってみて"
+---
+{% raw %}
+
+<p>yamaokaです。</p>
+
+<p>
+通常のデータベースとしてではなく、Key-Valueストアの選択肢として
+<a href="http://1978th.net/tokyotyrant/">Tokyo Tyrant</a>を少しずつ使ってみています。
+実際に運用するにあたって、いくつか行ったことを書いておきます。
+ちなみに、現在の構成は1台のみでの運用です。
+マルチマスター構成やレプリケーションなどは行っていません。
+</p>
+
+<h3>PHPのクライアント</h3>
+
+<p>
+Tokyo Tyrantを利用するのはPHPのアプリケーションからです。
+最初は<a href="http://1978th.net/tokyotyrant/spex.html#protocol_memcached">memcachedプロトコル</a>を利用して
+<a href="http://pecl.php.net/package/memcache">PECL::memcache</a>を使っていましたが、
+データの大量更新を連続で行うとデータの取得が正常に行えなくなる現象が発生したため、
+<a href="http://openpear.org/package/Net_TokyoTyrant">Net_TokyoTyrant</a>を一部改変したものをライブラリとして利用しています。
+パフォーマンスではPECL::memcacheに負けますが、クリティカルな処理をしていないこともあり、
+今のところ問題になってはいません。
+<a href="http://pecl.php.net/package/tokyo_tyrant">PECL::tokyo_tyrant</a>もそのうち試してみようと思っています。
+</p>
+
+<h3>監視</h3>
+
+<p>
+<a href="http://www.nagios.org/">Nagios</a>のcheck_tcpプラグインを利用しています。
+Tokyo Tyrantが動いているサーバーにmemcachedプロトコルで接続、
+statsコマンドを実行してチェックしています。memcachedが動いているサーバーを監視するのと同じ要領ですね。
+</p>
+
+<p>
+<pre class="code"><code>define command{
+        command_name    check_tokyotyrant
+        command_line    $USER1$/check_tcp -H $HOSTADDRESS$ -p 1978 -t 5 -E -s 'stats\r\nquit\r\n' -e 'uptime' -M crit
+        }
+</code></pre>
+</p>
+
+<p>
+実際には、上のようなコマンドを定義して監視しています。
+</p>
+
+<h3>ログローテート</h3>
+
+<p>
+Tokyo Tyrantにはログを出力する起動オプションがあり、
+クライアントからの接続ログをテキストファイルで残すことができます。
+しかし、そのログを保管し続けていると容量を食うので、適宜ローテートさせています。
+Tokyo Tyrantを管理するttserverctlはHUPを受け取ることができるので、
+次のような設定をlogrotateに対して行うことでローテーションしています。
+</p>
+
+<p>
+<pre class="code"><code>/var/ttserver/log {
+    missingok
+    notifempty
+    compress
+    sharedscripts
+    postrotate
+        /usr/sbin/ttservctl hup > /dev/null 2>/dev/null || true
+    endscript
+    rotate 7
+    daily
+}</code></pre>
+</p>
+
+<h3>バックアップ</h3>
+
+<p>
+Tokyo Tyrantはホットバックアップを取ることができるので、
+1日1回、データ本体をコピーして保存しています。
+ホットバックアップはTokyo Tyrant付属のコマンドを実行するだけでOKです。
+バックアップとリカバリーの手順については<a href="http://1978th.net/tokyotyrant/spex.html#tutorial_backup">Tokyo Tyrantのドキュメントに詳しく記載されている</a>ので、
+そちらを参照しつつ自分の環境に合ったバックアップスクリプトを用意するといいのではないでしょうか。
+</p>
+
+<h3>最後に</h3>
+
+<p>
+Tokyo Tyrantは非常に扱いやすい環境だと感じています。
+実際に運用していて、タイミングによってはかなりたくさんの更新・参照が行われるのですが、
+負荷も上がらず非常に安定して稼動しています。また、処理も高速です。
+将来的にはセッションストレージとして利用するのもありかな、と思います。
+</p>
+
+<p>
+Tokyo Tyrantを用いた運用事例の1つとして参考にしていただければ幸いです。
+また、皆さんの運用事例やtipsなどありましたら、是非教えてください。
+</p>
+
+{% endraw %}

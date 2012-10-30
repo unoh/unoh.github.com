@@ -1,0 +1,172 @@
+---
+layout: post
+title: "Operaのウィジェットを作ってみた"
+---
+{% raw %}
+<p>yamaokaです。</p>
+
+<p>
+<a href="http://unite.opera.com/">Opera Unite</a>が話題になっていますね。
+Operaを使うことが多いので、こうして話題になると少しだけうれしいです。
+Operaは単なるwebブラウザーではありません。
+Opera Uniteはともかく、メーラーにも、IRCのクライアントにも、
+BitTorrentのクライアントにもなることができます。
+そして、ウィジェットが動くプラットフォームでもあるのです。
+</p>
+
+<p>
+<a href="http://widgets.opera.com/">Operaのウィジェット</a>にはいろいろな種類があって、
+例えばTwitterクライアントの<a href="http://widgets.opera.com/widget/6522/">Twippera</a>など便利なものから、
+ちょっとしたツールやゲームまで揃っています。
+ウィジェットの開発はHTMLとJavaScript、CSSを使って行います。普通のwebサイト制作と同じですね。
+<a href="http://dev.opera.com/articles/widgets/">開発者向けのドキュメント</a>はまだ整備段階の感じもしますが、一通りの情報は揃っています。
+</p>
+
+<p>
+というわけで（？）、試しに<a href="http://photozou.jp/">フォト蔵</a>の写真をスライドショー表示するウィジェットを作ってみました。
+ウィジェットは次のファイルで構成されている必要があります。
+</p>
+
+<ul>
+  <li>config.xml</li>
+  <li>index.html</li>
+</ul>
+
+<p>
+もちろん、画像やJavaScriptをディレクトリに分けておくことも可能です。
+それら全てを、1つのディレクトリに保存します。
+</p>
+
+<p>
+まず「config.xml」を用意します。
+<pre class="code"><code>&lt;?xml version="1.0" encoding="UTF-8" ?&gt;
+&lt;widget&gt;
+  &lt;widgetname&gt;フォト蔵スライドショー&lt;/widgetname&gt;
+  &lt;description&gt;フォト蔵で人気の写真を表示します&lt;/description&gt;
+  &lt;id&gt;
+    &lt;host&gt;photozou.jp&lt;/host&gt;
+    &lt;name&gt;photozou-slideshow&lt;/name&gt;
+    &lt;revised&gt;2009-06-17&lt;/revised&gt;
+  &lt;/id&gt;
+  &lt;width&gt;150&lt;/width&gt;
+  &lt;height&gt;150&lt;/height&gt;
+  &lt;author&gt;
+    &lt;name&gt;YAMAOKA Hiroyuki&lt;/name&gt;
+    &lt;organization&gt;Unoh Inc.&lt;/organization&gt;
+  &lt;/author&gt;
+&lt;/widget&gt;
+</code></pre>
+</p>
+
+<p>
+そして、「index.html」を用意します。
+<pre class="code"><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;
+  &lt;script type="text/javascript" src="http://www.google.com/jsapi"&gt;&lt;/script&gt;
+  &lt;script type="text/javascript"&gt;google.load("jquery", "1.3");&lt;/script&gt;
+  &lt;style type="text/css"&gt;
+    ul#photos {
+      position:relative;
+      width:120px;
+      height:120px;
+      margin:0;
+      padding:0;
+      list-style:none;
+    }
+    ul#photos li {
+      position:absolute;
+      top:0;
+      left:0;
+      z-index:8;
+    }
+    ul#photos li.active {
+      z-index:10;
+    }
+    ul#photos li.last-active {
+      z-index:9;
+    }
+  &lt;/style&gt;
+&lt;/head&gt;
+&lt;body&gt;
+&lt;ul id="photos"&gt;&lt;/ul&gt;
+&lt;script type="text/javascript"&gt;
+$(function(){
+  $.ajax({
+    type: "GET",
+    url: "http://api.photozou.jp/rest/photo_list_public",
+    data: { type: "popular", limit: "30" },
+    dataType: "xml",
+    success: function(data, dataType) {
+      if (data !== undefined) {
+        var photosFirstChild = $("#photos li:first-child");
+        var photos = $(data).find("photo").each(function() {
+          var thumbnailURL = $(this).find("thumbnail_image_url").text();
+          var url = $(this).find("url").text();
+          var content = "&lt;a href=\""+ url +"\"&gt;&lt;img src=\"" + thumbnailURL + "\"&gt;&lt;/a&gt;";
+          if (photosFirstChild.length == 0) {
+            $("#photos").append($("&lt;li&gt;").html(content));
+          } else {
+            photosFirstChild.before($("&lt;li&gt;").html(content));
+          }
+        });
+      }
+    },
+    error: function() { opera.postError("Photozou API error"); },
+    complete: function(xmlHttpRequest, textStatus) {
+      if (textStatus != "success") {
+        return;
+      }
+      setInterval(function() {
+        var activePhoto = $("#photos li.active");
+        if (activePhoto.length == 0) {
+          activePhoto = $("#photos li:last");
+        }
+        var nextPhoto = activePhoto.next().length ?
+          activePhoto.next() : $("#photos li:first");
+        activePhoto.addClass("last-active");
+        nextPhoto.css({ opacity: 0.0 })
+          .addClass("active")
+          .animate({ opacity: 1.0 }, 1000, function() {
+             activePhoto.removeClass("active last-active");
+           });
+      }, 5000);
+    }
+  });
+});
+&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</code></pre>
+</p>
+
+<p>
+JavaScriptを使うにあたって、<a href="http://jquery.com/">jQuery</a>をライブラリとして利用しています。
+今回はGoogleの<a href="http://code.google.com/intl/ja/apis/ajaxlibs/">AJAX Libraries API</a>を利用しましたが、ウィジェットとして配布するのであればパッケージに同梱することになるでしょう。
+スライドショーとして写真を順々に表示する部分は、
+<a href="http://jonraasch.com/blog/a-simple-jquery-slideshow">A Simple jQuery Slideshow</a>を参考にしました。
+</p>
+
+<p>
+Operaのウィジェットでは、通信はXMLHttpRequestを使って行います。
+通常Ajaxなどで使う場合は同一のドメイン内にしかリクエストを発行できませんが、
+ウィジェットの中で使う場合は何の制限もなく使うことができます。
+今回は<a href="http://photozou.jp/basic/api_method_photo_list_public">フォト蔵のAPI</a>にリクエストを投げています。
+</p>
+
+<p>
+この2つのファイルを同じディレクトリに保存して、
+「config.xml」をOperaのウィンドウにドラッグ＆ドロップすると、
+ウィジェットが起動します。簡単ですね。
+まだ閉じるボタンも設定画面もありませんが、ウィジェットが1つできました。
+実際にウィジェットとして配布する場合は、
+zipでディレクトリをアーカイブして拡張子をwgtに変更すればいいようです。
+</p>
+
+<p>
+非常に簡単に作れるので、個人的なツールをささっと作るといった用途にも使えそうです。
+また、HTMLとJavaScriptで作成するので、JavaScriptの豊富なライブラリを利用できるのも大きなポイントです。
+ちょっといろいろ作ってみるのもいいかもしれませんね。
+</p>
+
+{% endraw %}

@@ -1,0 +1,69 @@
+---
+layout: post
+title: "携帯サイト作成時の注意点(au編)"
+---
+{% raw %}
+<p>こんばんは。harukです。</p>
+
+<p>前回の<a href="http://labs.unoh.net/2006/10/softbank.html">SoftBank編</a>に続き、今回はau編です。</p>
+<p>なお、HDMLに関しては扱ったことがないため、含まれていません。</p>
+
+<ul style="padding-left:16px;margin-left:16px">
+<li>mailtoに半角カタカナは使えない<br />
+  半角カタカナを受け付けない端末があり、その端末ではメーラが起動してくれません。<br />
+</li>
+<li>テキストボックスに改行が入力できる<br />
+  auはテキストボックスでもtextareaと同じように改行が普通に入力できます。<br />
+  テキストボックスだからといって安心はできません。<br />
+</li>
+<li>お気に入りに追加するリンクが使える<br />
+  以下のようなタグで簡単にお気に入りに追加させることができます。<br />
+  <pre>&lt;a href=&quot;device:home/bookmark?url=URL&amp;title=タイトル&quot;&gt;お気に入りに追加&lt;/a&gt;</pre>
+  ※URLエンコードが必要です。<br />
+  device:は他にも色々あるみたいです。調べればすぐ見つかります。<br />
+
+<li>cookieが使える<br />
+  ということは、他キャリアは使えません。<br />
+</li>
+<li>キャッシュコントロール<br />
+  <a href="http://www.au.kddi.com/ezfactory/tec/spec/wap_tag11.html">http://www.au.kddi.com/ezfactory/tec/spec/wap_tag11.html</a><br />
+  細かいルールが出ています。<br />
+  設定をうまく行わないと、2ページ目を表示させようとしてもキャッシュされている1ページ目が表示される。<br />
+  ということになったりします。<br />
+</li>
+</ul>
+
+<p>SoftBankに比べるとそれほど困るものはありません。</p>
+<p>しかし、メール送信を行う際には他のキャリアとは違うことがあります。</p>
+
+<ul style="padding-left:16px;margin-left:16px">
+<li>サイトから送信するメールの改行はLF<br />
+  万が一、CR+LFだった場合には、改行が2つになる端末もありますので強制的にLFにしましょう。<br />
+</li>
+<li>メールフィルターで拒否した場合のエラーメールが返ってこない<br />
+  <a href="http://www.au.kddi.com/notice/meiwaku/email/index.html">http://www.au.kddi.com/notice/meiwaku/email/index.html</a>
+<blockquote>
+  メールフィルターでブロックした場合の送信元への拒否通知 (エラーメール) の返信有無を設定できます。
+  初期値は「返信しない」に設定されます。
+</blockquote>
+  こうなると、どうやってメールアドレスの管理をすればいいのでしょうか。<br />
+  管理するいい方法をぜひ教えてください。<br />
+</li>
+
+<li>SPFレコードが設定されていない場合もエラーメールが来ない<br />
+  <a href="http://www.au.kddi.com/notice/manner/jyushin_policy/error_mail.html">http://www.au.kddi.com/notice/manner/jyushin_policy/error_mail.html</a>
+<blockquote>
+2006年9月下旬から送信ドメイン認証技術「SPF」を利用し、DNSで公開されたSPFレコードにより送信ドメインが認証できないメールに対して、あて先不明のエラーメールを返送しない機能をEZwebに導入致します。
+また、2006年度内にSPFを利用したメールフィルター機能を提供する予定です。
+</blockquote>
+  こちらはあて先不明の場合です。
+</li>
+</ul>
+
+<p>サイトからメールを送信する場合は、</p>
+<p>メールアドレスの管理は全キャリアで必要ですので、気をつけましょう。</p>
+
+<br />
+<p>見てのとおり、けっこうあっさりとしたものになってしまいましたが、</p>
+<p>少しでもお役に立てれば幸いです。</p>
+{% endraw %}

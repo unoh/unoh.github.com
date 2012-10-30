@@ -1,0 +1,77 @@
+---
+layout: post
+title: "さくらインターネットで添付画像付きのマルチパートメールをPHPで送ってみる"
+---
+{% raw %}
+matsudaです。こんにちは。<br>
+<br>
+最近周りの環境に触発され、PHPでプログラミングを初めています。<br>
+で、なんとなくHTMLで画像が添付されてて、マルチパートなメールを送りたくなったので簡単な雛形を作ってみました。<br>
+<br>
+・最近プログラミングはじめた<br>
+・PEARのインストールとかよくわからない<br>
+・簡単に、添付画像とテキストでメールを送れればいい<br>
+<br>
+な人にオススメです。<br>
+<br>
+さくらインターネットを利用していて、PEARのライブラリのインストールとかよくわからない！っていう人に効果を発揮するはずです。宛先と送信元メアドをかきかえて、ためしに利用してみてください。<br>
+<br>
+<pre class="code">
+&lt;?php
+
+//内部のエンコード
+mb_language("japanese");
+mb_internal_encoding("UTF-8");
+
+//画像の取得と画像のエンコード
+$img = file_get_contents("http://art6.photozou.jp/pub/835/122835/photo/4258910_thumbnail.jpg");
+$img_encode64_000 = chunk_split(base64_encode($img));
+
+//ヘッダ情報
+$sendto   = "ここに宛先メアド";
+$subject  = "ここにサブジェクト";
+$headers  = "FROM:" . "ここに送信元メアド". "\r\n";
+$headers .= 'MIME-Version: 1.0' . "\r\n";
+$headers .= 'Content-Type: multipart/related;boundary="1000000000"' . "\r\n";
+
+//テキストパート、HTMLパート
+$message =&lt;&lt;&lt;END
+
+--1000000000
+Content-Type: text/plain; charset=iso-2022-jp
+Content-Transfer-Encoding: 7bit
+
+テキストパートはここ
+
+--1000000000
+Content-Type: text/html; charset=iso-2022-jp
+Content-Transfer-Encoding: 7bit
+
+&lt;html&gt;
+&lt;body&gt;
+ここがHTMLパート&lt;br&gt;
+画像表示はこんな感じで&lt;br&gt;
+&lt;img src="cid:img_id_000"&lt;&lt;br&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+
+--1000000000
+Content-Type: image/jpeg; name="images000.jpg"
+Content-Transfer-Encoding: base64
+Content-ID: &lt;img_id_000&gt;
+
+$img_encode64_000
+
+--1000000000--
+
+END;
+
+//メール用にサブジェクトと本文をエンコード
+$subject = mb_encode_mimeheader($subject);
+$message = mb_convert_encoding($message, "JIS");
+
+//最後に送信！！
+mail( $sendto, $subject, $message, $headers); 
+?&gt;
+</pre>
+{% endraw %}

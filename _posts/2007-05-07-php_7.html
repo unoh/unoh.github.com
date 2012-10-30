@@ -1,0 +1,262 @@
+---
+layout: post
+title: "PHPの画像処理の紹介と簡単な比較"
+---
+{% raw %}
+Keita です。<br />
+<br />
+僕は、フォト蔵チームではないので、フォト蔵の画像処理については見ていませんが、個人的に画像処理に興味があるためPHPにおいての画像処理を簡単に調べたことがあります。<br />
+<br />
+その時の結果をお話させていただきたいとおもいます。<br />
+この他に、もし、こういう選択肢があるよというのがあれば、教えていただけると大変うれしいです。<br />
+<br />
+<h2>主要なライブラリの一覧</h2><br />
+<h3>GDで処理</h3>
+<a href="http://www.libgd.org/Main_Page">LibGD</a>を操作するPHP標準のライブラリです。<br />
+ほぼ、レンタルサーバなどで利用できる反面、対応形式が、JPEG,GIF,PNG,WBMP,GD{,2}にしか対応していないなどのいくつか機能的に制限があります。<br />
+（WBMPは、Wireless Bitmapという、WindowsBitmapとは別の形式です）<br />
+<br />
+<h3><a href="http://pecl.php.net/package/imagick/">imagick</a></h3>
+ImageMagick/GraphicsMagickという画像編集ソフトのPECLの拡張で非常に多くの形式に対応しています。<br />
+最近まで2004で、更新がとまっており、今後も絶望的でした。<br />
+しかし、最近、2007-04-13にバグを修正したバージョンが出て、もしかすると今後は期待できるかもしれません。<br />
+<br />
+<br />
+<h3><a href="http://www.magickwand.org/">MagickWandForPHP</a></h3>
+上記のimagickと同じ系統、ImageMagickのAPIであるMagickCoreを利用するためのPHP拡張で、残念ながらPHP公式のPECLではありませんが、同じ形式で、配布されています。<br />
+APIの数が、400個以上で、対応形式も、ImageMagickのコンパイル時に利用できるライブラリに依存するため一定ではありませんが、非常に多くの形式に対応しています。<br />
+<br />
+<br />
+<h3><a href="http://pecl.php.net/package/imagick/">imagick2</a></h3>
+「今後は期待できるかもしれません。」<br />
+とかいってたら、この資料を書いてる間に、imagick2.0.0a1が出ていました。<br />
+ほとんどが書き直しされたもののようで、非常に多機能かつクラスベースです。<br />
+残念ながら、PHP5.1の特定のバージョン以降しか対応していないようです。<br />
+MagickWandForPHPと同じく400個以上のAPIをサポートしているようで、さらに、Classベースで実装されているので、操作が比較的簡単です。<br />
+<br />
+<br />
+<h2>そんなわけでどうすればいいのか</h2><br />
+最初、僕のほうでは、GDを使っていたのですが、アニメーションGIFやWindows Bitmapファイルが扱えなかったので、気合をいれてMagickWandForPHP差し替えました。<br />
+<br />
+先に結論だけ述べておくと、今の段階では、MagickWandForPHPで将来的には、PHP4の環境もしくは細かい制御がしたいなら、MagickWandForPHP、PHP5の環境なら新しいimagickを使うのが健康的だと思います。<br />
+<br />
+そんなわけで、将来的には、imagick2にしていきたいのですが、さすがに、GWの前日に出たものを、ちゃんとは検証できなかったので、それぞれの簡単なコード比較と、そのベンチマークを紹介したいとおもいます。<br />
+<br />
+まず、ファイルの読み込み比較です。<br />
+MagickWandForPHPと、GDについては、簡単にクラス化した、ライブラリを作ったのでそれを抜粋します。<br />
+<br />
+GD:<br />
+<pre class="code">
+class Image_Converter_GD
+{
+    .....(省略
+    function loadFromFile($filename)
+    {
+        if (! file_exists($filename)) {
+            return false;
+        }
+    
+        $size = @getimagesize($filename);
+        
+        if ($size === false) {
+            return false;
+        }
+    
+        list($width, $height, $type, $attr) = $size;
+    
+        $this->type = $type;
+        $this->width = $width;
+        $this->height = $height;
+    
+        switch($this->type) {
+           case IMAGETYPE_GIF:
+               $this->handle = imagecreatefromgif($filename);
+               break;
+           case IMAGETYPE_JPEG:
+               $this->handle = imagecreatefromjpeg($filename);
+               break;
+           case IMAGETYPE_PNG:
+               $this->handle = imagecreatefrompng($filename);
+               break;
+           case IMAGETYPE_WBMP:
+               $this->handle = imagecreatefromwbmp($filename);
+               break;
+           default:
+               return false;
+        }
+        return true;
+    }
+    .....(省略
+}
+
+$image = new Image_Converter_GD();
+$image->LoadFromFile($filename);
+</pre>
+GDではファイルを読み込む場合には、各形式ごとに別々の関数があるのでこれを分ける必要があります。<br />
+<br />
+MagickWandForPHPの場合はこんな感じです。<br />
+<pre class="code">
+class Image_Converter
+{
+    .....(省略
+    function Image_Converter()
+    {
+        $this->image = NewMagickWand();
+    }
+
+    function LoadFromFile($filename){
+        if (! MagickReadImage($this->image, $filename)) {
+            return $this->_returnError();        
+        }
+        return true;
+    }
+    .....(省略
+}
+
+$image = new Image_Converter();
+$image->LoadFromFile($filename);
+</pre>
+関数がひとつなので、（まぁ対応形式が多いかつ不確定なので、一個一個関数作ったら追いつきませんし。）簡単に見えます。<br />
+<br />
+さらに、Imagick 2はすでに、Classになっているのでこんな感じになります。<br />
+<pre class="code">
+    $image =& new Imagick();
+    $image->readImage($filename);
+</pre>
+
+次に、僕は、実際画像のリサイズがしたかったので、<br />
+リサイズ処理を書いてみました。<br />
+
+GD:<br />
+<pre class="code">
+class Image_Converter_GD
+{
+    function resize($width, $height)
+    {
+        if ($width > $this->width &&  $height > $this->height ){
+            return ;
+        }
+        switch($this->type) {
+           case IMAGETYPE_GIF:
+                $work_handle = imagecreate($width, $height);
+                
+                $tcolor = imagecolorallocate($work_handle , 255, 255, 255);
+                imagecolortransparent($work_handle , $tcolor);
+                imagefilledrectangle ($work_handle , 0, 0, $width, $height ,$tcolor);
+               break;
+           case IMAGETYPE_JPEG:
+           case IMAGETYPE_PNG:
+           case IMAGETYPE_WBMP:
+                $work_handle = imagecreatetruecolor($width, $height);
+               break;
+        }
+
+        imagecopyresized($work_handle, $this->handle, 0,  0, 0, 0, $width, $height, $this->width, $this->height);
+        imagedestroy($this->handle);
+
+        $this->handle = $work_handle;
+    }
+}
+</pre>
+
+ちゃんとは検証してないですが、だいたい上記のような感じでうごくとおもいます。<br />
+次にMagickWandForPHPです。<br />
+MagickWandForPHP:
+<pre class="code">
+class Image_Converter
+{
+    function resize($width, $height, $filter = null, $blur = 1)
+    {
+        if (is_null($filter)) {
+            $filter = MW_HammingFilter;
+        }
+        if (! MagickResizeImage($this->image, $width, $height, $filter, $blur) ) {
+            return $this->_returnError();        
+        }
+        
+        return true;
+    }
+}
+</pre>
+
+ちょっと比較対象が違いますが、すでにclass化されてるimagick2の場合<br />
+<br />
+imagick2:<br />
+<pre class="code">
+    $image =& new Imagick();
+    $image->readImage('test2.jpg');
+    $image->ResizeImage(100, 100, 0, false);
+</pre>
+<br />
+MagickWandとimagick2には、それぞれ、フィルタを使わないScaleと、さらに、imagick2には縦横比率を保存する、thumbnailがありますので、適時使い分ける必要がありそうです。<br />
+<br />
+上記の機能を使って、簡単ですがベンチマークを図ってみました。<br />
+
+<pre class="code">
+require_once "Benchmark/Timer.php";
+require_once "../Image_Converter.php";
+require_once "../Image_Converter_GD.php";
+
+$timer =& new Benchmark_Timer();
+
+$timer->start();
+for ($i = 0; $i < 100; $i++) {
+    $image =& new Image_Converter();
+    $image->LoadFromFile('test2.jpg');
+    $image->resize(100, 100);
+    $image->SaveToFile('test_file.jpg');
+}
+$timer->setMarker('MagickWandResize');
+
+for ($i = 0; $i < 100; $i++) {
+    $image =& new Image_Converter();
+    $image->LoadFromFile('test2.jpg');
+    $image->scale(100, 100);
+    $image->SaveToFile('test_file.jpg');
+}
+$timer->setMarker('MagickWandScale');
+
+for ($i = 0; $i < 100; $i++) {
+    $image =& new Image_Converter_GD();
+    $image->LoadFromFile('test2.jpg');
+    $image->resize(100, 100);
+    $image->SaveToFile('test_file.jpg');
+}
+$timer->setMarker('GD');
+
+for ($i = 0; $i < 100; $i++) {
+    $image =& new Imagick();
+    $image->readImage('test2.jpg');
+    $image->thumbnailImage(100, null);
+    $image->writeImage('test_file3.jpg');
+    $image->destroy();
+}
+$timer->setMarker('imagick2Thum');
+for ($i = 0; $i < 100; $i++) {
+    $image =& new Imagick();
+    $image->readImage('test2.jpg');
+    $image->ResizeImage(100, 100, 0, false);
+    $image->writeImage('test_file3.jpg');
+    $image->destroy();
+}
+$timer->setMarker('imagick2Resize');
+
+
+for ($i = 0; $i < 100; $i++) {
+    $image =& new Imagick();
+    $image->readImage('test2.jpg');
+    $image->scaleImage(100, 100);
+    $image->writeImage('test_file3.jpg');
+    $image->destroy();
+}
+$timer->setMarker('imagick2Scale');
+
+$timer->stop();  
+$timer->display();
+</pre>
+
+画像は、50kの450x337のjpeg画像を使いました。<br />
+<br />
+結果:<br />
+<pre class="code">
+{% endraw %}

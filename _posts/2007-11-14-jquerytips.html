@@ -1,0 +1,87 @@
+---
+layout: post
+title: "jQueryのパフォーマンス最適化に関するTips"
+---
+{% raw %}
+<p>こんにちは、山下です。<br />
+今回は、jQueryのパフォーマンス最適化について説明したいと思います。</p>
+
+<p>軽量と言われているjQueryですが、いろいろな機能を実現しようとして複数のプラグインを導入すると、だんだんと動作が重くなってきます。サーバ側をいくらチューニングしたところで、ブラウザ側での処理に時間がかかっていたら、せっかく訪問してくれたユーザに重いサイトとして認識されてしまいます。以下に、ウノウで運営している<a href="http://www.eigaseikatu.com/">「映画生活」</a>で実際に行っている方法を紹介します。</p>
+
+<h3>1. Packed版ではなくMinified版を使う</h3>
+
+<p>jQuery1.1まではPacked版のみだったのですが、jQuery1.2からMinified版もダウンロードできるようになりました。Packed版よりもMinified版を使うことをお勧めします。どう違うのかというと、Packed版はファイルサイズを極限まで削減するために静的辞書＋可読文字符号化という方法を使っているのですが、ページが読み込まれる度に展開処理が必要になり、無駄な処理が発生します。</p>
+
+<p>これに対してMinified版は、コメントや無駄な空白などを取り除くだけですので圧縮率は低いのですが、無駄な展開処理が必要ありません。最新のPCを使っている場合は気にならないかもしれませんが、古いPCを使っている場合にこの差は顕著になります。静的辞書法については、<a href="http://d.hatena.ne.jp/dayflower/20061122/1164175094">JavaScriptの圧縮 - daily dayflower</a>に詳しく書かれていますので参考にしてください。</p>
+
+<p>以上のような理由からjQuery1.2からMinified版が提供されるようになったのですが、まだ1.1.4を使っている場合には、自分でMinified版を作成しましょう。私は<a href="http://crockford.com/javascript/jsmin">JSMin</a>のPython版を使っています。<a href="http://crockford.com/javascript/jsmin.py.txt">jsmin.py</a>をダウンロードして次のように実行します。</p>
+
+<pre class="code">$ python jsmin.py &lt;some.src.js &gt;some.js</pre>
+
+<h3>2. 代わりにmod_deflateなどを使う</h3>
+
+<p>上で説明したように、Minified版はPacked版より圧縮率の点で劣るのですが、Webサーバの機能を使って通信時にgzip圧縮することで圧縮率を高めることができます。WebサーバにApache2を使っている場合は、mod_deflateが利用可能です。</p>
+
+<p>設定例：</p>
+<pre class="code">LoadModule deflate_module modules/mod_deflate.so
+&lt;FilesMatch "\.(html|css|js)$"&gt;
+SetOutputFilter DEFLATE
+&lt;/FilesMatch&gt;</pre>
+
+<h3>3. プラグインを一つのファイルにまとめる</h3>
+
+<p>すべてのページで読み込まれるプラグインなどは、jquery.jsと一緒にまとめてしまいましょう。ブラウザがWebサーバと同時に接続できるコネクション数は限られています。また、通信のオーバーヘッドをできるだけ減らすことで、レスポンスの向上が期待できます。<br />
+プラグインのjsファイルは圧縮されていないことが多いので、前述のJSMinなどを使って忘れずにMinified処理をしておきます。</p>
+
+<h3>4. 自動で実行される処理を止める</h3>
+
+<p><a href="http://jquery.com/demo/thickbox/">ThickBox</a>はよく使われるjQueryプラグインで、aタグにclass="thickbox"を追加するだけで画像のエフェクト表示を行うことができます。これは、JavaScriptが分からない人でも手軽に使えて便利なのですが、jQuery(document).ready()関数で毎回イベントの割り当が行われるので非常に効率が悪いです。</p>
+
+<pre class="code">$(document).ready(function(){   
+  <s>tb_init('a.thickbox, area.thickbox, input.thickbox');</s> ← 削除
+  imgLoader = new Image();// preload image
+  imgLoader.src = tb_pathToImage;
+});</pre>
+
+<p>&lt;a class="thickbox"&gt;の代わりに、次のようにHTML内の記述を変更します。</p>
+
+<pre class="code">&lt;a href="javascript:tb_show('タイトル',
+                             '/hoge/?height=300&amp;width=300')"&gt;</pre>
+
+<p>ThickBoxに限らず、利用するプラグインのソースには目を通して、無駄な処理が実行されていないか確認しましょう。</p>
+
+<h3>5. Expiresをできるだけ長く設定する</h3>
+
+<p>ブラウザにキャッシュを使ってもらうようにExprireの期限をできるだけ未来に設定します。Apacheの場合は次のように設定します。</p>
+
+<pre class="code">Expires On
+ExpiresByType text/javascript "access plus 30 day"
+ExpiresByType application/x-javascript "access plus 30 day"</pre>
+
+<h3>6. class指定ではなくid指定にする</h3>
+
+<p>以前のエントリで紹介したように、jQueryでは $('div.hoge') などとclass指定でノードを選択することが簡単にできるのですが、class指定での選択はid指定よりも遅いので可能な限り、$('#hoge')のようにidを指定するようにします。HTMLの構造上できない場合もあるかもしれませんが、速度が変わってくることは覚えておいたほうが良いと思います。</p>
+
+<p>&nbsp;</p>
+
+<b>2007/11/14 17:20追記</b>
+<p>コメント欄で質問されたので、下記のようなコードで軽くベンチマークを取ってみました(MacBook+Firefox)。#hogeだと速いのですが、div#hogeだと逆に遅くなってしまうようです。ですので、初掲時のdiv#hogeを#hogeに修正させていただきました。</p>
+<pre class="code">var txt = '';
+
+var date = new Dae;
+for (var i = 0; i &lt; 10000; i++) txt = $('#hoge').html();
+alert(new Date - date); // 582
+
+date = new Date;
+for (var i = 0; i &lt; 10000; i++) txt = $('div#hoge').html();
+alert(new Date - date); // 4771
+
+date = new Date;
+for (var i = 0; i &lt; 10000; i++) txt = $('div.hoge').html();
+alert(new Date - date);  // 4595</pre>
+
+<p>&nbsp;</p>
+
+<p>以上、jQueryのパフォーマンス最適化について説明してきましたが、これによって向上できる時間は数十〜数百ミリ秒かもしれません。しかし、新しい機能を追加するよりもパフォーマンス・チューニングを行ったほうがアクセス向上に役立ったというデータもあり、サイトを訪れてくれたユーザに少しでも快適に使ってもらうために有効だと思います。</p>
+
+{% endraw %}

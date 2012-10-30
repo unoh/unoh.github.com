@@ -1,0 +1,119 @@
+---
+layout: post
+title: "リビドーに赴くままlibmemcachedをPHPから使ってみる"
+---
+{% raw %}
+Keita です。
+<p>
+浴衣姿の女性は人類の宝だと思います。
+</p>
+<p>さて、phpの<a href="http://pecl.php.net/package/memcached">peclのmemcache'd'</a>ってご存知でしょうか。
+長い歴史をもつ<a href="http://pecl.php.net/package/memcache">pecl memcache</a>(名前近過ぎだ）はその拡張の中でmemcachedプロトコルの実装をしていますが、pecl memcachedはlibmemcahcedにその実装を依存を任せています。</p>
+
+<p>
+利用するときの違いとしては<br />
+
+memcache:
+<ul>
+<li>インストール時に他のライブラリに依存しない</li>
+<li>長いこと使われてるライブラリなので安定性はある</li>
+</ul>
+memcached
+<ul>
+<li>memcacheよりも利用できる機能が多い</li>
+<li>今後もプロトコルの拡張があったときにlibmemcachedに追従するだけなので対応が早いことが予測される</li>
+</ul>
+という点が挙げられます。(まだまだ一杯ありますが・・）
+</p>
+<p>
+memcacheよりも利用できる機能が多いというのはかなり大きく、具体的に言うと、set時に比較して他のプロセスが更新されてないかどうかを確認してから更新するという処理をアトミックにできるMemcached::casは、揮発性の高い本家のmemcached(デーモンの方）はともかく、最近の永続的なストレージとして、memcachedプロトコル互換をうたうKVSを使う時には是非とも使いたい機能だと思います。
+</p>
+<p>
+追記:<br />
+kamipoさんより、はてブのご指摘でPECL::memcacheも<a href="http://pecl.php.net/package-info.php?package=memcache&version=3.0.0">3.0.0(alpha)</a>より、casをサポートしているというご指摘いただきました。<br />
+よくよく見てみると確かにCasに限らずappendやバイナリプロトコルのサポートなどいままでほしかった機能が実装されています。（どんだけやる気なんだと作者に対して強く尊敬の念をいだきました）安定性やなどかんがみると、PECL::memcacheは非常に有力な候補となると個人的には思いますのでこれは別途調査してみたいとおもいますし皆様も選択の際はぜひ頭の隅にいれていただければ幸いです。
+</p>
+
+<p>
+前置きが長くなりましたが、libmemcachedとpecl memcachedの構築に本来は簡単なのになんだかとっても、手間取ったので記録を残したいと思います。
+</p>
+
+前提としては、PHP5.3.3の環境でRPMを作成する環境は整っているという前提です。
+
+とりあえずrpmmacrosをの設定
+<pre class="code">
+cd ~/
+echo "%_topdir `pwd`/rpmbuild" > ~/.rpmmacros
+mkdir -p ~/rpmbuild/{SRPMS,RPMS/x86_64,SOURCES,SPECS,BUILD}
+</pre>
+
+libmemcachedのrpmを作成
+<pre class="code">
+tar zxvf libmemcached-0.39.tar.gz 
+cd libmemcached-0.39
+./configure
+make rpm
+</pre>
+
+インストール
+<pre class="code">
+$ cd ~/rpmbuild/RPMS/x86_64/
+$ rpm -ivh libmemcached-devel-0.39-1.x86_64.rpm libmemcached-0.39-1.x86_64.rpm 
+</pre>
+
+これで、limemcachedがインストールされました。
+そのあとpeclのRPMを作るのですが、会社のRPMだとラボブログに書くちょっと癖があったりするので、ここでは、<a href="http://rpms.famillecollet.com/">Les RPM de Remi - Packages</a>からSRPMを拝借することにします。
+
+libmemcachedも含めてここにRPMが公開されてるのでそちらをつかってさくっと入れてしまうのが楽だとは思いますが、RPM作るのに手間取ったのでその手順を書くというのが本記事の主旨なのでとりあえずこのまま進めます。
+
+<pre class="code">
+# PHPはすでに入っていて、phpizeが使える前提で・・・
+$ wget http://rpms.famillecollet.com/SRPMS/php-pecl-memcached-1.0.2-1.remi.src.rpm
+$ rpm -i php-pecl-memcached-1.0.2-1.remi.src.rpm
+$ cd ~/rpmbuild/SPECS
+$ rpmbuild -ba php-pecl-memcached.spec
+$ cd ~/rpmbuild/RPMS/x86_64/
+$ rpm -ivh php-pecl-memcached-1.0.2-1.x86_64.rpm
+</pre>
+ちなみに何を手間取ったかというと、libmemcached-0.39で、pecl-memcached-1.0.1を動かそうとしていたからずーっと動かなかったりしていたのですが。
+<a href="http://pecl.php.net/package-changelog.php?package=memcached&release=1.0.2">Change Log</a>にしっかり書いてありました。
+それに気がついた時いろいろ雄たけびあげました。
+
+何はともあれ、これで安心してCasが使えます。動作としてはこんな感じのイメージです。
+<pre class="code">
+&lt;?php
+$memcached = new memcached();
+$memcached->addServer('localhost', 11211);
+
+$key = 'hoge';
+$value1 = 'fuga';
+$value2 = 'mote';
+
+$memcached->set($key, $value1);
+$cas = null;
+$resultValue = $memcached->get($key, null, $cas);
+assert($resultValue === $value1); //fugaが返される
+
+$success = $memcached->cas($cas, $key, $value2);
+$resultValue = $memcached->get($key, null, $cas);
+
+assert($success === true); //更新は成功
+assert($resultValue === $value2); //更新されmoteが返される
+
+
+$memcached->set($key, $value1);
+$resultValue = $memcached->get($key, null, $cas);
+
+$memcached->set($key, $value1); // 取得したあとに誰かがもう一度セットしたとする
+
+//更新しようとする
+$success = $memcached->cas($cas, $key, $value2);
+
+assert($success === false); //更新失敗
+assert($resultValue === $value1); //更新されずhogeが返される
+</pre>
+
+
+そんなわけで、どうでもいいですが、僕は、秋祭り、一緒に浴衣でいってくれる女子を募集中です。
+記事ともどもご参考になれば幸いです。
+{% endraw %}

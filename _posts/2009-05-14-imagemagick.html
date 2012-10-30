@@ -1,0 +1,78 @@
+---
+layout: post
+title: "ImageMagickのテキスト描画を画像にしてコストダウン"
+---
+{% raw %}
+<p>こんにちは。中村です。</p>
+<p>本日、<a href="http://mt9.jp/">まちつく！</a>が<a href="http://www.unoh.net/news/2009/05/post_83.html">正式リリース</a>になりました。よろしければ是非携帯でアクセスして遊んでみてください。以前公開しました<a href="http://labs.unoh.net/2008/08/phpgeomobilejp_converter.html">位置情報ライブラリ</a>も利用されています。</p>
+<p>さて、PHPでImageMagickを使って画像生成を行うときに、どうもテキストを描画すると無視できないコストがかかることに最近気が付きました。具体的には次のようにImagickDraw::drawImageメソッドによる描画コストです。</p>
+<pre class="code"><code>&lt;?php
+$draw = new ImagickDraw();
+$draw-&gt;setFontSize(20);
+$draw-&gt;setFillColor('#FFFFFF');
+$draw-&gt;annotation(20, 28, 'Hello World');
+
+for ($i = 0; $i &lt; 1000; $i++) {
+    $img = new Imagick();
+    $img-&gt;newImage(160, 40, new ImagickPixel('#550000'));
+    $img-&gt;drawImage($draw);
+    $img-&gt;setImageFormat('jpeg');
+    $img-&gt;writeImage('test.jpg');
+}</code></pre>
+<p>生成される画像は次のようになります。</p>
+<a href="http://photozou.jp/photo/show/784/21255361"><img src="http://art5.photozou.jp/pub/784/784/photo/21255361.jpg" alt="helloworld" width="160" height="40" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/21255361">helloworld</a> posted by <a href="http://photozou.jp/user/top/784">(C)フォト蔵</a>
+<p>これを実行すると手元の環境では次のようになりました。</p>
+<pre class="code"><code>% /usr/bin/time -p php test.php
+real 12.81
+user 12.07
+sys 0.71</code></pre>
+<p>フリーな文字列を生成する場合には使えないのですが、出現する文字やフォントサイズなどが限られている場合には、これを画像に置き換えることで大分と速度が上がります。次の例では「Hello」と「World」の2つの画像を描画しています。</p>
+<pre class="code"><code>&lt;?php
+$hello = new Imagick('hello.jpg');
+$world = new Imagick('world.jpg');
+for ($i = 0; $i &lt; 1000; $i++) {
+    $img = new Imagick();
+    $img-&gt;newImage(160, 40, new ImagickPixel('#550000'));
+    $img-&gt;compositeImage($hello, Imagick::COMPOSITE_OVER, 20, 15);
+    $img-&gt;compositeImage($world, Imagick::COMPOSITE_OVER, 65, 15);
+    $img-&gt;setImageFormat('jpeg');
+    $img-&gt;writeImage('test.jpg');
+}</code></pre>
+<pre class="code"><code>% /usr/bin/time -p php test.php
+real 2.08
+user 1.94
+sys 0.13</code></pre>
+<p>約13秒から約2秒にまでなりました。ただし、10文字の描画に2枚の画像では不公平な感じもしますので、それぞれ文字単位に画像にして描画してみました。</p>
+<pre class="code"><code>&lt;?php
+$h = new Imagick('h.jpg');
+$e = new Imagick('e.jpg');
+$l = new Imagick('l.jpg');
+$o = new Imagick('o.jpg');
+$w = new Imagick('w.jpg');
+$r = new Imagick('r.jpg');
+$d = new Imagick('d.jpg');
+
+for ($i = 0; $i &lt; 1000; $i++) {
+    $img = new Imagick();
+    $img-&gt;newImage(160, 40, new ImagickPixel('#550000'));
+    $img-&gt;compositeImage($h, Imagick::COMPOSITE_OVER, 20, 15);
+    $img-&gt;compositeImage($e, Imagick::COMPOSITE_OVER, 30, 15);
+    $img-&gt;compositeImage($l, Imagick::COMPOSITE_OVER, 40, 15);
+    $img-&gt;compositeImage($l, Imagick::COMPOSITE_OVER, 50, 15);
+    $img-&gt;compositeImage($o, Imagick::COMPOSITE_OVER, 60, 15);
+    $img-&gt;compositeImage($w, Imagick::COMPOSITE_OVER, 80, 15);
+    $img-&gt;compositeImage($o, Imagick::COMPOSITE_OVER, 90, 15);
+    $img-&gt;compositeImage($r, Imagick::COMPOSITE_OVER, 100, 15);
+    $img-&gt;compositeImage($l, Imagick::COMPOSITE_OVER, 110, 15);
+    $img-&gt;compositeImage($d, Imagick::COMPOSITE_OVER, 120, 15);
+    $img-&gt;setImageFormat('jpeg');
+    $img-&gt;writeImage('test.jpg');
+}</code></pre>
+<pre class="code"><code>/usr/bin/time -p php test.php
+real 2.31
+user 2.12
+sys 0.15</code></pre>
+<p>小さな画像が増えてもそれほどコストが上がることはないようです。</p>
+<p>大量に画像を生成するようなケースで、かつ文字のパターンが少ない場合に限られますが、速度が必要な場合にはテキスト描画を画像に置き換えた方が有利のようです。</p>
+<p>いずれにしても、自分の利用する環境でのベンチが大切だと思いますので、参考程度に見てもらえればと思います。</p>
+{% endraw %}

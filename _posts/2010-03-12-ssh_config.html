@@ -1,0 +1,104 @@
+---
+layout: post
+title: "快適なsshクライアント生活"
+---
+{% raw %}
+<p>2010/03/13 一部記事修正。</p>
+<p>はじめまして、<a href="http://hiroki.jp">HIROKI</a>です。</p>
+
+<p>大規模コンテンツの開発に携わっていると数多くのサーバにsshでログインすることになります。その手間を軽減するために $HOME/.ssh/config を設定してみます。</p>
+
+<h3>sshコマンドを簡略化</h3>
+例えば dev01.labs.unoh.netというサーバにsshでログインするのであれば、
+<pre class="code"> $ ssh -i ~/.ssh/id_rsa.unoh hiroki@dev01.labs.unoh.net</pre>
+<p>という感じのコマンドでログインしているかと思います。</p>
+<p>これを</p>
+<pre class="code">　$ ssh dev01</pre>
+でログインできるように設定してみましょう。
+<pre class="code"><code>Host dev01
+    User            hiroki
+    HostName        dev01.labs.unoh.net
+    IdentityFile    ~/.ssh/id_rsa.unoh</code></pre>
+<p>秘密鍵を複数使いわけている人はIdentityFileを指定すると便利です。</p>
+
+<h3>さらにホストを追加</h3>
+さらにホストを追加してみます。
+<pre class="code">Host dev01
+    User            hiroki
+    HostName        dev01.labs.unoh.net
+    IdentityFile    ~/.ssh/id_rsa.unoh
+
+Host home
+    User            hirocaster
+    HostName 	    home.hiroki.jp
+    IdentityFile    ~/.ssh/id_rsa.home</pre>
+いままで
+<pre class="code"> $ ssh -i ~/.ssh/id_rsa.home hirocaster@home.hiroki.jp</pre>
+でログインしていたのが
+<pre class="code"> $ ssh home</pre>
+でログインできるようになりました。
+
+<h3>各ホストの共通設定</h3>
+<p>すべてのホストの共通設定は以下のような感じ</p>
+
+<pre class="code">Host *
+     IdentityFile               ~/.ssh/id_rsa
+     ForwardAgent               yes
+     TCPKeepAlive               yes
+     ServerAliveInterval        15
+     ServerAliveCountMax        3</pre>
+
+<p>必ず設定ファイルの最後に追加するようにしてください。</p>
+
+<h3>踏み台を経由してログインする場合</h3>
+<p>応用編として、踏み台サーバ(op.labs.unoh.net)を経由して
+開発サーバ(dev01.labs.unoh.net)にログインする場合</p>
+
+<pre class="code">Host dev*
+    User            hiroki
+    IdentityFile    ~/.ssh/id_rsa.unoh
+    ProxyCommand    ssh op.labs.unoh.net nc -w 6000 %h %p</pre>
+
+<p>踏み台サーバ(op.labs.unoh.net)の/etc/hostsにdev01,dev02などを追加しておくことがポイントです。</p>
+<p>このようにしておけば、踏み台サーバを経由して開発サーバに入れます。</p>
+
+<pre class="code"> $ ssh dev01</pre>
+にもログインできますが、
+<pre class="code"> $ ssh dev02</pre>
+にもログインできるようになります。
+
+<p>このようにワイルドカードを利用した設定もできます。</p>
+
+<h3>最終的な$HOME/.ssh/config</h3>
+<pre class="code">Host dev*
+    User                        hiroki
+    HostName                    dev.01.labs.unoh.net
+    IdentityFile                ~/.ssh/id_rsa.unoh
+    ProxyCommand                ssh op.labs.unoh.net nc -w 6000 %h %p
+
+Host home
+    User                        hirocaster
+    HostName                    home.hiroki.jp
+    IdentityFile                ~/.ssh/id_rsa.home
+
+Host *
+     IdentityFile               ~/.ssh/id_rsa
+     ForwardAgent               yes
+     TCPKeepAlive               yes
+     ServerAliveInterval        15
+     ServerAliveCountMax        3</pre>
+
+<p>以上でsshコマンドを利用してのログインが簡略化されました。</p>
+
+<h3>最後に</h3>
+<p>簡単にログインできるようになったからこそ、本番サーバとテストサーバを間違ってオペレーションしないようにログインした際にはサーバを確認する癖をつけてください。</p>
+<p>$HOME/.ssh/configに関するその他の設定は</p>
+<pre class="code"> $ man ssh_config</pre>
+<p>を参照ください。</p>
+
+
+<div style="margin:0;padding:.5em;border:2px solid 
+#ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br /><a
+href="http://www.unoh.net/recruit.html"> 採用ページ</a>をご覧になり興味のある方、ぜひご応募ください。<br/><a
+href="http://www.find-job.net/fj/showjob.cgi?id=50212">Find Job!</a>でも募集してます！</div>
+{% endraw %}

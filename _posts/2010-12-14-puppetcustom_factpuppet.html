@@ -1,0 +1,260 @@
+---
+layout: post
+title: "puppetのCustom factを使って、puppetをもっと柔軟に使う"
+---
+{% raw %}
+<p>こんにちは、satoshiです。</p>
+<p>Puppetという、システム管理を自動で行うためのツールがあるのですが、
+今回は、これを使ってEC2インスタンスにEBSボリュームをAttachするスクリプトを作成してみました。</p>
+<div class="section" id="id1">
+<h2>前提環境</h2>
+<p>CentOS5.4</p>
+<p>Puppet-0.25.4-1</p>
+<p>Facter-1.5.7-1</p>
+</div>
+
+<div class="section" id="puppet-facter">
+<h2>Puppet, Facter?</h2>
+<p>Puppetとは、システム管理を自動で行うためのツールです。
+Facterは、システム情報(OS, FQDN, IPアドレス)などを収集するRubyライブラリです。
+Facterによって取得できる項目のことを <strong>fact</strong> と呼びます。</p>
+<p>下記が詳しいです。<br/>
+<a class="reference external" href="http://gihyo.jp/admin/serial/01/puppet">オープンソースなシステム自動管理ツール Puppet</a></p>
+</div>
+<div class="section" id="id2">
+<h2>Custom factを使用するための事前準備</h2>
+<p>下記のサイトを参考に事前設定します。<br/>
+<a class="reference external" href="http://docs.puppetlabs.com/guides/plugins_in_modules.html">Docs: Plugins in Modules</a></p>
+<p>puppet master、client両方で下記の設定ファイルに、pluginsync = trueを追加します</p>
+<p><em>puppet.conf</em>:</p>
+<pre class="code">
+[main]
+pluginsync = true
+</pre>
+<p>puppet master上でのcustom factの配置パスは下記の通りです。</p>
+<p><em>fact path</em>:</p>
+<pre class="code">
+&lt;MODULEPATH&gt;/&lt;module&gt;/lib/facter
+</pre>
+<p>例えば、&lt;MODULEPATH&gt;=/etc/puppet/modulesで&lt;module&gt;=customならcustom factを配置するディレクトリは下記のようになります。</p>
+<p><em>example</em>:</p>
+<pre class="code">
+/etc/puppet/modules/custom/lib/facter
+</pre>
+</div>
+
+<div class="section" id="amazonec2ebs-volumeattach">
+<h2>AmazonEC2インスタンスにEBS VolumeをAttachする</h2>
+<p>AmazonEC2インスタンスでEBSVolumeをAttachする場合、Instance-id, available-zoneが必要ですが、そのInstance-id等をFacterで取得するCustom factを利用した
+manifestを作成してみます。</p>
+<div class="section" id="ec2-facter-recipe">
+<h3>Ec2 Facter Recipeの配置</h3>
+<p>AmazonEc2のFacterレシピが下記のリンクにあるので、それをpuppet master上のcustom factの配置パスに作成します。
+<a class="reference external" href="http://projects.puppetlabs.com/projects/1/wiki/Amazon_Ec2_Patterns">Amazon EC2 Facter Recipe</a></p>
+<p><em>path</em>:</p>
+<pre class="code">
+/etc/puppet/modules/ec2utils/lib/facter/ec2.rb
+</pre>
+<p><em>ec2.rb</em>:</p>
+<pre class="code">
+# Copyright 2008 Tim Dysinger
+# Distributed under the same license as Facter
+# 27.02.09 KurtBe
+# Added a can_connect? function so that this fact can safely be distributed to non-ec2 instances
+# otherwise the script hangs if the amazon-ip is not reachable
+# 13.03.09 Francois Deppierraz
+# Fixed the timeout handling code because which was not actually working. A
+# file named &quot;169.254.169.254&quot; was created instead.
+
+require 'open-uri'
+require 'timeout'
+
+def metadata(id = &quot;&quot;)
+  open(&quot;http://169.254.169.254/2008-02-01/meta-data/#{id||=''}&quot;).read.
+    split(&quot;\n&quot;).each do |o|
+    key = &quot;#{id}#{o.gsub(/\=.*$/, '/')}&quot;
+    if key[-1..-1] != '/'
+      value = open(&quot;http://169.254.169.254/2008-02-01/meta-data/#{key}&quot;).read.
+        split(&quot;\n&quot;)
+      value = value.size&gt;1 ? value : value.first
+      symbol = &quot;ec2_#{key.gsub(/\-|\//, '_')}&quot;.to_sym
+      Facter.add(symbol) { setcode { value } }
+    else
+      metadata(key)
+    end
+  end
+end
+
+begin
+  Timeout::timeout(1) { metadata }
+rescue Timeout::Error
+  puts &quot;ec2-metadata not loaded&quot;
+end
+</pre>
+<p>上記のFacter Recipeから下記のcustom factが取得できます。</p>
+<p><em>facts</em>:</p>
+<pre class="code">
+ec2_ami_id
+ec2_ami_launch_index
+ec2_ami_manifest_path
+ec2_block_device_mapping_ami
+ec2_block_device_mapping_ephemeral0
+ec2_block_device_mapping_root
+ec2_block_device_mapping_swap
+ec2_hostname
+ec2_instance_id
+ec2_instance_type
+ec2_kernel_id
+ec2_local_hostname
+ec2_local_ipv4
+ec2_placement_availability_zone
+ec2_public_hostname
+ec2_public_ipv4
+ec2_public_keys_0_openssh_key
+ec2_reservation_id
+ec2_security_groups
+</pre>
+</div>
+
+<div class="section" id="ebs-volume">
+<h3>EBS Volume作成用ファイル</h3>
+<p>EBS Volumeを作成/Ec2インスタンスにAttachするためのmanifestファイルとEBSVolumeを作成するScriptのテンプレートファイルを用意します。</p>
+<dl class="docutils">
+<dt><em>path</em>::</dt>
+<pre class="code">
+/etc/puppet/modules/ebsraid/manifests/init.pp
+/etc/puppet/modules/ebsraid/templates/ebs_create_with_attach.rb.erb
+</pre>
+<p>EBS Volumeを作成/Ec2インスタンスにAttachするScriptファイルをpuppetのテンプレートファイルで用意します。<br/>
+テンプレートファイル内に、 <em>&lt;%= custom fact名 %&gt;</em>  と記述すればfactの値が設定されます。</p>
+<p><em><span class="mt-enclosure mt-enclosure-file" style="display: inline;"><a href="http://labs.unoh.net/ebs_create_with_attach.rb.erb">ebs_create_with_attach.rb.erb</a></span></em>:</p>
+<pre class="code">
+#!/usr/bin/env ruby
+
+require 'yaml'
+require 'pp'
+require 'optparse'
+require 'rubygems'
+require 'right_aws'
+[...]
+# Load AWS KEYS
+begin
+  auth = open(S3CONF_FILE) {|f| YAML.load(f)}
+rescue =&gt; e
+  warn e.pretty_inspect
+  warn e.backtrace
+  exit 0
+else
+  ENV['AWS_ACCESS_KEY_ID'] = auth[&quot;aws_access_key_id&quot;]
+  ENV['AWS_SECRET_ACCESS_KEY'] = auth[&quot;aws_secret_access_key&quot;]
+  &#64;instance_id = &lt;%= ec2_instance_id %&gt;           # fact: ec2_instance_idを取得
+  &#64;az = &lt;%= ec2_placement_availability_zone %&gt;    # fact: ec2_placement_availability_zoneを取得
+  ENV['EC2_URL'] = &quot;https://ec2.#{&#64;az.chop}.amazonaws.com&quot;
+
+  &#64;ec2 = RightAws::Ec2.new
+end
+[...]
+</pre>
+<p>例えば、Ec2インスタンスの/dev/sdj, /dev/sdkにEBS Volumeをマウントし、Raid0デバイスを構築する場合の
+puppetのmanifest例は、下記のようになります。</p>
+<p><em>init.pp</em>:</p>
+<pre class="code">
+class ebsraid {
+  package { &quot;right_aws&quot;:
+    ensure =&gt; installed,
+    provider =&gt; &quot;gem&quot;;
+  }
+
+  # EBS Raid
+  file { &quot;/mnt/ebsraid&quot;:
+    ensure =&gt; directory,
+    owner  =&gt; &quot;root&quot;,
+    group  =&gt; &quot;root&quot;,
+    mode   =&gt; &quot;755&quot;,
+    require =&gt; Package['right_aws'],
+  }
+
+  file { &quot;/usr/local/bin/ebs_create_with_attach.rb&quot;:
+    content =&gt; template(&quot;ebsraid/ebs_create_with_attach.rb.erb&quot;),
+    mode =&gt; 755,
+  }
+
+  exec {
+    'create_ebs_raid':
+      command =&gt; &quot;ruby /usr/local/bin/ebs_create_with_attach.rb -s 200 -D /dev/md1 -L 0 /dev/sdj /dev/sdk&quot;,
+      require =&gt; File[&quot;/usr/local/bin/ebs_create_with_attach.rb&quot;],
+      subscribe =&gt; File['/mnt/ebsraid'],
+      refreshonly =&gt; true,
+  }
+
+  exec {
+    'create_mdconf':
+      command     =&gt; 'echo &quot;DEVICE /dev/sd[bcdejklm]&quot; &gt; /etc/mdadm.conf &amp;&amp; /sbin/mdadm --detail --scan &gt;&gt; /etc/mdadm.conf',
+      require     =&gt; Exec['create_ebs_raid'],
+      subscribe   =&gt; Exec['create_ebs_raid'],
+      refreshonly =&gt; true,
+  }
+
+  exec {
+    'mkfs.ext3':
+      command     =&gt; 'mkfs.ext3 -F /dev/md1',
+      require     =&gt; Exec['create_ebs_raid'],
+      subscribe   =&gt; Exec['create_ebs_raid'],
+      refreshonly =&gt; true,
+  }
+
+  mount { &quot;/mnt/ebsraid&quot;:
+    atboot  =&gt; true,
+    ensure  =&gt; mounted,
+    device  =&gt; &quot;/dev/md1&quot;,
+    fstype  =&gt; &quot;ext3&quot;,
+    options =&gt; &quot;defaults&quot;,
+    dump    =&gt; 0,
+    pass    =&gt; 0,
+    require =&gt; [ File['/mnt/ebsraid'], Exec['create_ebs_raid'], Exec['mkfs.ext3'] ]
+  }
+  # END OF EBS RAID
+}
+</pre>
+<p>上記manifestを適用するには、適用するnodeでincludeします。</p>
+<p><em>sample</em>:</p>
+<pre class="code">
+node /db\d+/ { include ebsraid }
+</pre>
+<p>そして、対象のクライアントにてpuppetdを実行すると適用されます。</p>
+<p><em>example</em>:</p>
+<pre class="code">
+$ sudo /usr/sbin/puppetd --verbose --no-daemonize --server puppet --onetime
+</pre>
+</div>
+</div>
+
+<div class="section" id="custom-fact">
+<h2>Custom factを自分で作ってみる</h2>
+<p>Capistranoというデプロイツールがありますが、拡張コードを配置するために必要なLibraryパスを取得するCustom factを作成してみます。</p>
+<p>環境が下記の場合、factの値は、 <strong>/usr/lib64/ruby/gems/1.8/gems/capistrano-2.5.19/lib</strong> が取得できます</p>
+OS: CentOS5.4 x86_64<br/>
+Gem: version 1.8<br/>
+Capistrano: version 2.5.19<br/>
+<p><em>capistrano_libpath.rb</em>:</p>
+<pre class="code">
+require 'rubygems'
+
+# fact: capistrano_libpathを設定(capistranoのlibraryの最新バージョンのディレクトリを取得)
+Facter.add(:capistrano_libpath) do
+  begin
+    value = File.dirname(Gem::find_files(&quot;capistrano.rb&quot;).sort.last)
+  rescue =&gt; e
+    value = nil
+  end
+
+  setcode do
+    value
+  end
+end
+</pre>
+<p>custom factを作ることにより柔軟にpuppetを使うことができます。
+puppetのmanifestを書くのは面倒ですが、一度記述しておけば設定漏れとかがなくなります。</p>
+</div>
+
+{% endraw %}

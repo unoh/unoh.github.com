@@ -1,0 +1,53 @@
+---
+layout: post
+title: "Google App Engine Java 触ってみたメモ"
+---
+{% raw %}
+<p>yukiです。<br />
+最近社内のコードレビューにて「Javaとっかかり」というものがあり、とても興味があったので参加させて頂いたのですが(開いてもらったとも言う)、「なんとなくActionScriptに似てるなぁ」という印象を持ちました。Javaの人もActionScriptの人も「全然違う」と思うかもしれませんが。<br />
+そんな感じで日曜スクリプト書いてみたり色々勉強中のJavaですが、先日<a href="http://code.google.com/intl/ja/appengine/">Google App Engine</a>でもJavaが対応した(今は英語版のみ)ということなので、ちょっとイジってみました。<a href="http://labs.unoh.net/2009/03/pythonweb.html">PythonでWebアプリ</a>のエントリでも書いていますが、何かを作ると言うよりはイジってみたかったので。<br />
+まだ何かをアップロードしたわけではありませんが、流れをざっとご紹介しようと思います。
+</p>
+<p>まずHelp→SoftwareUpdateからロケーションを追加し、Google Plugin for Eclipseを導入しました。詳細は2009/04/15現在以下のようになっています。</p>
+<ul>
+<li>Google App Engine Java SDK 1.2.0</li>
+<li>Google Plugin for Eclipse 3.4</li>
+<li>Google Web Toolkit SDK 1.6.4</li>
+</ul>
+<p>次に新プロジェクトを作成します。先ほどのプラグインを追加すると新たに項目が増え「Web Application Project」というのが選択できるようになっています。<br />
+<a href="http://photozou.jp/photo/show/784/20106250"><img src="http://art8.photozou.jp/pub/784/784/photo/20106250.jpg" alt="icon" width="240" height="133" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/20106250">icon</a> posted by <a href="http://photozou.jp/user/top/784">(C)フォト蔵</a><br />
+<a href="http://photozou.jp/photo/show/784/20106247"><img src="http://art3.photozou.jp/pub/784/784/photo/20106247.jpg" alt="newproject" width="240" height="150" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/20106247">newproject</a> posted by <a href="http://photozou.jp/user/top/784">(C)フォト蔵</a></p>
+<p>作成されたファイルは以下のような構造になっています。<br />
+<a href="http://photozou.jp/photo/show/784/20106251"><img src="http://art2.photozou.jp/pub/784/784/photo/20106251.jpg" alt="directories" width="232" height="240" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/20106251">directories</a> posted by <a href="http://photozou.jp/user/top/784">(C)フォト蔵</a><br />
+ここからServletやJSPを利用するコードを開発していきます。<br />
+deployもEclipseから出来るようになっており、非常に簡単です。ただこのままですと以下のようなエラーが発生してdeployできません。
+<pre class="code"><code>Creating staging directory
+Scanning for jsp files.
+Scanning files on local disk.
+Initiating update.
+Unable to upload:
+java.io.IOException: Error posting to URL: http://appengine.google.com/api/appversion/create?app_id=XXXXXXXXXX&version=XXXXXXXX&
+400 Bad Request
+Invalid runtime specified.
+
+	at com.google.appengine.tools.admin.ServerConnection.send(ServerConnection.java:114)
+	at com.google.appengine.tools.admin.ServerConnection.post(ServerConnection.java:66)
+	at com.google.appengine.tools.admin.AppVersionUpload.send(AppVersionUpload.java:345)
+	at com.google.appengine.tools.admin.AppVersionUpload.beginTransaction(AppVersionUpload.java:159)
+	at com.google.appengine.tools.admin.AppVersionUpload.doUpload(AppVersionUpload.java:68)
+	at com.google.appengine.tools.admin.AppAdminImpl.update(AppAdminImpl.java:41)
+	at com.google.appengine.eclipse.core.proxy.AppEngineBridgeImpl.deploy(AppEngineBridgeImpl.java:203)
+	at com.google.appengine.eclipse.core.deploy.DeployProjectJob.runInWorkspace(DeployProjectJob.java:97)
+	at org.eclipse.core.internal.resources.InternalWorkspaceJob.run(InternalWorkspaceJob.java:38)
+	at org.eclipse.core.internal.jobs.Worker.run(Worker.java:55)
+java.io.IOException: Error posting to URL: http://appengine.google.com/api/appversion/create?app_id=XXXXXXXXXX&version=XXXXXXXX&
+400 Bad Request
+Invalid runtime specified.</code></pre>
+これは事前に認証が必要すればdeployできるようになるので、こちらから認証して下さい。しばらくすると(半日～1日程度)認可のメールが送られてきますので、そこからは問題なくdeployすることができます。<br/>
+<a href="http://photozou.jp/photo/show/784/20106254"><img src="http://art4.photozou.jp/pub/784/784/photo/20106254.jpg" alt="deploy" width="240" height="78" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/20106254">deploy</a> posted by <a href="http://photozou.jp/user/top/784">(C)フォト蔵</a><br />
+<a href="http://photozou.jp/photo/show/784/20106256"><img src="http://art8.photozou.jp/pub/784/784/photo/20106256.jpg" alt="app_id" width="240" height="209" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/20106256">app_id</a> posted by <a href="http://photozou.jp/user/top/784">(C)フォト蔵</a><br />
+余談ですが、公式ページでは
+<blockquote>April 2009: During this "early look" of Google App Engine for Java, the ability to upload Java applications to App Engine is reserved for a limited number of developer accounts. All users will be able to upload Java apps when we do a full release of Google App Engine for Java in the near future.</blockquote>
+とあるので、しばらく待てば認証もなくなるのではないかと思います。</p>
+<p>色々試行錯誤しながらやった結果、なかなか日本語での情報が少ないので大変ですが、おもしろそうなので何か作ってみるかもしれません。それではまた。</p>
+{% endraw %}

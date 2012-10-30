@@ -1,0 +1,62 @@
+---
+layout: post
+title: "Flash Lite初学者の為のまとめ"
+---
+{% raw %}
+おはようございます。内田です。
+最近はmixiアプリモバイルやモバゲー上のゲームのようなソーシャルゲームが流行ってるようですね。
+私もソーシャルゲーム＆Flash Lite案件を手がけることになったので、その時に参考にしたサイトを紹介します。
+
+
+h2. 開発の前に覚えること
+
+最初にFlash Liteの仕様とケータイ開発の障壁ともいえるキャリア間の差異を知る必要があります。
+
+* "Flash Lite ことはじめ。 ":http://labs.unoh.net/2009/10/flash_lite.html
+** 我らがryosuke氏のエントリー
+** 仕様とキャリア毎の情報が分かりやすくまとまってます。
+
+* "[Flash Lite 1.1]制作前に知っておきたいことをQ＆A形式でまとめてみた":http://kanariia.com/blog/archives/650
+** 上記エントリーと重複する部分も多いですが、Q＆Aの形で調べやすい。
+** 「一般的なガイドラインが知りたい！」を厳守すれば3キャリアで動作するswfがつくれそうです。
+
+h2. コンテンツの作成
+
+Flash Liteコンテンツのつくりかたです。
+
+* "Flash Liteドキュメンテーション":http://www.adobe.com/support/documentation/jp/flashlite/
+** 公式に勝るドキュメントはありませんね。
+** 必読
+
+* "携帯フラッシュ作成講座":http://www.next-system.com/mobileflash_index.html
+** 書籍のような感じで非常に分かりやすいです。
+** サンプルとリファレンスも嬉しい
+
+h2. 動的生成
+
+ゲームコンテンツの場合、動的にswfを合成することが多くあると思いますが、非常に悩ましい部分です。皆様がどのような方法で開発をおこなっているのか是非教えてください！
+
+* "Ming":http://sourceforge.net/projects/ming/
+** swftophpコマンドによりswfをPHPに変換できる（perl,pythonもある）
+** 試してみたがまともに動かない
+** 有識者様の意見を是非!
+
+* "swfmill":http://swfmill.org/
+** swf⇔xmlの相互変換ツール
+** 使ってみた感じでは非常に安定しています
+** しかし外部コマンドを叩いて生成するため、mingと比べると遅いかもしれない
+
+
+h2. Tips
+
+Flash Lite1.1の鬼門ともいえる100K制限をなんとかするためのTips達です。非常に参考になります。
+しかし100Kに収まったとしても、重くてまともに動作しない端末もあるので油断できませんね。
+
+* "携帯Flash　さらなる軽量化":http://level0.kayac.com/2009/02/flashlite_light.php
+
+* "Flash Lite ファイル容量切り詰めTips":http://code.nanigac.com/source/view/436
+
+
+おわり
+
+{% endraw %}

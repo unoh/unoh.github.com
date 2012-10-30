@@ -1,0 +1,65 @@
+---
+layout: post
+title: "脆弱性検知ツールratproxyをCygwin上で動かしてみました"
+---
+{% raw %}
+こんにちは！やまもと＠テスト番長です。<br />
+<br />
+先日Googleからプロキシ型の脆弱性発見ツール「ratproxy」が公開されました。<br />
+これは触らないと！ということでCygwin上で動かしてみました。<br />
+<br />
+<a href="http://code.google.com/p/ratproxy/">ratproxy<br />
+http://code.google.com/p/ratproxy/</a><br /><br />
+
+
+早速解凍してCygwin（1.5.25-14）上でmakeすると、以下のエラーが出て出鼻を挫かれます。
+<pre class="code"><code>
+cc1:error: unrecognized command line option "-Wno-pointer-sign"
+</code></pre>
+ので、
+Makefileの23行目<pre class="code"><code>
+CFLAGS  = -Wall -O3 -Wno-pointer-sign -D_GNU_SOURCE
+</code></pre>
+のところから-Wno-pointer-sign を消して再チャレンジします。<br />
+すると今度はこの警告が出ます。
+<pre class="code"><code>
+*** WARNING: flare-dist/flare binary is not operational.
+*** Please see flare-dist/README and update it for your OS.
+</code></pre>
+flareとは、SWF解析用のコンポーネントのようです。<br />
+デフォルトで入っているのがlinux用バイナリなので、
+以下からwindows用バイナリを入手して入れ替えます。<br />
+<a href="http://www.nowrap.de/download/flare06doswin.zip">http://www.nowrap.de/download/flare06doswin.zip</a>
+<br />
+<br />
+3度目の正直で、コンパイル成功しました！<br />
+早速使ってみます。<br />
+<br />
+ブラウザのproxy 設定を　localhost:8080にセット。<br />
+
+ログファイルを指定してratproxyを実行します。<pre class="code"><code>
+ratproxy -w rat.log
+</code></pre>
+テスト対象のページを開いて周ります。
+終わったらCygwinに戻ってCtrl+cでratproxyを停止。
+<br />
+ログファイルをレポートにします。<pre class="code"><code>
+ratproxy-report.sh rat.log > report.html
+</code></pre>
+<br />
+生成されたファイルをブラウザで開くと、レポートがたくさん表示されます。<br />
+<a href="http://photozou.jp/photo/show/784/10677712"><img src="http://art9.photozou.jp/pub/784/784/photo/10677712.gif" alt="ratproxy" width="450" height="429" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/10677712">ratproxy</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br />
+<br />
+個人的にいつも戯れている脆弱性検知ツールはParosです。<br />
+あちらはスパイダーがついていて、どかっとページをかきあつめて
+どかっとチェックできるのですが、ratproxyはプロキシですから基本手動になります。<br />
+とはいえ、Seleniumなどの自動実行ツールの裏に入れて一緒に使えますので、
+自動テスト用シナリオを準備されている方は組み合わせてすぐ使えます。<br />
+<br />
+それでは既存の脆弱性発見ツールと比べて性能はどうなのか比較してみましょう。<br />
+･･･と思いましたが適切なスケープゴートが無いので、皆さんそれぞれでやってみてください。<br />
+まだ詳しく調べていませんが好感触です。<br />
+<br />
+ところで、どなたかメッセージを日本語化して下さる方はいませんかー？？<br />
+<br />
+{% endraw %}

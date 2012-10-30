@@ -1,0 +1,481 @@
+---
+layout: post
+title: "やってみようBDD on Sinatra"
+---
+{% raw %}
+おはようございます。
+うちだです。
+
+みなさんテストコード書いてますか？
+私はテストと言われると、どうもやる気がおこりません。
+そこでBDD！
+今回はBDD初心者の私が、やってみた過程を綴ります。ツッコミ大歓迎
+
+h1. BDDとは？
+
+* Behavior Driven Development
+* 振舞駆動開発
+* テスト駆動開発ではテストのためにコードを書く
+* 振舞駆動開発では振舞（仕様）のためにコードを書く
+* 結果的にやる事はほぼ一緒
+* 言い方でモチベーションがかなり変わる
+* スペック！スペック！
+
+h1. 各言語のBDDフレームワーク
+
+* Ruby
+** "RSpec":http://rspec.info/
+* .NET
+** "NSpec":http://nspec.tigris.org/
+* Java
+** "JBehave":http://jbehave.org/
+* PHP
+** "PHPSpec":http://www.phpspec.org/
+
+h1. 10ステップでやってみるBDD(RSpec編)
+
+1. インストール
+
+<pre class="code">
+ $ sudo gem install rspec
+</pre>
+
+2. スペックを書く
+
+<pre class="code">
+ # spec/hello_spec.rb
+ require 'hello'
+ 
+ describe Hello do
+   before do
+     @hello = Hello.new
+   end
+ 
+   it "should equal 'Hello, RSpec'" do
+     @hello.say('RSpec').should == 'Hello, RSpec'
+   end
+ end
+</pre>
+
+3. Helloクラスを書く
+
+<pre class="code">
+ # hello.rb
+ class Hello
+   def say(name)
+     "Hello #{name}"
+   end
+ end
+</pre>
+
+4. 動かす
+
+<pre class="code">
+ $ spec -fs -c spec/hello_spec.rb
+ 
+ Hello
+ - should equal 'Hello, RSpec' (FAILED - 1)
+ 
+ 1)
+ 'Hello should equal 'Hello, RSpec'' FAILED
+ expected: "Hello, RSpec",
+      got: "Hello RSpec" (using ==)
+ ./spec/hello_spec.rb:9:
+ 
+ Finished in 0.002776 seconds
+ 
+ 1 example, 1 failure
+</pre>
+
+5. 失敗した！
+expectedが仕様でgotが結果です。
+「,」が無いので修正します
+
+<pre class="code">
+ class Hello
+   def say(name)
+     "Hello, #{name}"
+   end
+ end
+</pre>
+
+6. 動かす
+
+<pre class="code">
+ $ spec -fs -c spec/hello_spec.rb
+ 
+ Hello
+ - should equal 'Hello, RSpec'
+ 
+ Finished in 0.002051 seconds
+ 
+ 1 example, 0 failures
+</pre>
+
+成功！
+
+7. スペックを追加
+日本語にしたり、ネストしたりすると見やすくなりますね
+引数が空文字だったら例外にしよう
+
+<pre class="code">
+ require 'hello'
+ 
+ describe Hello do
+   describe '#say' do
+     before :all do
+       @hello = Hello.new
+     end
+ 
+     it "戻り値は'Hello, RSpec'であるべき" do
+       @hello.say('RSpec').should == 'Hello, RSpec'
+     end
+ 
+     it "引数が空だと例外が発生するべき" do
+       lambda { @hello.say('') }.should raise_error
+     end
+   end
+ end
+</pre>
+
+8. 動かす
+
+<pre class="code">
+ $ spec -fs -c spec/hello_spec.rb
+ 
+ Hello#say
+ - 戻り値は'Hello, RSpec'であるべき
+ - 引数が空だと例外が発生するべき (FAILED - 1)
+ 
+ 1)
+ 'Hello#say 引数が空だと例外が発生するべき' FAILED
+ expected Exception but nothing was raised
+ ./spec/hello_spec.rb:14:
+ 
+ Finished in 0.003019 seconds
+ 
+ 2 examples, 1 failure
+</pre>
+
+9. もちろん失敗。Helloクラスを修正
+
+<pre class="code">
+ class Hello
+   def say(name)
+     raise StandardError, 'name is empty' if name.empty?
+     "Hello, #{name}"
+   end
+ end
+</pre>
+ 
+10. 動かす
+
+<pre class="code">
+ $ spec -fs -c spec/hello_spec.rb
+  
+ Hello#say
+ - 戻り値は'Hello, RSpec'であるべき
+ - 引数が空だと例外が発生するべき
+ 
+ Finished in 0.002542 seconds
+ 
+ 2 examples, 0 failures
+</pre>
+
+完成!!
+
+h1. BDD on Sinatra
+
+1. 必要な物
+
+<pre class="code">
+ sudo gem install sinatra
+ sudo gem install rspec
+ sudo gem install rack-test
+</pre>
+
+2. helperを用意
+rack-testに合わせてhelperを用意します
+
+<pre class="code">
+ # spec/spec_helper.rb
+ require 'rack/test'
+ 
+ module MyTestMethods
+   def app
+     Sinatra::Application
+   end
+ end
+ 
+ Spec::Runner.configure do |config|
+   config.include Rack::Test::Methods
+   config.include MyTestMethods
+ end
+</pre>
+
+3. さっそくスペックを書いてみる
+レスポンスをチェックしてみましょう
+Rack::Test::Methods#(get|last_response)が使えます
+
+<pre class="code">
+ # spec/app_spec.rb
+ require 'app'
+ require 'spec/spec_helper'
+ 
+ describe 'GET /' do
+   before :all do
+     get '/'
+   end
+ 
+   it "statusコードは200であるべき" do
+     last_response.ok?.should be_true
+   end
+ 
+   it "responseは'Hello, World\\n'であるべき" do
+     last_response.body.should == "Hello, World\n"
+   end
+ end
+</pre>
+
+4. アプリケーションの実装
+
+<pre class="code">
+ # app.rb
+ require 'rubygems'
+ require 'sinatra'
+ 
+ get '/' do
+   "Hello, World\n"
+ end
+</pre>
+
+5. 動かす。そしてOK
+
+<pre class="code">
+ $ spec -fs -c spec/app_spec.rb
+ 
+ GET /
+ - statusコードは200であるべき
+ - responseは'Hello, World\n'であるべき
+ 
+ Finished in 0.021507 seconds
+ 
+ 2 examples, 0 failures
+</pre>
+
+6. 実行が面倒なのでRakefileを書く
+
+<pre class="code">
+ # Rakefile
+ require 'rubygems'
+ require 'spec/rake/spectask'
+ 
+ task :default => :spec
+ 
+ desc "Run all specs in spec directory"
+ Spec::Rake::SpecTask.new(:spec) do |t|
+   t.spec_opts = ['--format specdoc', '--color']
+   t.spec_files = FileList['spec/**/*_spec.rb']
+ end
+</pre>
+
+<pre class="code">
+ $ rake
+</pre>
+
+7. コントローラのスペック
+コントローラの役割は
+* 適切なレスポンスを返す
+* ビューで使うオブジェクトをロードする
+* 適切なビューを選択する
+です。
+
+参考
+"Rubyist Magazine - スはスペックのス 【第 2 回】 RSpec on Rails (コントローラとビュー編)":http://jp.rubyist.net/magazine/?0023-Rspec#l38
+
+しかし、このままではRSpec on Railsのようにコントローラの状態を知ることができないので、少々Sinatraのコードを変更します。
+何か良い手段はないものか。。
+
+<pre class="code">
+ # spec/spec_helper.rb
+ require 'singleton'
+ class SinatraSpecHelper
+   include Singleton
+   attr_accessor :last_app
+ end
+ 
+ module Sinatra
+   class Base
+     def call(env)
+       _dup = dup
+       SinatraSpecHelper.instance.last_app = _dup
+       _dup.call!(env)
+     end
+ 
+     def assigns(sym)
+       instance_variables.include?("@#{sym}")
+     end
+   end
+ end
+ 
+ module MyTestMethods
+   def app
+     Sinatra::Application
+   end
+ 
+   def last_app
+     SinatraSpecHelper.instance.last_app
+   end
+ end
+ ...
+ </pre>
+
+これで#last_appで実行されたインンスタンスを取得できます、また、#assignsでインスタンス変数のチェックができます
+
+<pre class="code">
+ # spec/app_spec.rb
+ it "@msgをもつべき" do
+   last_app.assigns(:msg).should be_true
+ end
+ 
+ it "viewはindex.erbをつかうこと" do
+   last_response.body.should == last_app.erb(:index)
+ end
+</pre>
+
+8. rake。失敗。実装。
+
+<pre class="code">
+ # app.rb
+ require 'rubygems'
+ require 'sinatra'
+ 
+ get '/' do
+   @msg = "Hello, World"
+   erb :index
+ end
+</pre>
+
+<pre class="code">
+ # views/index.erb
+ <%= @msg %>
+</pre>
+ 
+9. rake。成功！
+
+<pre class="code">
+ GET /
+ - statusコードは200であるべき
+ - responseは'Hello, World\n'であるべき
+ - @msgをもつべき
+ - viewはindex.erbをつかうこと
+ 
+ Finished in 0.015934 seconds
+ 
+ 4 examples, 0 failures
+</pre>
+
+10. viewのスペック
+
+RSpec on Railsでは#have_tagのような仕組みが提供されています。
+これをそのまま使えないだろうか。
+調査中
+
+11. Extensions(拡張)のスペック
+
+まずは拡張をロードするアプリケーションを用意します。
+これは通常のSinatraアプリのようにTOPレベルに書いても良いのですが、ここではmockを作り、そこでロードしましょう
+全コードを載せます
+
+<pre class="code">
+# lib/hello.rb
+module Sinatra
+  module Hello
+    module Helpers
+      def hello(name)
+        "#{options.prefix}#{name}"
+      end
+    end
+    def self.registered(app)
+      app.helpers Hello::Helpers
+      app.set :prefix, "Hello, "
+    end
+  end
+  register Hello
+end
+</pre>
+
+<pre class="code">
+# spec/hello_spec
+require 'rubygems'
+require 'sinatra'
+require 'lib/hello'
+require 'rack/test'
+
+module MyTestMethods
+  def app
+    @app
+  end
+  def mock_app(base=Sinatra::Base, &block)
+    @app = Sinatra.new(base, &block)
+  end
+end
+
+Spec::Runner.configure do |config|
+  config.include Rack::Test::Methods
+  config.include MyTestMethods
+end
+
+describe Sinatra::Hello do
+  it '「Hello, Unoh」であるべき' do
+    mock_app {
+      register Sinatra::Hello
+      get('/') { hello('Unoh') }
+    }
+    get '/'
+    last_response.body.should == 'Hello, Unoh'
+  end
+
+  it '「Good morning, Unoh」であるべき' do
+    mock_app {
+      register Sinatra::Hello
+      get('/') { hello('Unoh') }
+      configure { set :prefix, "Good morning, " }
+    }
+    get '/'
+    last_response.body.should == 'Good morning, Unoh'
+  end
+end
+</pre>
+
+<pre class="code">
+$ spec -fs -c spec/hello_spec.rb
+
+Sinatra::Hello
+- 「Hello, Unoh」であるべき
+- 「Good morning, Unoh」であるべき
+
+Finished in 0.046408 seconds
+
+2 examples, 0 failures
+</pre>
+
+h1. 課題
+
+* viewのスペック
+* ストーリーテスト
+
+h1. 参考
+
+* RSpec on Railsのとても参考になる記事
+** "Rubyist Magazine - スはスペックのス 【第 1 回】 RSpec の概要と、RSpec on Rails (モデル編)":http://jp.rubyist.net/magazine/?0021-Rspec
+** "Rubyist Magazine - スはスペックのス 【第 2 回】 RSpec on Rails (コントローラとビュー編)":http://jp.rubyist.net/magazine/?0023-Rspec
+* よく分かるまとめ
+** "RSpec をもっと理解したかったので、まとめを作りました - takihiroの日記":http://d.hatena.ne.jp/takihiro/20081108/1226114504
+* Rack-Test
+** "Rack-Test":http://github.com/brynary/rack-test/tree/master
+
+
+HT-03Aを買ってAndroidアプリに夢中なうちだでした。
+おしまい
+{% endraw %}

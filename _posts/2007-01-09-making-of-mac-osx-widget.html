@@ -1,0 +1,36 @@
+---
+layout: post
+title: "はじめてでも簡単、Mac OSX用ウィジェットの作り方"
+---
+{% raw %}
+<br>
+hideです。<br>
+<br>
+<div style="float:right;margin-left:20px"><a href="http://photozou.jp/photo/show/784/2144996"><img src="http://photozou.jp/pub/784/784/photo/2144996.png?m=1168337956" alt="Dashborad" width="240" height="149" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/784/2144996">Dashboard</a> posted from <a href="http://photozou.jp/">フォト蔵</a></div>
+Mac OS X 10.4（Tiger）から追加された機能にDashboardというものがあります（右図）。F12キーを押すと現在のデスクトップ画面上に重ねてウィジェットというユーティリティが表示されます。電卓やカレンダー、天気予報など、ちょっと使いたい時にいちいちアプリケーションを起動することなく、これらの機能が利用できるので、とても使い勝手がよいです。<br>
+<br>
+このウィジェットですが、中身はHTML、CSSやJavaScriptといったお馴染みの技術でできていて、実は簡単に作ることができます。また先日にベータ版ではありますが、Appleからウィジェット開発環境のDashcodeというソフトウェアが公開されました。次期Mac OS XのLeopardにバンドルされる予定のものなのですが、このソフトを使うと1行もプログラムを記述することなしにウィジェットを作成することができます。<br>
+<br>
+Dashcodeのダウンロードには、Apple Developer Connectionのアカウントが必要なのですが、無料でユーザ登録できます。使い方も簡単で、あらかじめ用意されたパーツ類をドラッグ＆ドロップで組み合わせていくことで、ウィジェットが作成できるようになっています。また、汎用的なテンプレートも用意されていて、RSSリーダ程度のものでしたら、本当に1行もコードを書くことなく作れてしまいます。<br>
+<br>
+→　<a href="http://developer.apple.com/tools/dashcode/">Dashcode beta -  Apple Developer Connection</a><br>
+<br>
+Dashcodeの画面はこのような感じです。<br>
+
+<div style="margin-left:40px"><a href="http://photozou.jp/photo/show/784/2145065"><img src="http://photozou.jp/pub/784/784/photo/2145065.png?m=1168338637" alt="Dashcode" width="240" height="176" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/784/2145065">Dashcode</a> posted from <a href="http://photozou.jp/">フォト蔵</a></div>
+
+<br>
+
+このDashcodeを使って作ったのが、<a href="http://labs.unoh.net/html/eiga_ranking-1.0.zip">「映画生活ランキング」ウィジェット</a>です。映画生活のサイトからランキング情報が記述されたHTMLを取得し、内容を表示しているだけで難しいことはしていません。そのプログラムを一部紹介すると、XMLHttpRequestを使って非同期でリクエストを実行し、responseTextを取得するという一般的なAjaxアプリケーションの動作となんら変わりはありません。<br>
+
+<div style="margin-left:40px"><a href="http://labs.unoh.net/html/eiga_ranking-1.0.zip"><img src="http://photozou.jp/pub/784/784/photo/2145126.png?m=1168339812" alt="映画生活ランキング・ウィジェット" width="223" height="240" style="border: solid 1px #000;"><br><br>ダウンロード(145KB)</a></div>
+
+<br>
+注意すべき点を一つあげるとすると、「URLリンクにはwidget.openURL()関数を使う」ということくらいでしょうか。リンクをブラウザで開くためには、次のようにこの関数を利用して記述します。<br>
+
+<pre class="source_code">&lt;a href="javascript:widget.openURL('http://www.hoge.com/')"&gt;リンク&lt;/a&gt;</pre>
+<br>
+Macをお使いの方は、ぜひオリジナルのウィジェットを作成してみてはどうでしょうか。新しい年初めのこの時期、今年の抱負をWidgetに表示して毎日眺められるようにしておくのもいいかもしれません。
+<br>
+<br>
+{% endraw %}

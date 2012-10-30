@@ -1,0 +1,59 @@
+---
+layout: post
+title: "Tracに QA(testing) のステータスを追加する方法"
+---
+{% raw %}
+2次元より3次元のほうが好きな hide です。<br />
+<br />
+昨日の<a href="http://labs.unoh.net/2006/08/post_38.html">masatoさんのエントリ</a>へのコメントで、Tracの話が盛り上がっていたので引き続きTracネタを続けます。今さらTracについての説明は必要ないと思いますが、どんなものかひと言で説明すると、BTSとWikiとSubversionリポジトリビュアーを合体したようなものです。この組み合わせ具合が絶妙で、Tracは様々なソフトウェア開発現場で使われています。有名なところでは、Ruby on Railsの開発にも使われています。<br />
+<br />
+しかし、ウノウではBTSに影舞を使っています。何故かというと、標準ではTracのワークフローは次のようになっていて、testingのステータスがないからです。<br />
+<br />
+<img alt="trac-default-workflow.png" src="http://labs.unoh.net/images/trac-default-workflow.png" width="272" height="232" /><br />
+<br />
+最近は、ベータ・クオリティでもいいから、とにかく早くサービスを公開することが重要だという考え方が一般的になってきています。しかし、バグだらけのシステムでは、ユーザはすぐに離れていってしまいます。まともに動かないシステムなんて、ふつう使いたくないですからね。ベータ版といえども、最低限の品質を確保している必要があるわけです。そこでQAのフェーズが重要になってきます。自動でユニットテストを行っていても、思いもよらないバグが出てきたりすることはよくあるわけで、ウノウにおけるテスト番長の存在は大きいです（見た目の存在感もw）。<br />
+<br />
+大切なtestingのステータスがないのが致命的というわけですが、Tracの便利さは一度味わってしまうと、なかなか抜けることができません。で、いろいろ調べていたところ、本家TracのWikiで <a href="http://trac.edgewall.org/wiki/WorkFlow">WorkFlow Discussion</a> というページを発見しました。やっぱり、同じようにTestingのステータスが欲しいと思っている人はいるようで、ブランチとしてTracのWorkflowをカスタマイズできるような仕組みが開発されていました。このブランチ版を使うことで、Workflowを次のようにすることができるそうです。<br />
+<br />
+<img alt="trac-new-workflow.png" src="http://labs.unoh.net/images/trac-new-workflow.png" width="278" height="293" /><br />
+<br />
+<br />
+ほとんど普通のTracと変わらないのですが、インストールと設定方法を説明します。<br />
+まず、svnリポジトリからチェックアウトしてインストールします。<br />
+<br />
+<pre class="source_code">$ svn co http://svn.edgewall.com/repos/trac/sandbox/workflow trac
+$ cd trac
+$ python setup.py install</pre>
+
+次にプロジェクト環境を作成します。
+
+<pre class="source_code">$ trac-admin &lt;/path/to/projenv&gt; initenv</pre>
+
+作成したプロジェクト環境のtrac.iniを修正して、verifyのステータスを追加します。
+
+<pre class="source_code">$ vi /path/to/projenv/conf/trac.ini
+
+    ; Available actions for each ticket status
+    [ticket-status]
+    new = leave resolve reassign accept
+    assigned = leave resolve reassign
+    reopened = leave resolve reassign
+    resolved = leave reassign reopen verify
+    verified = leave reassign reopen retest close
+    closed = leave reopen retest
+
+    ; Status states for each action
+    [ticket-actions]
+    accept = assigned
+    resolve = resolved
+    reassign = new
+    reopen = reopened
+    retest = resolved
+    verify = verified
+    close = closed</pre>
+<br />
+<br />
+以上で特別な設定は完了です。試しにチケットをfixedにしてみて、closedにならずに下のようにverifyのActionが表示されればOKです。同じようにTracにはtestingのステータスがないからなぁと思っていた方は、試してみてはいかがでしょうか。
+
+<img alt="trac-verify-status.png" src="http://labs.unoh.net/images/trac-verify-status.png" width="280" height="213" />
+{% endraw %}

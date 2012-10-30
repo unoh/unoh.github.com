@@ -1,0 +1,88 @@
+---
+layout: post
+title: "Amazon Web Services入門: PHPとEC2/S3/SQS/SimpleDBで作るビデオ共有サイト"
+---
+{% raw %}
+<p>新年あけましておめでとうございます、五十川です。</p>
+<p>PHPデベロッパー向けのAmazon Web Services（AWS）のリソースは<a href="http://aws.amazon.com/php/">http://aws.amazon.com/php/</a>にまとめられていますが、その<a href="http://developer.amazonwebservices.com/connect/kbcategory.jspa?categoryID=137">Articles &amp; Tutorials</a>カテゴリーにある、<a href="http://developer.amazonwebservices.com/connect/entry.jspa?externalID=2433">Introduction to AWS for PHP Developers</a>という記事は、AWSの主要サービスの概要と、PHPによるその操作を学ぶチュートリアルで、ここで取り上げられているサービスに初めて取り組むPHPデベロッパーには格好の入門となっており、ここではこのチュートリアルを紹介したいと思います。</p>
+<p>また、このチュートリアルはAmazon純正のライブラリを利用していますが、AWS用のライブラリには様々なものがあり、この記事の最後ではそのひとつ、<a href="http://getcloudfusion.com/">CloudFusion</a>を紹介しようと思います。</p>
+<p>なお、以下のチュートリアルのスクリプトの実行には、もちろん<a href="http://www.amazon.com/gp/aws/registration/registration-form.html">AWSアカウント</a>が必要で、スクリプトの実行に応じてAWSの利用料が課金されます。チュートリアルには、例えば起動したEC2インスタンスを停止（Terminate）するなど、余計な課金がされないようにする手順は説明されていませんので、<a href="http://console.aws.amazon.com/ec2/">AWS Console</a>や<a href="http://developer.amazonwebservices.com/connect/kbcategory.jspa?categoryID=250">各種デベロッパーツール</a>を利用して（あるいはチュートリアルの復習も兼ねて、そうしたプログラムを自作するなどして）、適宜対処してください。</p>
+
+<h3>チュートリアルのシナリオ</h3>
+<p>チュートリアルはビデオ共有サイトを題材にしており、AWSのうち、<a href="http://aws.amazon.com/ec2/">EC2</a>、<a href="http://aws.amazon.com/s3/">S3</a>、<a href="http://aws.amazon.com/sqs/">SQS</a>、<a href="http://aws.amazon.com/simpledb/">SimpleDB</a>を利用します。</p>
+<ul>
+    <li>ウェブサーバはEC2でホストされる</li>
+    <li>ユーザは任意の形式のビデオをサイトのファイルアップロードフォームからアップロードできる</li>
+    <li>アップロードされたビデオはS3に保存され、SQSで管理されるバッチプロセスでFLVに変換される</li>
+    <li>変換されたビデオはS3に保存され配信される</li>
+    <li>ビデオのメタデータはSimpleDBに記録される</li>
+</ul>
+<p>一般的なビデオ共有サイトでは、ユーザから投稿される様々な形式のビデオを、共通の形式（一般的にFLV）に変換して視聴に供します。ビデオの変換は相応のリソースと時間を消費するため、バッチプロセスで処理され、キューシステムで管理されますが、チュートリアルではここにSQSを採用しています。また、バッチプロセスをウェブサーバとは別のコンピュータ（EC2インスタンス）に分離し、さらにそれらが複数に分散されることを想定し、変換前後のビデオはS3に保存します。</p>
+
+<h3>チュートリアルの著者について</h3>
+<p>チュートリアルの著者は、Feedsterを経て現在はAPIのマネージメントサービスを提供する<a href="http://www.mashery.com/">Mashery</a>のチーフアーキテクトを務める<a href="http://claylo.com/">Clay Loveless</a>さんです。彼はオライリーのPHP Cookbook Second Editionの4つの章の著者であり、かつて存在していたpearified.comの運営者でもありました。また、このチュートリアルで使われるS3のストリームラッパー実装（Killersoft_Wrapper_S3）とSOAPクライアント（AWSSoapClient）は彼自身の手によるものです。</p>
+
+<h3>チュートリアルファイルのダウンロード</h3>
+<p><a href="http://s3.killersoft.com/AWSforPHP/awsfiles.zip">http://s3.killersoft.com/AWSforPHP/awsfiles.zip</a></p>
+<p>チュートリアルのPHPスクリプトは、バージョン5.1.2以上のPHPでの実行を前提にしています。チュートリアルファイル中のcompatibility.phpで動作要件を確認できます。</p>
+<p>チュートリアルはAmazon純正の以下のライブラリを利用します。</p>
+<ul>
+    <li><a href="http://developer.amazonwebservices.com/connect/entry.jspa?externalID=1669">PHP Library for Amazon EC2</a></li> 
+    <li><a href="http://developer.amazonwebservices.com/connect/entry.jspa?externalID=1135">PHP Library for Amazon SDB</a></li> 
+    <li><a href="http://developer.amazonwebservices.com/connect/entry.jspa?externalID=1287">PHP Library for Amazon SQS</a></li> 
+</ul> 
+<p>チュートリアルファイルにはこれらのライブラリが含まれていますが、それらはチュートリアルが執筆された時点のバージョンのものであり、最新のものではありません。当然、対象となるAPIバージョンもチュートリアルの執筆時点のものとなっている点に注意してください。</p>
+
+<h3>設定ファイルの作成</h3>
+<p>チュートリアルは/etc/aws.confファイルに保存された設定情報を利用します。</p>
+<p>/etc/aws.confファイルに、<a href="http://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key">Security Credentials</a>で表示されるAccess Key IDとSecret Access Key、及びAccount Numberを、以下の書式で記述します。</p>
+
+<pre class="code">; AWS Security Credentials
+; Access Key ID
+access_key = &quot;06224BHAZ75910F2&quot;
+; Secret Access Key
+secret_key = &quot;aIfbA2568+12TEqLDYpiqOyRULvi9&quot;
+; Account Number
+account_id = &quot;123412341234&quot;</pre>
+<p>さらに/etc/aws.confファイルに、チュートリアルのPHPスクリプトが作成するファイルを保存するディレクトリのパスを、以下の書式で追記しておきます。</p>
+<pre class="code">; Path to writable directory where we can save files
+tutorial_file_path = &quot;/tmp&quot;</pre>
+
+<h3>接続の確認</h3>
+<p>チュートリアルの最初に登場するPHPスクリプトは、avail-zones.phpです。このスクリプトは、EC2のゾーンの利用可否を問い合せる<a href="http://docs.amazonwebservices.com/AWSEC2/latest/APIReference/ApiReference-query-DescribeAvailabilityZones.html">DescribeAvailabilityZones</a>リクエストを発行します。</p>
+<pre class="code">$ php avail-zones.php
+&lt;?xml version=&quot;1.0&quot;?&gt;
+&lt;DescribeAvailabilityZonesResponse xmlns=&quot;http://ec2.amazonaws.com/doc/2008-05-05/&quot;&gt;
+...</pre>
+<p>このスクリプトは最もプリミティブなRESTリクエストの作成例で、外部ライブラリに依存せずにURLをいちから組み立てています。そのため、スクリプトの実行で、/etc/aws.confファイルに記述したSecurity Credentialsの正当性が確認できるとともに、そのソースを読み解くことで、RESTリクエストのURLの構成、特にその署名（Signature）の作成方法が把握できるようになっています。</p>
+
+<h3>SOAPリクエスト</h3>
+<p>すべてのAWSはRESTとSOAPの両インタフェースで利用できます。チュートリアルは基本的にRESTを利用しますが、一部のスクリプトにはそのSOAP版も用意されています。</p>
+<p>SOAPリクエストではX.509 Certificateが必要になります。<a href="http://aws-portal.amazon.com/gp/aws/developer/account/index.html?action=access-key">Security Credentials</a>でX.509 Certificateを設定後、/etc/aws.confファイルに、cert-....pemファイルとpk-....pemファイルのパスを以下の書式で追記します。SOAPを利用しない場合は、この手順は不要です。</p>
+<pre class="code">; X.509 Certificate Path
+cert_file = &quot;/path/to/my/cert-....pem&quot;
+; RSA private key 
+private_key_file = &quot;/path/to/my/pk-....pem&quot;</pre>
+<p>avail-zones-soap.phpは、avail-zones.phpのSOAP版です。</p>
+<pre class="code">$ php avail-zones-soap.php 
+us-east-1a: available
+...</pre>
+
+<p>これ以降に登場するチュートリアルのPHPスクリプトはその冒頭でexample_setup.phpをインクルードしています。このexample_setup.phpは、/etc/aws.confファイルから設定情報を読み込み、あわせて各スクリプトが利用するクラスライブラリ用のオートロードを定義しています。</p>
+
+<h3>EC2インスタンスの起動</h3>
+<p>初めてチュートリアルに取り組む際は、実際にEC2インスタンスを起動する前に、まずec2-prelaunch.phpを実行して、キーペアの作成とセキュリティグループの設定を行います。</p>
+<h4>ec2-prelaunch.php</h4>
+<ol>
+  <li><a href="http://docs.amazonwebservices.com/AWSEC2/latest/APIReference/ApiReference-query-DescribeKeyPairs.html">DescribeKeyPairs</a>リクエストで「awstutorial」キーペアの存在を確認</li>
+  <li>キーペアが存在しない場合、<a href="http://docs.amazonwebservices.com/AWSEC2/latest/APIReference/ApiReference-query-CreateKeyPair.html">CreateKeyPair</a>リクエストでキーペアを作成し、プライベートキーを、/etc/aws.confファイルの「tutorial_file_path」で設定したディレクトリの「id_rsa-awstutorial」ファイルに保存</li>
+  <li><a href="http://docs.amazonwebservices.com/AWSEC2/latest/APIReference/ApiReference-query-DescribeSecurityGroups.html">DescribeSecurityGroups</a>リクエストで「awstutorial」セキュリティグループの存在を確認</li>
+  <li>グループが存在しない場合、<a href="http://docs.amazonwebservices.com/AWSEC2/latest/APIReference/ApiReference-query-CreateSecurityGroup.html">CreateSecurityGroup</a>リクエストでグループを作成</li>
+  <li>グループの設定でポート80とポート22が開放されていない場合、<a href="http://docs.amazonwebservices.com/AWSEC2/latest/APIReference/ApiReference-query-AuthorizeSecurityGroupIngress.html">AuthorizeSecurityGroupIngress</a>リクエストでポートを開放</li>
+</ol>
+<pre class="code">$ php ec2-prelaunch.php 
+Creating awstutorial keypair...
+generated fingerprint
+f3:e4:e6:c8:92:dd:f1:52:be:ea:a3:9d:75:57:ba:65:61:a7:a3:28
+generated material
+{% endraw %}

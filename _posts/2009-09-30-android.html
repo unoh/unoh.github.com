@@ -1,0 +1,326 @@
+---
+layout: post
+title: "分かったつもりになるAndroid開発方法"
+---
+{% raw %}
+こんばんは。うちだです。
+
+皆さんAndroid携帯は購入しましたか？
+社内ではiPhone勢が多く、Android携帯所持は私だけという悲しい現実を目の当たりにしています。
+
+そこで以前、社内勉強会にて、Androidの素晴らしさを皆に知ってもらおうと発表した内容が今回のエントリーです。
+
+今回のエントリーでは開発者視点で分かったつもりになる為に、広く浅く書いてます。
+本気で分かるには公式ドキュメントや書籍及び参考リンクをご参照ください。 
+
+参考： "Android | Official Website":http://www.android.com/
+
+
+
+h2. 特徴
+
+h3. 環境
+
+* Linuxカーネル
+* BSD UNIXのlibc
+* アプリケーションはDalvikと呼ばれるVM上で動作
+* 主にJavaで開発
+* Google提供のSDKあり
+* Eclipseプラグインあり
+* "アーキテクチャ":http://upload.wikimedia.org/wikipedia/commons/3/3c/Android%E3%81%AE%E3%82%A2%E3%83%BC%E3%82%AD%E3%83%86%E3%82%AF%E3%83%81%E3%83%A3%28New%29.PNG
+
+参考： "わかった気になる気になるandroid":http://dev.ariel-networks.com/Members/iwanaga/android-intro
+
+h3. メリット
+
+* マルチタスク
+* intentの存在
+* Androidマーケットの自由度が素敵
+* Googleとの連携凄すぎ
+
+h3. デメリット
+
+* UIがまだまだ(レスポンスが悪かったりする）
+* 何度か落ちた
+* バッテリー使い過ぎ
+* マルチタッチ(開発中との噂）
+
+
+h2. 開発 
+
+h3. 環境構築
+
+参考： "開発環境を構築するには":http://www.adakoda.com/android/000062.html
+
+h3. アクティビティ
+
+いわゆる、コントローラー。１つのウィンドウと考えてもらっても大丈夫だと思います。
+Activityクラスを継承したクラスでレイアウトの設定や各種イベントを登録します。
+また、インスタンスの生成から破棄までのライフサイクルが非常に重要ですので参考リンク先を参照ください。
+
+Activityクラスの子クラスには専用の仕事をするクラスもあります。
+
+* ListActivity
+* ExpandableListActivity
+* TabActivity
+
+参考： "勉強会/Android SDK WG 第1回 セッション（2008.10.25）":http://android.siprop.org/index.php?%CA%D9%B6%AF%B2%F1%2FAndroid%20SDK%20WG%20%C2%E81%B2%F3%20%A5%BB%A5%C3%A5%B7%A5%E7%A5%F3%A1%CA2008.10.25%A1%CB
+
+h3. ウィジェット
+
+画面を構成する部品
+
+* TextView
+* Button
+* Canvas
+* 等
+
+参考： "簡単でワクワクするAndroidウィジェット10連発！":http://www.atmarkit.co.jp/fjava/rensai4/android04/android04_1.html
+
+h3. レイアウト
+
+画面のウィジェットの配置は基本的にxmlファイルで定義します。
+そしてxmlファイルから自動で生成されるRクラスを使いコントロールします。
+ちなみに、手書きだと面倒なのでDroidDrawを使うと楽(Web版は重いです)
+
+参考： "DroidDraw":http://droiddraw.org/
+
+h3. リソース
+
+文字列やアイコン等の定義ファイルです。これもxmlで記述し、Rクラスを使います
+文字列はロケールによって切り替え可能。
+
+参考： "Resources and Internationalization | Android Developers":http://developer.android.com/intl/ja/guide/topics/resources/resources-i18n.html
+
+h3. Activity、レイアウト、リソースのサンプル
+
+<pre class="code">
+// res/values/string.xml
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Hello World, ex1Activity!</string>
+    <string name="app_name">ex1</string>
+</resources>
+
+// res/layout/main.xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+<TextView  
+    android:layout_width="fill_parent" 
+    android:layout_height="wrap_content" 
+    android:text="@string/hello"
+    />
+</LinearLayout>
+
+// src/net.unoh.ex1/exActivity.java
+package net.unoh.ex1;
+
+import android.app.Activity;
+import android.os.Bundle;
+
+public class ex1Activity extends Activity {
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
+    }
+}
+</pre>
+
+* string.xmlに[hello=Hello World]を設定
+* レイアウトファイルにコンテナとTextViewを設置
+* TextViewのtextプロパティを設定[android:text="@string/hello"
+* Activityにレイアウトをセット
+* このコードはeclipseでプロジェクトを作ったときの初期状態です。
+
+
+h3. インテント
+
+アプリケーションからアクティビティやサービスを起動する仕組み。次の二つのタイプがある
+
+* 明示的インテント
+** ActivityやServiceを直接指定して起動
+* 暗黙的インテント
+** パラメータを設定することでシステムが該当するActivityを起動
+** 該当するActivityが複数ある場合は選択ダイアログがでる
+
+参考： "Androidの重要な機能、インテント":http://thinkit.jp/article/921/1/
+参考： "勉強会/インテントを発行してみよう - 日本Androidの会（日本アンドロイドの会）":http://www.android-group.jp/index.php?%CA%D9%B6%AF%B2%F1%2F%A5%A4%A5%F3%A5%C6%A5%F3%A5%C8%A4%F2%C8%AF%B9%D4%A4%B7%A4%C6%A4%DF%A4%E8%A4%A6
+参考： "OpenIntents":http://www.openintents.org/en/
+
+h3. サービス
+
+バックグラウンド処理を実現します。
+例えば、時間のかかるダウンロード処理をバックグラウンドで行う等が可能です。
+また、AIDLを使う事でActivity等とのプロセス間通信が可能となります。
+電源をonにしたときに起動することでcronやタスクマネージャーのように使う事もできます。
+
+各種センサー機能はシステムサービスとして提供されています
+
+
+参考： "AIDLによるプロセス間通信":http://xfutures.jp/2009/07/18/60/
+参考： "常駐アプリが作成できるAndroidのサービスとは":http://www.atmarkit.co.jp/fjava/rensai4/android07/android07_1.html
+参考： "Android のセンサーを活用する":http://www.ibm.com/developerworks/jp/opensource/library/os-android-sensor/
+
+h3. このあたりまでのサンプル
+
+<pre class="code">
+// AndroidManifest.xml
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="net.unoh.ex1"
+    android:versionCode="1"
+    android:versionName="1.0">
+    <application android:icon="@drawable/icon" android:label="@string/app_name">
+        <activity android:name=".ex1Activity"
+            android:label="@string/app_name">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <service android:name=".ex2Service" />
+    </application>
+    <uses-sdk android:minSdkVersion="3" />
+</manifest>
+
+// res/values/string.xm
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="hello">Hello World, ex1Activity!</string>
+    <string name="app_name">ex1</string>
+    <string name="btnEx2">Service</string>
+    <string name="btnEx3">Intent</string>
+</resources>
+
+// res/layout/main.xml
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    >
+<TextView  
+    android:layout_width="fill_parent" 
+    android:layout_height="wrap_content" 
+    android:text="@string/hello"
+    />
+<Button
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/btnEx2"
+    android:text="@string/btnEx2"
+    />
+<Button
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/btnEx3"
+    android:text="@string/btnEx3"
+    />
+</LinearLayout>
+
+// src/net.unoh.ex1.ex1Activity.java
+Button btnEx2 = (Button)findViewById(R.id.btnEx2);
+    btnEx2.setOnClickListener(new View.OnClickListener(){
+        public void onClick(View v) {
+        Intent i = new Intent(ex1Activity.this, ex2Service.class);
+        Log.v("click", "start");
+        startService(i);
+    }
+});
+Button btnEx3 = (Button)findViewById(R.id.btnEx3);
+    btnEx3.setOnClickListener(new View.OnClickListener(){
+        public void onClick(View v) {
+        Intent i = new Intent(Intent.ACTION_VIEW, Uri.parse("http://www.unoh.net/"));)
+        startActivity(i);
+    }
+});
+
+// src/net.unoh.ex1.ex2Service.java
+package net.unoh.ex1;
+import android.app.Service;
+import android.content.Intent;
+import android.os.IBinder;
+import android.widget.Toast;
+
+public class ex2Service extends Service {
+    @Override
+    public IBinder onBind(Intent arg0) {
+        return null;
+    }
+    @Override
+    public void onStart(Intent intent, int startId) {
+        Toast.makeText(this, "ex2Service", 500).show();
+    }
+}
+</pre>
+
+* AndroidManifest.xmlのapplication以下にserviceを追加
+* res/values/string.xmlにボタンの表示名を設定
+* res/layout/main.xmlにボタン追加
+* ex1Activity.javaでボタンの設定
+* サービスの実装(今回は起動するだけなのでonStartをオーバーライド。プロセス間通信する場合はonBindを実装)
+* インテントの発行
+
+h3. コンテンツプロバイダー
+
+アプリケーションが所有するデータを他のアプリケーションに公開する仕組み
+例えば電話アプリケーションが所有する通話履歴データを取得できたりします。
+
+また、アプリケーションがデータを永続化する方法として次のものがあります
+* プリファレンス
+* ファイル
+* SQLite
+
+参考： "Content Provider入門":http://d.hatena.ne.jp/isher/20090613/1244932235
+参考： "Android SharedPreferences について":http://www.taosoftware.co.jp/blog/2009/03/android_sharedpreferences_gets.html
+
+h3. ネットワーク
+
+もちろん普通にできます。
+気をつける点は、デフォルトではセキュリティ上の問題で拒否されている為、許可するためにAndroidManifest.xmlのPermissionsの項目を記述しなければならない。
+
+参考： "HTTP（DefaultHttpClient/HttpHost/HttpGet/HttpResponse/HttpEntity）":http://www.adakoda.com/adakoda/2009/01/android-httpdefaulthttpclienthttphosthttpgethttpresponsehttpentity.html
+参考： "HT-03A その９":http://blogmrc.blog84.fc2.com/blog-entry-357.html
+
+h3. tips
+
+参考： "XmlPullParser（XML解析（パース））":http://www.adakoda.com/adakoda/2009/01/android-xmlpullparserxml.html
+参考： "JSON形式のデータにアクセス":http://www.adakoda.com/adakoda/2009/01/android-json.html
+参考： "AndroidでListView":http://d.hatena.ne.jp/CLSmooth/20090315
+参考： "サーフェイスビュー":http://www.saturn.dti.ne.jp/~npaka/android/AnimeEx/index.html
+参考： "OpenGL":http://www.saturn.dti.ne.jp/~npaka/android/OpenGL/index.html
+参考： "Android 開発情報":http://www.taosoftware.co.jp/android/android.html
+参考： "逆引きAndroid入門":http://www.adakoda.com/android/
+
+ただでさえ消費電力が多いので省電力プログラミングがとても重要です
+
+参考： "AndroidのappWidget作成時に行っておくべき消費電力対策についてのまとめ(その1)":http://d.hatena.ne.jp/TAKAOMAYA/20090803/1249303524
+
+h2. アプリケーションの配信
+
+h3. Androidマーケット
+
+* 開発者登録に$25
+* 承認プロセスがないので自由に公開できる
+* 売り上げの7割が開発者へ、残りが通信会社と課金処理費用。
+
+参考： "開発者登録するには":http://www.adakoda.com/android/000100.html
+
+h3. 野良アプリ
+
+* ブラウザでダウンロード
+* SDK付属のadbコマンドを使用
+
+h2. これから必要なこと
+
+* iPhoneを手放す勇気
+
+
+おしまい
+
+{% endraw %}

@@ -1,0 +1,44 @@
+---
+layout: post
+title: "Nagios のログの日付を変換しながら読むには"
+---
+{% raw %}
+<p>こんにちは。kyagi です。</p>
+
+<p>ウノウではサービスの稼働状況を監視するために <a href="http://www.nagios.org/">Nagios</a> を使用しています。ログファイル「/var/log/nagios/nagios.log」には監視活動の履歴が出力されるのですが、最初のカラムの日付フォーマットがエポック秒になっているため、障害発生時の時間を知るためには変換処理を行わなければなりません。この目的を達成する簡単なスクリプト nagioslogview.rb を書いたので、以下に公開しておきます。同様に小さなストレスを抱えている方の解決策になれば幸いです。</p>
+
+<a href="http://github.com/kyagi/nagioslogview/blob/master/nagioslogview.rb">http://github.com/kyagi/nagioslogview/blob/master/nagioslogview.rb</a>
+
+<p>使い方は以下になります。-f オプションで tail -f と同じように成長するファイルを追いかけて読むことができます。テスト時などにご活用いただければと思います。(なお tail 機能には rubygem の file-tail(<a href="http://flori.github.com/file-tail/">http://flori.github.com/file-tail/</a>) を利用していますので、別途インストールが必要です。)</p>
+
+■使い方(ファイルを指定しない場合はデフォルトの /var/log/nagios/nagios.log が対象になります)
+<pre class="code">
+ $ nagioslogview.rb
+ $ nagioslogview.rb -f # ファイルを追いかけて読みます。tail -f と同様です。
+ $ nagioslogview.rb /var/log/nagios/archives/nagios-09-07-2010-00.log # 指定したファイルを読みます。
+</pre>
+
+■rubygems と file-tail のインストール方法
+<pre class="code">
+$ sudo yum install rubygems
+$ sudo gem install file-tail
+$ gem list | grep file-tail
+file-tail (1.0.5)
+</pre>
+
+■変換前(エポック秒のため実際の時間がわかりづらい)
+<pre class="code">
+$ less /var/log/nagios/nagios.log
+(... snip ...)
+[1274194965] Auto-save of retention data completed successfully.
+(... snip ...)
+</pre>
+
+■変換後
+<pre class="code">
+$ nagioslogview.rb
+(... snip ...)
+[Wed May 19 00:02:45] Auto-save of retention data completed successfully.
+(... snip ...)
+</pre>
+{% endraw %}

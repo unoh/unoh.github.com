@@ -1,0 +1,108 @@
+---
+layout: post
+title: "携帯サイト作成時のXHTMLでの相違点"
+---
+{% raw %}
+<p>こんばんは。harukです。</p>
+
+<p>DoCoMo編…となるはずですが、特に書くようなことがないので、今回はXHTMLについて少し書いてみます。</p>
+
+<p>現在ではすべてのキャリアが3G端末がメインとなってきています。</p>
+<p>※2006年11月末現在</p>
+<p>DoCoMo: 約60%</p>
+<p>au: 約90%</p>
+<p>SoftBank: 約35%</p>
+<br />
+<p>ほとんどの3Gの端末ではHTMLに加え、XHTMLを使うことができます。</p>
+<p>XHTMLを使うことによって、文字の背景色を設定できたりするなど、デザイン表現が多彩になっています。</p>
+<p>今回はXHTMLを使用する上での、各キャリアの仕様の違いなどをまとめてみたいと思います。</p>
+
+
+<ul><li>対応機種
+<ul style="padding-left:16px;margin-left:16px">
+<li>DoCoMo<br />
+FOMA(初期の2001,2002,2101以外)</li>
+
+<li>au<br />
+WAP2.0ブラウザ搭載端末</li>
+
+<li>SoftBank<br />
+W型、3GC型</li>
+</ul></li></ul>
+
+
+<ul><li>DOCTYPE宣言(推奨)
+<ul style="padding-left:16px;margin-left:16px">
+<li>DoCoMo<br />
+&lt;!DOCTYPE html PUBLIC "-//i-mode group (ja)//DTD XHTML i-XHTML(Locale/Ver.=ja/1.0) 1.0//EN" "i-xhtml_4ja_10.dtd"&gt;<br />
+&lt;!DOCTYPE html PUBLIC "-//i-mode group (ja)//DTD XHTML i-XHTML(Locale/Ver.=ja/1.1) 1.0//EN" "i-xhtml_4ja_10.dtd"&gt;<br />
+&lt;!DOCTYPE html PUBLIC "-//i-mode group (ja)//DTD XHTML i-XHTML(Locale/Ver.=ja/2.0) 1.0//EN" "i-xhtml_4ja_10.dtd"&gt;<br />
+&lt;!DOCTYPE html PUBLIC "-//i-mode group (ja)//DTD XHTML i-XHTML(Locale/Ver.=ja/2.1) 1.0//EN" "i-xhtml_4ja_10.dtd"&gt;<br />
+</li>
+
+<li>au<br />
+&lt;!DOCTYPE html PUBLIC "-//OPENWAVE//DTD XHTML 1.0//EN" "http://www.openwave.com/DTD/xhtml-basic.dtd"&gt;<br />
+</li>
+
+<li>SoftBank<br />
+&lt;!DOCTYPE html PUBLIC "-//JPHONE//DTD XHTML Basic 1.0 Plus//EN" "xhtml-basic10-plus.dtd"&gt;<br />
+</li>
+</ul></li></ul>
+
+<ul><li>Content-Type
+<ul style="padding-left:16px;margin-left:16px">
+<li>DoCoMo<br />
+application/xhtml+xml<br />
+</li>
+
+<li>au<br />
+text/html<br />
+application/xhtml+xml<br />
+</li>
+
+<li>SoftBank<br />
+text/html<br />
+application/xhtml+xml<br />
+</li>
+</ul></li></ul>
+
+<ul><li>CSS
+<ul style="padding-left:16px;margin-left:16px">
+<li>DoCoMoがインラインのみの対応のためstyle=""のように指定しないといけません。</li>
+</ul></li></ul>
+
+<ul><li>その他
+<ul style="padding-left:16px;margin-left:16px">
+<li>Content-Lengthが必須</li>
+<li>文字コードはShift_JIS</li>
+</ul></li></ul>
+
+<ul><li>(XHTML関連)
+<ul style="padding-left:16px;margin-left:16px">
+<li>要素/属性は小文字</li>
+<li>空要素以外のタグは省略不可</li>
+<li>属性の省略不可<br />
+(例) &lt;input type="checkbox" name="hoge" value="abc" checked="checked" /&gt;</li>
+</ul></li></ul>
+
+<br /><br />
+<p>基本的なことばかりでしたが、</p>
+<p>その他、細かい違いがあればぜひ教えて下さい。</p>
+<br /><br />
+
+<ul><li>参考URL
+<ul style="padding-left:16px;margin-left:16px">
+<li>DoCoMo<br />
+<a href="http://www.nttdocomo.co.jp/service/imode/make/content/xhtml/">http://www.nttdocomo.co.jp/service/imode/make/content/xhtml/</a>
+</li>
+
+<li>au<br />
+<a href="http://www.au.kddi.com/ezfactory/tec/spec/xhtml.html">http://www.au.kddi.com/ezfactory/tec/spec/xhtml.html</a><br />
+<a href="http://www.au.kddi.com/ezfactory/xhtml.html">http://www.au.kddi.com/ezfactory/xhtml.html</a>
+</li>
+
+<li>SoftBank<br />
+<a href="http://developers.softbankmobile.co.jp/dp/tool_dl/web/tech.php">http://developers.softbankmobile.co.jp/dp/tool_dl/web/tech.php</a>
+</li>
+</ul></li></ul>
+{% endraw %}

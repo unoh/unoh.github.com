@@ -1,0 +1,312 @@
+---
+layout: post
+title: "Mac OS X上のUnicode"
+---
+{% raw %}
+<p>
+yamaokaです。
+</p>
+
+<p>
+<a href="http://photozou.jp/">フォト蔵</a>のアップロード画面では、
+選択されたファイルのパスから拡張子を除いたファイル名だけを取得、
+写真のタイトルの初期値に設定するということをしています（JavaScriptで）。
+</p>
+
+<p>
+ある日、ユーザ様からお問い合わせがありました。
+「サンバの季節.jpg」というファイルをアップロードしたところ、
+タイトルが「サンハ」になってしまったとのこと。
+Mac OS Xで、ブラウザはSafariをお使いでした。
+同じ環境で試してみたところ、再現性を確認。
+画面上ではタイトルに「サンバの季節」と設定されているにも関わらず、
+実際に登録されるタイトルは「サンハ」になってしまいます。
+</p>
+
+<p>
+問題が発生するのはタイトルをファイルのパスからJavaScriptで編集した場合だけで、
+手で「サンバの季節」と直接入力した場合は、
+何も問題なく登録処理を行うことができました。
+</p>
+
+<p>
+  <a href="http://photozou.jp/photo/show/784/4645817"><img src="http://art6.photozou.jp/pub/784/784/photo/4645817.png" alt="Macでフォト蔵にアップロード" width="448" height="327" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/4645817">Macでフォト蔵にアップロード</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a>
+</p>
+
+<p>
+Mac OS Xでは、ファイルシステムでUnicodeが用いられています。
+いわゆるUTF-8なのですが、一般に言うところのUTF-8とは違います。
+Macをお持ちの方は、「iconv -l」とTerminalからコマンドを実行してみてください。
+「UTF-8-MAC」という表示が見つかるかと思います。
+</p>
+
+<p>
+一般的なUTF-8では、文字はNormalization Form C（NFC）で
+<del>符号化</del><ins>正規化</ins>されています。
+しかし、Mac OS Xのファイルシステムで用いられているUTF-8
+（以下、便宜的にUTF-8-MACと呼びます）では、
+文字はNormalization Form D（NFD）で<del>符号化</del><ins>正規化</ins>されます。
+日本語を扱う際にNFCとNFDでどこが違うかというと、
+ひらがな・カタカナの濁点・半濁点の扱いです。
+UTF-8では「が」は「U+304C」（HIRAGANA LETTER GA）ですが、
+UTF-8-MACでは「U+304B U+3099」（HIRAGANA LETTER KA、COMBINING KATAKANA-HIRAGANA VOICED SOUND MARK）
+となります。Appleによる簡単な説明は以下のページにあります。
+</p>
+
+<ul>
+  <li><a href="http://developer.apple.com/jp/qa/qa2001/qa1235.html">Converting to Precomposed Unicode</a></li>
+  <li><a href="http://developer.apple.com/jp/qa/qa2001/qa1173.html">Text Encodings in VFS</a></li>
+</ul>
+
+<p>
+しかもややこしいことに、UTF-8で濁点をあらわすコードは「U+309B」（KATAKANA-HIRAGANA VOICED SOUND MARK）で、
+UTF-8-MACから送信される「U+3099」（COMBINING KATAKANA-HIRAGANA VOICED SOUND MARK）とは別物です。
+サーバ側できちんと変換できればよいのですが、
+PHPのmbstringモジュールはUTF-8-MACをサポートしていません。
+（Javaの場合、Java SE 6から導入された
+<a href="http://java.sun.com/javase/ja/6/docs/ja/api/java/text/Normalizer.html">java.text.Normalizerクラス</a>
+を使えば一発で変換できますね。）
+</p>
+
+<p>
+また、Mac上で動作する他のブラウザの挙動を調査したところ
+（「サンバの季節」というファイルをタイトルを変更せずにアップロードした場合）、
+それぞれの挙動が異なることがわかりました。
+</p>
+
+<table>
+<tr><th>ブラウザ</th><th>フォーム上のタイトル表記</th><th>登録されたタイトル</th></tr>
+<tr><td>Safari</td><td>サンバの季節</td><td>サンハ</td></tr>
+<tr><td>Firefox</td><td>サンバの季節</td><td>サンバの季節</td></tr>
+<tr><td>Opera</td><td>サンハ゛の季節</td><td>サンハ</td></tr>
+</table>
+
+<p>
+Firefoxは内部的に<a href="https://bugzilla.mozilla.org/show_bug.cgi?id=227547">変換処理を行うようになっている</a>ようです。
+問題はSafariとOperaですね。
+選択されたファイルのパスからJavaScriptで
+ファイル名を抜き出してタイトルに設定する部分で、
+正しく扱えるような文字コードに変換することにしたいと思います。
+</p>
+
+<p>
+基本的な流れとしては、UTF-8-MAC特有の「U+3099」（COMBINING KATAKANA-HIRAGANA VOICED SOUND MARK）、
+「U+309A」（COMBINING KATAKANA-HIRAGANA SEMI-VOICED SOUND MARK）がファイル名に含まれている場合は、
+その前の文字と結合して濁音・半濁音の文字にしてあげればいいでしょう
+（ひらがな・カタカナのみの暫定的な対処に過ぎませんが）。
+</p>
+
+<p>
+変換用の文字テーブルを用意して、逐一変換していくかたちにしたいと思います。
+</p>
+
+<p>
+というわけで、ライブラリを作りました。以下のように使用します。
+<pre class="code"><code>var path = document.getElementById(&quot;yourfile&quot;).value();
+if (Photozou.MacUnicode.isNFD()) {
+  // MacのSafari、Operaの場合だけ変換
+  path = Photozou.MacUnicode.normalizeToNFC(path);
+}
+</code></pre>
+</p>
+
+<p>
+以下、ライブラリのコードです。
+</p>
+
+<p>
+<pre class="code"><code>if (typeof Photozou == "undefined") {
+  Photozou = {};
+}
+
+Photozou.MacUnicode = {};
+
+Photozou.MacUnicode.combinedKana = [
+  0x304C,  // HIRAGANA LETTER GA
+  0x304E,  // HIRAGANA LETTER GI
+  0x3050,  // HIRAGANA LETTER GU
+  0x3052,  // HIRAGANA LETTER GE
+  0x3054,  // HIRAGANA LETTER GO
+  0x3056,  // HIRAGANA LETTER ZA
+  0x3058,  // HIRAGANA LETTER ZI
+  0x305A,  // HIRAGANA LETTER ZU
+  0x305C,  // HIRAGANA LETTER ZE
+  0x305E,  // HIRAGANA LETTER ZO
+  0x3060,  // HIRAGANA LETTER DA
+  0x3062,  // HIRAGANA LETTER DI
+  0x3065,  // HIRAGANA LETTER DU
+  0x3067,  // HIRAGANA LETTER DE
+  0x3069,  // HIRAGANA LETTER DO
+  0x3070,  // HIRAGANA LETTER BA
+  0x3073,  // HIRAGANA LETTER BI
+  0x3076,  // HIRAGANA LETTER BU
+  0x3079,  // HIRAGANA LETTER BE
+  0x307C,  // HIRAGANA LETTER BO
+  0x3071,  // HIRAGANA LETTER PA
+  0x3074,  // HIRAGANA LETTER PI
+  0x3077,  // HIRAGANA LETTER PU
+  0x307A,  // HIRAGANA LETTER PE
+  0X307D,  // HIRAGANA LETTER PO
+  0x3094,  // HIRAGANA LETTER VU
+  0x30AC,  // KATAKANA LETTER GA
+  0x30AE,  // KATAKANA LETTER GI
+  0x30B0,  // KATAKANA LETTER GU
+  0x30B2,  // KATAKANA LETTER GE
+  0x30B4,  // KATAKANA LETTER GO
+  0x30B6,  // KATAKANA LETTER ZA
+  0x30B8,  // KATAKANA LETTER ZI
+  0x30BA,  // KATAKANA LETTER ZU
+  0x30BC,  // KATAKANA LETTER ZE
+  0x30BE,  // KATAKANA LETTER ZO
+  0x30C0,  // KATAKANA LETTER DA
+  0x30C2,  // KATAKANA LETTER DI
+  0x30C5,  // KATAKANA LETTER DU
+  0x30C7,  // KATAKANA LETTER DE
+  0x30C9,  // KATAKANA LETTER DO
+  0x30D0,  // KATAKANA LETTER BA
+  0x30D3,  // KATAKANA LETTER BI
+  0x30D6,  // KATAKANA LETTER BU
+  0x30D9,  // KATAKANA LETTER BE
+  0x30DC,  // KATAKANA LETTER BO
+  0x30D1,  // KATAKANA LETTER PA
+  0x30D4,  // KATAKANA LETTER PI
+  0x30D7,  // KATAKANA LETTER PU
+  0x30DA,  // KATAKANA LETTER PE
+  0x30DD,  // KATAKANA LETTER PO
+  0x30F4   // KATAKANA LETTER VU
+];
+
+Photozou.MacUnicode.uncombinedKana = [
+  0x304B,  // HIRAGANA LETTER KA
+  0x304D,  // HIRAGANA LETTER KI
+  0x304F,  // HIRAGANA LETTER KU
+  0x3051,  // HIRAGANA LETTER KE
+  0x3053,  // HIRAGANA LETTER KO
+  0x3055,  // HIRAGANA LETTER SA
+  0x3057,  // HIRAGANA LETTER SI
+  0x3059,  // HIRAGANA LETTER SU
+  0x305B,  // HIRAGANA LETTER SE
+  0x305D,  // HIRAGANA LETTER SO
+  0x305F,  // HIRAGANA LETTER TA
+  0x3061,  // HIRAGANA LETTER TI
+  0x3064,  // HIRAGANA LETTER TU
+  0x3066,  // HIRAGANA LETTER TE
+  0x3068,  // HIRAGANA LETTER TO
+  0x306F,  // HIRAGANA LETTER HA
+  0x3072,  // HIRAGANA LETTER HI
+  0x3075,  // HIRAGANA LETTER HU
+  0x3078,  // HIRAGANA LETTER HE
+  0x307B,  // HIRAGANA LETTER HO
+  0x306F,  // HIRAGANA LETTER HA
+  0x3072,  // HIRAGANA LETTER HI
+  0x3075,  // HIRAGANA LETTER HU
+  0x3078,  // HIRAGANA LETTER HE
+  0x307B,  // HIRAGANA LETTER HO
+  0x3046,  // HIRAGANA LETTER U
+  0x30AB,  // KATAKANA LETTER KA
+  0x30AD,  // KATAKANA LETTER KI
+  0x30AF,  // KATAKANA LETTER KU
+  0x30B1,  // KATAKANA LETTER KE
+  0x30B3,  // KATAKANA LETTER KO
+  0x30B5,  // KATAKANA LETTER SA
+  0x30B7,  // KATAKANA LETTER SI
+  0x30B9,  // KATAKANA LETTER SU
+  0x30BB,  // KATAKANA LETTER SE
+  0x30BD,  // KATAKANA LETTER SO
+  0x30BF,  // KATAKANA LETTER TA
+  0x30C1,  // KATAKANA LETTER TI
+  0x30C4,  // KATAKANA LETTER TU
+  0x30C6,  // KATAKANA LETTER TE
+  0x30C8,  // KATAKANA LETTER TO
+  0x30CF,  // KATAKANA LETTER HA
+  0x30D2,  // KATAKANA LETTER HI
+  0x30D5,  // KATAKANA LETTER HU
+  0x30D8,  // KATAKANA LETTER HE
+  0x30DB,  // KATAKANA LETTER HO
+  0x30CF,  // KATAKANA LETTER HA
+  0x30D2,  // KATAKANA LETTER HI
+  0x30D5,  // KATAKANA LETTER HU
+  0x30D8,  // KATAKANA LETTER HE
+  0x30DB,  // KATAKANA LETTER HO
+  0x30A6   // KATAKANA LETTER U
+];
+
+Photozou.MacUnicode.isNFD = function() {
+  var ua = navigator.userAgent;
+  if (ua.indexOf("Mac") > -1) {
+    // Mac
+    if (ua.indexOf("Safari") > -1 || window.opera) {
+      // Safari or Opera
+      return true;
+    }
+  }
+  return false;
+};
+
+Photozou.MacUnicode.normalizeToNFC = function(path) {
+  var result = "";
+  var pathLength = path.length;
+  for (var i = 0; i < pathLength; i++) {
+    var c = path.charCodeAt(i);
+    if (c == 0x3099 || c == 0x309A) {
+      // a voiced sound mark or a semi-voiced sound mark
+      if (i == 0) {
+        continue;
+      }
+      var prev = path.charCodeAt(i - 1);
+      for (var k in Photozou.MacUnicode.uncombinedKana) {
+        if (prev == Photozou.MacUnicode.uncombinedKana[k]) {
+          if (result.length > 0) {
+            result = result.substr(0, result.length - 1);
+          }
+          result += String.fromCharCode(Photozou.MacUnicode.combinedKana[k]);
+          break;
+        }
+      }
+    } else {
+      result += path.charAt(i);
+    }
+  }
+  return result;
+};
+</code></pre>
+</p>
+
+<p>
+変換用の文字テーブルがほとんどを占めているため、
+実際の処理内容としては大したことをしていません。
+一文字ずつ見ていって、必要なら変換しているだけです。
+サーバ側で変換する場合も、同様の変換処理をしてあげればよさそうですね。
+</p>
+
+<h4>追記</h4>
+<p>
+<a href="http://d.hatena.ne.jp/odz/20070904/1188884960">http://d.hatena.ne.jp/odz/20070904/1188884960</a><br />
+記事に関して上記のようなご指摘をいただきました。
+私自身Unicodeに関して詳しいわけではないので、こうしたご指摘はありがたいです。
+一部、符号化という語を誤った意味で使っていたので修正しました。
+NFC、NFDはUnicodeの正規化形式の種類です。
+</p>
+
+<p>
+以下、さらなる補足です。
+</p>
+
+<p>
+PHPのmbstringの設定で、
+mbstring.http_inputとmbstring.internal_encodingの値が異なり、
+mbstring.encoding_translationの値がonになっている場合、
+サーバ側で入力パラメータのエンコーディングが自動変換されます。
+その場合、NFDで正規化された合成文字は正しく変換されずに
+途中で切れてしまう場合があります
+（そもそもPHPのmbstringモジュールがNFDに対応していないため）。
+</p>
+
+<p>
+この問題に対処するためには、
+エンコーディングの自動変換をしないようにしてサーバ側で変換処理を行うか、
+送信前にJavaScriptで変換してから送信するしかないようです。
+<a href="http://page2.xrea.jp/#php_unorm">ICUを使った正規化ライブラリ</a>が存在するようなので、
+ICUベースでUnicode対応する予定のPHP6が待ち遠しいところです。
+</p>
+{% endraw %}

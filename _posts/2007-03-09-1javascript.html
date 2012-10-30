@@ -1,0 +1,59 @@
+---
+layout: post
+title: "1時間で作る簡易スクリプト言語(JavaScript)"
+---
+{% raw %}
+<p>さかとくです。最近では、JavaScript上でJavaバイトコードが実行できたり(<a href="http://orto.accelart.jp/">Orto</a>)、JavaScriptでScheme(<a href="http://alex.ability.ru/scheme.html">jsScheme</a>)が動いたりと、とても楽しい状況ですね。ブラウザさえあれば、その上でいろんなプログラミング言語を体験することができるのですから！</p>
+
+<p>私も、これまで、マクロ言語やスクリプト言語をいくつか作ってきました。（代表作は、音楽のプログラミング言語「<a href="http://oto.chu.jp">サクラ</a>」や、<a href="http://nadesi.com">日本語プログラミング言語「なでしこ」</a>などです。）今は、ブラウザ上で動く日本語プログラミング言語を開発中ですが、これはまだ見せられる状況ではありません。</p>
+
+<p>そこで、ウノウラボを書くのに与えられただろう時間(<strong>約１時間</strong>)で、オリジナルのプログラミング言語を作ってみようと思います。もちろん、JavaScriptだけで。</p>
+
+<p>では、はじめてみましょう！</p>
+
+<h3>(1) コンパイラコンパイラをゲットする</h3>
+
+<p>はじめに用意するのは、コンパイラコンパイラです。これは、文法規則を与えると、自動的にプログラミング言語のソースコードを吐いてくれるというとても便利な道具です。今回は、時間も限られているので、とにかく、Googleで「<a href="http://www.google.co.jp/search?q=javascript+%E3%82%B3%E3%83%B3%E3%83%91%E3%82%A4%E3%83%A9%E3%82%B3%E3%83%B3%E3%83%91%E3%82%A4%E3%83%A9&lr=lang_ja&ie=utf-8&oe=utf-8&aq=t&rls=org.mozilla:ja:official&client=firefox">javascript コンパイラコンパイラ</a>」で検索してみます。</p>
+<p>すると、弊社CTOの尾藤が書いた、「<a href="http://www.google.co.jp/url?sa=t&ct=res&cd=3&url=http%3A%2F%2Fblog.bz2.jp%2Farchives%2F2005%2F07%2Fjavascript_2.html&ei=EDPxRe2JB4iwsAKP0OG-Cg&usg=__FqUYDnkvbeVI-UUItdotzgTAduw=&sig2=nY_LyRYkbb3g4yrjeeKVpg">ベイエリア情報局: Javascriptも出力できるコンパイラコンパイラ</a>」が見つかりました。既に「<A href="http://blog.bz2.jp/archives/2005/09/javascript_4.html">JavaScriptなでしこ</A>」なる言語を作って公開しているようです。
+<P>その時、使ったのが「<A href="http://www005.upp.so-net.ne.jp/kmori/kmyacc/index.html">kmyacc - 多言語対応LALRパーサー生成系</A>」のようで、時間もないのでさっそく、これをダウンロードして、マニュアルを見ながら、Cygwin上でmakeしてみました。何の障害もなくインストール完了です。でも、よく見たら、実行ファイル版(VC++版)もあるようなので、自分でmakeしなくてもよかったのです。いきなり時間浪費してしまいました。</P>
+<H3>(2) サンプルを研究する</H3>
+<P>次に、用意されている<A href="http://www005.upp.so-net.ne.jp/kmori/kmyacc/calcdemo.html">デモプログラム</A>のソースを見て、だいたいの感じをつかみます。幸いなことに、文法の定義方法は、<A href="http://www.linux.or.jp/JF/JFdocs/Lex-YACC-HOWTO-4.html">Yacc</A>とほとんど同じようです。本来なら、Yaccの使い方も解説したいところですが、何しろ1時間と限られていますので諦めます。Yaccが分かれば、ほとんど悩むことなしに、kmyaccを使いこなせるでしょう。</P>
+<H3>(3) 変数が使えるようにする</H3>
+<P>次にサンプルをコピーして適当に文法を付け加えていきます。サンプルでは、四則演算ができるだけのものでした。そこで、とりあえず、変数が使えるように、代入の定義を追加してみます。</P>
+<TABLE border="1">
+  <TBODY>
+    <TR>
+      <TD><pre>start : lines { parser_result = $1; }
+      ;
+lines : /**/            { $$ = null; }
+      | line            { $$ = $1; }
+      | lines EOL       { $$ = $1; }
+      | lines EOL line  { $$ = $3; }
+      ;
+line : expr
+     | let
+     ;
+let : WORD '=' expr   { variables[$1] = $3; }
+    ;
+expr  : expr '+' expr { $$ = $1 + $3; }
+      | expr '-' expr { $$ = $1 - $3; }
+      | expr '*' expr { $$ = $1 * $3; }
+      | expr '/' expr { $$ = $1 / $3; }
+      | expr '%' expr { $$ = $1 / $3; }
+      | value
+      ;
+value : NUMBER     { $$ = $1; }
+      | WORD       { $$ = variables[$1]; }
+      ;</pre></TD>
+    </TR>
+  </TBODY>
+</TABLE>
+<P>まず、複数行のプログラムを読めるように、linesという定義を加え、次に、「WORD
+'=' expr」という定義を追加したのです。</P>
+<H3>(4) タイムアウト</H3>
+<P>・・・と、このような感じで、１時間終了です。やはり、１時間では、変数が使える電卓が限度のようです。もう半日あれば、変な言語に改良できるんでけど、これは、またの機会にしてみます。</P>
+<HR>
+<P>ここまでで作ったものは、以下のような感じです。<BR>
+[calc]ボタンを押すと計算できます。</P>
+<a href="http://labs.unoh.net/jscalc_test.html">→変数の使える電卓</a>
+{% endraw %}

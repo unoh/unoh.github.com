@@ -1,0 +1,41 @@
+---
+layout: post
+title: "Googleマップの地図を好きな写真に簡単にさしかえられるツール"
+---
+{% raw %}
+matsuda です。こんにちは<br />
+<br />
+最近Googleマップで独自の地図を表示したりするのがちょっとしたブームだったりしたので、
+よーし僕も挑戦するぞーと思ったのですが、Googleマップって1枚の画像で
+簡単に出来るものじゃなかったんだと挫折(ズームごとに256×256pxに分割された画像が必要のよう…)。
+しかし、この問題を解決してくれるツールがあったので紹介します。<br />
+<br />
+1枚の写真とズームレベルを決めればあっという間にGoogleマップに画像が表示
+されて拡大縮小できる優れものです。<br />↓↓↓<br />
+<a href="http://www.casa.ucl.ac.uk/software/googlemapimagecutter.asp">The Google Maps Image Cutter</a>よりダウンロードが可能<br />
+<br />
+使い方はいたって簡単<br />
+<br />
+<strong>1)メニューの左にあるFileから、地図にしたい写真を選ぶ</strong><br />
+<a href="http://photozou.jp/photo/show/784/4664659"><img src="http://art8.photozou.jp/pub/784/784/photo/4664659.png" alt="gimc001" width="400" height="300" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/4664659">gimc001</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a>
+<br />
+<br />
+<strong>2)最大のズームレベルを設定する</strong>
+<br />ズームレベルが大きいほど、出来あがるタイルの数が増えるのでほどほどがいいかと思います。Tile Count で枚数がわかります。
+今回はズームレベル５(全部で341枚の画像になりますね)で作りました。<br />
+<a href="http://photozou.jp/photo/show/784/4664660"><img src="http://art8.photozou.jp/pub/784/784/photo/4664660.png" alt="gimc002" width="450" height="310" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/4664660">gimc002</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a>
+<br />
+<br />
+<strong>3)後は[create]→[start] で作成されます。</strong><br />
+<br />
+<strong>4)作成が終わると、HTMLのファイル(今回はDSC_0009.html)と、分割された画像が納められたフォルダ(今回はDSC_0009-tiles)ができあがり。</strong><br />
+<a href="http://photozou.jp/photo/show/784/4664661"><img src="http://art8.photozou.jp/pub/784/784/photo/4664661.png" alt="gimc003" width="132" height="181" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/4664661">gimc003</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a>
+<br />
+<br />
+HTMLファイルの中の<br /><br />
+http://maps.google.com/maps?file=api&v=2.x&key=PUTAPIKEYHERE<br /><br />
+のGoogle Maps API keyを自分のものに代えて（<a href="http://www.google.com/apis/maps/">Google Maps API keyはココから取得できます</a>）tile画像のフォルダと一緒にアップすれば完成。<br />↓↓↓<br />
+<a href="http://photozou.jp/photo/show/784/4664763"><img src="http://art7.photozou.jp/pub/784/784/photo/4664763.png" alt="gimc004" width="450" height="383" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/4664763">gimc004</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a>
+<br /><br />写真以外にも、会社案内用の地図とかを手書きにしたりとか…いろいろ使えそうですね。
+<br />
+{% endraw %}

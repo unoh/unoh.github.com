@@ -1,0 +1,73 @@
+---
+layout: post
+title: "横に長いコードはどこで改行していますか？"
+---
+{% raw %}
+<p>中村です。</p>
+<p>プログラムコードは1行80文字以内で、というルールを多くのプログラマが知っていると思います。以前はプリンタなどの、ハード的な都合があったみたいですね。現在では81文字になってもそれほど困ることはなさそうですが、今でも、ある程度このルールが守られていることが多いのではないでしょうか。</p>
+<p>そんな中、メソッド名などの都合上、どうしても長くなってしまうことがあります。そんなとき、みなさんはどこで改行をしていますか？</p>
+<p>例えば、次のようなJavaプログラムがあったとします。</p>
+<pre class="code"><code>package net.unoh.labs.longlong;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+
+public class Client {
+
+    public static void main(String[] args) {
+        
+        HttpURLConnection urlConnection = null;
+        BufferedReader reader = null;
+        
+        try {
+            URL url = new URL("http://clonedoppelganger.net/");
+            urlConnection = (HttpURLConnection)url.openConnection();
+            urlConnection.connect();
+            reader = new BufferedReader(new InputStreamReader(urlConnection.getInputStream()));
+            while (reader.ready()) {
+                System.out.println(reader.readLine());
+            }
+        } catch (MalformedURLException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } finally {
+            if (urlConnection != null) {
+                urlConnection.disconnect();
+            }
+            if (reader != null) {
+                try {
+                    reader.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+}</code></pre>
+<p>「reader = new BufferedReader...」のところが文字数オーバーです。私が改行するならこのようにします。</p>
+<pre class="code"><code>        try {
+            URL url = new URL("http://clonedoppelganger.net/");
+            urlConnection = (HttpURLConnection)url.openConnection();
+            urlConnection.connect();
+            reader = new BufferedReader(
+                        new InputStreamReader(urlConnection.getInputStream()));
+            while (reader.ready()) {
+                System.out.println(reader.readLine());
+            }
+        } catch (MalformedURLException e) {</code></pre>
+<p>これの見栄えが良いのか悪いのかは全く不明ですが、大体悩んだ結果こんな感じになります。関係ないですが、このプログラムを実行すると、指定のURL（ここではclonedoppelganger.net）にアクセスしてコンテンツを出力します。</p>
+<p>次のJavaScriptコードの場合はどうでしょうか。</p>
+<pre class="code"><code>document.getElementsByTagName('body').item(0).innerHTML = ['Hello', 'World'].join('&lt;br /&gt;');</code></pre>
+<p>少々意図的ですが、こんなコードも世の中にはあると思います。私が改行するならこのようにします。</p>
+<pre class="code"><code>document.getElementsByTagName('body').item(0).innerHTML
+        = ['Hello', 'World'].join('&lt;br /&gt;');</code></pre>
+<p>演算子の両隣には半角スペースを空けたり、といった他のインデントは大分と自分のなかで確立されてきたのですが、改行の位置は未だに試行錯誤の連続です。ケースバイケースではありますが、何かしら基準があると悩まずに済むのになともんもんしています。</p>
+<p>どう改行する？.orgをそろそろ作るべきかなと悩みます。</p>
+
+{% endraw %}

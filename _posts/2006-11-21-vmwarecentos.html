@@ -1,0 +1,317 @@
+---
+layout: post
+title: "VMwareとCentOSでウェブ開発の環境をさっさと整える手順書(前編)"
+---
+{% raw %}
+<p>
+最近オイルヒーター，ガスファンヒーター，石油ファンヒーターのどれを買おうか悩みつつPHPのフレームワークは<a href="http://www.symfony-project.com/" target="_blank">Symfony</a>にかなり転がりそうなjokagiです．
+私が遅いので気を遣ってkomagataさんが先に書いてくださいました．
+ナイスフォローありがとうございます．
+</p>
+<p>
+さて今回は，先日参加した開発合宿をはじめ最近何度かLinux環境を用意する必要性が連続したので，その辺りの作業を手短にする手順を紹介します．
+慣れれば最低限の環境は10分程度，全部で30分あれば十分ウェブ開発に必要な環境を用意できるようになります．
+</p>
+<p>
+とりあえずLinuxはCentOSでバージョン4.4用にServerCDというのがあるので，それとVMware Serverを使います．
+</p>
+<p>
+まずVMware ServerのインストールとCentOSのisoイメージを下記リンクあたりからダウンロードしてください．
+VMware Serverはライセンスを入力しなければいけないので仕様ライセンスの取得も忘れずに．
+また，VMware Serverを用いた運用についてはライセンスの内容を十分確認してください．
+</p>
+<p>
+</p>
+<ul>
+<li><a href="http://www.vmware.com/download/server/">Download VMware Server</a>
+<li><a href="ftp://ftp.riken.jp/Linux/centos/4/isos/i386/CentOS-4.4.ServerCD-i386.iso">CentOS-4.4.ServerCD-i386.iso</a>
+</ul>
+
+<p>
+VMware ServerのインストールはWindowsの場合だと一般的なWindwosアプリケーションと同様です．
+Linuxの場合，Red Hat系ならRPMがあるので「rpm -ihv &lt;ファイル名&gt;」ですぐインストールができます(ただしvmware-config.plを実行し，最低限の動作設定をする必要がありますが)．
+一応Administator権限が必要だと思いますので，権限のあるアカウントでインストール作業を行ってください(多分再起動が必要なので注意してください)
+</p>
+<p>
+次にGuestOSの作成を行います．
+とりあえずこんな感じで作成しました．
+</p>
+
+<dl>
+<dt>基本的にデフォルト．種類はLinuxでRed Hat Enterprise Linux 4を選ぶ</dt>
+<dd>
+CentOSはRed Hat Enterprise Linuxをベースに作成されているので，ここではRed Hat Enterprise Linux 4を選択するといいでしょう．<br />
+<div class="photozou-photo"><a href="http://photozou.jp/photo/show/137/1814306"><img src="http://photozou.jp/pub/137/137/photo/1814306.png?m=1164039196" alt="GuestOSの追加と設定4" width="450" height="334" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/137/1814306">GuestOSの追加と設定4</a> posted from <a href="http://photozou.jp/">フォト蔵</a></div>
+</dd>
+<dt>仮想ディスクサイズは20GB，容量確保は動的でで2GBスプリットは行わない</dt>
+<dd>
+20GBにはあまり根拠はありません．大体5～10GB前後あればいいかもしれません．
+容量を最初から確保しないのは，私は沢山GuestOSを作成するので(以前は20～30は常時持っていて大体10は同時に使用していた)HDDもう1個用意をケチっています．
+2GB分割をしないのはファイルが増えるのがいやなだけだったりします．</dd>
+<dt>ネットワークはNATインターフェースを選ぶ</dt>
+<dd>
+<div class="photozou-photo"><a href="http://photozou.jp/photo/show/137/1815518"><img src="http://photozou.jp/pub/137/137/photo/1815518.png?m=1164073623" alt="GuestOSのインストールと設定" width="450" height="334" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/137/1815518">GuestOSのインストールと設定</a> posted from <a href="http://photozou.jp/">フォト蔵</a></div>
+Bridgeを選ばないのには理由があり，Bridgeは有効なネットワークインターフェースが存在しなければ何もネットワークが起動しなくなるからです．
+NATインターフェースなら少なくともHostOS上からは常にアクセスができるようになります．
+また，外部からアクセスさせた場合はrouteコマンドなどでパケットがこちらに飛ぶようにして貰えばいいだけなのでそんなに面倒な話ではありません．
+</dd>
+</dd>
+<dt>CDは仮想CDで先ほどダウンロードしたisoを指定する</dt>
+<dd>
+CDやDVDはいちいち焼く必要はありません．
+限りある時間や資源の無駄遣いです．
+エコで行こう．
+<div class="photozou-photo"><a href="http://photozou.jp/photo/show/137/1814312"><img src="http://photozou.jp/pub/137/137/photo/1814312.png?m=1164097626" alt="GuestOSの追加と設定9" width="314" height="421" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/137/1814312">GuestOSの追加と設定9</a> posted from <a href="http://photozou.jp/">フォト蔵</a></div>
+</dd>
+</ul>
+
+<p>
+後はこれで一般的な手順でanaconda(インストーラー)を進めていきます．
+<div class="photozou-photo"><a href="http://photozou.jp/photo/show/137/1814314"><img src="http://photozou.jp/pub/137/137/photo/1814314.png?m=1164097626" alt="CentOSのインストール1" width="450" height="422" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/137/1814314">CentOSのインストール1</a> posted from <a href="http://photozou.jp/">フォト蔵</a></div>
+個人的にはこの辺で若干標準ではない操作と設定をします．
+</p>
+
+<ul>
+<li>画面左下の「Hide Help」で左のヘルプを隠す(まず読まないヘルプエリアが消えるので編集画面が広くなる)
+<div class="photozou-photo"><a href="http://photozou.jp/photo/show/137/1814315"><img src="http://photozou.jp/pub/137/137/photo/1814315.png?m=1164097813" alt="CentOSのインストール2" width="450" height="405" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/137/1814315">CentOSのインストール2</a> posted from <a href="http://photozou.jp/">フォト蔵</a></div>
+</li>
+<li>キーボードはUS Internationalにします．開発者は英語キーボードがいいですよ．超お勧めです．</li>
+<li>ファイアウォールとSELinuxは無効にする．やる気があるなら後で調整しましょう．</li>
+<li>インストールするロケールはEnglish(USA)もチェックします．半分気分的なものですが．</li>
+<li>「インストールするソフトウェアパッケージをカスタマイズ」を選び，次の画面で「最小」を選ぶ</li>
+</ul>
+<p>
+キモは最小を選ぶことです．
+実際に使用する時期が後になればなるほどパッケージをインストールした環境を構築していてもアップデートが出てきて再度アップデートする必要が出てきがちです．
+じゃー最初から入れなきゃいいじゃん!!ってことで必要なものは後でyumでインストールする方が手っ取り早いです．
+さてこれでインストールするとおおよそ手元のノート(おおよそスペックはDELL製 XPS M1210，Core 2 Duo，nVidia，メモリ1GB，7200rpm HDD)5分未満でインストールできました．
+インストールができたらとっとと再起動します．
+このときこのGuestOSのディスク容量はおおよそ850MB前後でした．
+コンパクトでいいですね．
+うまく圧縮できればぎりぎり800MBのメディアならCDにも入るかもしれません．
+</p>
+<p>
+ちなみに再起動したときはVMwareのロゴがでてきたころにGuestOSの電源を落とし，イメージをコピーしておきます．
+これで何度でもやり直せます．やり直したいときは5分でも面倒くさいですから．
+<div class="photozou-photo"><a href="http://photozou.jp/photo/show/137/1814318"><img src="http://photozou.jp/pub/137/137/photo/1814318.png?m=1164071419" alt="GuestOSイメージのコピー" width="450" height="292" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/137/1814318">GuestOSイメージのコピー</a> posted from <a href="http://photozou.jp/">フォト蔵</a></div>
+ちなみに実は後でいろいろパッケージを追加します．その追加されたイメージをコピーしておいてもいいですが，個人的にはコンパクトさ重視でこの状態を保存しておきました．
+</p>
+
+<p>
+さてやっとLinuxをちゃんと起動します．
+ここでrootでログインし，まずネットワークの設定を行います．
+VMware ServerのNATはインストール時に存在しないネットワークアドレスを探し，見つかったらそれをNAT用のネットワークアドレスにします．
+今回私の環境では192.168.112.0/24がそれに当たりました．
+</p>
+<div class="photozou-photo">
+<a href="http://photozou.jp/photo/show/137/1814325"><img src="http://photozou.jp/pub/137/137/photo/1814325.png?m=1164039459" alt="NATインターフェースの設定確認1" width="450" height="374" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/137/1814325">NATインターフェースの設定確認1</a> posted from <a href="http://photozou.jp/">フォト蔵</a>
+<a href="http://photozou.jp/photo/show/137/1814326"><img src="http://photozou.jp/pub/137/137/photo/1814326.png?m=1164039463" alt="NATインターフェースの設定確認2" width="402" height="420" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/137/1814326">NATインターフェースの設定確認2</a> posted from <a href="http://photozou.jp/">フォト蔵</a>
+</div>
+<p>
+VMware ServerのNATネットワークは最後の8ビットのうち1をHost OSのNAT側インターフェースとして，2をゲートウェイとして，128～254をDHCP用に割り当てるようで，それ以外なら固定IPアドレスとして使用することができます．
+私はよく5～10あたり(つまり例えば今回なら192.168.112.5～192.168.112.10)に固定IPアドレスで設定し，サーバーとして使用します．
+設定はエディタでやってもいいですコマンドnetconfigもお手軽です．ただしコマンドnetconfigはコンソールベースだと文字化けする場合があるので，LANG=Cを付けて起動しましょう．
+</p>
+<div class="command">
+<pre>
+# /usr/sbin/netconfig
+</pre>
+</div>
+
+<p>
+今回開発サーバー用のIPアドレスは192.168.112.10ということにしたので，netconfigを用いると大体こんな感じになります．
+</p>
+<div class="command">
+<pre>
+[root@tjokagi ~]# /bin/cat /etc/sysconfig/network-scripts/ifcfg-eth0
+# Advanced Micro Devices [AMD] 79c970 [PCnet32 LANCE]
+DEVICE=eth0
+ONBOOT=yes
+BOOTPROTO=static
+IPADDR=192.168.112.10
+NETMASK=255.255.255.0
+GATEWAY=192.168.112.2
+HWADDR=00:0C:29:2C:C6:3E
+</pre>
+</div>
+
+<div class="command">
+<pre>
+[root@tjokagi ~]# /bin/cat /etc/resolv.conf
+; generated by /sbin/dhclient-script
+search localdomain
+nameserver 192.168.112.2
+</pre>
+</div>
+
+<p>
+若干この設定に関する補足を下記にしておきましょう．
+</p>
+
+<dl>
+<dt>ifcgh-eth0のHWADDRは削除するかコメントアウトするほうがいいかもしれない</dt>
+<dd>
+HWADDRはインターフェースのMACアドレスが入るのですが，通常ネットワークインターフェースにはMACアドレスが付加されていますが，VMware Serverは使用上設定ファイルのパスをベースにMACアドレスを生成します．
+つまりフォルダーを移動するとMACアドレスが変化する可能性が出てきます(一応GuestOS起動時にどうするか確認してくる)．
+設定ファイル上のHWADDRはインターフェースのMACアドレスが入るのですが，これと実際のMACアドレスが不一致だった場合，インターフェースが起動しません．
+この原因に気づかなければずっとインターフェースが起動できなくなってしまいます．
+</dd>
+<dt>resolv.confのsearchやdefaultdomainの設定をどうするか</dt>
+<dd>
+個人的にサーバーを指定するときにいわゆるホスト名には必ずFQDNを指定するようにしています(jokagi.example.comなど)
+これをホスト名だけで指定する方はresolv.confにsearchやdomainの値を適切に指定する必要があるでしょう．
+</dd>
+</dl>
+
+<p>
+次にサービスの設定をします．
+コマンドsetupでCUIを使って設定もできますが，個人的にはchkconfigを用いてCLIで設定するが好みです．
+厳密にやると面倒なのですが，基本的に外からアクセスされることのないウェブ開発として準備していたので最低限のもののみ停止します．
+下記は「cups」「isdn」「kudzu」gpm」「smartd」「pcmcia」のサービスを停止します．
+</p>
+
+<div class="command">
+<pre>
+# for SERVICE in cups isdn kudzu gpm smartd pcmcia; \
+  do /sbin/chkconfig ${SERVICE} off; done
+ (実際は1行です)
+</pre>
+</div>
+
+<p>
+次に必要そうなパッケージをガンガンいれていきます．
+</p>
+
+<div class="command">
+<pre>
+# /usr/bin/yum update
+# /usr/bin/yum install httpd postfix openldap-servers postgresql-server mysql-server
+# /usr/bin/yum install php php-{mbstring,pgsql,mysql,ldap,imap}
+# /usr/bin/yum install emacs rpm-build gcc
+</pre>
+</div>
+
+<p>
+1回目のyumはまずシステム全体のアップデートを行います．
+これは少し時間がかかるかもしれません．
+</p>
+
+<p>
+2回目のyumはサーバー系のインストールです．
+自分が必要だと思う分だけインストールしましょう．
+</p>
+
+<p>
+3回目のyumはphpで必要なRPMをインストールしました．
+個人的に「PEARはRPMで管理するべからず」と考えているので，後々http://go-pear.org/から別途インストールします．
+</p>
+<p>
+最後のyumは単にメインのエディタにemacsを使っているから入れています．
+のちに自分で準備したPHPのRPMをビルドするためにとりあえず最低限の開発関連のパッケージをインストールしています(今入れてもどうせ後でもっとたくさん入れないといけないんだけど)．
+</p>
+
+<p>
+次にuseraddで一般ユーザーを作成し，ウェブ開発用のグループを作成します．
+作成した一般ユーザーにはパスワードもちゃんと付け，vigrを用いてwebに所属させます．
+作成した一般ユーザーはsshの公開鍵をちゃんと入れておき，パスワードログインはしないようにしましょう．
+</p>
+
+<div class="command">
+<pre>
+# /usr/sbin/useradd jokagi
+# /bin/passwd
+# /usr/sbin/groupadd web
+# /usr/sbin/vigr
+</pre>
+</div>
+
+<p>
+ここでなぜわざわざ新しいグループを作るかというと，共同作業などを行う場合，ディレクトリに特殊なパーミッションしていして作成すると共用ディレクトリのようなものを実現できるため，この作業はその下準備とします．
+</p>
+
+<div class="command">
+<pre>
+# mkdir /home/web
+# chmod g+s /home/web
+# chgrp web /home/web
+</pre>
+</div>
+
+<p>
+これでグループwebに追加されているか阿吽とが/home/web配下でファイルやディレクトリを作成するとそのファイルやディレクトリのオーナーグループはwebになります．
+umaskを0002にしておけばグループでの読み書きが可能になるので実質共用フォルダーのようなものが実現できるようになります．
+</p>
+
+<p>
+次に，またvigrを用いて今度は先ほど作成したユーザーをグループwheelに所属させ，visudoを用いてsudoの設定をします．
+sudoの設定でwheelはsudo経由でrootになれるようにし，sudoを併用することにより一般ユーザーをrootに直接ログインしないでいい環境にします．
+</p>
+
+<div class="command">
+<pre>
+# /usr/sbin/vigr    (「wheel:」で始まる行の右にカンマ区切りで先ほど作成したユーザーを追加)
+# /sbin/visudo      (「# %wheel」で始まる行にある行頭の「#」を削除する)
+</pre>
+</div>
+
+<p>
+「# %wheel」と書いている行は「NOPASSWD:」という文字列を含む行の方の行頭の「#」をはずすとsudoをするたびにパスワードが聞かれなくなります．
+これを使うか使わないかは運用方針と好みになりますね．
+</p>
+
+<div class="command">
+<pre>
+# su - jokagi
+$ mkdir -p ~/.ssh
+$ chmod go-rwx ~/.ssh
+$ vi ~/.ssh/authorized_keys2
+$ chmod go-rwx ~/.ssh/authorized_keys2
+</pr>
+</div>
+
+<p>
+ssh関連はパーミッションなども意識して動作するので，しっかり設定してあげてください．
+最後にsshd(sshサーバー)の設定をします．
+今回はrootへはssh経由でログインできないようにし，パスワードでのログインも禁止します．
+</p>
+
+<div class="command">
+<pre>
+# /usr/bin/vi /etc/sshd_config
+</pre>
+</div>
+
+<p>
+編集のポイントは下記のようになり，編集が終了したらsshdを再起動します．
+</p>
+
+<ul>
+<li>PermitRootLogin no</li>
+<li>PasswordAuthentication no</li>
+</ul>
+
+<div class="command">
+<pre>
+# /sbin/service sshd restart
+</pre>
+</div>
+
+<p>
+これでLinuxにログインする上で最低限のことができました．
+だいたいここまでで慣れれば合計10～15分で設定できます．
+Windows上に(Linux上でも動くみたいですが)httpdなどを用意するXAMPPなどもありますが，この程度の時間で最低限のインストールができるなら(おそらくより本番環境に近い)Linuxをさっさと入れる方が最終的には近道になるという考えもあります．
+特に複数の案件を同時にこなしたい!!といったときは，開発環境をきっちりわけて持っておく方がより確実な開発環境になります．こういった場合VMwareならGuestOSのイメージを必要分持てばいいだけですが，XAMPPでは中々難しいでしょう．
+今となっては仮想技術のようなものは他にはcoLinuxやXenなどもありますが，それなりに沢山のバリエーションのOSやディストリビューションを使用する目的でVMwareを(バージョン1がリリースされる前から)用いていた身には他の環境に移るモチベーションを中々持つことができずにいます．
+</p>
+<p>
+さて手短にとかいう出だしの割りに長くなったので今回はここで終わります．
+次回はここからhttpdの設定などを行います．って肝心なところだろ!!とも思いますがご了承ください．
+httpdの設定などはなるべくメンテナンス性などを意識した開発環境の構築などを紹介したいと思います．
+興味がでてきた方は首を長くして話半分で期待してください．
+</p>
+<p>
+今回の結論としては子供がいる家庭で暖房器具は何にするのが最適かというお話でした．
+もしいいアドバイスがあるかたは<a href="http://blog.poyo.jp/" target="_blank">私のブログ</a>などにでも適当なエントリにコメントをいただければと思います．
+それではあでゅー
+</p>
+{% endraw %}

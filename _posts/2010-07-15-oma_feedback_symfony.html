@@ -1,0 +1,81 @@
+---
+layout: post
+title: "symfonyを使ってみた所感"
+---
+{% raw %}
+<p>こんにちは、オマタです。</p>
+
+<p>4月に入社したばかりでここに書ける小ネタがないのですが、<br />
+symfonyを使い始めてみて便利だなと思ったことを書いてみたいと思います。</p><br />
+
+<p style="color:yellow; font-weight:bold">jobeetが用意されているところがすごい</p>
+<p>symfony初心者は、jobeetと言われるチュートリアルを参照しつつ、<br />
+説明の通りに自分の環境で動かしながら使い方に慣れていくのが一般的です。<br />
+このjobeetがとてもよく出来ていて、これを一通りこなすだけでインストールから<br />
+エンジニア求人サイトの正しい作り方までを勉強することができます。<br />
+途中、日本語訳の説明文に間違いや分かり辛いところがあったりしますが、<br />
+そのときは個人blogに書かれているjobeet正誤情報が助けてくれます。<br />
+ちなみにウノウではjobeetの14日目までが習得推奨となっています。<br />
+<a href="http://www.symfony-project.org/jobeet/1_4/Propel/ja/">jobeetへのリンク</a>
+</p><br />
+
+<p style="color:yellow; font-weight:bold">symfonyコマンドがすごい</p>
+<p>symfonyコマンドを使ってプロジェクトの作成、モジュールの作成、<br />
+modelやformの生成の他にDBのスキーマ構築、fixtures.ymlの生成、<br />
+バージョンやプラグインの確認など様々なことが行えます。<br />
+CakePHPのbakeコマンドもお茶目で便利で素敵と思ったものでしたが、<br />
+symfonyコマンドの便利さをしみじみ感じている今日この頃です。</p><br />
+
+
+<p style="color:yellow; font-weight:bold">デバッグツールバーがすごい</p>
+<p>symfonyのデバッグツールバーはとっても便利です。<br />
+パラメータの中身やactionからviewへ渡すオブジェクトの中身が閲覧できる他、<br />
+実行速度やSQLクエリのログなども見れます。<br />
+そのツールバーが画面の右上に常駐していて、見たい時に開いて見ることができます。<br />
+エラー時にはログやstack traceを見れば何処でエラーが起こったかを特定できます。
+</p><br />
+
+
+<p style="color:yellow; font-weight:bold">ルーティングが便利</p>
+<p>routing.ymlで各ページのURLの命名規則やパラメータの有無、<br />
+リクエストの種類（GET/POST）など設定することができ、<br />
+条件に合わないURLがリクエストされた場合にはエラーを表示させることができます。<br />
+さらにはsfPropelRouteクラスを使うことで、指定クラスのオブジェクトを<br />
+受け取ることができます。<br />
+テンプレート内でURLを記述する場合には、<br />
+<pre class="code">
+&lt;?php echo url_for('ルート名') ?&gt;
+</pre>
+を使います。<br />
+後からURLの規則を変えたいときでも、ルート名で呼び出しておけば<br />
+routing.ymlの設定を変えるだけでいいので便利です。</p>
+<br />
+
+
+<p style="color:yellow; font-weight:bold">フィルターが便利</p>
+<p>アプリケーションディレクトリ内のconfig/security.ymlの設定を<br />
+<pre class="code">
+is_secure: true
+</pre>にすると、どのページににアクセスする際にも<br />
+filters.ymlで設定されているfilterクラスを通ることになり、<br />
+たとえばmyAuthenticationFilterで認証が通らなかった場合には<br />
+loginモジュールに飛ばす仕組みになっています<br />
+（どのモジュールに飛ばすかの設定は変えられます）<br />
+その他、InputFilterやOutpurFileterを追加することで入出力時に<br />
+フィルターをかけることができます。<br />
+filterを通したくないモジュール（errorモジュールなど）の場合には、<br />
+モジュールのディレクトリ内にconf/security.ymlを作成し、<br />
+下記のように設定するだけでスキップされます。<br />
+<pre class="code">
+all:
+    is_secure: false
+</pre>
+</p><br />
+
+<p>以上がsymfonyを使ってみた所感になります。<br />
+これからsymfonyを使ってみようと考えている方にとって、<br />
+少しでもこの情報がお役に立てれば幸いです。</p><br />
+
+
+
+{% endraw %}

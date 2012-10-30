@@ -1,0 +1,40 @@
+---
+layout: post
+title: "Firefox 2 RC2 を使ってみる - 対応していない拡張機能も強引に使えるようにする方法"
+---
+{% raw %}
+<p>こんにちは、ジュンヤです。</p>
+
+<p><a href="http://www.mozilla-japan.org/products/firefox/releases/2rc2.html">Firefox 2 RC2</a>　をダウンロードして使ってみました。タブやボタンがちょっとかっこよくなっています。</p>
+
+<a href="http://photozou.com/photo/show/7/1528054"><img src="http://photozou.com/pub/7/7/photo/1528054.png?m=1160542967" alt="firefox0" width="295" height="450" style="border: solid 1px #000;"></a><br><a href="http://photozou.com/photo/show/7/1528054">firefox0</a> posted from <a href="http://photozou.com/">フォト蔵</a>
+
+<p>いくつか新機能を紹介してみましょう。</p>
+
+<p>Google検索ツールバーに補完機能がつきました。結構便利です。特に英語のキーワードなどは、スペルミスして検索し、「もしかして○○」と言われることが少なくなります。</p>
+
+<a href="http://photozou.com/photo/show/7/1528155"><img src="http://photozou.com/pub/7/7/photo/1528155.png?m=1160543351" alt="firefox1" width="332" height="450" style="border: solid 1px #000;"></a><br><a href="http://photozou.com/photo/show/7/1528155">firefox1</a> posted from <a href="http://photozou.com/">フォト蔵</a>
+
+<p>ツール > オプション　で開くオプションタブに新たにフィードというタブが追加されました。ここで自分がいつも使っているフィードリーダーを選択しておくと、RSSのアイコンやリンクをクリックしたとき、xmlが表示されるかわりに、それぞれのフィードリーダーへの登録画面になります。残念ながら僕が利用している <a href="http://www.freshreader.com/">Fresh Reader</a> には対応していませんが、もしかするとなんとか対応させる方法があるのかもしれません。</p>
+
+<a href="http://photozou.com/photo/show/7/1528156"><img src="http://photozou.com/pub/7/7/photo/1528156.png?m=1160543360" alt="firefox2" width="450" height="447" style="border: solid 1px #000;"></a><br><a href="http://photozou.com/photo/show/7/1528156">firefox2</a> posted from <a href="http://photozou.com/">フォト蔵</a>
+
+<p>新機能の中で僕が結構魅力的だなと思ったのが、スペルチェック機能です。<a href="http://blog.photozou.com/">英語版フォト蔵の開発日誌</a>に僕もたまにエントリーを書いたりするのですが、そういうときに役立ちそうです。テキストエリア内のスペルチェックをおこなってくれます。デフォルトでは辞書がインストールされていないようで、インストールするには、テキストエリア内で右クリックし、言語 > 辞書を追加　を選択します。開いた Firefox Add-ons のページで、United States English Dictionary 2.0.0.1　を選択しました。ミスしている部分に赤い下線が付き、その上で右クリックすれば候補を表示してくれるようになります。</p>
+
+<a href="http://photozou.com/photo/show/7/1528158"><img src="http://photozou.com/pub/7/7/photo/1528158.png?m=1160543369" alt="firefox3" width="450" height="302" style="border: solid 1px #000;"></a><br><a href="http://photozou.com/photo/show/7/1528158">firefox3</a> posted from <a href="http://photozou.com/">フォト蔵</a>
+
+<p>まだまだある新機能について知りたければ、<a href="http://www.mozilla-japan.org/products/firefox/releases/2rc2.html">本開発マイルストーンの新機能と改良点</a>を見てください。</p>
+
+<p>実は、1.5 -> 2.0 にアップデートするとたいがいの拡張機能が対応していないために、使えなくなってしまいます。例えば僕が愛用している、<a href="http://perso.orange.fr/marc.boullet/index.html">All-in-One Gestures</a>　なんかも使えなくなってしまいました。
+
+<p>そこで、<a href="http://users.blueprintit.co.uk/~dave/web/firefox/nightly">Nightly Tester Tools</a>　という拡張機能を使い無理やりそうした未対応の拡張機能を使えるようにします。この Nightly Tester Tools　をインストールし拡張機能に加え、ツール > アドオン　でアドオン画面を開くと、Make all compatible というボタンが右下に表示されるようになります。</p>
+
+<a href="http://photozou.com/photo/show/7/1528161"><img src="http://photozou.com/pub/7/7/photo/1528161.png?m=1160543377" alt="firefox4" width="450" height="277" style="border: solid 1px #000;"></a><br><a href="http://photozou.com/photo/show/7/1528161">firefox4</a> posted from <a href="http://photozou.com/">フォト蔵</a>
+
+<p>これをクリックすれば未対応の拡張機能が使えるようになります。僕の場合は、<a href="https://addons.mozilla.org/firefox/697/">View formatted source</a> が残念ながらうまく動かなくなってしまいましたが、All-in-One Gestures　や　<a href="http://livehttpheaders.mozdev.org/">Live HTTP Headers</a> といったほかの愛用している拡張機能は使えるようになりました。</p>
+
+<p>注意しなくてはいけないのは、こうした拡張機能は 1.5 のときにインストールしておいてから、2.0 にアップグレードし、Nightly Tester Tools を使って利用できるようにしないといけない、ということです。2.0 にアップグレードしてからだと、例えば All-in-One Gestures をインストールしようとしても、「対応していない拡張機能です」と言われてしまいインストールできません。</p>
+
+<p>皆さんも Firefox2 を使ってみてはいかがでしょう。こんな使い方があるとか、この機能がオススメだというのがあればぜひお聞かせください。</p>
+
+{% endraw %}

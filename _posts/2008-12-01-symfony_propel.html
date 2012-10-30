@@ -1,0 +1,28 @@
+---
+layout: post
+title: "symfony propelでシーケンス名が省略されてしまう"
+---
+{% raw %}
+<p>yukiです。</p>
+<p>今回は「symfonyでよくあるトラブル」を掲載してからちょうど1年を経過したので、また今年も取り上げてみたいと思います。</p>
+<p>前回はsymfony+MySQLを使っての場合でしたが、今回はsymfony+PostgreSQLでお送りします。</br>
+とはいえ以前よりもだいぶsymfonyを取り巻く状況も変化し、バグらしいバグもほとんど既知のものだったり、枯れて(?)きたのかな、とも思います。</br>
+そんななか、小一時間ほどハマってしまった不具合があったので、今回はそのご紹介のみになります。</p>
+<h3> symfony propel-build-modelで作成したSQLのシーケンス名が食い違う</h3>
+<p>どうもテーブル名やカラム名がある程度長いと、途中で省略されてしまったりして、誤認識してしまう。<br>
+PostgreSQLの場合英数字63文字(63byte)までは問題ないはずが、どうもそれより短い文字数でも途中で切れてしまう問題。</br>
+どうもPropelのバグらしいので、自作パッチを当てるなり、UPDATEで修正されることを期待するしかなさそうです。</p>
+
+<pre class="code"><code>$ cat symfony/lib/vendor/propel-generator/classes/propel/engine/platform/PgsqlPlatform.php
+中略
+    /** 
+     * @see        Platform#getMaxColumnNameLength()
+     */
+    public function getMaxColumnNameLength()
+    {   
+        return 32; 
+    }   
+
+中略</code></pre>
+<p>今回もアッサリしたエントリになってしまいましたが、お役に立てれば幸いです。</p>
+{% endraw %}

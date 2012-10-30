@@ -1,0 +1,94 @@
+---
+layout: post
+title: "Photoshopのスクリプトを気軽に複数ファイルに適用する"
+---
+{% raw %}
+<p>みなさんこんにちは。11月に入社したデザイナーの935です。</p>
+
+<p>デザインの仕事をしていると「バッチ処理ではできない複雑な作業を複数のファイルに一度に適応したい」という気持ちになることがありませんか？そんなとき私はjsflなんかと比べると若干マイナーな感のあるphotoshopのスクリプトを愛用しています。</p>
+
+<p>でも、photoshopのスクリプトってメニューからだと「一度に開いたファイル一つ」にしか適応できないですよね？そうすると、せっかくスクリプト書いたのに「それってなんか片手おちじゃない？どうせなら一度にやってよ」という気持ちになるわけです。</p>
+
+<p>そこで今回はドロップレットを使って複数のファイルにスクリプトを適用する方法をご紹介したいと思います。</p>
+
+<p>まあ、特定のフォルダのファイルリストを取得してforで回すようなスクリプト書いてもいいんですが、今回はドロップレットを使って気軽にやってみましょう。</p>
+
+<h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;">1.スクリプトの準備</h3>
+
+<p>まず簡単なスクリプトを用意してみましょう。</p>
+
+<pre class="code">
+fName = activeDocument.name.slice(0,1);
+colObj = new SolidColor();
+
+if (fName == "a") {
+	colObj.rgb.red = 255;
+	colObj.rgb.green = 0;
+	colObj.rgb.blue = 0;
+}else if (fName == "b") {
+	colObj.rgb.red = 0;
+	colObj.rgb.green = 0;
+	colObj.rgb.blue = 255;
+}
+
+activeDocument.activeLayer = activeDocument.artLayers[activeDocument.artLayers.length-1];
+activeDocument.selection.selectAll();
+activeDocument.selection.fill(colObj,ColorBlendMode.NORMAL, 100, false);
+</pre>
+
+<p>ファイル名がaから始まれば背景を赤に、bから始まれば青に塗りつぶすだけのスクリプトです。これを「サンプルスクリプト.jsx」という名前でPhotoshop.exeのあるフォルダの\Presets\Scripts以下に保存します。</p>
+
+<p>Photoshopを起動し直すとスクリプトメニューに「サンプルスクリプト」が追加されます。</p>
+
+<img alt="1_1.jpg" src="http://labs.unoh.net/yamane1_1.jpg" width="526" height="298" class="mt-image-left" style="margin: 0 20px 20px 0; display: block;" />
+
+<p>ついでに、このスクリプトを適応するファイルも用意しました。</p>
+
+<img alt="yamane1_2.jpg" src="http://labs.unoh.net/yamane1_2.jpg" width="700" height="198" class="mt-image-left" style="margin: 0 20px 20px 0; display: block;" />
+
+<h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;">2.スクリプトをアクションに登録</h3>
+
+<p>そしてこれをアクションに登録します。新規のアクションを作ってスクリプトを実行しましょう。</p>
+
+<img alt="yamane1_6.jpg" src="http://labs.unoh.net/yamane1_6.jpg" width="282" height="129" class="mt-image-left" style="margin: 0 20px 20px 0; display: block;" />
+
+<p>これでスクリプトを実行するアクションができました。</p>
+
+<h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;">3.ドロップレットを作る</h3>
+
+<p>先ほど作ったアクションからドロップレットを作成（[ファイル]-[自動処理]-[ドロップレットを作成]）します。</p>
+
+<img alt="yamane1_3.jpg" src="http://labs.unoh.net/yamane1_3.jpg" width="360" height="253" class="mt-image-left" style="margin: 0 20px 20px 0; display: block;" />
+
+<p>ここでは試しに「サンプルドロップレット.exe」を作成しました。</p>
+
+<h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;">4.バッチファイルを作る</h3>
+
+<p>フォルダを作って処理したいファイルを入れ、さらに3で作ったドロップレットにフォルダを渡すバッチファイルを作ります。</p>
+
+<pre class="code">
+サンプルドロップレット.exe C:\sample\psd
+</pre>
+
+<p>↓サンプルで作ったフォルダの中身はこんな感じです。</p>
+
+<img alt="yamane1_4.jpg" src="http://labs.unoh.net/yamane1_4.jpg" width="328" height="247" class="mt-image-left" style="margin: 0 20px 20px 0; display: block;" />
+
+<pre class="code">
+C:\sample
+　　　　\psd
+　　　　　　処理したいファイル群
+　　　　サンプルドロップレット.exe
+　　　　サンプルバッチ.bat
+</pre>
+
+<p>これで、バッチファイルをダブルクリックするだけでフォルダの中身全部にスクリプトが適用されるようになりました！あとはゆっくりコーヒーでも飲んでいれば、Photoshopがかいがいしくファイル処理をしてくれますよ～。</p>
+
+<img alt="yamane1_5.jpg" src="http://labs.unoh.net/yamane1_5.jpg" width="336" height="143" class="mt-image-left" style="margin: 0 20px 20px 0; display: block;" />
+
+<p>補足</p>
+
+<p>よく考えてみればフォルダをドロップレットにドラッグ&ドロップするだけでもできるんですよね。...ドロップレットなんだから...。</p>
+
+<p>それではみなさんよいお年を！</p>
+{% endraw %}

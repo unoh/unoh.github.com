@@ -1,0 +1,122 @@
+---
+layout: post
+title: "Adobe MAX で明らかになった次世代Flashの世界"
+---
+{% raw %}
+こんにちは！ yamazakiです。<br/>
+毎度このブログでは日ごろの仕事にちょっと役立つかもしれないデザイン話をあれこれとやらせていただいているのですが、今回はちょっと趣を変えて。<br/>
+<br/>
+日ごろの仕事はどちらかというとデザイン画像を作ったり、HTMLやCSSのコードを書いたりといったことが多いのですが、個人的にFlashが好きで、ActionScriptやFlex関係の勉強会などにもお邪魔させていただいたり、Flash関係の情報を集めていたりしています。<br/>
+9/30～10/3にアメリカのシカゴで開催されたAdobe MAXというイベントで、Flashを中心としたAdobe製品についての発表がありまして、様々な新しい情報が出てきました。<br />
+このブログをご覧いただいている方の中にも、Flex/FlashやSilverlightなどといった技術の活用やRIA方面に関心のある方もいらっしゃるかと思いますし、趣味と実益を兼ねて、捕捉している限りの発表内容をざっくりまとめてみました。<br/>
+<br/>
+ちなみにより詳しい内容は<a href="http://mtl.recruit.co.jp/" title="メディアテクノロジーラボ">メディアテクノロジーラボ</a>
+さんなどに、実際にMAXに参加された方による記事・映像へのリンクなどもありますのでぜひご覧くださいませ。<br/>
+<br/>
+<br/>
+<br/>
+まずは以前からアナウンス済みのものから<br/>
+<h3>
+  FlashPlayer9 update
+</h3>
+こちらはすでにアナウンス済み。H.264ビデオ、HD対応、AAC対応などメディアプレーヤとしての機能がぐんと拡充された感じです。<br/>
+<a href="http://labs.adobe.com/technologies/flashplayer9/" id="ih:p" title="Adobe Labsにてベータ版公開中。">Adobe
+Labsにてベータ版公開中。</a><br/>
+<h3>
+  Adobe Media Player
+</h3>
+こちらも以前にアナウンス済みですね。Adobe謹製のメディアプレイヤーです。映像配信の際のブランディングができるなど、Adobeらしい特徴を持ったメディアプレイヤーに仕上がっている模様です。<a href="http://labs.adobe.com/technologies/mediaplayer/" id="l6us" title="プレリリース版がAdobe Labsで公開中">プレリリース版がAdobe
+Labsで公開中</a> です<br/>
+<h3>
+  Flex 3 SDK/Flex Builder 3
+</h3>
+こちらは以前からベータ版がAdobe
+Labsに公開されてましたが、MAXにあわせて<a href="http://labs.adobe.com/technologies/flex/flexbuilder3/" id="hraa" title="beta2が公開になりました">beta2が公開になりました</a>
+。Flex
+Builderのロードマップなどについては<a href="http://flex.org/" id="d6uc" title="flex.org">flex.org</a>
+の<a href="http://flexwiki.adobe.com/confluence/display/ADOBE/Home" id="ujhi" title="wiki">wiki</a>
+に色々とまとまってますのでご参考までに。<br/>
+<h3>
+  Photoshop Express
+</h3>
+Photoshopの簡易オンライン版。簡易版といいながら写真の補正等の目的では使えそうな内容みたいでした。<br/>
+<h3>
+  Flash lite3.0
+</h3>
+携帯電話向けFlashの新版。flv再生できるというのが一番のポイントですね。<br/>
+国内だとドコモが対応を発表しているとのことですが、いったいいつ乗ってくるのやら。<br/>
+<br/>
+<br/>
+そして今回のMAXで初めて明かされたもの<br/>
+<h3>
+  FlashPlayer10(Astro)
+</h3>
+今回のMAXではじめて明らかになったFlashPlayerの次期バージョンです。<br/>
+<ul>
+  <li>
+    画像などを3次元的に扱うためのAPI
+  </li>
+  <li>
+    文字組み機能が強化
+  </li>
+</ul>
+など、デザイナとしては表現力の強化に期待できそうな機能追加。他に注目ポイントとして、Flash内部で使用する画像処理のフィルタを自作できるようになるそうです。そのための開発ツールとして、<a href="http://labs.adobe.com/wiki/index.php/AIF_Toolkit" id="udb-" title="AIF(Adobe Image Foundation) Toolkit">AIF(Adobe
+Image Foundation) Toolkit</a>
+というものが公開されまして、こちらでswf内でも利用可能な高速画像処理フィルタを作ることができるそうです。<br/>
+<h3>
+  Flash<br/>
+</h3>
+こちらはFlashのIDEのほうの話。<br/>
+<ul>
+  <li>
+    Flashの開発画面上で映像再生できる
+  </li>
+</ul>
+といった便利な機能拡張や<br/>
+<ul>
+  <li>
+    タイムラインにキーフレームをいくつも打って、みたいな面倒なことをせずにアニメーション作れる
+  </li>
+</ul>
+<ul>
+  <li>
+    書いた絵にボーンを仕込んでアニメーションさせる、みたいなことができる
+  </li>
+</ul>
+といった、アニメーション作りに便利な機能拡張がされるようです。<br/>
+<h3>
+  Flash on C/C++
+</h3>
+どうやらC/C++の資産がFlashで活用できるようになるらしい、という話のようで。C/C++で書いたものがASに取り込めて、たとえばXSLTの機能を追加、とか色々拡張できる、という感じの説明っぽかったんですがイマイチ英語が聞き取れず。とりあえずFlashの常識からすると恐ろしい内容のデモが展開されてまして会場大フィーバー。<br/>
+<h3>
+  Thermo
+</h3>
+こちらは今回のMAXで初公開になったプロダクト。<br/>
+性格としては「Flex Builder for Designer」といったもので、RIAインターフェースを、デザイナーが制作するのを助けるツール、といった感じ。<br/>
+IllustratorやPhotoshop、Fireworksなどで作ったグラフィックをThermoに取り込んで、各パーツにインタラクションなどを設定。それをmxmlに吐き出して、エンジニアに渡す、といったようなワークフローが想定されているようです。リリース時期は未定。<a href="http://aralbalkan.com/1050" id="aexf" title="映像はこちら">映像はこちら(aralbalkan.com)</a><br/>
+<h3>
+  Flex Builder linux
+</h3>
+FlexのEclipse
+pluginがlinuxでも動くようになる模様。<a href="http://labs.adobe.com/technologies/flex/flexbuilder_linux/" id="vpps" title="Public Alphaが公開されている">Public
+Alphaが公開されている</a> ので興味のある方は自己責任でお試しあれ。<br/>
+<h3>
+  Flash home
+</h3>
+携帯電話のOSそのものをFlashに?という技術、なのか何なのかよくわからず。とりあえずブート段階から各種操作などのUIが全てFlashになっていた、というのはわかったんですが…。<br/>
+<br/>
+その他にもAdobe CS4製品やサーバ製品、Adobe社で運営するサービスなどについてもあれこれと話があったようなのですが追いきれてないのでその辺りは割愛。<br/>
+以上、大雑把なまとめですが、次世代のWebを作るツールとして、Flashの可能性がまた広がった、といった感じでしょうか。<br/>
+どんどん進化していくので本当についていくの大変です…。<br/>
+<br/>
+<br/>
+以下参考にさせていただいたサイト：<br/>
+<a href="http://labs.adobe.com/" id="dgpt" title="Adobe Labs">Adobe Labs</a><br/>
+<a href="http://flex.org/" id="y_m:" title="flex.org">flex.org</a><br/>
+<a href="http://mtl.recruit.co.jp/" id="t1c8" title="メディアテクノロジーラボ　ブログ">メディアテクノロジーラボ　ブログ</a><br/>
+<a href="http://d.hatena.ne.jp/sato-shi/" id="qgxt" title="Flex Coder">Flex
+Coder</a><br/>
+<a href="http://journal.mycom.co.jp/articles/2007/10/04/max2/index.html" id="akv:" title="http://journal.mycom.co.jp/articles/2007/10/04/max2/index.html">http://journal.mycom.co.jp/articles/2007/10/04/max2/index.html</a><br/>
+<a href="http://aralbalkan.com/" id="muvh" title="http://aralbalkan.com/">http://aralbalkan.com/</a><br/>
+<a href="http://www.peterelst.com/blog/" id="q161" title="http://www.peterelst.com/blog/">http://www.peterelst.com/blog/</a><br/>
+{% endraw %}

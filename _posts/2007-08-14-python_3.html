@@ -1,0 +1,162 @@
+---
+layout: post
+title: "Pythonで携帯の機種判別をする"
+---
+{% raw %}
+<p>こんにちは、chihiroです。今回はPythonでモバイルサイトを開発する場合に便利なライブラリ、WSGIUserAgentMobileを紹介します。これはUserAgentからキャリアや端末情報を取得するためのライブラリです。</p>
+
+<p>Google Code WSGIUserAgentMobile<br />
+<a href="http://code.google.com/p/wsgiuseragentmobile/" >http://code.google.com/p/wsgiuseragentmobile/</a>
+</p>
+<p>これは基本的にはPHPのPEAR::Net_UserAgent_Mobile、さらに元を辿ればPerlのHTTP-MobileAgentを、僕がPythonに移植したものですが、いくつか独自のメソッドやプロパティを追加しています。インストールから、基本的な使い方、Djangoで使用する場合の例をご紹介します。</p>
+
+<h3> インストール</h3>
+<p>諸般の事情によりまだ<a href="http://pypi.python.org/pypi">Python Package Index</a>に登録していないので、開発レポジトリから直接インストールして下さい。</p>
+<p>レポジトリからチェックアウトしてからインストールする場合、次のようにします。</p>
+
+<pre class="code">$ svn checkout http://wsgiuseragentmobile.googlecode.com/svn/trunk/ uamobile
+$ cd uamobile
+$ python setup.py install
+</pre>
+
+<p>または、easy_installを使って直接レポジトリからインストールすることもできます。</p>
+<pre class="code">$ easy_install http://wsgiuseragentmobile.googlecode.com/svn/trunk/
+</pre>
+
+<h3> 簡単な使い方</h3>
+<p>デバイスの判定を行うには、uamobileモジュールのdetect関数を使います。detectに与える引数は辞書型オブジェクトです。</p>
+
+<pre class="code">&gt;&gt;&gt; from uamobile import detect
+&gt;&gt;&gt; detect({&#39;HTTP_USER_AGENT&#39;:&#39;KDDI-SA31 UP.Browser/6.2.0.6.3.129 (GUI) MMP/2.0&#39;})
+&lt;EZwebUserAgent &quot;KDDI-SA31 UP.Browser/6.2.0.6.3.129 (GUI) MMP/2.0&quot;&gt;
+</pre>
+
+<p>detect関数には、少なくともHTTP_USER_AGENTというキーと値だけは与えなくてはなりません。さもないと、当然ながらUserAgentの判定ができないので、detect関数はNonMobileオブジェクトを返します。</p>
+
+<pre class="code">&gt;&gt;&gt; detect({})
+&lt;NonMobileUserAgent &quot;&quot;&gt;
+</pre>
+
+<h3> よく使うメソッド・プロパティ</h3>
+<p>carrier, short_carrierでキャリア名、キャリア名の頭文字を取得できます。</p>
+<pre class="code">&gt;&gt;&gt; dev = detect({&#39;HTTP_USER_AGENT&#39;:&#39;KDDI-SA31 UP.Browser/6.2.0.6.3.129 (GUI) MMP/2.0&#39;})
+&gt;&gt;&gt; dev.carrier
+&#39;EZweb&#39;
+&gt;&gt;&gt; dev.short_carrier
+&#39;E&#39;
+</pre>
+
+<p>PHP版、Perl版との違いとしては、ライブラリ内部での用語・表現に、VodafoneではなくSoftBank、AirHではなくWILLCOMという語を使用している点があります。</p>
+<pre class="code">&gt;&gt;&gt; dev = detect({&#39;HTTP_USER_AGENT&#39;:&#39;Vodafone/1.0/V904SH/SHJ003 Browser/VF-NetFront/3.3 Profile/MIDP-2.0 Configuration/CLDC-1.1&#39;})
+&gt;&gt;&gt; dev.carrier
+&#39;SoftBank&#39;
+&gt;&gt;&gt; dev.short_carrier
+&#39;S&#39;
+</pre>
+
+<pre class="code">&gt;&gt;&gt; dev = detect({&#39;HTTP_USER_AGENT&#39;:&#39;Mozilla/3.0(WILLCOM;SANYO/WX310SA/2;1/1/C128) NetFront/3.3&#39;})
+&lt;WillcomUserAgent &quot;Mozilla/3.0(WILLCOM;SANYO/WX310SA/2;1/1/C128) NetFront/3.3&quot;&gt;
+&gt;&gt;&gt; dev.carrier
+&#39;WILLCOM&#39;
+&gt;&gt;&gt; dev.short_carrier
+&#39;W&#39;
+</pre>
+
+<p>キャリアを判定するメソッドとして、is_docomo(), is_ezweb(), is_softbank(), is_willcom(), is_nonmobile()があります。それぞれ、DoCoMo端末、au端末、SoftBank端末、WILLCOM端末、それ以外のときにTrueを返します。</p>
+<pre class="code">&gt;&gt;&gt; dev = u.detect({&#39;HTTP_USER_AGENT&#39;:&#39;DoCoMo/2.0 N904i(c100;TB;W30H20)&#39;})
+&gt;&gt;&gt; dev.is_docomo()
+True
+&gt;&gt;&gt; dev.is_ezweb()
+False
+&gt;&gt;&gt; dev.is_softbank()
+False
+&gt;&gt;&gt; dev.is_willcom()
+False
+&gt;&gt;&gt; dev.is_nonmobile()
+False
+&gt;&gt;&gt;
+</pre>
+
+<p>serialnumberプロパティから、DoCoMo端末ならばFOMA製造番号、au端末ならばサブスクライバID、SoftBank端末ならば製造番号を取得できます。</p>
+<pre class="code">&gt;&gt;&gt; dev = detect({&#39;HTTP_USER_AGENT&#39;:&#39;DoCoMo/2.0 N904i(c100;TB;W30H20;ser333333333333333;icc8888888888888888888F)&#39;})
+&gt;&gt;&gt; dev.is_docomo()
+True
+&gt;&gt;&gt; dev.serialnumber
+&#39;333333333333333&#39;
+</pre>
+
+<pre class="code">&gt;&gt;&gt; dev = detect({&#39;HTTP_USER_AGENT&#39;:&#39;Vodafone/1.0/V904SH/SHJ003/SN333333333333333 Browser/VF-NetFront/3.3 Profile/MIDP-2.0 Configuration/CLDC-1.1&#39;})
+/CLDC-1.1&quot;&gt;
+&gt;&gt;&gt; dev.serialnumber
+333333333333333
+</pre>
+
+<p>SoftBankだけの特殊なプロパティとしてjphone_uidがあります。これはSoftBank利用者が通知設定を有効にしている場合(My SoftBank⇒各種変更手続き⇒ユーザID通知設定)に、コンテンツ提供者に通知される端末毎に一意なIDです。実際のjphone_uidは英数字(a-zA-Z0-9)からなる16桁の文字列です。</p>
+
+<pre class="code">&gt;&gt;&gt; dev = detect({&#39;HTTP_USER_AGENT&#39;: &#39;Vodafone/1.0/V904SH/SHJ003 Browser/VF-NetFront/3.3 Profile/MIDP-2.0 Configuration/CLDC-1.1&#39;,
+                 &#39;HTTP_X_JPHONE_UID&#39;: &#39;xxxxxxxxxxxxxxxx&#39; })
+&gt;&gt;&gt;dev.jphone_uid
+&#39;xxxxxxxxxxxxxxxx&#39;
+</pre>
+
+<p>displayプロパティでDisplayオブジェクトを取得できます。これは端末の画面サイズにあわせて表示するコンテンツを変える場合に便利です。</p>
+<pre class="code">&gt;&gt;&gt; dev = u.detect({&#39;HTTP_USER_AGENT&#39;:&#39;DoCoMo/2.0 N904i(c100;TB;W30H20)&#39;})
+&gt;&gt;&gt; dev.display.width
+240
+&gt;&gt;&gt; dev.display.height
+352
+&gt;&gt;&gt; dev.display.color
+1
+&gt;&gt;&gt; dev.display.depth
+262144
+</pre>
+
+<p>端末がCookieを利用かどうかを調べるには、supports_cookie()メソッドを使います。</p>
+<pre class="code">&gt;&gt;&gt; docomo = u.detect({&#39;HTTP_USER_AGENT&#39;:&#39;DoCoMo/2.0 N904i(c100;TB;W30H20)&#39;})
+&gt;&gt;&gt; docomo.supports_cookie()
+False
+&gt;&gt;&gt; au = detect({&#39;HTTP_USER_AGENT&#39;:&#39;KDDI-SA31 UP.Browser/6.2.0.6.3.129 (GUI) MMP/2.0&#39;})
+&gt;&gt;&gt; au.supports_cookie()
+True
+&gt;&gt;&gt; sb = detect({&#39;HTTP_USER_AGENT&#39;:&#39;Vodafone/1.0/V904SH/SHJ003 Browser/VF-NetFront/3.3 Profile/MIDP-2.0 Configuration/CLDC-1.1&#39;})
+&gt;&gt;&gt; sb.supports_cookie()
+True
+</pre>
+
+<h3> 応用編・Djangoで使う</h3>
+
+<p>Djangoで使用する場合、Middleware層に端末判定処理を追加するとよいでしょう。例えば、myprojectというプロジェクトのmyappというアプリケーションにmiddleware.pyとして、次のようなMiddlewareを用意します。</p>
+<pre class="code"># myproject/myapp/middleware.py
+from uamobile import detect, exceptions
+
+class UserAgentMobileMiddleware(object):
+    def process_request(self, request):
+        try:
+            request.device = detect(request.META)
+        except exceptions.NoMatchingError, e:
+            raise
+</pre>
+
+<p>判定に失敗した場合、NoMatchingErrorが発生します。上記のMiddlewareでは、たんに、例外を再度raiseしているだけですが、本来ならば、非モバイルブラウザとしてそのまま処理を続行するか、あるいは、エラー画面を表示するといった対応が必要でしょう。</p>
+<p>このMiddlewareを有効にするために、settings.pyのMIDDLEWARE_CLASSESにこのクラスを追記します。</p>
+<pre class="code">MIDDLEWARE_CLASSES = (
+    &#39;django.middleware.common.CommonMiddleware&#39;,
+    # 追加
+    &#39;myproject.myapp.middleware.UserAgentMobileMiddleware&#39;,
+    &#39;django.contrib.sessions.middleware.SessionMiddleware&#39;,
+    &#39;django.contrib.auth.middleware.AuthenticationMiddleware&#39;,
+    &#39;django.middleware.doc.XViewMiddleware&#39;,
+)
+</pre>
+
+<p>後はビューやテンプレートから"request.device"のようにしてUserAgentサブクラスのインスタンスにアクセスできます。</p>
+<p>Djangoで本格的なモバイルサイトを構築する場合には、Cookieが使えない端末のセッションIDの処理といったモバイルサイトならではの対応が必要とされますが、そのあたりのノウハウはまた機会を改めて紹介したいと思います。</p>
+
+<h3> まとめにかえて</h3>
+<p>このWSGIUserAgentMobileは僕が開発を担当している<a href="http://gu3.jp/">gumi</a>でも使用しています。興味がある方は、是非、携帯で<a href="http://gu3.jp/">http://gu3.jp/</a>にアクセスしてみて下さい。</p>
+<p>また、このライブラリはまだベータ版なのですが、バグの報告や何かご質問がありましたら、コメントやトラックバックでお知らせいただくか、下記メールアドレスに直接ご連絡いただければ幸いです。</p>
+
+<pre class="code">&gt;&gt;&gt; 'Y2hpaGlyb19zYWthdG9rdUB1bm9oLm5ldA=='.decode('base64')
+</pre>
+
+{% endraw %}

@@ -1,0 +1,173 @@
+---
+layout: post
+title: "水平方向のナビゲーションの作り方"
+---
+{% raw %}
+<p>
+yamaokaです。
+</p>
+
+<p>
+水平方向に並んだナビゲーションを作る場合、
+皆さんはどのようにマークアップされているでしょうか。
+とりあえず必要な項目を羅列してみましょう。
+それぞれの項目には矢印の画像を付加するものとします。
+<pre class="code"><code>== HTML ==
+&lt;p id=&quot;navigation&quot;&gt;
+  &lt;img src=&quot;arrow.gif&quot;&gt;編集
+  &lt;img src=&quot;arrow.gif&quot;&gt;削除
+  &lt;img src=&quot;arrow.gif&quot;&gt;追加
+&lt;/p&gt;
+</code></pre>
+</p>
+
+<p>
+<a href="http://photozou.jp/photo/show/784/3974098"><img src="http://art5.photozou.jp/pub/784/784/photo/3974098.png" alt="horizontal_nav_1" width="160" height="49" style="border: solid 1px #ccc;"></a><br><a href="http://photozou.jp/photo/show/784/3974098">horizontal_nav_1</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a>
+</p>
+
+<p>
+一見よさそうです。
+ただ、HTMLの論理的な構造としてふさわしいものでしょうか。
+ナビゲーションと言えども論理構造としてはリストの一種なので、リストとしてマークアップするのが適当と言えます。
+</p>
+
+<p>
+リストにしてみましょう。
+<pre class="code"><code>== HTML ==
+&lt;ul id=&quot;navigation&quot;&gt;
+  &lt;li&gt;編集&lt;/li&gt;
+  &lt;li&gt;削除&lt;/li&gt;
+  &lt;li&gt;追加&lt;/li&gt;
+&lt;/ul&gt;
+</code></pre>
+</p>
+
+<p>
+<a href="http://photozou.jp/photo/show/784/3974099"><img src="http://art5.photozou.jp/pub/784/784/photo/3974099.png" alt="horizontal_nav_2" width="146" height="111" style="border: solid 1px #ccc;"></a><br><a href="http://photozou.jp/photo/show/784/3974099">horizontal_nav_2</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a>
+</p>
+
+<p>
+リストの先頭に表示される記号が邪魔な感じですね。
+先程使用した矢印の画像に置き換えてみましょう。
+<pre class="code"><code>=== CSS ==
+#navigation {
+  list-style-image: url(arrow.gif);
+}
+== HTML ==
+&lt;ul id="navigation">
+  &lt;li&gt;編集&lt;/li&gt;
+  &lt;li&gt;削除&lt;/li&gt;
+  &lt;li&gt;追加&lt;/li&gt;
+&lt;/ul&gt;
+</code></pre>
+</p>
+
+<p>
+<a href="http://photozou.jp/photo/show/784/3974100"><img src="http://art5.photozou.jp/pub/784/784/photo/3974100.png" alt="horizontal_nav_3" width="121" height="100" style="border: solid 1px #ccc;"></a><br><a href="http://photozou.jp/photo/show/784/3974100">horizontal_nav_3</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a>
+</p>
+
+<p>
+これで矢印の画像が表示されるようになりました。
+垂直方向に並んでいるのを水平方向に並ぶようにして、
+それぞれの項目の間のスペースを調整します。
+ここでは、それぞれの項目をfloatさせることにします。
+<pre class="code"><code>== CSS ==
+#navigation {
+  list-style-image: url(arrow.gif);
+  list-style-position: inside;
+}
+#navigation li {
+  float: left;
+  width: 3em;
+  margin: 0 20px 0 0;
+  padding: 0;
+}
+== HTML ==
+&lt;ul id=&quot;navigation&quot;&gt;
+  &lt;li&gt;編集&lt;/li&gt;
+  &lt;li&gt;削除&lt;/li&gt;
+  &lt;li&gt;追加&lt;/li&gt;
+&lt;/ul&gt;
+</code></pre>
+</p>
+
+<p>
+<a href="http://photozou.jp/photo/show/784/3974101"><img src="http://art5.photozou.jp/pub/784/784/photo/3974101.png" alt="horizontal_nav_4" width="248" height="53" style="border: solid 1px #ccc;"></a><br><a href="http://photozou.jp/photo/show/784/3974101">horizontal_nav_4</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a>
+</p>
+
+<p>
+大体よさそうですが、よく見ると文字の垂直方向の中央と矢印の画像の位置が揃っていません。
+これは画像やフォントの大きさによるのですが、できれば揃えてしまいたいところです。
+</p>
+
+<p>
+リストの記号として画像を指定した場合、その画像の位置をCSSで指定することはできません。
+あえて揃えるなら、画像の大きさを空白部分を設けるなどして調整する必要があります。
+また、そうした場合でも、フォントの大きさを変更した場合にレイアウトが崩れてしまうのを避けることはできません。
+</p>
+
+<p>
+しかし、背景画像なら位置を指定することができます。
+そこで、li要素の背景画像に矢印の画像を配置して、横に並ぶようにしてみます。
+もうリストの記号は必要ないので、消してしまいましょう。
+<pre class="code"><code>== CSS ==
+#navigation {
+  list-style: none;
+}
+#navigation li {
+  float: left;
+  width: 3em;
+  background: transparent url(arrow.gif) no-repeat scroll left center;
+  padding-left: 12px;
+  margin-right: 15px;
+}
+== HTML ==
+&lt;ul id=&quot;navigation&quot;&gt;
+  &lt;li&gt;編集&lt;/li&gt;
+  &lt;li&gt;削除&lt;/li&gt;
+  &lt;li&gt;追加&lt;/li&gt;
+&lt;/ul&gt;
+</code></pre>
+</p>
+
+<p>
+<a href="http://photozou.jp/photo/show/784/3974102"><img src="http://art5.photozou.jp/pub/784/784/photo/3974102.png" alt="horizontal_nav_5" width="254" height="52" style="border: solid 1px #ccc;"></a><br><a href="http://photozou.jp/photo/show/784/3974102">horizontal_nav_5</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a>
+</p>
+
+<p>
+いかがでしょうか、最初に思ったとおりの表示結果が得られたでしょうか。
+上記のコードのままだとfloatの指定が残ってしまうので、
+実際には#navigationでclearfixハックをする必要があるかと思います。
+clearfixハックに関しては以下の記事が詳しいので、参考にどうぞ。
+</p>
+
+<ul>
+  <li><a href="http://www.lucky-bag.com/archives/2007/05/variation-of-clearfix.html">Lucky bag::blog: 俗に言う clearfix と言われるコードのバリエーション色々</a></li>
+  <li><a href="http://css-happylife.com/log/css-hack/000078.shtml">clearfix｜CSS HappyLife</a></li>
+</ul>
+
+<p>
+注意する点としては、ナビゲーションが複数行になってしまった場合に、
+矢印の画像がその複数行分の高さの中央に配置されてしまうという問題があります。
+そうなってしまいそうな場合は、矢印の画像の位置を調整するなどしていろいろ試してみてください。
+</p>
+
+<p>
+また、上記の例ではli要素をfloatさせて水平方向に並べましたが、
+display: inline; を指定することでも水平方向に並べることができます。
+しかし、その場合は上下のマージンが指定できないこと、
+また、widthが指定できないのでボタンのような表現がしづらいことに留意する必要があります。
+</p>
+
+<p>
+常に論理的なマークアップを心がけるようにしておくと、
+自然にシンプルな構成のHTML（XHTML）になるのではないかと思います。
+頭の片隅で常に意識しておきたいですね。
+</p>
+
+<h3>追記</h3>
+
+<p>
+floatを指定した要素に対して、widthを指定していなかったのを修正しました。CSS2の仕様では、floatを指定したliに対しては必ずwidthを指定する必要があります。ご指摘いただきましてありがとうございました。
+</p>
+{% endraw %}

@@ -1,0 +1,7 @@
+---
+layout: post
+title: "PHPでパスワード文字列を生成"
+---
+{% raw %}
+こんにちは，ttsuruoka です．<br /><br />会員制のサイトなどを作るとき，<br />ユーザー登録時に仮のパスワードを発行したいときがあります．<br />そういうときに便利なのが <a href="http://pear.php.net/package/Text_Password">PEAR::Text_Password</a> です．<br /><br />こんな感じで使えます：<br /><br /><pre class="source_code"><br />$passwd = Text_Password::create();<br />echo $passwd;<br />// 出力 :<br />// praimifrou<br /></pre><br /><br />デフォルトでは覚えやすい（発音可能な）10 文字のパスワードを生成しますが，<br />以下のようにすると複雑なパスワードも生成できます：<br /><br /><pre class="source_code"><br />$passwd = Text_Password::create(16, 'unpronounceable');<br />echo $passwd;<br />// 出力（16文字の発音不可能なパスワード）: <br />// mArR99H3ZN#JsuK%<br /></pre>
+{% endraw %}

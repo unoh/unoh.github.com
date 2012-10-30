@@ -1,0 +1,24 @@
+---
+layout: post
+title: "MagickWand For PHPで、PDFを画像にしてみる"
+---
+{% raw %}
+MagickWand for PHPと、Imagick 2.0系はもともと同じ、ImageMagickののAPI群を利用しているため、片方でできることとは基本的にもう片方でもできるようになっています。<br />
+<br />
+たとえば、PECL/Imagickのメンテナである、Mikko氏のblogのMikko's blogの<a href="http://valokuva.org/?p=7">Creating a PDF preview</a>という記事の内容で、pdfの画像にしてプレビューするというのがありますが、これも、あっさり以下のような感じで移植ができます。<br />
+<br />
+<br />
+※ 多少コードを変えて、複数ファイルがあるときのために、ファイルに保存するようにしてみました。<br />
+<pre class="code">
+    $image =  NewMagickWand();
+    MagickReadImage($image, 'test.pdf');
+    MagickSetFormat($image, 'png');
+    MagickWriteImages($image, 'test.png');
+</pre>
+プレビューを用意するときとかに使えそうです。<br />
+<br />
+以前の、角丸画像を作るエントリーのコードも、Imagickのソースコードを読んで、ほぼそのままの移植で実装することができましたのでぜひ、皆さんも挑戦して、公開してみてください。<br />
+<br />
+Mikko's blogは非常によさげなので、今後も参考にさせていただこうとおもいます。<br />
+ご参考になれば幸いです。<br />
+{% endraw %}

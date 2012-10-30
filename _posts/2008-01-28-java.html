@@ -1,0 +1,21 @@
+---
+layout: post
+title: "Javaで雪の降るアニメーションを作る"
+---
+{% raw %}
+<p>こんにちは。中村です。</p>
+<p>私は大阪出身で小さい頃には雪だるまが作れるくらいに雪が降っていましたが、最近はあまり降らないので淋しく感じます。</p>
+<p>ということで、Javaで雪の降るアニメーションを作ってみました。Flashで作る方が今時な気もしましたが、気にせずにJavaのSwingです。</p>
+<p>ウインドウ上でマウスを左右に動かすと、それに合わせて雪がなびくようになっています。</p>
+<object width="450" height="360"><param name="movie" value="http://photozou.jp/bin/vplayer/784_1771_6950806_5f82deaefc3cceabee1aebf31f3f5225_22.134_ja"></param><param name="wmode" value="transparent"></param><embed src="http://photozou.jp/bin/vplayer/784_1771_6950806_5f82deaefc3cceabee1aebf31f3f5225_22.134_ja" type="application/x-shockwave-flash" wmode="transparent" width="450" height="360"></embed></object><br /><a href="http://photozou.jp/photo/show/784/6950806">snow</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a>
+<p>せっかくですので、ソースコードを含んだJARファイルを公開します。Java5以上で動作すると思います。</p>
+<ul>
+  <li><a href="http://labs.unoh.net/download/snow.zip">snow.zip</a></li>
+</ul>
+<p>やっていることはJFrameにひとつだけCanvasを配置して、ある一定間隔ごとに雪の配置を動かしたあとに再描画しています。
+再描画するタイミングで、雪を落下させるのと、マウスの前回との位置を比較して左右への移動をさせています。</p>
+<p>Swingを使ってアプリケーションを開発するのも楽しいですが、たまにはアニメーションを作ってみるのも楽しいですね。</p>
+<br />
+<p>[追記 2008/01/28 20:58]</p>
+<p>JFrameで作ってしまったのでSwingと書いてしまいましたが、Swingで統一する場合はCanvasではなくJPanelなどを使うほうが適当だと思います。</p>
+{% endraw %}

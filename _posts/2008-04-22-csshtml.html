@@ -1,0 +1,134 @@
+---
+layout: post
+title: "CSSによるデザインワークと相性のよいHTMLって？"
+---
+{% raw %}
+<p>yamazakiです。最近だいぶあたたかくなってきましたね。おかげで日中眠くて仕方ないわけですがいかがお過ごしでしょうか。</p>
+
+<p>ウノウに入る以前も含めてそれなりに長いことHTMLとCSSを書いてきたわけですが、今回は試みに、「だいたいこういうところに気を使われたHTMLだと、CSSでのデザイン適用やレイアウトがやりやすいな」というこれまでの経験則を簡単ですがまとめてみたいと思います。</p>
+<p>まあ、このあたりはCSS書く人とHTML書く人の間でちゃんとルールを決めておけばいいだけの話なので、そもそも何の役に立つのか疑問といえば疑問ですが（笑<br />
+たとえばユーザがCSSを書いてスキンを作れるようなサービスを作る際、どういったHTMLにするかを決める、みたいな時には少し参考になる、かもしれません。</p>
+
+<h3>ID、クラスを適切に割り振って、要素がCSS側から一意に特定できるように</h3>
+<p>
+たとえばグローバルナビゲーションとカテゴリー別のナビゲーションが同じulで書かれているとして、どちらがどちらかCSSで特定できないと、別の見た目にしようとしても難しいです。
+</p>
+<pre class="code">
+&lt;ul&gt;
+&lt;li&gt;グローバル&lt;/li&gt;
+&lt;li&gt;グローバル&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;ul&gt;
+&lt;li&gt;カテゴリ内&lt;/li&gt;
+&lt;li&gt;カテゴリ内&lt;/li&gt;
+&lt;/ul&gt;
+</pre>
+<p>なので可能な限り「表示される内容に共通項のない部分」にはそれぞれID割り振るなどして特定できるようにします。</p>
+
+<pre class="code">&lt;ul id=&quot;gNavi&quot;&gt;
+&lt;li&gt;グローバル&lt;/li&gt;
+&lt;li&gt;グローバル&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;ul id=&quot;catNavi&quot;&gt;
+&lt;li&gt;カテゴリ内&lt;/li&gt;
+&lt;li&gt;カテゴリ内&lt;/li&gt;
+&lt;/ul&gt;</pre>
+
+<p>さらに、「同じ『ナビゲーション』なので」ということで、同じクラスを振っておくと、似たような見た目にしたい場合に便利。</p>
+
+<pre class="code">&lt;div id=&quot;gNavi&quot; class=&quot;navigation&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;グローバル&lt;/li&gt;
+&lt;li&gt;グローバル&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;
+&lt;div id=&quot;catNavi&quot; class=&quot;navigation&quot;&gt;
+&lt;ul&gt;
+&lt;li&gt;カテゴリ内&lt;/li&gt;
+&lt;li&gt;カテゴリ内&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/div&gt;</pre>
+
+<p>もちろん、たとえば「ページ内にH1タグは一つしかない」というポリシーが全ページできちんと貫かれていれば、H1タグに余計なIDをつけたりしなくても問題ないと思います。<br />
+大事なのは「ちゃんと別々のものだと区別できること」です。</p>
+
+
+<h3>同じようなものには同じクラスを割り振る</h3>
+
+<p>IDはその名の通り、ページ内に唯一のものに割り振っておくべきものです。一方で「クラス」は、同じようなものを「これとこれは同じようなものですよ」ということを表す場合に使います。<br />
+似たものはやはり似たような見た目にしたい場合が多いので、似たような要素にはできるだけ同じクラスが割り振られているほうが好ましいと思います。<br />
+逆に、たとえば同じような内容なんだけどちょっとだけ違うものに、全く別のクラスが指定されていると色々と面倒です。<br />
+たとえば、ブログの新着記事のリストと人気記事のリストがあったとして、</p>
+<pre class="code">
+&lt;ul class=&quot;recentPostList&quot;&gt;
+&lt;li&gt;記事1&lt;/li&gt;
+&lt;li&gt;記事2&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;ul class=&quot;popularPostList&quot;&gt;
+&lt;li&gt;記事i&lt;/li&gt;
+&lt;li&gt;記事ii&lt;/li&gt;
+&lt;/ul&gt;</pre>
+
+<p>としてしまうと、二つのリストに同じ見た目を指定したいときに、</p>
+
+<pre class="code">ul.recentPostList,
+ul.popularPostList{}</pre>
+
+<p>といちいち書かなくてはいけなくなります。※まあ２つくらいだったらいいのですが、これが多くなってくるとだいぶ残念な感じになっていきます。<br />
+こういう場合は、クラスはスペースで区切って複数指定できますので、たとえば</p>
+
+<pre class="code">&lt;ul class=&quot;postList recent&quot;&gt;
+&lt;li&gt;記事1&lt;/li&gt;
+&lt;li&gt;記事2&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;ul class=&quot;postList popular&quot;&gt;
+&lt;li&gt;記事i&lt;/li&gt;
+&lt;li&gt;記事ii&lt;/li&gt;
+&lt;/ul&gt;</pre>
+
+<p>とすると、CSSでは、共通のスタイルを「ul.postList」で指定し、それぞれちょっと別の見た目にしたければ「ul.recent/ul.popular」に指定、という形でスマートに書きやすくなりますし、メンテナンス性もよくなると思います。</p>
+
+<h3>tableのtrごとに「odd」「even」</h3>
+
+<p>テーブルは特に大きくなると見にくくなりがちです。<br />
+1行おきに色などを変えられるようにする意味で、テーブルの行ごとにクラスをなにかしら交互に指定してあると、スタイル割り当てがしやすくなります。<br />
+同じようにリスト系要素（li）など繰り返される要素にも割り当ててあると便利かも。
+</p>
+
+<h3>リスト系要素（ul,ol,dl)の最初と最後が特定できるようにしておく</h3>
+
+<p>:first-childなどの擬似要素がすべてのブラウザでちゃんと使えればこんなものはあまり必要ないのですが、IE6などの対応状況を考えると現実問題としてまだまだ使えません。<br />
+ので、リストなどの同じ要素の連続するものの場合は、できるだけ最初と最後に「これが最初の要素」「これが最後の要素」だということがわかるようにしておきます。</p>
+
+<pre class="code">&lt;ul&gt;
+&lt;li class=&quot;first&quot;&gt;xxxx&lt;/li&gt;
+&lt;li&gt;xxxx&lt;/li&gt;
+&lt;li&gt;xxxxx&lt;/li&gt;
+&lt;li class=&quot;last&quot;&gt;xxxx&lt;/li&gt;
+&lt;/ul&gt;</pre>
+
+<p>なんでこういうことが必要になるかというと、</p>
+<ul>
+<li>最初の要素だけマージンを狭く/広くしたい</li>
+<li>最後の要素だけマージンを狭く/広くしたい</li>
+<li>最初の要素のところにだけ背景画像指定したい</li>
+<li>インライン化して横並びのメニューにして、間に線を入れたいんだけど全部のli要素に線を割り当てると一本余計になるので消したい</li>
+</ul>
+
+<p>などなど、最初/最後の要素はちょっとだけ違うスタイルにしたいことが結構よくあるからです。</p>
+
+<h3>h1～h6タグ直下には&lt;span&gt;か&lt;a&gt;タグが必ず入るようにしておく</h3>
+<p>「見出し」はやはり「画像に差し替えたい」とか、「特別な装飾を施したい」とかいったことがよくあります。<br />
+また、文字の書かれてる部分だけに装飾したい場合や、margin/paddingのコントロールの都合で子インライン要素があるほうが調整しやすくなります。<br />
+といったわけで、直下に&lt;span&gt;もしくは&lt;a&gt;タグなどのインライン要素が入るようにしてあると、CSSでのデザインの幅がだいぶ広がると思います。
+
+<pre class="code">&lt;h1&gt;hogehoge&lt;/h1&gt;</pre>
+<p>ではなく</p>
+<pre class="code">&lt;h1&gt;&lt;span&gt;hogehoge&lt;/span&gt;&lt;/h1&gt;</pre>
+
+<p>その他にもCSSの猛者の皆様的に「こうなっていると嬉しい」という例あると思いますので、もし何かあればぜひ教えてください！</p>
+{% endraw %}

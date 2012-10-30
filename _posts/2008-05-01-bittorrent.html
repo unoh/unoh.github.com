@@ -1,0 +1,36 @@
+---
+layout: post
+title: "コマンドラインから使うBitTorrentクライアント"
+---
+{% raw %}
+<p>yukiです。</p>
+
+<p>唐突ですが、BitTorrentクライアントは何をお使いでしょうか？これまで私はずっと<a title="BitComet" href="http://jp.bitcomet.com/" >BitComet</a> を使ってきましたが、私の非力な自宅マシンだとどうしても負荷が高く、その間は何も出来ないような状態に陥っていました。GUIから使おうとすると、見やすさや使いやすさはさすがに良いのですが、あまりの負荷とその間何も出来ない状況はあまりよろしくないと考え、今回はUNIX系でCLIから操作できるクライアントはないだろうか、と探していて見つかった<a title="Enhanced CTorrent" href="http://www.rahul.net/dholmes/ctorrent/">Enhanced CTorrent</a>をご紹介することにします。</p>
+
+<p><a title="Enhanced CTorrent" href="http://www.rahul.net/dholmes/ctorrent/">Enhanced CTorrent</a>は、C++で書かれた<a title="Ctorrent" href="http://ctorrent.sourceforge.net/">Ctorrent</a>をベースにしたBitTorrentクライアントです。Ctorrentからバグフィックスや改良・軽量化を重ねており、現在のバージョンは3.3.1になっています。</p>
+
+<p>Enhanced Ctorrentは現在は<a title="Sorceforge" href="http://sourceforge.net/projects/dtorrent/">Sorceforge</a>でバグレポートやダウンロードができますので、早速使ってみました。</p>
+
+<h3>インストール</h3>
+
+<p>インストールは非常に簡単で、普通にwgetで落としてきて展開し、configureしてmake installします。</p>
+
+<pre class="code"><code>% wget http://jaist.dl.sourceforge.net/sourceforge/dtorrent/ctorrent-dnh3.3.1.tar.gz
+% tar zxvf ctorrent-dnh3.3.1.tar.gz
+% cd ctorrent-dnh3.3.1
+% ./configure
+% make
+% sudo make install
+</code></pre>
+
+<h3>torrentファイルからダウンロードする</h3>
+
+<p>早速torrentファイルをダウンロードして、ダウンロードしてみましょう。
+やり方は非常に簡単で、これだけです。</p>
+
+<pre class="code"><code>ctorrent [torrent.file]</code></pre>
+
+<p>これだけで同じディレクトリ内にダウンロードが開始されます。<br>
+注意点としては、デフォルトだと2706-2106番ポートを使うようになっていますが、オプションでポートを指定することが出来ます。とても簡単なうえ、デーモンとして起動することも出来ますのでバックグラウンドで動作させたい場合にも非常に便利です。</p>
+
+{% endraw %}

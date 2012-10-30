@@ -1,0 +1,164 @@
+---
+layout: post
+title: "Androidアプリ開発環境を構築する"
+---
+{% raw %}
+<h2>はじめに</h2>
+<div>
+４月にウノウ入社しました、takaと申します。
+ウノウではまだまだなAndroidですが、敢えてMacでAndroidアプリ開発環境を整えてみようと思います。元々はWindowsユーザでしたがウノウではMacを使って作業していますので、慣れる目的もあります。AndroidアプリはJava、Eclipseを用いた開発が主流だと思いますのでWindowsでもほぼ同様の手順で構築可能なはずです。
+</div>
+
+<h2>JDK6</h2>
+<ul>
+	<li>Mac OS Xでは標準で入っていたので特に作業無し。</li>
+</ul>
+
+
+<h2>Eclipse 3.6 Helios</h2>
+<ul>
+	<li>http://www.eclipse.org/</li>
+	<li>http://www.eclipse.org/downloads/</li>
+</ul>
+
+
+<h2>Pleiades</h2>
+<ul>
+	<li>http://mergedoc.sourceforge.jp/</li>
+	<li>Windowsの場合は「Pleiades All in One」など使用すると各種プラグインも入っていて楽かもしれない。</li>
+	<li>Eclipse を日本語ローカライズするためのプラグイン。 </li>
+	<li>Eclipse 3.6 Helios では上手く使えなかったので今回は保留。 </li>
+</ul>
+
+
+<h2>Eclipse-ADT</h2> 
+<ul>
+　　　　　　　<li>Android の Eclipse Plugin。</li>
+	<li>Android DDMS	0.9.7.v201005071157-36220</li>
+	<li>Android Development Tools	0.9.7.v201005071157-36220	</li>
+</ul>
+
+
+<h2>Eclipse のインストール</h2>
+<ol>
+	<li>Eclipse Helios (3.6) Packages for Mac OS X(Cocoa)</li>
+	<li>Eclipse IDE for Java Developers の Mac OS X 64 Bitをダウンロード。</li>
+	<li>Eclipse を起動。</li>
+	<li>Workspace を適当に設定。デフォルトでOK。</li>
+	<li>メニューから Help - Install New Software。</li>
+	<li>Add ボタンを押すと入力ボックスダイアログが表示される。</li>
+	<li>Name: に適当な名前を入力する。例）Google Android Plugin</li>
+	<li>Location: に https://dl-ssl.google.com/android/eclipse/</li>
+	<li>Developer Tools という項目が表示されるのでチェックを入れて Next。</li>
+	<li>Install Details で以下のインストール項目が表示されるのを確認して Next。<br>
+	-Android DDMS<br>
+	-Android Development Tools</li>
+	<li>I accept the term of th license agreements 同意して Finish。</li>
+	<li>インストール中に Security Warning が出る事があるので OK。</li>
+	<li>再起動してプラグインを有効にする必要があるので Restart Now。</li>
+	<li>Eclipse - Preferences - Java - Compiler - Compiler compliance settings は 1.6。<br>
+	-環境にはよっては1.5となっている事があるようで、大量のエラーが出るので要確認。<br>
+	-JDK1.5と1.6ではアノテーションの仕様が変わっています。</li>
+</ol>
+
+
+<h2>Android SDKのインストール</h2>
+<ol>
+	<li>http://developer.android.com/sdk/index.html</li>
+	<li>Mac OS X (intel)  	 android-sdk_r06-mac_86.zip</li>
+	<li>ダウンロードして任意の場所に展開。</li>
+	<li>Eclipse - 環境設定 - Android - SDK Location に展開したSDKの場所を指定。</li>
+	<li>Send usage statistics to Google.はチェックを外して良い。</li>
+</ol>
+
+
+<h2>Android SDK Libraryのインストール</h2>
+<ol>
+	<li>Window - Android SDK and AVD Manager - Available Packages より全てチェック。<br>
+        ダウンロードとインストールに時間が掛かるので、例えば、開発ターゲットを絞るのであれば SDK Platform Android 2.1 だけ選択もアリ。ただ、Android1.6で試したい時もあると思うので全部入れる方が楽。</li>
+	<li>Install Selected より全てインストール。</li>
+	<li>All Accept して Install。</li>
+	<li>インストールが完了すると ADB Restart で Yes として再起動。<br>
+	Updated ADB to support the USB devices declared in the SDK add-ons.<br>
+	'adb kill-server' succeeded.<br>
+	'adb start-server' failed.<br>
+	と表示されるが気にせず Close。</li>
+	<li>Eclipse 自体を再起動。</li>
+</ol>
+
+
+<h2>エミュレータ端末の設定</h2>
+<ol>
+	<li>Window - Android SDK and AVD Manager - Virtual Devices より New。</li>
+	<li>Name: 任意の端末名。例：HT-03aAndroid2.2-HVGAなど判り易い名前。</li>
+	<li>Target: 任意のPlatform。例：Android 2.2 - API Level 8<br>
+        -Googleのサービスを使う場合は Google APIs (Google inc.) - API Level 8 など。</li>
+	<li>SD Card: 任意の容量。 例：Size: 100 MiB<br>
+	-ファイルイメージとしてマウントしたい場合にはFileに指定。</li>
+	<li>Skin: 各解像度に合わせて設定。Default(HVGA)</li>
+	<li>Hardware: GPS、タッチスクリーン、トラックボールなどの各種デバイスのサポート指定。</li>
+	<li>Create ADV で端末作成。</li>
+	<li>作成した端末名を選択して Start でエミュレータ端末が起動する。</li>
+	<li>起動する際に、Launch Options で表示スケールを設定することもできる。</li>
+	<li>作成したエミュレータ端末は詳細が見れるが変更不可能で、変更する場合は作成しなおす。</li>
+</ol>
+
+
+<h2>エミュレータ端末起動後画面</h2>
+<ol>
+	<li>左側にHOME画面。</li>
+	<li>右側にデバイスキー。</li>
+	<li>マウスやキーボードを使って操作可能。</li>
+	<li>Window名に リスンポート番号:端末名 と表示。</li>
+	<li>HOMEからMENU - Setting - Language よりUIを日本語選択可能。</li>
+</ol>
+
+
+<h2>エミュレータ端末でのショートカットキー</h2>
+<table>
+<tr><td>画面の縦横切り替え：</td><td>control+F11</td></tr>
+<tr><td>Google検索ボックス：</td><td>F5</td></tr>
+<tr><td>トラックボールモード：</td><td>F6</td></tr>
+<tr><td>MENU/画面ロック解除：</td><td>F2</td></tr>
+<tr><td>受話UP：</td><td>F3</td></tr>
+<tr><td>受話DOWN/画面ロック：</td><td>F4</td></tr>
+<tr><td>戻る：</td><td>ESC</td></tr>
+</table>
+
+
+<h2>プログラムの作成</h2>
+<ol>
+	<li>File - New - Project - Android - Android Project</li>
+	<li>Project name: HelloAndroid</li>
+	<li>Contents - Create new project in workspace<br>
+	-任意適当に設定</li>
+	<li>Build Target<br>
+	-エミュレータ端末の設定と同様にPlatformの選択。Android2.2など。<br>
+	-Googleのサービスを使う場合は Google APIs の方を選ぶなど。</li>
+	<li>Application name: HelloAndroid</li>
+	<li>Package name: net.unoh.helloandroid</li>
+	<li>Create Activity: HelloAndroidActivity</li>
+	<li>Min SDK Version: 8<br>
+	-必須Androidバージョンを指定。例だと 8 と指定しないと Warning が出る。</li>
+	<li>Finish プロジェクトが作成される。</li>
+	<li>gen にリソースファイルが自動ジェネレートされる</li>
+	<li>src にソーススケルトン。</li>
+	<li>エラーとなる場合には Project - Properties - Java Build Path を確認。</li>
+	<li>Java Build Path - Order and Export の Android 2.2 にチェックし、OK。</li>
+	<li>assets</li>
+	<li>res</li>
+	<li>AndroidManifest.xml</li>
+	<li>default.properties</li>
+	<li>ディレクトリとファイルが生成されているのを確認。</li>
+	<li>Run - Run - Run As - Android Application で OK。</li>
+	<li>エミュレータ端末の画面に HelloAndroid が表示。</li>
+	<li>Hello World, HelloAndroidActivity!</li>
+</ol>
+
+
+<h2>最後に</h2>
+MacでもWindowsと同様に開発環境を構築することができました。メニューの位置が変わっているなど違いはあれどツールとしては同じものを使用しているので開発環境に差は無いでしょう。予めJDK6が入っている分、導入は楽なように思います。
+Enjoy! Android!
+
+
+{% endraw %}

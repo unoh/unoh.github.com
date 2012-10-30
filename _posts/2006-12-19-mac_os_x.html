@@ -1,0 +1,71 @@
+---
+layout: post
+title: "Mac OS Xで携帯サイトの開発環境を整える"
+---
+{% raw %}
+<p>
+尾藤正人(マカー3号)です。
+</p>
+
+<p>
+家でも会社でも MacBook を使うようになって、名実共にマカーの仲間入りをしました。
+</p>
+
+<p>
+最近はずっと携帯サイトの開発をやっているのですが、MacよりもWindowsの方が携帯サイト開発用のツールは充実してます。
+携帯サイトを開発しているMacユーザの方で、本当はWindowsは使いたくないんだけど、Windowsマシンを使ってたり、Parallels Desktop使ってる方は多いんじゃないでしょうか。
+</p>
+
+<p>
+<a href="http://lifehacker.com/software/parallels/hack-attack-how-to-run-windows-and-mac-apps-sidebyside-with-parallels-221002.php">新しいParallels Desktopでは、Coherenceモードを使えばWindows上のアプリがMac上のアプリかのように使える</a>ので、大きな問題はないのかもしれませんが、やはりMacネイティブでできるようにしたいものです。
+</p>
+
+<p>
+というわけでMacで携帯サイトの開発環境を整えてみたので、何をやったのかを具体的に書いてみたいと思います。
+</p>
+
+<h3>Macで絵文字を表示できるようにする</h3>
+
+<a href="http://photozou.jp/photo/show/1/2012718"><img src="http://photozou.jp/pub/1/1/photo/2012718.png?m=1166524380" alt="ピクチャ 1" width="302" height="173" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/1/2012718">ピクチャ 1</a> posted from <a href="http://photozou.jp/">フォト蔵</a>
+
+<p>
+下記の記事を参考にしました。やってることは全く同じです。
+</p>
+
+<p>
+<a href="http://d.hatena.ne.jp/sorasemi/20060413">imode用携帯サイトを開発する場合のメモ</a>
+</p>
+
+<p>
+<ul>
+<li><a href="http://www.sunsale.co.jp/iemoji.htm">i絵文字</a>をダウンロードする。
+<li>Windowsの実行形式になってますが、LHAで解凍します。
+<li>mv iemoji.tte $HOME/Library/Fonts/iemoji.ttf
+<li>各アプリで使用するフォントをi絵文字(i-emozi)を選択します。
+</ul>
+</p>
+
+<p>
+これで Cocoa アプリで絵文字が表示できるようになります。
+手元ではMac標準のテキストエディタでは問題なく絵文字を表示できましたが、Safariでは絵文字が化けて表示されます。
+ブラウザでの表示の確認には未だにWindowsを使っているので、この辺の詳しい情報お持ちの方いたら、よろしくお願いします。
+</p>
+
+<h3>Macで絵文字を入力する</h3>
+
+<a href="http://photozou.jp/photo/show/1/2012719"><img src="http://photozou.jp/pub/1/1/photo/2012719.png?m=1166524381" alt="ピクチャ 2" width="266" height="360" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/1/2012719">ピクチャ 2</a> posted from <a href="http://photozou.jp/">フォト蔵</a>
+
+<p>
+絵文字の表示ができるようになったので、次は入力です。
+<a href="http://www.mitome.to/software/">エモジモ2</a>というソフトウェアを使うと絵文字の入力ができます。
+普通にインストールして起動するとアプリが起動するので、後は入力した絵文字をテキストエディタまでドラッグアンドドロップするだけ。
+</p>
+
+<h3>まとめ</h3>
+
+<p>
+Macでも頑張れば、絵文字の表示、入力ができるようになります。
+残念なのはブラウザでの表示ができないことです。
+これができれば、ほぼ完全にMacだけで開発ができるのですが...
+</p>
+{% endraw %}

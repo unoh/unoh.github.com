@@ -1,0 +1,82 @@
+---
+layout: post
+title: "携帯におけるメールアドレスの制限について調べてみました"
+---
+{% raw %}
+<div>harukiです。</div>
+<div>携帯サイトの開発は、いわば端末の制限との戦いとも言えます。</div>
+<div>今回は、メールアドレスだけに絞って、端末での制限について調べてみました。</div>
+<br />
+<div>(会社にある端末で調べたので、すべての端末で当てはまるかどうかは保障できません)</div>
+<br />
+<ul>
+まず、携帯のメーラでは宛先に入れられるByte数が決まっています。
+<li>DoCoMo: 50Byte</li>
+<li>au: 64Byte</li>
+<li>SoftBank: 128Byte</li>
+<div>上記のByte数より長いメールアドレスへは端末からは絶対に送信できません。</div>
+</ul>
+<br />
+<ul>
+次に、local-partで使える文字を以下の機能が動くかどうかで調べてみました。
+<li>メールの送信</li>
+<li>web(aタグのmailto)</li>
+<li>メール(本文でのmailto機能)</li>
+</ul>
+<style type="text/css">
+table.haruki_ tr {
+ text-align:center;
+}
+table.haruki_ th, table.haruki_ td {
+ border: 1px solid gray;
+}
+</style>
+<table class="haruki_">
+<tr>
+ <th rowspan="2">文字</th><th rowspan="2"><a href="http://www.ietf.org/rfc/rfc2822.txt">RFC2822</a></th><th colspan="3">DoCoMo</th><th colspan="3">au</th><th colspan="3">SoftBank</th>
+</tr>
+<tr>
+<th>送信</th><th>aタグ</th><th>メール本文</th><th>送信</th><th>aタグ</th><th>メール本文</th><th>送信</th><th>aタグ</th><th>メール本文</th>
+</tr>
+<tr><th>!</th><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+<tr><th>&quot;</th><td>×</td><td>×</td><td>×</td><td>×</td><td>×</td><td>○</td><td>×</td><td>×</td><td>×</td><td>×</td></tr>
+<tr><th>#</th><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+<tr><th>$</th><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+<tr><th>%</th><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+<tr><th>&amp;</th><td>○</td><td>○</td><td>○</td><td>×</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+<tr><th>'</th><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+<tr><th>(</th><td>×</td><td>×</td><td>×</td><td>×</td><td>×</td><td>○</td><td>×</td><td>×</td><td>×</td><td>×</td></tr>
+<tr><th>)</th><td>×</td><td>×</td><td>×</td><td>×</td><td>×</td><td>○</td><td>×</td><td>×</td><td>×</td><td>×</td></tr>
+<tr><th>*</th><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+<tr><th>+</th><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+<tr><th>,</th><td>×</td><td>×</td><td>×</td><td>×</td><td>×</td><td>×</td><td>×</td><td>×</td><td>×</td><td>×</td></tr>
+<tr><th>-</th><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+<tr><th>.</th><td>△</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+<tr><th>/</th><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+<tr><th>:</th><td>×</td><td>○</td><td>×</td><td>×</td><td>×</td><td>○</td><td>×</td><td>×</td><td>×</td><td>×</td></tr>
+<tr><th>;</th><td>×</td><td>○</td><td>×</td><td>×</td><td>×</td><td>○</td><td>×</td><td>×</td><td>×</td><td>×</td></tr>
+<tr><th>&lt;</th><td>×</td><td>×</td><td>×</td><td>×</td><td>×</td><td>○</td><td>×</td><td>×</td><td>×</td><td>×</td></tr>
+<tr><th>=</th><td>○</td><td>○</td><td>○</td><td>×</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+<tr><th>&gt;</th><td>×</td><td>×</td><td>×</td><td>×</td><td>×</td><td>○</td><td>×</td><td>×</td><td>×</td><td>×</td></tr>
+<tr><th>?</th><td>○</td><td>○</td><td>○</td><td>×</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+<tr><th>@</th><td>×</td><td>×</td><td>×</td><td>×</td><td>×</td><td>○</td><td>×</td><td>×</td><td>×</td><td>×</td></tr>
+<tr><th>[</th><td>×</td><td>○</td><td>×</td><td>×</td><td>×</td><td>○</td><td>×</td><td>×</td><td>×</td><td>×</td></tr>
+<tr><th>\</th><td>×</td><td>○</td><td>×</td><td>×</td><td>×</td><td>○</td><td>×</td><td>×</td><td>×</td><td>×</td></tr>
+<tr><th>]</th><td>×</td><td>○</td><td>×</td><td>×</td><td>×</td><td>○</td><td>×</td><td>×</td><td>×</td><td>×</td></tr>
+<tr><th>^</th><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+<tr><th>_</th><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+<tr><th>`</th><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+<tr><th>{</th><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+<tr><th>|</th><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+<tr><th>}</th><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+<tr><th>~</th><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td></tr>
+
+<tr><th colspan="2">&quot;localpart&quot;@example.com</th><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>×</td><td>×</td><td>×</td><td>×</td></tr>
+<tr><th colspan="2">&quot;localpart@example.com&quot;</th><td>○</td><td>○</td><td>×</td><td>○</td><td>○</td><td>×</td><td>×</td><td>×</td><td>×</td></tr>
+<tr><th colspan="2">&lt;localpart@example.com&gt;</th><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>×</td><td>×</td><td>×</td><td>×</td></tr>
+<tr><th colspan="2">[localpart]@example.com</th><td>○</td><td>×</td><td>×</td><td>×</td><td>○</td><td>×</td><td>×</td><td>×</td><td>×</td></tr>
+<tr><th colspan="2">.localpart@example.com</th><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>○</td><td>×</td></tr>
+</table>
+<br />
+<div>よほど特殊な事情がない限りは気にしなくていいことではありますが、何かの時に一から調べるのが面倒なのでまとめてみました。</div>
+{% endraw %}

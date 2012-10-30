@@ -1,0 +1,563 @@
+---
+layout: post
+title: "30分でわかる PHP Extensionの作り方を学べる記事をかいたよー ＼(＾o＾)／"
+---
+{% raw %}
+<p>こんにちは。12月に入社した<a href="http://twitter.com/chobi_e">@chobi_e</a>です。</p>
+
+
+<p>私が所属しているチームではお菓子系男子が30%を超えているという素敵チームで
+毎週チーム内の漢の子がお菓子を焼いてくるという状況でハッピハッピハッピーです。
+</p>
+
+<p>今日は私が学んできたPHP Extension作成についてのノウハウの一部を
+公開しようと思います。</p>
+
+<p>PHPExtension作成についての資料はklabさんやyoyaさん
+rskyさんの記事が参考になりますが私のようにPHPは書けてもCが書けない人には具体的にhello world以降何をすればいいのかがサッパリよく分かりません。</p>
+
+
+<p>そこで先人達が作ってくれた偉大なライブラリをPHPで扱えるようにする為にC/MigemoのPHPバインディングを作ってみましょう</p>
+
+
+<h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;">C/Migemoをインストールしてみる</h3>
+
+<p>読者の方の中にはC/Migemoをご存知でない方もいらっしゃるかと思いますので簡単に説明するとC/MigemoはKoRoNさんが作成されているローマ字のまま日本語を(インクリメンタルに)検索する」ための正規表現を生成するライブラリです。</p>
+
+<pre class="code"><a href="http://www.kaoriya.net/#CMIGEMO">http://www.kaoriya.net/#CMIGEMO</a></pre>
+
+<p>私は普段Ubuntuで開発をしているのでUbuntuでのC/Migemoの導入方法の説明を書きます。
+OSXやWindowsの方はC/MigemoのREADMEを読みつつコンパイルしてください。</p>
+
+<pre class="code">sudo aptitude install nkf
+
+svn co http://cvs.kaoriya.net/svn/CMigemo/trunk migemo
+cd migemo
+./configure
+make gcc
+
+make gcc-dict
+cd dict
+make utf8
+cd ..
+sudo make gcc-install
+</pre>
+
+<p>これでC/Migemoのインストールが完了しました。C/Migemoには簡単な動作を確認する為の
+プログラムが付属しているのでそれを使って試してみましょう。</p>
+
+<p>cmigemoを起動してchobiという文字列を入力してみます。</p>
+
+<pre class="code">chobie@air:~/src/migemo$ cmigemo -d /usr/local/share/migemo/utf-8/migemo-dict
+migemo_open("/usr/local/share/migemo/utf-8/migemo-dict")=0x820d008
+clock()=0.210000
+QUERY: chobi
+PATTERN: (ﾁｮﾋﾞ|チョビ|ちょび|ｃｈｏｂｉ|chobi)</pre>
+
+
+<p>chobiに対応した正規表現が生成されましたね！</p>
+
+
+<h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;">PHP Extensionの下準備</h3>
+
+<p>まずはPHP Extensionの設計を自分がよく理解できる言語でふわっと書いてみましょう。</p>
+
+<pre class="code">&lt;?php
+/**
+* これは実装するExtensionの目標で実際には使いません。
+*/
+class Migemo{
+    public function __construct()
+    {
+      //migemoのロードを行う
+    }
+
+    public function query($query)
+    {
+      //migemoに問い合せて正規表現を返す
+    }
+}
+</pre>
+
+<p>せっかくなのでUnitTestも書いておきましょう。</p>
+
+<p>PHPExtensionを作成する場合は別途テスト用のrun-test.phpというのが付属してるんですが、自分で使う分には慣れ親しんだツールを使ったほうが楽なので今回はPHPUnit3を使います。</p>
+
+<pre class="code">sudo pear channel-discover pear.phpunit.de
+sudo pear channel-discover components.ez.no
+sudo pear channel-discover pear.symfony-project.com
+sudo pear install phpunit/PHPUnit</pre>
+
+<p>テストを書きます。</p>
+
+<li>MigemoTest.php</li>
+<pre class="code">&lt;?php
+class MigemoTest extends \PHPUnit_Framework_TestCase{
+
+
+    /**
+     * Migemoロードされているかしらべるよ
+     */
+    public function testMigemoIsLoaded()
+    {
+        $this->assertEquals(true,extension_loaded("migemo"));
+    }
+
+    /**
+     * Migemoクラスがあるかしらべるよ
+     * @depends testMigemoIsLoaded
+     */
+    public function testMigemoClassExists()
+    {
+        $this->assertEquals(true,class_exists("Migemo"));
+    }
+
+    /**
+     * @depends testMigemoClassExists
+     */
+    public function testQueryMethodExists()
+    {
+        $reflection = new \ReflectionClass("Migemo");
+        $this->assertEquals(true,$reflection->hasMethod("query"));
+    }
+
+    /**
+     * @depends testQueryMethodExists
+     */
+    public function testQuery()
+    {
+        $migemo = new Migemo();
+        $this->assertEquals("(ﾁｮﾋﾞ|チョビ|ちょび|ｃｈｏｂｉ|chobi)",$migemo->query("chobi"));
+        unset($migemo);
+    }
+
+    /**
+     * @depends testQuery
+     */
+    public function testQueryCycle()
+    {
+        $migemo = new Migemo();
+        for($i = 0; $i < 30; $i++){
+            $this->assertEquals("(ﾁｮﾋﾞ|チョビ|ちょび|ｃｈｏｂｉ|chobi)",$migemo->query("chobi"));
+        }
+        unset($migemo);
+
+    }
+}
+</pre>
+
+<p>さて、これでExtension作成までの準備が出来ましたのでサクサク書いていきます。</p>
+
+<h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;">PHP Extensionを書く</h3>
+
+
+<p>私は容量悪い系の人間なのでコツコツ書いてきますよ！みなさんも写経についてきてくださいね</p>
+
+<li>config.m4</li>
+
+<pre class="code">PHP_ARG_ENABLE(migemo,
+  [  --enable-migemo      Enable "migemo" extension support])
+
+if test $PHP_MIGEMO != "no"; then
+  export CFLAGS="$CFLAGS -lmigemo"
+  PHP_SUBST(MIGEMO_SHARED_LIBADD)
+  PHP_NEW_EXTENSION(migemo, migemo.c, $ext_shared)
+fi</pre>
+
+<p>phpizeというビルド環境をチェックしつつコンパイルに必要な設定を書いてくれるconfig.m4というマクロファイルを書きます。とりあえずこう書けばOK</p>
+
+<p style="color:999;">本来はもうちょっとPHP Extensionらしい書き方が有るんですが長くなるので今回はこんな形でごまかしちゃいましょう。</p>
+
+
+<p>続いてPHPにExtensionを登録するためのコードを書きます。</p>
+
+<li>php_migemo.h</li>
+
+<pre class="code">#ifndef PHP_MIGEMO_H
+#define PHP_MIGEMO_H
+
+#define PHP_MIGEMO_EXTNAME "migemo"
+#define PHP_MIGEMO_EXTVER "0.1"
+
+
+#ifdef HAVE_CONFIG_H
+#include "config.h"
+#endif
+
+#include "php.h"
+#include <migemo.h>
+
+extern zend_module_entry migemo_module_entry;
+#define phpext_migemo_ptr &migemo_module_entry;
+
+PHPAPI zend_class_entry *migemo_class_entry;
+
+#endif /* PHP_MIGEMO_H */
+</pre>
+
+
+<li>migemo.c</li>
+
+<pre class="code">#include "php_migemo.h"
+
+PHPAPI function_entry php_migemo_methods[] = {
+    {NULL, NULL, NULL}
+};
+
+PHP_MINIT_FUNCTION(migemo) {
+    return SUCCESS;
+}
+
+PHP_MINFO_FUNCTION(migemo)
+{
+    return SUCCESS;
+}
+
+zend_module_entry migemo_module_entry = {
+#if ZEND_MODULE_API_NO >= 20010901
+    STANDARD_MODULE_HEADER,
+#endif
+    PHP_MIGEMO_EXTNAME,
+    NULL, 					/* Functions */
+    PHP_MINIT(migemo),	    /* MINIT */
+    NULL, 	                /* MSHUTDOWN */
+    NULL, 	                /* RINIT */
+    NULL,	                /* RSHUTDOWN */
+    PHP_MINFO(migemo),	    /* MINFO */
+#if ZEND_MODULE_API_NO >= 20010901
+    PHP_MIGEMO_EXTVER,
+#endif
+    STANDARD_MODULE_PROPERTIES
+};
+
+#ifdef COMPILE_DL_MIGEMO
+ZEND_GET_MODULE(migemo)
+#endif
+</pre>
+
+<p>そいでは準備ができましたのでコンパイルしてみましょう。</p>
+
+<pre class="code">phpize
+./confiugre
+make
+sudo make install
+
+# migemo本体の共有ライブラリいれてからldconfigしてなかったので初回だけ。
+sudo ldconfig
+</pre>
+
+<p>php5のconfファイルにmigemo.soを追加します。</p>
+
+<li>/etc/php5/conf.d/migemo</li>
+
+<pre class="code">extension=migemo.so</pre>
+
+<p>これでPHPにMigemo Extensionを登録するだけのExtensionが作れました。</p>
+
+<pre class="code">chobie@air:~/src/php-migemo$ php -m | grep migemo
+migemo
+</pre>
+
+<p>確かにPHPExtensionがロードされているようですね。UnitTestも実行しておきましょう。</p>
+
+<pre class="code">chobie@air:~/src/php-migemo$ phpunit MigemoTest.php 
+PHPUnit 3.5.6 by Sebastian Bergmann.
+
+.FSSS
+
+Time: 0 seconds, Memory: 3.00Mb
+
+There was 1 failure:
+
+1) MigemoTest::testMigemoClassExists
+Failed asserting that <boolean:false> matches expected <boolean:true>.
+
+/home/chobie/src/php-migemo/MigemoTest.php:19
+
+FAILURES!
+Tests: 2, Assertions: 2, Failures: 1, Skipped: 3.
+</pre>
+
+<p>きちんとモジュールが読み込まれるテストは成功していますね。</p>
+
+<h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;">クラスだけを実装する</h3>
+
+<p>それではMigemoクラスをExtensionで実装してみましょう。まずは単純にクラスの定義だけを行ないます。PHPで言えばこんなコードになります。</p>
+
+<pre class="code">
+&lt;?php
+class Migemo{}
+</pre>
+
+<p>新しいクラスを定義するにははPHP_MINIT_FUNCTION(migemo)に3行追加するだけで出来ます。</p>
+
+<li>migemo.c</li>
+
+<pre class="code">PHP_MINIT_FUNCTION(migemo) {
+    <span style="background:green">zend_class_entry ce;</span>
+    <span style="background:green">INIT_CLASS_ENTRY(ce, "Migemo", php_migemo_methods);</span>
+    <span style="background:green">migemo_class_entry = zend_register_internal_class(&ce TSRMLS_CC);</span>
+    return SUCCESS;
+}
+</pre>
+
+<p>コレだけです。zend_class_entry `migemo_class_entry`は前もってphp_migemo.h
+で宣言しておいたのでPHP_MINIT_FUNCTIONで使うことができます。</p>
+
+<p>INIT_CLASS_ENTRYは一番目にzend_class_entry、2番目にクラス名、3番目にクラスに
+対応したfunction_entryを渡せばOKです。</p>
+
+<p>それでは再度コンパイルしてチェックしてみましょう。</p>
+
+<pre class="code">sudo make install
+
+chobie@air:~/src/php-migemo$ phpunit MigemoTest.php 
+PHPUnit 3.5.6 by Sebastian Bergmann.
+
+..FII
+
+Time: 0 seconds, Memory: 3.00Mb
+
+There was 1 failure:
+
+1) MigemoTest::testQueryMethodExists
+Failed asserting that <boolean:false> matches expected <boolean:true>.
+
+/home/chobie/src/php-migemo/MigemoTest.php:28
+
+FAILURES!
+Tests: 5, Assertions: 3, Failures: 1, Incomplete: 2.
+</pre>
+
+<p>2つテストが成功しました。クラスも定義できたのでどんどん進みましょう。</p>
+
+<h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;">queryメソッドを実装してみる</h3>
+
+<p>ひとまずこれでMigemoクラスが扱えるようになったので地味な部分はとりあえずおいておいてqueryメソッドを実装してしまいましょう。</p>
+
+
+<p>メソッドの追加は先程`INIT_CLASS_ENTRY`で指定した`php_migemo_methods`に
+どんなメソッドがあるかを追加しておけばOKです。</p>
+
+<pre class="code">PHPAPI function_entry php_migemo_methods[] = {
+    <span style="background:green">PHP_ME(migemo, query, arginfo_migemo_query, ZEND_ACC_PUBLIC)</span>
+    {NULL, NULL, NULL}
+};
+</pre>
+
+<p>function_entry配列のお約束は最後は必ず{NULL,NULL,NULL}で締める、という事を守っておけばOK。PHP_MEなどのfunction_entry用マクロのあとは
+,は必要ありません。大体一緒なので雰囲気で書いちゃいましょう。</p>
+
+<p>これでMigemoクラスにはqueryというメソッドがあるよ！というのを定義出来ました。
+肝心の実装はどう書くかというと。</p>
+
+<pre class="code">ZEND_BEGIN_ARG_INFO_EX(arginfo_migemo_query, 0, 0, 1)
+    ZEND_ARG_INFO(0, query)
+ZEND_END_ARG_INFO()
+PHP_METHOD(migemo, query)
+{
+    migemo *m;
+    char *query;
+    int ret = 0;
+    int query_len = 0;
+    unsigned char *result;
+    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,
+        "s", &query, &query_len) == FAILURE){
+        return;
+    }
+
+    m =  migemo_open("/usr/local/share/migemo/utf-8/migemo-dict");
+    result = migemo_query(m, query);
+
+    RETVAL_STRING(result, 1);
+    migemo_release(m, result);
+    migemo_close(m);
+}
+</pre>
+
+<p>こんな感じです。Zend Engine2周りの関数やマクロが入ってきて若干分かりづらいかもしれませんがこれはこういうもんだと思っておけば大丈夫です。<p>
+
+<p>RETVAL_STRINGはZEND_APIで定義されているマクロの一つでメソッドや関数の返り値を
+簡単に設定できるマクロです。RETVAL系のマクロを使うとCの型からPHPの型に簡単に
+変換しつつ返り値の設定をしてくれるので便利ですね。</p>
+
+
+<p>それではまたコンパイルして試してみましょう</p>
+
+<pre class="code">sudo make install
+
+chobie@air:~/src/php-migemo$ phpunit MigemoTest.php 
+PHPUnit 3.5.6 by Sebastian Bergmann.
+
+.....
+
+Time: 7 seconds, Memory: 3.00Mb
+
+OK (5 tests, 34 assertions)
+</pre>
+
+<p>おー、ちゃんと動いていますね！</p>
+
+
+<p>しかし今のままだとqueryメソッドを呼ぶ際に毎回migemoの初期化と解放をしているのが気に入りません。</p>
+
+
+<p>それではコンストラクタを実装してみましょう。</p>
+
+<h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;">コンストラクタを実装</h3>
+
+<p>コンストラクタの実装と行きたいのですがよく考えてみると一つ困ったことがでてきました。
+migemoポインタはどこに格納しておけばよいのでしょう？</p>
+
+
+<p>クラスのインスタンス関連付けて何かしらの構造を持ち回したい場合は自前の
+構造体を定義してクラス生成時のオブジェクトの生成をハンドリングする方法を使います。</p>
+
+<p>オブジェクトの生成をハンドリングする為にはオブジェクトを作るための関数と、オブジェクトが作ったメモリを開放するための関数を定義してzend_class_entry->create_object にオブジェクトを作成する為の関数を設定してあげます。</p>
+
+<li>migemo.c</li>
+
+<pre class="code">typedef struct{
+    zend_object zo;
+    migemo *migemo;
+} php_migemo;
+</pre>
+
+<p>構造体のキャストを行なっているので先頭はzend_objectでなければいけません。</p>
+
+<p>続いてオブジェクトの生成と解放を行う関数を追加します。殆ど同じなのでこういうもんだと思ってコピペすればOKです。大事なところは緑でマーキングしておいたので自分で違うのを作る場合は参考にしてください。</p>
+
+<li>migemo.c</li>
+
+<pre class="code">static void <span style="background:green">php_migemo_free_storage</span>(<span style="background:green">php_migemo *object</span> TSRMLS_DC)
+{
+    zend_object_std_dtor(&object->zo TSRMLS_CC);
+    
+    <span style="background:green">if(!object->migemo){</span>
+      <span style="background:green">migemo_free(object->migemo);</span>
+    <span style="background:green">}</span>
+    <span style="background:green">object->migemo = NULL;</span>
+    efree(object);
+}
+
+zend_object_value <span style="background:green">php_migemo_new</span>(zend_class_entry *ce TSRMLS_DC)
+{
+	zend_object_value retval;
+	<span style="background:green">php_migemo *obj</span>;
+	zval *tmp;
+
+	obj = ecalloc(1, sizeof(*obj));
+	zend_object_std_init( &obj->zo, ce TSRMLS_CC );
+	zend_hash_copy(obj->zo.properties, &ce->default_properties, (copy_ctor_func_t) zval_add_ref, (void *) &tmp, sizeof(zval *));
+
+	retval.handle = zend_objects_store_put(obj, 
+        (zend_objects_store_dtor_t)zend_objects_destroy_object,
+        (zend_objects_free_object_storage_t)<span style="background:green">php_migemo_free_storage</span>,
+        NULL TSRMLS_CC);
+	retval.handlers = zend_get_std_object_handlers();
+	return retval;
+}
+</pre>
+
+<p>コンストラクタを追加します。</p>
+
+<pre class="code">PHP_METHOD(migemo, __construct){
+    php_migemo *this = (php_migemo *) zend_object_store_get_object(getThis() TSRMLS_CC);
+
+    this->migemo = migemo_open("/usr/local/share/migemo/utf-8/migemo-dict");
+}
+</pre>
+
+<p>コンストラクタを追加したのでメソッド定義とクラスの初期化部分に少し手を入れます。</p>
+
+<pre class="code">PHPAPI function_entry php_migemo_methods[] = {
+    PHP_ME(migemo, __construct, NULL, ZEND_ACC_PUBLIC)
+    <span style="background:green">PHP_ME(migemo, query, arginfo_migemo_query, ZEND_ACC_PUBLIC)</span>
+    {NULL, NULL, NULL}
+};
+
+PHP_MINIT_FUNCTION(migemo) {
+    zend_class_entry ce;
+    INIT_CLASS_ENTRY(ce, "Migemo", php_migemo_methods);
+    migemo_class_entry = zend_register_internal_class(&ce TSRMLS_CC);
+<span style="background:green">migemo_class_entry->create_object = php_migemo_new;</span>
+
+    return SUCCESS;
+}
+</pre>
+
+<p>コンストラクタ側でmigemoの生成行うようにしたので、それに合わせて
+queryの実装を変更します。</p>
+
+<pre class="code">PHP_METHOD(migemo, query)
+{
+    <span style="background:green">php_migemo *this = (php_migemo *) zend_object_store_get_object(getThis() TSRMLS_CC);</span>
+    char *query;
+    int ret = 0;
+    int query_len = 0;
+    unsigned char *result;
+    if(zend_parse_parameters(ZEND_NUM_ARGS() TSRMLS_CC,
+        "s", &query, &query_len) == FAILURE){
+        return;
+    }
+
+    result = migemo_query(this->migemo, query);
+
+    RETVAL_STRING(result, 1);
+    migemo_release(this->migemo, result);
+}
+</pre>
+
+<p>これで実装が完了しましたね。もう一回コンパイルして試してみましょう。</p>
+
+<pre class="code">chobie@air:~/src/php-migemo$ phpunit MigemoTest.php 
+PHPUnit 3.5.6 by Sebastian Bergmann.
+
+.....
+
+Time: 0 seconds, Memory: 3.00Mb
+
+OK (5 tests, 34 assertions)
+</pre>
+
+<p>ユニットテストの時間が短縮されていて効果が出ていますね。これで実装が終了しました！</p>
+
+
+<h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;">あとがき</h3>
+
+<p>どうでしたか？思っていたより簡単に開発できたのではないでしょうか？</p>
+
+<p>PHPバインディングから始めるExtension作成は割と身近で親しみやすく、
+次に自分が何を調べるべきかという目標が明確に分かるのでとっかかりには
+オススメだと思います。</p>
+
+
+<p>最後に参考になるリンクと宣伝を貼っておきます。</p>
+
+<li>php-migemo <a href="http://github.com/chobie/php-migemo">http://github.com/chobie/php-migemo</a></li>
+
+<p>今回作成したExtensionのGitリポジトリです。</p>
+
+<li>php-git <a href="http://github.com/chobie/php-git">http://github.com/chobie/php-git</a></li>
+
+<p>php-gitはlibgit2をPHPで扱えるようにする為のPHPバインディングです。最近作り始めたばかりなので
+まだまだalpha developmentで課題はたくさん有りますがPHPでgit repositoryを使った操作が行えます。</p>
+
+
+<li>ZendEngine 勉強会グループ <a href="http://groups.google.com/group/php-zendengine/">http://groups.google.com/group/php-zendengine/</a></li>
+
+<p>2011年2月か3月に東京でZendEngineについての勉強会を行ないます。私もLT予定ですので
+ご興味のある方はぜひぜひどうぞ！</p>
+
+<li>[klabさん] <a href="http://dsas.blog.klab.org/archives/50777398.html">PHP Extension を作ろう第１回 - まずは Hello World</a></li>
+<li>[klabさん] <a href="http://dsas.blog.klab.org/archives/50782987.html">PHP Extension を作ろう第２回 - 引数と返値</a></li>
+<li>[klabさん] <a href="http://dsas.blog.klab.org/archives/50903613.html">PHP Extension を作ろう第３回 - クラスを作ろう</a></li>
+<li>[yoyaさん] <a href="http://pwiki.awm.jp/~yoya/?PHP/ext">PHP extension の作り方</a></li>
+<li>[rskyさん] <a href="http://gihyo.jp/dev/serial/01/php-module/0006">実例で学ぶPHP拡張モジュールの作り方 第6回　PHP 5.3の変更点（その2）</a></li>
+
+
+<p>それでは、みんなも作ってア・ラ・モード☆</p>
+
+<div style="margin:0;padding:.5em;border:2px solid #ccc">Zynga Japanでは積極的にエンジニアを採用しています。<br />
+<a href="http://www.zynga.co.jp/recruit/recruit.php?siteid=unohlabs">採用ページ</a>をご覧になり、興味のある方はぜひご応募ください。</div>
+{% endraw %}

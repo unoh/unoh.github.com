@@ -1,0 +1,94 @@
+---
+layout: post
+title: "アジャイルな開発をチームでやってみた(2010年版)"
+---
+{% raw %}
+こんにちは murahashi です。<br />
+アジャイルな開発をチームでやってみている(2010年)のですが、いざやってみると結構ハマリどころがありました。やってみたことを共有しておこうと思います。<br /><br style="clear:left" />
+
+<h4>かたちから入ろう</h4>
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="acts_as_agile_armor_600_457.jpg" src="http://labs.unoh.net/acts_as_agile_armor_600_457.jpg" width="600" height="457" class="mt-image-none" style="" /></span>
+<h5>朝会</h5>
+アジャイルな開発と言えば朝会なので、朝会から始めました。<br />
+開始時刻をメンバーで決めて、それぞれが昨日やったこと、今日やること、おしらせ、困っていること、を共有しました。<br />
+さらに、朝会前に社内wikiにメモ書き程度の項目を書いておきます。これにあらかじめ目を通すことで、一番の課題に時間を集中することができました。<br /><br style="clear:left" />
+
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="acts_as_agile_anti_pattern_50_67.jpg" src="http://labs.unoh.net/acts_as_agile_anti_pattern_50_67.jpg" width="50" height="67" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span><h5>アンチパターン・決めた時刻を守らない</h5>
+11時から朝会始めようと決めたのに、11時過ぎに汗だくで飛び込んできて「遅れてすみません」「wiki書いてません」「wiki読んでません」というのは、チームの空気を悪くするだけでなく、単純に全員の時間を無駄にしてしまいます。<br />
+時刻を守るか、守れるルールに変えましょう。ごめんなさい。<br /><br style="clear:left" />
+
+<h5>できることからやろう</h5>
+組み込めそうなものからとりいれてみました。<br />
+具体的には、『達人プログラマー』で言う三本柱（テスト・自動化・早期デプロイ）、朝会、継続的な統合(CI)、テスト駆動開発(TDD)、テスト用データベースの独立、分散VCSを使う、などです。<br />
+CI, git, TDDは一気に導入しました。テスト用データベースの独立は必要になってから取り入れました。<br /><br style="clear:left" />
+
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="acts_as_agile_anti_pattern_50_67.jpg" src="http://labs.unoh.net/acts_as_agile_anti_pattern_50_67.jpg" width="50" height="67" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span><h5>アンチパターン・あれもこれも</h5>
+一個一個見ればそれはあったほうがいいんだろうなと思いますが、きりがありません。多すぎて身構えてしまうし、開発が乗ってくるまでにどれだけかかるんだよと。<br />
+かといって完全マスターしないと増やさないポリシーも意味がありません。要はバランスです。<br />
+今思えばgitの導入がかなり説明不足でした。その時はsubversionをフル活用した社内ライブラリとの接合をとるのでいっぱいいっぱいでした。<br /><br style="clear:left" />
+
+<h5>チームでやろう</h5>
+今までもタスクが個人レベルまで分解されたあとは、アジャイルというかXPというか"ぼくのかんがえたTDD"でやってみてました。これが結構できるようになったなーと思ってチームでやるようになったのですが、ひとりxpとチームxpのあいだの一歩は思ったより大きかったです。<br />
+逆説的ですが、ひとりxpが完璧にできるようになるのを待つ必要はないと思います。最終的にチームでやらない意味がわからないので、できることからさっさとチームで始めるのが良いと思います。<br /><br style="clear:left" />
+
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="acts_as_agile_anti_pattern_50_67.jpg" src="http://labs.unoh.net/acts_as_agile_anti_pattern_50_67.jpg" width="50" height="67" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span><h5>アンチパターン・チームで決めた方針は変えない</h5>
+合わなかったら、そして合理的な理由があればさっさと方針を変えましょう。<br />
+はじめのルールのままテストがどんどん遅くなっていっているのでどうにかしたいです。<br /><br style="clear:left" />
+
+<h5>テスト駆動で開発しよう</h5>
+テストコードを先に書く事で、テスト可能な設計になります。むしろテスト可能な設計でしか書けません。テストコードが存在することで、テストコードの範囲内で正しく動くっぽいことが確認できます。テストコードがなければ、正しく動くっぽいことの確認すらできません。<br />
+また、テストを壊してしまったら、CIサーバのhudsonが容赦なく "Build faild in Hudson" なるメールをガッシュガッシュ投げつけてくるので、想定の範囲内でデグレードを防ぐことができます。<br /><br style="clear:left" />
+
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="acts_as_agile_anti_pattern_50_67.jpg" src="http://labs.unoh.net/acts_as_agile_anti_pattern_50_67.jpg" width="50" height="67" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span><h5>アンチパターン・テストを書かなければ失敗しない</h5>
+テストを書かなければ失敗しないのですが、それでは意味がありません。また、通らなくなったテストをコメントアウトしたり、消したりしてテストを通してはいけません。<br />
+さらに「いけません」とチームに言ってるのに「他の作業するところで影響でるから」と実装だけ修正したりすると、「なんであいつだけ」となるので以後気をつけます。<br />
+ただし"たまに落ちるテスト"はどうしていいかいまだによくわかりません。<br /><br style="clear:left" />
+
+<h5>イディオムに従う</h5>
+symfonyのイディオムはjobeetなので、jobeetに従っておくと共通認識をつくりやすいです。php, symfony, lime, jobeetのイディオムから外れるときは明確に意図を持って外れるようにしましょう。<br />
+「正しいunit testでは」みたいな話ばかりをしていても仕方がないので。しましたけど。﻿<br /><br style="clear:left" />
+
+<h4>そんなこんなやってみた構成</h4>
+<ul>
+<li>php5.3, symfony1.4, mysql5.1, memcache, flashlite1.1</li>
+<li>テスティングフレームワーク lime</li>
+<li>BTS trac</li>
+<li>VCS git</li>
+<li>CI hudson</li>
+<li>デプロイ capistrano</li>
+</ul>
+だいたいそんなかんじ<br /><br style="clear:left" />
+
+<h4>やってみてのハマりどころ</h4>
+
+<h5>アジャイルな開発のスイートスポットは新規開発?</h5>
+不慣れなチームだったので別にスイートスポットではありませんでした。
+
+<h5>ケータイ向けアプリのflash</h5>
+flashが重要な役割を占めるけど、limeでテスト駆動開発...そこは割り切って開発することにしました。<br />
+デプロイするcapistranoのレシピは早々に書いて動かしてたのですが、flashとphpが出来上がってきたところでがっちゃんこになりました。そして、がっちゃんこしたら結局わりきった接合面でなんでか動きません。TDDでmodelを厚く作ったのに...<br />
+だいたい原因は、symfony にも不慣れな人ばかりだったので、そんなに厚くないcontroller部分の値の受け渡し部分なことが多かったです。
+
+<h5>ケータイ向けopensocialに特有の部分</h5>
+テスト用擬似ブラウザsfBrowserのclickとかredirectとか(NDAかもしれないので省略されました)<br /><br style="clear:left" />
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="acts_as_agile_stone_wall_600_569.JPG" src="http://labs.unoh.net/acts_as_agile_stone_wall_600_569.JPG" width="600" height="569" class="mt-image-none" style="" /></span>
+<h5>fixtureの硬直化がDBのschemaの硬直化を呼ぶ</h5>
+fixtureをyamlで書いてそれを毎回DBにロードしてるので、スキーマ変更するたびにyamlの編集が必要になりました。テスト書き換えるだけでもしんどいとおもうひとばかりなのに、yamlをえんえん編集してるのはもっとひどくてかなりダメージを受けてました。赤→緑→リファクタリングのサイクルで脳汁が出る人ばかりではありません。自然と、 DBのschemaが硬直してしまいました。<br />
+factory_girlはやくきてくれー。
+
+<h5>全体的に</h5>
+やりたいやりたい言ってる私がコーチになるどころかそんなに役に立ててないのが割と原因の一つです。でも私もわかんないよ。手探り手探りです。
+
+<h4>あわせてよみたい</h4>
+<ul>
+<li><a href="http://alpha.mixi.co.jp/blog/?p=1738">mixi Engineers' Blog » いまからでも間に合う開発者テスト</a></li>
+<li><a href="http://d.hatena.ne.jp/Yoshiori/20100321/1269171882">デブサミのアンケートに感動したので全部返事書いてみた 2010</a><br />
+このバーンダウンチャートいいなー</li>
+<li>達人プログラマー　黒い方 4-89471-274-1</li>
+<li>Head First ソフトウェア開発 978-4-87311-392-0</li>
+</ul>
+<h4>これから</h4>
+問題にぶつかったなかで、今一番多い解決策は"とりあえずわりきって前に進む"であることがおおいので、もうちょっとましな解決tipsのエントリを挙げられるといいなあと思います。<br />
+
+以上デース
+{% endraw %}

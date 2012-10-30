@@ -1,0 +1,45 @@
+---
+layout: post
+title: "UNIXデーモンを作ろう"
+---
+{% raw %}
+<div id="ph_video_2864323" width="450" height="360" time="3098.93"></div><script language="javascript" src="http://photozou.jp/bin/video/784/2864323_e23699151d60a225d8832209080f1efe/ja/176500"></script><a href="http://photozou.jp/photo/show/784/2864323">20070405コードレビュー</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a>
+
+<object width="450" height="500"><param name="allowScriptAccess" value="SameDomain" /><param name="movie" value="http://static.scribd.com/FlashPaperS3.swf?guid=5v8rtma38so2x&document_id=24739" /><embed width="450" height="500" src="http://static.scribd.com/FlashPaperS3.swf?guid=5v8rtma38so2x&document_id=24739" type="application/x-shockwave-flash"></embed> </object>
+
+<p>
+尾藤正人です
+</p>
+
+<p>
+先日ウノウの勉強会でUNIXデーモンの作り方についてプレゼンしました。
+UNIXのデーモンの仕組みはWebサービスの開発にあたって直接関係の深いトピックではないかもしれませんが、知っておいて損はないと思います。
+発表資料と動画を公開しますので、よかったらご覧下さい。
+普段は気にしないUNIXデーモンが裏で何をやってるのか、少しでも身近に感じていただければと思います。
+</p>
+
+<p>
+発表資料の公開にはちまたで話題の<a href="http://www.scribd.com/">Scribd</a>を使ってみました。
+プレゼン資料はKeynoteで作ったのですが、PowerPoint形式に変換してアップロードする簡単にできました。
+</p>
+
+<p>
+デモ用に実際に動く簡単なデーモンプログラム ccho(シコー) を作成しました。
+ccho は<a href="http://labs.unoh.net/2006/10/global_standard_programming_wi.html">前々回の勉強会で行ったGnu Autotools</a>で作った bat プログラムを外部ライブラリとして使用しています。
+UNIXのプログラムがどのようにして外部ライブラリと連携しているのかという例としてやってみました。
+</p>
+
+<p>
+勉強会では実際に作ったプログラムレベルでの解説をしたかったのですが、時間ができずに断念。
+プログラムも公開しておくので、もしよかったらご覧になってください。
+</p>
+
+<p>
+<a href="http://labs.unoh.net/bat-0.0.2.tar.gz">bat-0.0.2.tar.gz</a><br />
+<a href="http://labs.unoh.net/ccho-0.0.1.tar.gz">ccho-0.0.1tar.gz</a>
+</p>
+
+<p>
+何かありましたらコメント、トラックバックなりでいろいろ突っ込みいただければと思います。
+</p>
+{% endraw %}

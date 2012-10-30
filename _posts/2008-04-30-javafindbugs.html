@@ -1,0 +1,38 @@
+---
+layout: post
+title: "Javaコードのバグを発見するFindBugs"
+---
+{% raw %}
+<p>こんにちは。中村です。</p>
+<p>Javaコードをコンパイルしたクラスファイルからバグを見つけ出す<a href="http://findbugs.sourceforge.net/">FindBugs</a>というツールを使ってみました。</p>
+<p>FindBugsは単体で動作しますが、IDEのプラグインとしても提供されています。今回はEclipseのプラグインを試してみました。</p>
+<h3>プラグインの導入</h3>
+<p><a href="http://sourceforge.net/project/showfiles.php?group_id=96405&package_id=118233">SourceForgeのダウンロードページ</a>からedu.umd.cs.findbugs.plugin.eclipse_1.3.3.20080401.zipを取得して
+解凍、Eclipseディレクトリのpluginsに置くだけといういつも通りな感じです。</p>
+<h3>使い方</h3>
+<p>プロジェクトのプロパティから通知する問題を選択したりと色々設定が出来ますが、単純に使うにはJavaプロジェクトのところで右クリック -&gt; Find Bugs -&gt; Find Bugsをクリックすると
+プロジェクトを調べて問題箇所にマーカーを付けてくれます。</p>
+
+<h3>使ってみる</h3>
+<p>早速無茶なコードを書いてみました。</p>
+<a href="http://photozou.jp/photo/show/784/8859976"><img src="http://art2.photozou.jp/pub/784/784/photo/8859976_org.v1209543730.png" alt="FindBugs" width="390" height="494" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/8859976">FindBugs</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a>
+<p>すると、このようにバッチリと問題点が指摘されました。実行してNullPointerExceptionの発生箇所の行数を見るよりはこちらの方が一目瞭然で判りやすいと思います。</p>
+<p>次に書いてはいけないコードの類をやってみました。</p>
+<pre class="code"><code>package net.unoh.findbugstest;
+
+public class FindBugsTest {
+
+    public static void main(String[] args) {
+        Thread thread = new Thread();
+        thread.run();
+    }
+
+}</code></pre>
+<p>すると次のように問題点が指摘されました。</p>
+<pre class="code"><code>[Ru] スレッドの中で run を実行しています。(本当は startを代わりに呼び出すべきではないのですか？)。 [RU_INVOKE_RUN]
+
+このメソッドは、オブジェクトのrun()メソッドを明示的に呼び出しています。一般にRunnableを実装したクラスは、新しいスレッドがrun()メソッドを呼び出す事を期待しており、この場合、Thread.start()を呼び出すのが正しいやり方です。
+</code></pre>
+<p>こうした説明文がしっかりと表示される（しかも日本語で）点からすると、教育目的で使うのも良いかもしれません。</p>
+<p>他に同じようなことをするものに<a href="http://www.jutils.com/index.html">Lint4j</a>などがあるようなので、今度比較をしてみたいなと思います。</p>
+{% endraw %}

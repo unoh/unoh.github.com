@@ -1,0 +1,128 @@
+---
+layout: post
+title: "Propel1.5で階層構造が扱えるnested_setビヘイビア"
+---
+{% raw %}
+<p>yukiです。<br />
+今回は<a href="http://labs.unoh.net/2009/06/rdb.html">去年やりました階層構造</a>についてです。Propel1.5でビヘイビアとして実装されたので早速使ってみました。<br />
+以下の例ではPropel単体ではなく、symfonyの<a href="http://www.symfony-project.org/plugins/sfPropel15Plugin">sfPropel15Plugin</a>を利用しています。</p>
+
+<p><a href="http://labs.unoh.net/2009/06/rdb.html">前回と同様の</a>データを利用したいので、対象となるテーブルのschema.ymlを以下のように定義しましました。</p>
+
+<pre class="code">% cat schema.yml
+propel:
+  jojo:
+    _attributes: { phpName: Jojo }
+    _propel_behaviors:
+      nested_set:
+      timestampable:
+    id: ~
+    name:
+      type: varchar
+      required: true
+      primaryString: true</pre>
+
+<p>するとテーブルのCREATEのSQLは以下のように出力されます。</p>
+
+<pre class="code">% cat lib.model.schema.sql
+
+# This is a fix for InnoDB in MySQL >= 4.1.x
+# It "suspends judgement" for fkey relationships until are tables are set.
+SET FOREIGN_KEY_CHECKS = 0;
+
+#-----------------------------------------------------------------------------
+#-- jojo
+#-----------------------------------------------------------------------------
+
+DROP TABLE IF EXISTS `jojo`;
+
+
+CREATE TABLE `jojo`
+(
+        `id` INTEGER  NOT NULL AUTO_INCREMENT,
+        `name` VARCHAR(255)  NOT NULL,
+        `tree_left` INTEGER,
+        `tree_right` INTEGER,
+        `tree_level` INTEGER,
+        `created_at` DATETIME,
+        `updated_at` DATETIME,
+        PRIMARY KEY (`id`)
+) ENGINE=InnoDB;
+
+# This restores the fkey checks, after having unset them earlier
+SET FOREIGN_KEY_CHECKS = 1;</pre>
+
+<p>ご覧のように、tree_left, tree_right, tree_levelが作成されます。</p>
+
+<p>実際の使い方ですが、以下のように通常のモデルのメソッドとしてビヘイビアメソッドが使えます。<br />
+コード中のコメントは出力結果です。</p>
+
+<pre class="code">$george = new Jojo();
+$george->setName('george');
+$george->makeRoot();
+$george->save();
+
+/**
+ * mysql> select id, name, tree_left, tree_right, tree_level from jojo;
+ * +----+--------+-----------+------------+------------+
+ * | id | name   | tree_left | tree_right | tree_level |
+ * +----+--------+-----------+------------+------------+
+ * |  1 | george |         1 |          2 |          0 |
+ * +----+--------+-----------+------------+------------+
+ * 1 row in set (0.00 sec)
+ */
+
+$jonathan = new Jojo();
+$jonathan->setName('jonathan');
+$jonathan->insertAsFirstChildOf($george);
+$jonathan->save();
+
+/**
+ * mysql> select id, name, tree_left, tree_right, tree_level from jojo;
+ * +----+----------+-----------+------------+------------+
+ * | id | name     | tree_left | tree_right | tree_level |
+ * +----+----------+-----------+------------+------------+
+ * |  1 | george   |         1 |          4 |          0 |
+ * |  2 | jonathan |         2 |          3 |          1 |
+ * +----+----------+-----------+------------+------------+
+ * 2 rows in set (0.00 sec)
+ */
+
+$george2nd = new Jojo();
+$george2nd->setName('george the 2nd');
+$george2nd->insertAsFirstChildOf($jonathan);
+$george2nd->save();
+
+/**
+ * mysql> select id, name, tree_left, tree_right, tree_level from jojo;
+ * +----+----------------+-----------+------------+------------+
+ * | id | name           | tree_left | tree_right | tree_level |
+ * +----+----------------+-----------+------------+------------+
+ * |  1 | george         |         1 |          6 |          0 |
+ * |  2 | jonathan       |         2 |          5 |          1 |
+ * |  3 | george the 2nd |         3 |          4 |          2 |
+ * +----+----------------+-----------+------------+------------+
+ * 3 rows in set (0.00 sec)
+ */
+
+$george = JojoQuery::create()->findRoot();
+var_dump(get_class($george)); //string(4) "Jojo"
+var_dump($george->getName()); //string(6) "george"
+var_dump($george->isRoot());  //bool(true)
+var_dump($george->isLeaf());  //bool(false)
+
+$jonathan = $george->getFirstChild();
+var_dump($jonathan->getName()); //string(8) "jonathan"
+var_dump($jonathan->isRoot());  ///bool(false)
+var_dump($jonathan->isLeaf());  ///bool(false)
+
+$george2nd = $jonathan->getFirstChild();
+var_dump($george2nd->getName()); //string(14) "george the 2nd"
+var_dump($george2nd->isRoot());  ///bool(false)
+var_dump($george2nd->isLeaf());  ///bool(true)
+</pre>
+
+<p>このように、DoctrineのNestedSetビヘイビアに非常に近い操作感で扱えるので、階層構造を使う際にPropelを選択肢に入れることができるようになりました。<br />
+何かのお役に立てば幸いです。</p>
+
+{% endraw %}

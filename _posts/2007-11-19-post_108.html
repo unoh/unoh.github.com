@@ -1,0 +1,91 @@
+---
+layout: post
+title: "いまさら、ディレクトリトラバーサルについて語ってみる"
+---
+{% raw %}
+Keitaです。<br />
+ディレクトリトラバーサルという言葉があります。<br />
+今では、常識になっており、開発するときには無意識に対策する（されている）人がほとんどだと思います。<br />
+ただ、DBにデータを格納することが当たり前の昨今ファイルの扱いをちゃんとできない人もたまーにお会いするのでので、個人的にPHPでやっていることを書いておきます。<br />
+<h3>どんなものか</h3>
+詳しい定義は各自調べてもらうとして一例を一つ。<br />
+次のコードをみてください<br />
+<pre class="code">
+&lt;?php
+    $file = $_GET['file'];
+    $dir = '/pngdir/';
+    $filepath .= $dir . $file;
+
+    if (! file_exists($filepath)) {
+        $filepath = $dir . 'nofile.png';
+    }
+
+    header("Content-Type: image/png");
+    header("Content-Length: " . filesize($filepath));
+    $fp = fopen($filepath,'rb');
+    fpassthru($fp);
+</pre>
+概要としては、「/pngdir/」には、PNG画像があると想定して、「http://example.com/hoge.php?file=ero.png」といったアクセスがあったら、/pngdir/ero.pngを表示するような簡単なコードです。<br />
+<br />
+このコードを見たらすぐに、脆弱性があることがわかる人がほとんどだと思います。<br />
+<br />
+http://example.com/hoge.php?file=../etc/passwd<br />
+とすれば、/pngpath/../etc/passwd = /etc/passwdのファイルをそのまま表示しようとします。<br />
+<br />
+システム上の任意のコードが見られてしまうと、たとえば、ソースコードや、パスワードファイルなど秘密にしておくべきファイルが見られますし、何より、個人のサーバなどで性的なファイルをおいた場合の被害は計り知れません。<br />
+というわけで、こういう要件に対して安全にコードを書く方法を説明したいと思います。<br />
+<h3>入力値をチェックする</h3><br />
+想定してない文字列のチェックはあってしかるべきですが実際の処理直前で<br />
+PHPの関数である<a href="http://jp.php.net/realpath">realpath</a>がそれです。<br />
+使い方は、マニュアルを見てもらうとして、これは、渡されたパス文字列の正規化を行います。<br />
+シンボリックリンクの場合は、実際のファイルのパスが渡されます。<br />
+<br />
+ただし、../etc/passwdを指定されたときも、上記は/etc/passwdと帰ってくるのでこれだけではたりません。<br />
+そこで、そのディレクトリが公開していいファイルのディレクトリかをチェックするするようにします。<br />
+<br />
+そこらへんの処理をまとめるとこんな感じになります。<br />
+<pre class="code">
+function is_public_file($public_dir, $path)
+{
+    if (! is_string($path)) {
+        return false;
+    }
+
+    $realpath = realpath($path);
+
+    if ($realpath === false) {
+        return false;
+    }
+
+    if (file_exists($realpath) === false) {
+        return false;
+    }
+
+    if (strncmp($public_dir, $realpath, strlen($public_dir)) === false) {
+        return false;
+    }
+
+    return true;
+}</pre>
+realpathが、 BSD システム以外ではファイルが存在しない場合には、falseを返す仕様なので、ファイルの有無も一緒にチェックするようにしてあります。<br />
+<br />
+というわけで、下記のようなコードになりました。<br />
+<pre class="code">
+&lt;?php
+    $file = $_GET['file'];
+    $dir = '/pngdir/';
+    $filepath .= $dir . $file;
+    $filepath = realpath($filepath);
+
+    if (is_public_file($dir, $filepath) === false) {
+        //本来は不正なURLを書いた場合は、適切なロギングやエラー処理をするべき
+        $filepath = $dir . 'nofile.png';
+    }
+
+    header("Content-Type: image/png");
+    header("Content-Length: " . filesize($filepath);
+    $fp = fopen($filepath,'rb');
+    fpassthru($fp);
+</pre>
+もう少しきれいにかけそうな気がひしひしとしますが、こんな感じで概念はつかんでいただけたのではないかと思います。
+{% endraw %}

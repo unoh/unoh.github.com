@@ -1,0 +1,88 @@
+---
+layout: post
+title: "Firefox 2.0に移行する際のお勧め設定（中級編）"
+---
+{% raw %}
+こんにちわ、hide です。<br />
+<br />
+10月25日早朝にFirefox 2.0が正式にリリースされました。少し前にInternet Explorer 7も英語版がリリースされていたりして、最近Webブラウザ周りがにわかに熱いようです。<br />
+<br />
+Firefox 2.0の主な変更点は次の通りで、レンダリングエンジン自体に変更はないとのこと。先日の<a href="/2006/10/firefox_2_rc2.html">ジュンヤさんのエントリ</a>にRC2の先取りレビューがあるので、個々の機能についてはそちらを参考にして頂ければと思います。
+<a href="http://www.spreadfirefox.com/?q=affiliates&id=0&t=213"><img border="0" alt="Firefox 2" title="Firefox 2" src="http://sfx-images.mozilla.org/affiliates/Buttons/firefox2/firefox-spread-btn-2.png" style="float:right;margin:20px 0 0" /></a>
+<ul>
+<li>デフォルトテーマのデザイン変更</li>
+<li>フィードのプレビュー機能とRSSリーダ購読機能</li>
+<li>タブ機能の強化</li>
+<li>検索バーでのサジェスト機能</li>
+<li>JavaScript 1.7</li>
+</ul>
+<br />
+<br />
+さて、今日はFirefox 2.0に移行する際のお勧め設定について書きます。通常の設定画面では行えない、中級者以上の方向けのちょっとだけマニアックな設定です。と言ってもそんなに難しくないので、初心者の方でも自分で責任をとれる方は挑戦してみてください。<br />
+<br />
+その方法ですが、ロケーションバー（URLが表示されるところ）に“about:config”と入力してください。変数がたくさん表示されますが、フィルタで絞り込むと目的の変数を探しやすくなると思います。値を変更するには、行をダブルクリックすると入力ボックスが表示されたり、trueとfalseが入れ替わったりします。たまにこの変数がなかったりするのですが、その場合は焦らずに 右クリック→[新規作成] を選択すればOKです。<br />
+<br />
+<div align="center"><img alt="about_config.png" src="http://labs.unoh.net/images/about_config.png" width="416" height="234" /></div>
+<br />
+<br />
+設定方法が分かったところで、お勧めの設定を一つずつ説明していきます。
+<dl>
+<dt><b>1.xで使えていた拡張機能を有効にする</b></dt>
+<dd><br />拡張機能のバージョンチェックを無効にします。2.0にアップグレードして、今まで使えていた便利な拡張機能が軒並み使えなくなるのではないかと心配していたのですが、この設定をすることで多くの拡張機能はそのまま使えるようです。<br />
+ただ使えなかったのが、Tab Mix Plus。これはFirefox2.0自体が、タブ並び替えや閉じるのアンドゥ機能、セッションリストア機能を備えているので必要ないかもしれません（<a href="http://tmp.garyr.net/">Dev-Build版</a>は2.0でも動作するようです）。<br />
+<br />
+<table>
+<tr><td>設定名：</td><td>extensions.checkCompatibility</td></tr>
+<tr><td>値：</td><td>false</td></tr>
+</table><br />
+</dd>
+
+<dt><b>タブの閉じるボタン</b></dt>
+<dd><br />
+1.xの頃と違って、閉じるボタンが各タブに表示されるようになりました。気に入らない人は、カスタマイズしましょう。私は "0" (アクティブなタブだけに表示)に設定しています。<br />
+<br />
+<table>
+<tr><td>設定名：</td><td>browser.tabs.closeButtons</td></tr>
+<tr><td rowspan="4" valign="top">値：</td><td>0 (アクティブなタブにだけ表示)</td></tr>
+<tr><td>1 (全てのタブに表示) デフォルト</td></tr>
+<tr><td>2 (表示しない)</td></tr>
+<tr><td>3 (タブバー右端に表示) 1.xと同じ</td></tr>
+</table><br />
+</dd>
+
+<dt><b>スクロールが始まるタブ幅を変更する</b></dt>
+<dd><br />
+2.0になって、一度に多くのタブを開いた際に横スクロールするボタンが追加されました。しかし、スクロールをし始めるのが早すぎる感じがします。この値を小さくすることで、より多くのタブを開いてもスクロールしにくくなるように設定します。私は、50 に設定しています。<br />
+<br />
+<table>
+<tr><td>設定名：</td><td>browser.tabs.tabMinWidth</td></tr>
+<tr><td rowspan="2" valign="top">値：</td><td>100 デフォルト<td></tr>
+<tr><td>0 (スクロール無効)</td></tr>
+</table><br />
+</dd>
+
+<dt><b>グーグル等のページ先読みを止める</b></dt>
+<dd><br />
+Firefoxにはページの先読み機能があって、例えばグーグルの検索結果の最上位ページを裏で先読みしたりしています。見もしないページでも勝手にアクセスされてしまうのは気持ち悪いし、履歴にも残ってしまうので無効にします。<br />
+<br />
+<table>
+<tr><td>設定名：</td><td>network.prefetch-next</td></tr>
+<tr><td>値：</td><td>false</td></tr>
+</table><br />
+</dd>
+
+<dt><b>スペルチェックを止める</b></dt>
+<dd><br />
+この設定は、日本語版を使っている方には関係ありません。英語版で新たに追加されたスペルチェック機能の調整を行います。<br />
+<br />
+<table>
+<tr><td>設定名：</td><td>layout.spellcheckDefault</td></tr>
+<tr><td rowspan="3" valign="top">値：</td><td>0 (無効にする)</td></tr>
+<tr><td>1 (textareaでのみ有効) デフォルト</td></tr>
+<tr><td>2 (inputフィールドも有効)</td></tr>
+</table>
+</dd>
+</dl>
+<br />
+個人的には、Pythonの思想を取り入れた JavaScript 1.7 がとても気になっているのですが、それは明日の Keita（個々一番さん）が説明してくれると思うので楽しみに待つことにしましょう☆
+{% endraw %}

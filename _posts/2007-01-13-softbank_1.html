@@ -1,0 +1,105 @@
+---
+layout: post
+title: "SoftBank絵文字の対処法"
+---
+{% raw %}
+<p>こんにちは。harukです。</p>
+
+<p>今回はSoftBankの絵文字の対処法の基礎的な部分についてです。</p>
+<p>絵文字コードは以下のようになっています。</p>
+
+<pre class="code">
+0x1B    0x24($)   【 ? 】    【 X 】…   0x0F
+</pre>
+<p>【 ? 】 = G / E / F / O / P / Q </p>
+<p>【 X 】 = 0x21～0x7E</p>
+
+<p>【 X 】の部分には、[ &lt; ]や[ ' ]や[ \ ]などが含まれているので多少やっかいです。</p>
+<p>入力された絵文字を含む文字列を表示する際などには
+HTMLエンコード(実体参照化)してあげなければいけませんが、</p>
+<p>絵文字の中もエンコードされてしまいます。</p>
+<p>(例)</p>
+<p>こんにちは(0x1B)(0x24)G&gt;(0x0F)</p>
+<p>↓</p>
+<p>こんにちは(0x1B)(0x24)G&amp;gt;(0x0F)</p>
+<p>となってしまい、4文字の別の絵文字になってしまいます。</p>
+
+<p>対応するにはPHPでは以下のように行います。</p>
+<pre class="code">
+
+function SB_htmlspecialchars($str)
+{
+    $emoji_range = '[G|E|F|O|P|Q][\x21-\x7E]';
+    $pattern = '/[\x1B][\x24]'.$emoji_range.'+[\x0F]/';
+    $matches = array();
+    $match_count = preg_match_all($pattern, $str, $matches);
+    if (!$match_count) {
+        return _htmlspecialchars($str);
+    }
+
+    $matches[0][] = '';
+    $split = preg_split($pattern, $str);
+
+    $split = array_map('_htmlspecialchars', $split);
+    $htmlstr = '';
+    foreach ($split as $key =&gt; $val) {
+        $htmlstr .= $val.$matches[0][$key];
+    }
+    return $htmlstr;
+}
+
+function _htmlspecialchars($str)
+{
+    $encode = mb_internal_encoding();
+    return htmlspecialchars($str, ENT_QUOTES, $encode);
+}
+</pre>
+
+<p>さきほどの例文で、注意点が一つあります。</p>
+<p>古い機種で、絵文字で終わっている場合に末尾の(0x0F)がつかない端末があります。。。</p>
+
+<p>そのため、受け取った文字列に最初に以下の処理を通しておきます。</p>
+<pre class="code">
+
+/* 末尾に0x0Fがない場合に追加 */
+function SBEmoji($str)
+{
+    $emoji_range = '[G|E|F|O|P|Q][\x21-\x7E]';
+    $pattern = '/[\x1B][\x24]'.$emoji_range.'+([\x0F]?)$/';
+    $matches = array();
+    preg_match_all($pattern, $str, $matches);
+    if (isset($matches[1][0]) && $matches[1][0] === '') {
+        $str .= pack("C*", 0x0F);
+    }
+    return $str;
+}
+
+</pre>
+
+<p>こんな感じでSoftBankのエスケープシーケンスでの絵文字を対応しておけば問題はないと思います。</p>
+<p>あとは、絵文字の相互変換のために、連続している絵文字を1文字ずつに分けたり、</p>
+<p>2バイトの絵文字の対応を行ったり、という処理があるぐらいです。</p>
+<p>基礎の部分でしたが、お役に立てれば幸いです。</p>
+<br />
+<br />
+<p>最後に今年の目標を…「Vodafoneと言わないようにする」</p>
+
+<h3>修正(2007/10/19 18:15)</h3>
+<p>
+コメントにて指摘があり修正しました。ありがとうございます。
+</p>
+<pre class="code">
+    // 修正前
+    preg_match_all($pattern, $str, $matches);
+    if (count($matches) == 0) {
+        return _htmlspecialchars($str);
+    }
+</pre>
+<pre class="code">
+    // 修正後
+    $match_count = preg_match_all($pattern, $str, $matches);
+    if (!$match_count) {
+        return _htmlspecialchars($str);
+    }
+</pre>
+{% endraw %}

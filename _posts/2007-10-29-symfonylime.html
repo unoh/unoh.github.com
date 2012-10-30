@@ -1,0 +1,92 @@
+---
+layout: post
+title: "symfonyのテストフレームワーク「lime」"
+---
+{% raw %}
+yukiです。</br>
+</br>
+今回はpluginその2をお休みしてsymfonyのテストフレームワークであるlimeをさわりだけご紹介します。</br>
+symfonyではlimeという独自のテストフレームワークが用意されていますが、以前採用されていたSimpleTestでの解説が多く</br>
+まだまだ日本語で説明のあるサイトは少ないのが現状です。</br>
+そんなsymfonyのlimeについて、ほんの少しですがご紹介します。</br>
+</br>
+limeはsymfonyプロジェクト作成時、プロジェクトルートディレクトリにtestディレクトリが作成されます。</br>
+<pre class="code"><code>myproject
+ |
+ +--test
+     |
+     +--- bootstrap
+     |
+     +--- functional
+     |      |
+     |      +---- hogeActons.php
+     |
+     +--- unit</code></pre>
+
+上記のように、init-moduleで作成したモジュール用テストがfunctionalへ、ユニットテスト用コードはunit以下へ配置されます。(bootstrapはlime読み込みなどの初期設定を行うphpがあります。)<br>
+unit以下へ○○Test.phpと書くと、以下のコマンドでテストが開始されます。<br>
+<pre class="code"><code>例) hogeTest.php
+
+symfony test-unit hoge</code></pre>
+また、
+<pre class="code"><code>symfony test-unit</code></pre>
+このように対象とするテストを指定しない場合、unitディレクトリ以下の**Test.phpが順に自動的に実行されます。</br>
+テストする場合、どうしても面倒なのがパラメータの指定ですが、symfonyのポリシーに従ってYAMLで設定することもできるので、とても重宝しています。</br>
+</br>
+例として、暗号化を行った際のテストです。</br>
+
+<pre class="code"><code>
+&lt;?php
+
+// encryptTest.php
+
+defined('SF_APP')         || define('SF_APP',         'myapp');
+defined('SF_ENVIRONMENT') || define('SF_ENVIRONMENT', 'test');
+defined('SF_DEBUG')       || define('SF_DEBUG',       true);
+
+require_once(dirname(__FILE__).'/../bootstrap/unit.php');
+
+// テスト数を設定
+$t = new lime_test(7, new lime_output_color());
+$t->diag('Hoge::encrypt()');
+
+// 暗号化クラス
+class Hoge
+{
+    public static function encrypt($src)
+    {
+        return md5((string)$src);
+    }
+}
+
+// 空クラス
+class a
+{
+    public function b()
+    {
+    }
+}
+
+$a = new a;
+
+$t->can_ok(new Hoge, 'encrypt', 'Hogeオブジェクトのencryptメソッドは利用可能');
+$t->is(Hoge::encrypt('a'), md5('a'), '暗号化アルゴリズムはMD5を使用');
+$t->like(Hoge::encrypt('a'), '/^[a-f\d]{32}$/', 'MD5後は32文字の16進数');
+$t->is(Hoge::encrypt(array(1)), md5((string)array(1)), '配列を渡した場合は型変換される');
+$t->is(Hoge::encrypt($a), md5((string)$a), 'オブジェクトを渡した場合は型変換される');
+$t->is(Hoge::encrypt(''), md5((string)''), '空文字列を渡しても大丈夫');
+$t->is(Hoge::encrypt(false), md5((string)''), 'boolのfalseを渡しても空文字列にキャストされる');</code></pre>
+出力は以下のようになります。
+<pre class="code"><code>% symfony test-unit encrypt
+1..7
+# Hoge::encrypt()
+ok 1 - Hogeオブジェクトのencryptメソッドは利用可能
+ok 2 - 暗号化アルゴリズムはMD5を使用
+ok 3 - MD5後は32文字の16進数
+ok 4 - 配列を渡した場合は型変換される
+ok 5 - オブジェクトを渡した場合は型変換される
+ok 6 - 空文字列を渡しても大丈夫
+ok 7 - boolのfalseを渡しても空文字列にキャストされる
+ Looks like everything went fine.</code></pre>
+次回はもう少し掘り下げてlimeをご紹介します。</br>
+{% endraw %}

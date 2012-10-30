@@ -1,0 +1,7 @@
+---
+layout: post
+title: "Adobe Illustrator CS5自動化1"
+---
+{% raw %}
+<p>１２月に入社したものです。<br />得意なアプリケーションはIllustrator<br />そこで、現在使っているJavaScriptを共有させていただきます(｀・ω・´)<br />基本OSはWindowsですがMacでも起動します。</p><br /><p><br />注意点：ソースコードで使用する"\"マークは"/"に変更しないと起動しません。</p><br /><p><br />それでは、現在使っている自動化スクリプトです↓</p><br /><p>&nbsp;</p><br /><p><strong>【他のアプリケーションを起動する】</strong></p><br /><p>■プログラム説明<br />　起動したいアプリケーションのパスをファイルオブジェクトとして作成します。<br />　　　</p><br /><p>■ソースコード</p><br /><p>　fileObj = new File("実行へのアプリケーションパス");<br />　fileObj.execute();</p><br /><p>　▼使用例（Photoshop）</p><br /><p>　　fileObj = new File("C:/Program Files/Adobe/Adobe Photoshop CS5/Photoshop.exe");<br />　　fileObj.execute();</p><br /><p><br />■使い方<br />　１：ファイルメニューからスクリプト→その他スクリプトを実行します。<br />　　（もしくは、Program FilesのAdobe Illustrator CS5内プリセットの中から、<br />　　　スクリプトフォルダの中に格納しちゃえばもっと簡単に起動します。）</p><br /><p>　２：アドレスブックが起動します。</p><br /><p><br />■ポイント<br />　Windowsでは.exeファイルを実行することができます。</p><br /><p>&nbsp;</p><br /><p>■大きな変更点としては...<br />　CS4までは座標系の原点が左下でしたが、<br />　Illustrator CS5から座標系が変更され原点が左上になっています。<br />　↑個人的には、ちょっと厄介な変更です(´Д｀)</p><br /><p><br />■作ったきっかけ<br />　ノートPCで作業する際、Illustratorで作業→Photoshop起動がとっても面倒くさかった<br />　一発でPhotoshopを立ち上げたい！ついでにFlashも！<br />　ただそれだけ</p>
+{% endraw %}

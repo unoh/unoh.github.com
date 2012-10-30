@@ -1,0 +1,166 @@
+---
+layout: post
+title: "ASIHTTPRequestを入れてみた"
+---
+{% raw %}
+<p>
+ご無沙汰しています。Brandonです。<br/>
+今回は私がジンガジャパンでやってる実務とまったく関係がないObjective Cのライブラリ「ASIHTTPRequest」を紹介したいと思います。
+</p>
+
+<p>
+<a href="http://labs.unoh.net/2010/06/post_143.html">前の記事</a>の続きをやってたら、たまたま「ASIHTTPRequest」に出くわして、これはなかなかよさそうなのでみんなさんにご紹介しようと思いました。<br/>
+（もし既に知っていたらどうもすみません。前の記事からまったくiPhone関係の物を触ってなかったこともあって、情報が遅いのは承知しています。）
+</p>
+
+<p>
+AppleのiOS SDKに入っているNSMutableURLRequestでHTTPリクエストを送るやりかただと、以下のようなコードになります。<br/>
+（下記は<a href="http://labs.unoh.net/2010/06/post_143.html">前の記事</a>の一部の内容になります）
+</p>
+
+<pre class="code">
+/**
+ * リクエスト(requestObj)に認証情報をつける関数
+ */
+- (void) addAuthToWebRequest:(NSMutableURLRequest*)requestObj username:(NSString*)username password:(NSString*)password{
+
+    NSString *authString = [[[NSString stringWithFormat:@"%@:%@", username, password] dataUsingEncoding:NSUTF8StringEncoding] base64Encoding];
+
+    authString = [NSString stringWithFormat: @"Basic %@", authString];
+
+    [requestObj setValue:authString forHTTPHeaderField:@"Authorization"];
+}
+
+/**
+ * リクエストを送信する
+ */
+- (void)sendRequest:(NSString*)address username:(NSString*)username password:(NSString*)password {
+
+    //リクエストの初期設定
+    NSString *urlString = [NSString stringWithFormat:address];
+    NSMutableURLRequest *request = [[[NSMutableURLRequest alloc] init] autorelease];
+    [request setURL:[NSURL URLWithString:urlString]];
+    [request setHTTPMethod:@"POST"];
+
+    //上記のaddAuthToWebRequestで認証情報をリクエストに追加します
+    [self addAuthToWebRequest:request username:username password:password];
+
+    NSLog(@"connection attempted");
+
+    [NSURLConnection connectionWithRequest:request delegate:self];
+}
+
+//getSites APIリクエスト
+-(void)getSites:(NSString*)username password:(NSString*)password {
+    [self sendRequest:@"https://posterous.com/api/getsites"username:username password:password];
+}
+
+//最初にレスポンスが来たとき一度だけだけ実行されます
+- (void)connection:(NSURLConnection *)connection didReceiveResponse:(NSURLResponse *)response {
+    //receivedDataを初期化してデータ受信の準備をする
+    receivedData = [[NSMutableData alloc]init];
+    [receivedData setLength:0];
+    NSLog(@"Set received data length to 0");
+
+    //レスポンスのヘッダー情報をNSLogでコンソールに出力して確認する
+    if ([response respondsToSelector:@selector(allHeaderFields)]) {
+        NSLog(@"response header");
+        NSHTTPURLResponse *httpResponse = (NSHTTPURLResponse*)response;
+        NSDictionary *dictionary = [httpResponse allHeaderFields];
+        NSLog(@"%@", [dictionary description]);
+    }
+}
+
+//受信したデータをreceivedDataに保存する
+-(void)connection:(NSURLConnection *)connection didReceiveData:(NSData *)data {
+    [receivedData appendData:data];
+}
+
+//レスポンスが終了したときに実行されます
+-(void)connectionDidFinishLoading:(NSURLConnection *)connection {
+    NSError *error;
+    NSLog(@"succeeded! received %d bytes of data", [receivedData length]);
+    GDataXMLDocument *doc = [[GDataXMLDocument alloc] initWithData:receivedData options:0 error:&error];
+    if (doc != nil) {
+        /*
+         ...
+         レスポンス解析
+         ...
+         */
+    }
+
+    [doc release];
+    [receivedData release];
+}
+</pre>
+
+<br/>
+<p>
+ASIHTTPRequestなら、下記のコードのようにより簡単・分かりやすいようにかける。
+</p>
+
+<pre class="code">
+-(void)getSites:(NSString*)username password:(NSString*)password {
+     NSURL *url = [NSURL URLWithString:@"https://posterous.com/api/getsites"];
+     ASIHTTPRequest *request = [ASIHTTPRequest requestWithURL:url];
+     [request setUsername:username];
+     [request setPassword:password];
+     [self grabURLInBackground:request];
+}
+
+- (IBAction)grabURLInBackground:(id)sender
+{
+     [sender setDelegate:self];
+     [sender startAsynchronous];
+}
+
+- (void)requestFinished:(ASIHTTPRequest *)request
+{
+     // テキストデータを取得する場合はこちらを使用する
+     NSString *responseString = [request responseString];
+    
+     // バイナリデータを取得する場合はこちらを使用する
+     NSData *responseData = [request responseData];
+         
+     [responseString release];
+     [receivedData release];
+}
+
+- (void)requestFailed:(ASIHTTPRequest *)request
+{
+     NSError *error = [request error];
+     //エラー処理
+}
+</pre>
+
+<p>
+ご覧のとおり、コードがかなり短くなり、分かりやすくなります。
+</p>
+
+<p>
+パラメータ付けたリクエストを送信するのもより簡単にできちゃいます。
+</p>
+<pre class="code">
+ASIFormDataRequest *request = [ASIFormDataRequest requestWithURL:url];
+[request addPostValue:@"Ben" forKey:@"names"];
+[request addPostValue:@"George" forKey:@"names"];
+[request addFile:@"/Users/ben/Desktop/ben.jpg" forKey:@"photos"];
+[request addData:imageData withFileName:@"george.jpg"　andContentType:@"image/jpeg" forKey:@"photos"];
+</pre>
+
+<p>
+他にもqueueなど、色々な機能があります。<br/>
+英語になりますが、<a href="http://allseeing-i.com/ASIHTTPRequest/How-to-use">ホームページ</a>で使い方の例など色々書かれています。
+</p>
+<br/>
+<p>
+セットアップする方法を<a href="http://allseeing-i.com/ASIHTTPRequest/Setup-instructions">こちら</a>に詳しく書いてあります（英語ですが画像付きなので分かりやすいです）。
+</p>
+<br/>
+<p>
+日本語記事を<a href="http://www.google.co.jp/search?q=ASIHTTPRequest&hl=en&num=10&lr=lang_ja&ft=i&cr=&safe=images">検索してみたら</a>他の記事も色々出てきました。
+</p>
+<br/>
+もしまだ使っていない方がいっらっしゃれば、ぜひ使ってみてください！
+
+{% endraw %}

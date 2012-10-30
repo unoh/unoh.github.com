@@ -1,0 +1,406 @@
+---
+layout: post
+title: "Ext.js入門: Grid編"
+---
+{% raw %}
+<p>Extは、<q cite="http://extjs.com/learn/Ext_FAQ#What_is_Ext_all_about.3F">ウェブアプリケーションを構築するための、クライアントサイドのJavaScriptフレームワーク</q>（<a href="http://extjs.com/learn/Ext_FAQ#What_is_Ext_all_about.3F">公式サイトのFAQ</a>より）です。日本ではまだ実際の利用例はあまり多くないようですが、たぶんに日本語のドキュメントがまだそれほど多くはないからではないかと思われ、今後利用事例は増えていくだろうと思われます。</p>
+
+<p>Extの真骨頂は高機能でデザインの洗練された、（直ちに利用可能な）レディメイドのユーザインタフェースウィジェット群です。Extは「アダプタ」として、prototype.jsやjQuery、Yahoo! UIといったJavaScript拡張ライブラリを利用する設計ですが、現在は独自のアダプタも用意され、サードパーティのライブラリに依存しない実装も可能です。</p>
+
+<p>現時点での安定版はバージョン1.1ですが、既に、大幅な機能強化が図られたバージョン2.0のアルファ版が公開されており、以下のページでそのサンプルを見ることができます。</p>
+
+<ul>
+  <li><a href="http://extjs.com/deploy/ext-2.0-alpha1/examples/">Ext 2.0 Alpha 1 Samples</a></li>
+</ul>
+
+<p>以下ではExtの数あるウィジェットの中でももっともポピュラーなもののひとつであると思われる「グリッド」（表組み）のサンプルコードを紹介します。</p>
+
+<p>Extのグリッドは、列見出しのクリックによる並べ替えやその境界をドラッグすることでの列幅の変更、そして列見出しの右クリックで表示される、こうした機能をまとめたコンテキストメニューなど、表計算ソフトを思わせる豊富な機能があらかじめ用意されています。</p>
+
+<p>なお、以下のサンプルコードは、SCRIPT要素とLINK要素の「path/to/ext/」となっている箇所を実際にExtを配置したディレクトリ名に変更して利用してください。</p>
+
+<h3>シンプルなグリッド</h3>
+
+<p>以下の例は、あらかじめ定義済みの配列をグリッドで表示します（これは公式サイトの<a href="http://extjs.com/learn/Tutorial:Introduction_to_Ext#Grid">チュートリアル入門編</a>にある例の、ほぼそのままです）。</p>
+
+<p>Extではデータを、データストア（Ext.data.Store）というオブジェクトに保持します。配列をデータストアに読み込むには、以下のようにExt.data.MemoryProxyとExt.data.ArrayReaderを使用します。データがグリッドでどのように表示されるかは、カラムモデル（Ext.grid.ColumnModel）で定義します。</p>
+
+<p>なお以下の画像では、列見出しを右クリックしてコンテキストメニューを表示していますが、メニュー項目が日本語で表示されているのが確認できると思います。Extの構成ファイルには各国語のリソースファイルも含まれており、日本語のリソースファイル（source/locale/ext-lang-ja.js）を読み込むようにSCRIPT要素を追加すれば、表示の多くが日本語化されるようになっています。</p>
+
+<div><a href="http://photozou.jp/photo/show/784/5390710"><img src="http://art8.photozou.jp/pub/784/784/photo/5390710.png" alt="Ext Grid Example #1" width="450" height="243" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/5390710">Ext Grid Example #1</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a></div>
+
+<pre class="code"><code>&lt;!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 4.01//EN&quot; &quot;http://www.w3.org/TR/html4/strict.dtd&quot;&gt;
+&lt;html lang=&quot;ja&quot;&gt;
+  &lt;head&gt;
+    &lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html;charset=UTF-8&quot;&gt;
+    &lt;meta http-equiv=&quot;Content-Style-Type&quot; content=&quot;text/css&quot;&gt;
+    &lt;meta http-equiv=&quot;Content-Script-Type&quot; content=&quot;text/javascript&quot;&gt;
+    &lt;title&gt;TEST&lt;/title&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;path/to/ext/adapter/ext/ext-base.js&quot;&gt;&lt;/script&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;path/to/ext/ext-all.js&quot;&gt;&lt;/script&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;path/to/ext/source/locale/ext-lang-ja.js&quot;&gt;&lt;/script&gt;
+    &lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;path/to/ext/resources/css/ext-all.css&quot;&gt;
+    &lt;script type=&quot;text/javascript&quot;&gt;
+    &lt;!--
+    /**
+     * サンプルデータ
+     */
+    var myData = [
+        ['Apple',       29.89,  0.24,   0.81,   '9/1 12:00am'],
+        ['Ext',         83.81,  0.28,   0.34,   '9/12 12:00am'],
+        ['Google',      71.72,  0.02,   0.03,   '10/1 12:00am'],
+        ['Microsoft',   52.55,  0.01,   0.02,   '7/4 12:00am'],
+        ['Yahoo!',      29.01,  0.42,   1.47,   '5/22 12:00am']
+    ];
+
+    /**
+     * DOMの読み込みが完了した時点で実行される
+     */
+    Ext.onReady(function() {
+
+        /**
+         * データストア
+         */
+        var ds = new Ext.data.Store({
+            /**
+             * データストアに配列を読み込む
+             */
+            proxy:  new Ext.data.MemoryProxy(myData),
+            reader: new Ext.data.ArrayReader(
+                {id: 0},
+                [
+                    {name: 'company'},
+                    {name: 'price',         type: 'float'},
+                    {name: 'change',        type: 'float'},
+                    {name: 'percentChange', type: 'float'},
+                    {name: 'lastChange',    type: 'date', dateFormat: 'n/j h:ia'}
+                ]
+            )
+        });
+
+        /**
+         * カラムモデル
+         */
+        var cm = new Ext.grid.ColumnModel(
+            [
+                {header: 'Company',      width: 320, dataIndex: 'company'},
+                {header: 'Price',        width: 140, dataIndex: 'price'},
+                {header: 'Change',       width: 80,  dataIndex: 'change'},
+                {header: '% Change',     width: 80,  dataIndex: 'percentChange'},
+                {header: 'Last Updated', width: 180, dataIndex: 'lastChange', renderer: Ext.util.Format.dateRenderer('Y/m/d')}
+            ]
+        );
+        cm.defaultSortable = true;
+
+        /**
+         * グリッド
+         */
+        var grid = new Ext.grid.Grid(
+            'grid-example',
+            {ds: ds, cm: cm}
+        );
+
+        /**
+         * グリッドの描画
+         */
+        grid.render();
+        ds.load();
+    });
+    //--&gt;
+    &lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;div style=&quot;margin:10px;padding:10px;border:1px solid #000&quot;&gt;
+      &lt;h1&gt;Ext.grid Example #1&lt;/h1&gt;
+      &lt;p&gt;A very simple grid.&lt;/p&gt;
+      &lt;div id=&quot;grid-example&quot; style=&quot;overflow:hidden;width:800px&quot;&gt;
+        The example grid will be placed here.
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+<h3>Ajaxなグリッド</h3>
+
+<p>以下の例では、あらかじめ用意してある配列に代えて、Ajaxで読み込んだXMLのデータを表示します。これにはデータストアへのデータの読み込みに、以下のようにExt.data.HttpProxyとExt.data.XmlReaderを使用します。ちなみに、データがJSON形式の場合はExt.data.JsonReaderを使用します。また、Ext.data.ScriptTagProxyを使用してクロスドメインのアクセスも行えます。</p>
+
+<p>以下の例は、<a href="http://www.amazon.co.jp/gp/feature.html/?docId=451209">Amazon Webサービス</a>で取得したXMLデータが「amazon.xml」というファイル名でこのHTMLと同じディレクトリにあるという構成が前提になっています。</p>
+<p>また、以下の例ではカラムモデルにコールバック関数を設定し、アイテムの題名をそのまま表示するのではなく、そのアイテムのAmazon.co.jpのページへのハイパーリンク付きで表示しています。さらに、グリッドに「rowdblclick」イベントを設定し、列をダブルクリックすることでもそのアイテムのページを表示するようにしています。</p>
+
+<div><a href="http://photozou.jp/photo/show/784/5390711"><img src="http://art8.photozou.jp/pub/784/784/photo/5390711.png" alt="Ext Grid Example #2" width="450" height="243" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/5390711">Ext Grid Example #2</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a></div>
+
+<pre class="code"><code>&lt;!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 4.01//EN&quot; &quot;http://www.w3.org/TR/html4/strict.dtd&quot;&gt;
+&lt;html lang=&quot;ja&quot;&gt;
+  &lt;head&gt;
+    &lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html;charset=UTF-8&quot;&gt;
+    &lt;meta http-equiv=&quot;Content-Style-Type&quot; content=&quot;text/css&quot;&gt;
+    &lt;meta http-equiv=&quot;Content-Script-Type&quot; content=&quot;text/javascript&quot;&gt;
+    &lt;title&gt;TEST&lt;/title&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;path/to/ext/adapter/ext/ext-base.js&quot;&gt;&lt;/script&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;path/to/ext/ext-all.js&quot;&gt;&lt;/script&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;path/to/ext/source/locale/ext-lang-ja.js&quot;&gt;&lt;/script&gt;
+    &lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;path/to/ext/resources/css/ext-all.css&quot;&gt;
+    &lt;script type=&quot;text/javascript&quot;&gt;
+    &lt;!--
+    /**
+     * DOMの読み込みが完了した時点で実行される
+     */
+    Ext.onReady(function() {
+
+        /**
+         * データストア
+         */
+        var ds = new Ext.data.Store({
+            /**
+             * データストアにAjaxでXMLを読み込む
+             */
+            proxy:  new Ext.data.HttpProxy(
+                {url: 'amazon.xml'}
+            ),
+            reader: new Ext.data.XmlReader(
+                {id: 'ASIN', record: 'Item', totalRecords: '@total'},
+                [
+                    'DetailPageURL',
+                    {name: 'Title',        mapping: 'ItemAttributes &gt; Title'},
+                    {name: 'Author',       mapping: 'ItemAttributes &gt; Author'},
+                    {name: 'Manufacturer', mapping: 'ItemAttributes &gt; Manufacturer'}
+                ]
+            )
+        });
+
+        /**
+         * カラムモデル
+         */
+        var cm = new Ext.grid.ColumnModel(
+            [
+                {header: '題名',   width: 480, dataIndex: 'Title', renderer: formatTitle},
+                {header: '著者',   width: 140, dataIndex: 'Author'},
+                {header: '出版社', width: 180, dataIndex: 'Manufacturer'}
+            ]
+        );
+        cm.defaultSortable = true;
+
+        /**
+         * グリッド
+         */
+        var grid = new Ext.grid.Grid(
+            'grid-example',
+            {ds: ds, cm: cm}
+        );
+        grid.on('rowdblclick', openWindow, this);
+
+        /**
+         * グリッドの描画
+         */
+        grid.render();
+        ds.load();
+    });
+
+    /**
+     * カラムモデル用コールバック関数
+     */
+    function formatTitle(val, metadata, record) {
+        return '&lt;a href=&quot;' + record.data['DetailPageURL'] + '&quot;&gt;' + val + '&lt;\/a&gt;';
+    }
+    function openWindow(grid, rowIndex) {
+        window.open(grid.getDataSource().getAt(rowIndex).data.DetailPageURL, 'foo');
+    }
+    //--&gt;
+    &lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;div style=&quot;margin:10px;padding:10px;border:1px solid #000&quot;&gt;
+      &lt;h1&gt;Ext.grid Example #2&lt;/h1&gt;
+      &lt;p&gt;Loading XML into a grid w/ Ajax.&lt;/p&gt;
+      &lt;div id=&quot;grid-example&quot; style=&quot;overflow:hidden;width:800px&quot;&gt;
+        The example grid will be placed here.
+      &lt;/div&gt;
+    &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+<h3>ドラッグ＆ドロップなグリッド</h3>
+
+<p>以下の例は、ふたつのグリッドを並べて表示し、ドラッグ＆ドロップ操作で、グリッド間で各行のデータを移動できるようにしたものです。同じ構造のグリッドをふたつ表示するので、データストアとグリッドをふたつずつ定義し、各グリッドのパラメータには「enableDragDrop」と「ddGroup」を設定しています。そしてExt.dd.DropTargetで、各グリッドのドラッグ＆ドロップ時の動作を定義しています。</p>
+
+<p>なお、上のふたつの例ではグリッドを単体でそのまま（DIV要素内に）表示していましたが、以下の例では表示にレイアウトマネージャ（Ext.BorderLayout）を使用しています（レイアウトマネージャの詳細は今回は端折ります）。</p>
+
+<div><a href="http://photozou.jp/photo/show/784/5390712"><img src="http://art8.photozou.jp/pub/784/784/photo/5390712.png" alt="Ext Grid Example #3" width="450" height="243" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/5390712">Ext Grid Example #3</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a></div>
+
+<pre class="code"><code>&lt;!DOCTYPE html PUBLIC &quot;-//W3C//DTD HTML 4.01//EN&quot; &quot;http://www.w3.org/TR/html4/strict.dtd&quot;&gt;
+&lt;html lang=&quot;ja&quot;&gt;
+  &lt;head&gt;
+    &lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html;charset=UTF-8&quot;&gt;
+    &lt;meta http-equiv=&quot;Content-Style-Type&quot; content=&quot;text/css&quot;&gt;
+    &lt;meta http-equiv=&quot;Content-Script-Type&quot; content=&quot;text/javascript&quot;&gt;
+    &lt;title&gt;TEST&lt;/title&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;path/to/ext/adapter/ext/ext-base.js&quot;&gt;&lt;/script&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;path/to/ext/ext-all.js&quot;&gt;&lt;/script&gt;
+    &lt;script type=&quot;text/javascript&quot; src=&quot;path/to/ext/source/locale/ext-lang-ja.js&quot;&gt;&lt;/script&gt;
+    &lt;link rel=&quot;stylesheet&quot; type=&quot;text/css&quot; href=&quot;path/to/ext/resources/css/ext-all.css&quot;&gt;
+    &lt;script type=&quot;text/javascript&quot;&gt;
+    &lt;!--
+    /**
+     * DOMの読み込みが完了した時点で実行される
+     */
+    Ext.onReady(function() {
+
+        /**
+         * データストア
+         */
+        var ds1 = new Ext.data.Store({
+            /**
+             * データストアにAjaxでXMLを読み込む
+             */
+            proxy:  new Ext.data.HttpProxy(
+                {url: 'amazon-small.xml'}
+            ),
+            reader: new Ext.data.XmlReader(
+                {id: 'ASIN', record: 'Item', totalRecords: '@total'},
+                [
+                    'DetailPageURL',
+                    {name: 'Title',        mapping: 'ItemAttributes &gt; Title'},
+                    {name: 'Author',       mapping: 'ItemAttributes &gt; Author'},
+                    {name: 'Manufacturer', mapping: 'ItemAttributes &gt; Manufacturer'}
+                ]
+            )
+        });
+        ds2 = new Ext.data.Store({
+            reader: new Ext.data.ArrayReader({}, [
+                'DetailPageURL',
+                'Title',
+                'Author',
+                'Manufacturer'
+            ])
+        });
+
+        /**
+         * カラムモデル
+         */
+        var cm = new Ext.grid.ColumnModel(
+            [
+                {header: '題名',   dataIndex: 'Title', id: 'Title', renderer: formatTitle},
+                {header: '著者',   dataIndex: 'Author'},
+                {header: '出版社', dataIndex: 'Manufacturer'}
+            ]
+        );
+        cm.defaultWidth = 150;
+        cm.defaultSortable = true;
+
+        /**
+         * グリッド
+         */
+        var grid1 = new Ext.grid.Grid(
+            'grid-example',
+            {ds: ds1, cm: cm, enableDragDrop: true, ddGroup: 'ddGroup1', autoExpandColumn: 'Title', loadMask: {msg: 'しばらくお待ちください'}}
+        );
+        grid1.on('rowdblclick', openWindow, this);
+        var grid2 = new Ext.grid.Grid(
+            'grid-example2',
+            {ds: ds2, cm: cm, enableDragDrop: true, ddGroup: 'ddGroup2', autoExpandColumn: 'Title'}
+        );
+        grid2.on('rowdblclick', openWindow, this);
+
+        /**
+         * ドラッグ＆ドロップ
+         */
+        var grid1dd = new Ext.dd.DropTarget(grid1.container, {
+            ddGroup: 'ddGroup2',
+            notifyDrop: function(dd, e, data) {
+                for (var i = 0; i &lt; data.selections.length; i++) {
+                    if (!ds1.getById(data.selections[i].id)) {
+                        ds1.add(data.selections[i]);
+                        ds2.remove(data.selections[i]);
+                    }
+                }
+                grid2.getSelectionModel().clearSelections();
+                return true;
+            }
+        });
+        var grid2dd = new Ext.dd.DropTarget(grid2.container, {
+            ddGroup: 'ddGroup1',
+            notifyDrop: function(dd, e, data) {
+                for (var i = 0; i &lt; data.selections.length; i++) {
+                    if (!ds2.getById(data.selections[i].id)) {
+                        ds2.add(data.selections[i]);
+                        ds1.remove(data.selections[i]);
+                    }
+                }
+                grid1.getSelectionModel().clearSelections();
+                return true;
+            }
+        });
+
+        /**
+         * レイアウト
+         */
+        layout = new Ext.BorderLayout(document.body, {
+            north: {
+                split:false,
+                initialSize: 60,
+                titlebar: false
+            },
+            center: {
+                titlebar:    true,
+                resizeTabs:  true
+            },
+            east: {
+                split:true,
+                initialSize: 400,
+                titlebar:    true,
+                collapsible: true,
+                collapsed:   true,
+                animate:     true
+            },
+            south: {
+                split:false,
+                initialSize: 30,
+                titlebar: false
+            }
+        });
+        layout.add('north',  new Ext.ContentPanel('header'));
+        layout.add('center', new Ext.GridPanel(grid1, {title: '検索結果'}));
+        layout.add('east',   new Ext.GridPanel(grid2, {title: 'ドラッグ &amp;amp; ドロップ'}));
+        layout.add('south',  new Ext.ContentPanel('footer'));
+
+        /**
+         * グリッドの描画
+         */
+        grid1.render();
+        grid2.render();
+        ds1.load();
+    });
+
+    /**
+     * カラムモデル用コールバック関数
+     */
+    function formatTitle(val, metadata, record) {
+        return '&lt;a href=&quot;' + record.data['DetailPageURL'] + '&quot;&gt;' + val + '&lt;\/a&gt;';
+    }
+    function openWindow(grid, rowIndex) {
+        window.open(grid.getDataSource().getAt(rowIndex).data.DetailPageURL, 'foo');
+    }
+    //--&gt;
+    &lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;div id=&quot;header&quot; style=&quot;padding:5px&quot;&gt;
+      &lt;h1&gt;Ext.grid Example #3&lt;/h1&gt;
+      &lt;p&gt;Drag &amp;amp; drop between two grids in the layout panel&lt;/p&gt;
+    &lt;/div&gt;
+    &lt;div id=&quot;grid-example&quot; style=&quot;overflow:hidden;width:400px&quot;&gt;
+      The example grid #1 will be placed here.
+    &lt;/div&gt;
+    &lt;div id=&quot;grid-example2&quot; style=&quot;overflow:hidden;width:400px&quot;&gt;
+      The example grid #2 will be placed here.
+    &lt;/div&gt;
+    &lt;div id=&quot;footer&quot; style=&quot;padding:5px&quot;&gt;
+      &lt;address style=&quot;font-size:12px;font-style:oblique;text-align:right&quot;&gt;
+        2007 Unoh, Inc. All rights reserved.
+      &lt;/address&gt;
+    &lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+<p>なおFirebugがインストールされたFirefoxでは、Extの<a href="http://extjs.com/deploy/ext/examples/debug/debug-console.html">デバッグコンソール</a>が利用できます。HTMLのSCRIPT要素で「ext-all.js」を読み込んでいるところを「ext-all-debug.js」を読み込むように変更しておくと、Control＋Shift＋Homeキーをタイプするとデバッグコンソールが表示されます。ただしExtを使用したページは、FirebugがインストールされたFirefoxではかなり表示が遅くなるので、その点は注意が必要です。</p>
+{% endraw %}

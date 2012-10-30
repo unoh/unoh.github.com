@@ -1,0 +1,151 @@
+---
+layout: post
+title: "PHPでwin32serviceを使ってみる"
+---
+{% raw %}
+<p>
+こんにちは。yuzoです。<br />
+今回はPHPをwindowsのサービスとして動作させる<a href="http://pecl.php.net/packages/win32service">win32service</a>を試してみました。</p>
+
+<h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;">準備した環境</h3>
+
+<ul>
+	<li>Windows 7 Professional(32bit)</li>
+	<li>PHP 5.3.3</li>
+	<li>win32service 0.1.0-dev</li>
+</ul>
+
+
+<h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;">インストール</h3>
+<p>
+PHPは「VC9 x86 Non Thread Safe」を利用しました。<br />
+<a href="http://windows.php.net/download/">http://windows.php.net/download/
+</a><br />
+どこに配置してもいいと思うのですが、<br />
+便宜上
+<p class="code">C:\PHP\5.3.3</p>
+にインストールしたことにします。<br />
+もちろんPATHもとおします。<br />
+</p>
+<p>
+win32serviceについては、別途こちらからダウンロードが必要です。<br />
+<a href="http://downloads.php.net/pierre/">http://downloads.php.net/pierre/</a><br />
+今回は「php_win32service-svn20091206-5.3-nts-vc9-x86.zip」を利用しました。<br />
+先ほどPHPをインストールした配下、
+<p class="code">C:\PHP\5.3.3\ext</p>
+にdllをコピーしましょう。
+</p>
+
+<h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;">php.iniを配置する</h3>
+<p>
+windows7の場合だとphp.iniの格納場所は "C:\Windows" らしいので、<br />
+php.exeと一緒にzipに入っていたphp.ini-development（もしくはphp.ini-production）<br />
+を "C:\Windows\php.ini" にコピーします。<br />
+windows7なんて使わない方は
+<p class="code">php --ini</p>で各自格納場所を調べて下さい。
+</p>
+
+
+<h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;">php.iniを編集する</h3>
+<p>
+配置したphp.iniにextension_dirとwin32serviceのextensionを定義します。
+<p class="code">
+extension_dir = "C\PHP\5.3.3\ext"<br />
+extension=php_win32service.dll
+</p>
+ついでにtimezoneのWarningがウザイので 、
+<p class="code">date.timezone = Asia/Tokyo</p>
+を定義しておきましょう。<br />
+これで環境は整いました。以下のコマンドで確認してみましょう。<br />
+<p class="code">php --re win32service</p>
+win32serviceのextension情報が出力されていれば成功です。
+</p>
+
+
+<h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;">サービススクリプトを書く</h3>
+<p>
+subversionのサンプルソースを参考に以下のようなソースを準備しました。<br />
+<br />
+C:\PHP\scripts\win32service.php
+<pre class="code">
+&lt;?php
+/**
+ * win32service.php
+ * usage:
+ * サービス登録 / php win32service.php install
+ * サービス解除 / php win32service.php uninstall
+ **/
+if ($argv[1] == 'install') {
+    // win32serviceを登録する
+    $x = win32_create_service(array(
+        'service'       =&gt; 'PHPwin32service',
+        'display'       =&gt; 'PHP win32service sample', // サービスの「名前」に表示される
+        'description'   =&gt; 'Zynga is not Janga!',
+        'params'      =&gt; __FILE__ . ' run',
+    ));
+    debug_zval_dump($x);
+    exit;
+} elseif ($argv[1] == 'uninstall') {
+    // win32serviceを解除する
+    $x = win32_delete_service('PHPwin32service');
+    debug_zval_dump($x);
+    exit;
+} else if ($argv[1] != 'run') {
+    die("Woops you are TENGA!!");
+}
+
+// SCMへcheckin
+$x = win32_start_service_ctrl_dispatcher('PHPwin32service');
+// サービス状態の更新
+win32_set_service_status(WIN32_SERVICE_RUNNING);
+
+// service loop
+while (WIN32_SERVICE_CONTROL_STOP != win32_get_last_control_message()) {
+    // ここにservice処理かく
+    file_put_contents("C:\PHP\dummy".time().".txt","hoge");
+    // ご利用は計画的に
+    usleep(2000000);
+}
+</pre>
+動作確認のため、 "C:\PHP\dummy_{xxxx}.txt" に永遠とファイルを作成し続ける処理を書きました。
+</p>
+
+
+<h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;">サービス登録／実行</h3>
+<p>
+それではさっそくサービス実行してみましょう。<br />
+以下のコマンドでサービス登録します。
+<p class="code">
+php C:\PHP\scripts\win32service.php install<br />
+bool(true) refcount(2)
+</p>
+これでサービスが登録されているはずです。<br />
+サービスコンソールで「PHP win32service sample」が存在するか確認してみましょう。<br />
+<br />
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><a href="http://labs.unoh.net/assets_c/2010/11/win32service-228.html" onclick="window.open('http://labs.unoh.net/assets_c/2010/11/win32service-228.html','popup','width=431,height=227,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false"><img src="http://labs.unoh.net/assets_c/2010/11/win32service-thumb-200x105-228.gif" width="200" height="105" alt="win32service.gif" class="mt-image-center" style="text-align: center; display: block; margin: 0 auto 20px;" /></a></span>
+<br />
+サービスを開始すると指定した場所 "C:\PHP\" 以下にポコポコとファイルが作られます。<br />
+このままファイルを生成し続けるのも困り者なので急いでサービスを停止しましょう。
+</p>
+
+
+<h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;">サービスを解除する</h3>
+<p>
+動作確認を終えたので、さっさとサービスを解除します。
+<p class="code">
+php  C:\PHP\scripts\win32service.php uninstall
+</p>
+</p>
+<br />
+<div style="margin:0;padding:.5em;border:2px solid #ccc">ジンガジャパンでは特に最近、積極的にスタッフを採用しています。<br />
+<a href="http://www.zynga.co.jp/recruit/">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください！！<br/>
+</div>
+<br />
+
+<p>
+普段はwindowsを利用する機会がほとんどないのですが、<br />
+どうしても利用しなければならなくなった時に試してみるのもいいかもしれませんね。<br />
+<br />
+それでは、またいつかお会いしましょう。
+</p>
+{% endraw %}

@@ -1,0 +1,313 @@
+---
+layout: post
+title: "ウェブアプリ開発を助けるGETコマンドを使ってハックしてみよう!!"
+---
+{% raw %}
+<style>
+p
+{
+text-indent: 1em;
+}
+.caution
+{
+    border: #C44 solid 1px;
+    margin: auto 20px;
+    padding: 4px 8px;
+}
+
+</style>
+
+<p>
+2GBのSDカード買って意気揚々と歓迎会に突撃したらカメラごと持って帰るのを忘れて生きていくのがつらくなったjokagiです．
+ガジェットには名前と連絡先をお忘れなく．
+</p>
+<p>
+さてウェブアプリケーションの開発をしていると当然ですがブラウザーで画面の確認をしたりしますが，ブラウザーで確認をしているとキャッシュに悩んだり面倒くさいことが少なくありません．
+普通そういう時はtelnetなどで直接HTTPプロトコルでウェブサーバーと会話するわけですが面倒くさいですよね．
+</p>
+
+<div class="command">
+<pre>
+$ telnet www.yahoo.co.jp 80
+Trying 203.216.231.160...
+Connected to www.yahoo.co.jp.
+Escape character is '^]'.
+GET / HTTP/1.1
+Host: www.yahoo.co.jp
+
+HTTP/1.1 200 OK
+Date: Tue, 13 Feb 2007 10:10:41 GMT
+P3P: policyref="http://privacy.yahoo.co.jp/w3c/p3p.xml", CP="CAO DSP COR CUR ADM DEV TAI PSA PSD IVAi IVDi CONi TELo OTPi OUR DELi SAMi OTRi UNRi PUBi IND PHY ONL UNI PUR FIN COM NAV INT DEM CNT STA POL HEA PRE GOV"
+Expires: -1
+Pragma: no-cache
+Cache-Control: no-cache
+Connection: close
+Transfer-Encoding: chunked
+Content-Type: text/html; charset=euc-jp
+
+10fff  
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta http-equiv="Content-Type" content="text/html; charset=euc-jp"&gt;
+&lt;!----&gt;
+(略)
+</pre>
+</div>
+
+<p>
+jokagiは何年か前に偶然見つけたGETというコマンド(HEADもよく使う)を使用していますので，このコマンドの紹介と超簡単なハックをひとつ紹介したいと思います．
+</p>
+
+<h3>GETコマンドの使い方</h3>
+<p>
+GETコマンドの使い方は--helpしてみましょう．
+</p>
+
+<div class="command">
+<pre>
+$ GET --help
+Unknown option: help
+Usage: GET [-options] &lt;url&gt;...
+    -m &lt;method&gt;   use method for the request (default is 'GET')
+    -f            make request even if GET believes method is illegal
+    -b &lt;base&gt;     Use the specified URL as base
+    -t &lt;timeout&gt;  Set timeout value
+    -i &lt;time&gt;     Set the If-Modified-Since header on the request
+    -c &lt;conttype&gt; use this content-type for POST, PUT, CHECKIN
+    -a            Use text mode for content I/O
+    -p &lt;proxyurl&gt; use this as a proxy
+    -P            don't load proxy settings from environment
+    -H &lt;header&gt;   send this HTTP header (you can specify several)
+
+    -u            Display method and URL before any response
+    -U            Display request headers (implies -u)
+    -s            Display response status code
+    -S            Display response status chain
+    -e            Display response headers
+    -d            Do not display content
+    -o &lt;format&gt;   Process HTML content in various ways
+
+    -v            Show program version
+    -h            Print this message
+
+    -x            Extra debugging output
+</pre>
+</div>
+
+<p>
+大体で言うと-m，-c，-p，-Hを覚えておくとよいです．後はDisplay～となっている系のオプション．
+例えば<a href="http://www.yahoo.co.jp/">http://www.yahoo.co.jp/</a>のコンテンツを取得するのはこんな感じで行います．
+</p>
+
+<div class="command">
+<pre>
+$ GET 'http://yahoo.co.jp/' | head
+&lt;html&gt;
+&lt;head&gt;
+&lt;meta http-equiv="Content-Type" content="text/html; charset=euc-jp"&gt;
+&lt;!----&gt;
+&lt;title&gt;Yahoo! JAPAN&lt;/title&gt;
+&lt;meta name="description" content="80??"&gt;
+&lt;style type="text/css" media="all"&gt;
+&lt;!--
+.spacer { line-height: 110%; }
+.spacer1 {line-height: 115%; }
+</pre>
+</div>
+
+<div class="caution">
+URLを指定するときに「&amp;」などが含まれるとshellの特殊記号として扱われるので注意してください．
+大体はシングルクォートで囲む癖をつければ問題ないと思います．
+</div>
+<p>
+GETを使うと簡単にコマンドラインでいろんなウェブ関連の処理ができます．
+下記はgo-pear.org(pear.php.net)からPEARのインストーラーをダウンロードしてインストール作業を行う例です．
+</p>
+
+<div class="command">
+<pre>
+$ GET 'http://go-pear.org/' | php -q
+Welcome to go-pear!
+
+Go-pear will install the 'pear' command and all the files needed by
+it.  This command is your tool for PEAR installation and maintenance.
+
+Go-pear also lets you download and install the PEAR packages bundled
+with PHP: MDB2.
+
+
+If you wish to abort, press Control-C now, or press Enter to continue: 
+</div>
+
+<p>
+ウェブサービスへのアクセスも簡単です．
+下記はフォト蔵からキーワードmasatoで検索をする例です．
+</p>
+
+<div class="command">
+<pre>
+$ GET 'http://api.photozou.jp/rest/search_public?type=photo&order=date&keyword=masato' | head
+&lt;?xml version="1.0" encoding="UTF-8" ?&gt;
+&lt;rsp stat="ok"
+&gt;&lt;info
+&gt;&lt;photo
+&gt;&lt;photo_id&gt;2166156&lt;/photo_id
+&gt;&lt;user_id&gt;137&lt;/user_id
+&gt;&lt;album_id&gt;220281&lt;/album_id
+&gt;&lt;photo_title&gt;P1140118&lt;/photo_title
+&gt;&lt;favorite_num&gt;0&lt;/favorite_num
+&gt;&lt;comment_num&gt;0&lt;/comment_num
+</pre>
+</div
+
+<p>
+指定URLにアクセスしてコンテンツを標準出力に出力する程度ならwgetでもできますが，標準ではファイルが作られるため，オプションを覚えなければいけません．
+筆者はとても物覚えが悪いので，GETコマンドを覚える道を選択しました．
+</p>
+
+<p>
+-m覚えようぜ!!といいつつ，実は-mに相当するコマンドがそれぞれHEAD，POSTとして用意されています．
+</p>
+
+<div class="command">
+<pre>
+$ rpm -qlf /usr/bin/GET | grep bin
+/usr/bin/GET
+/usr/bin/HEAD
+/usr/bin/POST
+/usr/bin/lwp-download
+/usr/bin/lwp-mirror
+/usr/bin/lwp-request
+/usr/bin/lwp-rget
+</pre>
+</div>
+
+<p>
+ようするにコマンド名イコールHTTPリクエスト方法(-mオプション)になります．
+ウェブアプリケーションでは通常GET，POST，HEADしか使わないので(HEADも開発中でもなければ使う機会は少ないかも)，これだけで十分作業ができます(以後これらのコマンド群はまとめてGETコマンドとします)．
+</p>
+<p>
+GETコマンドはBasic認証に対応しているので，いちいちBasic認証情報をBase64エンコードしたりしなくてもいいことも特徴のひとつでしょう(ただし毎回認証情報を質問されるので，うっとおしければ-Hで自分で指定する必要があるかもしれません)．また，基本的にキャッシュなどの機構はないので，ブラウザーで確認するほどキャッシュに振り回されることがありません．
+</p>
+<p>
+また，HEADコマンドを使えば(HEADじゃなくてもできるけど)簡単にサーバー側からの送られてくるHTTPレスポンスヘッダーを確認することができます．
+</p>
+
+<div class="command">
+<pre>
+$ HEAD 'http://www.yahoo.co.jp/'
+200 OK
+Cache-Control: no-cache
+Connection: close
+Date: Tue, 13 Feb 2007 09:24:38 GMT
+Pragma: no-cache
+Content-Type: text/html; charset=euc-jp
+Expires: -1
+Client-Date: Tue, 13 Feb 2007 09:24:38 GMT
+Client-Peer: 203.216.247.225:80
+Client-Response-Num: 1
+P3P: policyref="http://privacy.yahoo.co.jp/w3c/p3p.xml", CP="CAO DSP COR CUR ADM DEV TAI PSA PSD IVAi IVDi CONi TELo OTPi OUR DELi SAMi OTRi UNRi PUBi IND PHY ONL UNI PUR FIN COM NAV INT DEM CNT STA POL HEA PRE GOV"
+</pre>
+</div>
+
+<p>
+残念ながらGETコマンドも注意点があります．
+</p>
+
+<ul>
+<li>動作環境にインストールされているCPANパッケージの具合によってはhttpsが使えない(ぽい)</li>
+<li>Locationなどで別ページに飛ばせる処理はリダイレクト先の情報(コンテンツ)が出力される</li>
+</ul>
+
+<p>
+この辺をうまく使うことでウェブサーバーを経由したユニットテストも可能になるかもしれません．
+またちょっとしたハックでWebDAVなどで必要なPROPFINDなどの対応もできるようになります．
+やり方はいくつかあると思いますが，jokagiは下記の手順でやってみました．
+</p>
+
+<ul>
+<li>
+/usr/bin/GETを適当なパスにコピーする
+<div class="command">
+<pre>
+$ mkdir -p ~/bin/
+$ cp -pr /usr/bin/GET ~/bin/PROPFIND
+</pre>
+</div>
+</li>
+<li>viなどでファイルを開き(ただのperlのスクリプトです)検索で「GET」を探し，それっぽくPROPFINDを追加する
+<div class="source-code">
+<pre>
+ %allowed_methods = (
+     GET        =&gt; "",
+     HEAD       =&gt; "",
+     POST       =&gt; "C",
+     PUT        =&gt; "C",
+     DELETE     =&gt; "",
+     TRACE      =&gt; "",
+     OPTIONS    =&gt; "",
+     PROPFIND   =&gt; "",   ←これを追加する
+ );
+</pre>
+</div>
+</li>
+</ul>
+
+<p>
+これでPROPFINDとして使用できるようになります．
+下記はその実行例です．
+</p>
+
+<div class="command">
+<pre>
+$ PROPFIND http://192.168.0.1/webdav/foo.txt
+Enter username for Authorization at 192.168.0.1:80: user
+Password: 
+&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;D:multistatus xmlns:D="DAV:"&gt;
+&lt;D:response xmlns:ns0="DAV:" xmlns:ns1="urn:schemas-microsoft-com:" xmlns:lp1="DAV:" xmlns:lp2="http://apache.org/dav/props/"&gt;
+&lt;D:href&gt;/webdav/foo.txt&lt;/D:href&gt;
+&lt;D:propstat&gt;
+&lt;D:prop&gt;
+&lt;ns1:Win32CreationTime&gt;Wed, 13 Dec 2006 07:06:38 GMT&lt;/ns1:Win32CreationTime&gt;
+&lt;ns1:Win32LastAccessTime&gt;Wed, 13 Dec 2006 07:06:38 GMT&lt;/ns1:Win32LastAccessTime&gt;
+&lt;ns1:Win32LastModifiedTime&gt;Wed, 13 Dec 2006 07:06:38 GMT&lt;/ns1:Win32LastModifiedTime&gt;
+&lt;ns1:Win32FileAttributes&gt;00000000&lt;/ns1:Win32FileAttributes&gt;
+&lt;lp1:resourcetype/&gt;
+&lt;lp1:creationdate&gt;2006-12-13T07:07:42Z&lt;/lp1:creationdate&gt;
+&lt;lp1:getcontentlength&gt;0&lt;/lp1:getcontentlength&gt;
+&lt;lp1:getlastmodified&gt;Wed, 13 Dec 2006 07:07:42 GMT&lt;/lp1:getlastmodified&gt;
+&lt;lp1:getetag&gt;"1ed52e-0-e08ab80"&lt;/lp1:getetag&gt;
+&lt;lp2:executable&gt;F&lt;/lp2:executable&gt;
+&lt;D:supportedlock&gt;
+&lt;D:lockentry&gt;
+&lt;D:lockscope&gt;&lt;D:exclusive/&gt;&lt;/D:lockscope&gt;
+&lt;D:locktype&gt;&lt;D:write/&gt;&lt;/D:locktype&gt;
+&lt;/D:lockentry&gt;
+&lt;D:lockentry&gt;
+&lt;D:lockscope&gt;&lt;D:shared/&gt;&lt;/D:lockscope&gt;
+&lt;D:locktype&gt;&lt;D:write/&gt;&lt;/D:locktype&gt;
+&lt;/D:lockentry&gt;
+&lt;/D:supportedlock&gt;
+&lt;D:lockdiscovery/&gt;
+&lt;D:getcontenttype&gt;text/plain&lt;/D:getcontenttype&gt;
+&lt;/D:prop&gt;
+&lt;D:status&gt;HTTP/1.1 200 OK&lt;/D:status&gt;
+&lt;/D:propstat&gt;
+&lt;/D:response&gt;
+&lt;/D:multistatus&gt;
+</pre>
+</div>
+
+<p>
+コピーでなくシンボリックリンクでもいいのですが，パッケージのアップデートの影響をもろ受けること，/usr/bin/直下を直接いじりたくないと思ったからです．
+perlがわかる人はそんなことしなくてもさくさくうまいやりかたでやると思います(コメントとかトラックバックとかで情報ください)．
+</p>
+
+<p>
+通常はwgetやcurlでも問題ないかもしれませんが，GETコマンドはできることがシンプルなのですぐに使いこなせると思います．
+また，WebDAVを使う人は今回のハックはちょっと開発効率アップに貢献するかもしれません．
+一度使うと常用するようになってしまうのでぜひお試しください．
+それではあでゅー．
+</p>
+{% endraw %}

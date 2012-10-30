@@ -1,0 +1,36 @@
+---
+layout: post
+title: "ソーシャルスクラップブック「clipp」とImageFlow"
+---
+{% raw %}
+<p>五十川です。</p>
+
+<p>ウノウではただいま「<a href="http://clipp.in/">clipp</a>（クリップ）」と名付けた新しいサービスを試験的に公開しています。これはソーシャルブックマーク＋ミニブログといった体のもので、ページのURLやタイトルに加えて、文章の抜粋や画像のサムネイルなどに、自分のコメントを添えて登録できるというもので、気になったページを&ldquo;切り貼りして&rdquo;保存し、他者と共有する、&ldquo;ソーシャルスクラップブック&rdquo;といった趣のサービスです。</p>
+
+<p style="padding:.5em;border-style:solid">※ clippは試験公開ということで現在は招待制とさせていただいておりますが、興味をお持ちいただいたかたは、<a href="http://clipp.in/account/register">clippのユーザ登録ページ</a>からメアドを登録しておいていただくと、招待状を送付させていただけると思いますので、是非どうぞ。</p>
+
+<p>さて、clippでは画像を扱えるという特徴を活かして、画像をiTunes/iPodのCoverFlow風に表示する機能を用意してみました。</p>
+
+<p>clippの各ユーザ毎のページには、サイドバーなどに「ImageFlow」というリンクがあるのですが、これをクリックすると、下図のように、そのユーザが登録している最新のサムネイル画像が一覧表示され、マウスのホイールやキーボードの矢印キーなどを使って、画像を次々「めくって」表示することができます。</p>
+
+<div><a href="http://photozou.jp/photo/show/784/9261591"><img src="http://art2.photozou.jp/pub/784/784/photo/9261591.png" alt="ImageFlow JavaScript for clipp" width="450" height="217" style="border:0" /></a></div>
+<div><a href="http://photozou.jp/photo/show/784/9261591">ImageFlow JavaScript for clipp</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a></div>
+
+<p>この「ImageFlow」はオリジナルのものではなく、既によく知られている<a href="http://www.finnrudolph.de/">Finn Rudolph</a>さん作の<a href="http://imageflow.finnrudolph.de/">ImageFlow JavaScript</a>を若干改変し、Ajaxによる処理などclippで必要な機能を追加したものです。</p>
+
+<p>Finn RudolphさんのImageFlowの原型は、Michael L. Perryさんが、スクラップブックのコンサルタントである夫人の作品を紹介するために作られた<a href="http://myscraproom.net/">Cover flow in Javascript</a>だそうです。Finn Rudolphさんのものはこれに、Adomas Paltanaviciusさんの<a href="http://adomas.org/javascript-mouse-wheel/">Mouse wheel programming in JavaScript</a>を利用したマウスホイールの制御をはじめとしたさまざまな改良を施されたものです。</p>
+
+<p>ImageFlowはプレインのJavaScriptで他のライブラリなどに依存しないので、改変が比較的容易で、Finn Rudolphさん自身による<a href="http://194.95.111.244/~countzero/scripts/_myImageFlowLightbox2/">Hacked version for Lightbox2</a>や<a href="http://194.95.111.244/~countzero/scripts/_myImageFlowHighSlide/">Hacked version for Highslide JS</a>などの画像エフェクトライブラリとの組み合わせや、Tobias Wetzelさんによるmootoolsフレームワーク用の<a href="http://www.outcut.de/MooFlow/">MooFlow</a>など、さまざまなバリエーションが作られています。</p>
+
+<p>clippのウェブサイトで配信されるJavaScriptはYUI Compressorでminifyしたものなので、以下にminify前のソースを掲載しておきます。</p>
+
+<ul>
+<li><a href="http://labs.unoh.net/download/imageflow_clipp.tar.gz">ImageFlow JavaScript for clipp</a></li>
+</ul>
+
+<p>※ これはあくまでclipp用で、汎用のものではないので、そのまま利用いただけるわけではありませんが、なんらかの参考になるようでしたら幸いです。</p>
+
+<h3>おまけ: リフレクション画像（鏡像）について</h3>
+
+<p>iTunes/iPodのCoverFlow風表示にはリフレクション画像が必須ですが、Finn RudolphさんのImageFlowではこれを、GD2を使った、Richard Daveyさんの<a href="http://reflection.corephp.co.uk/">Easy PHP Reflections</a>で動的に作成しており、これは配布パッケージにも同梱されてます。一方Imagick PHPを使ってリフレクション画像を作成する手順は、Imagick PHPの開発者Mikko Koppanenさんのブログの記事、<a href="http://valokuva.org/?p=82">Creating a reflection</a>に掲載されています。またMooFlowでは、リフレクション画像をCanvas要素などを使ってクライアント側で描画するように改良されています。</p>
+{% endraw %}

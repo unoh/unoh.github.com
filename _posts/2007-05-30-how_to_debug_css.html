@@ -1,0 +1,104 @@
+---
+layout: post
+title: "CSSをデバッグしよう"
+---
+{% raw %}
+こんにちは、Sashaです。CSSって、誰でも比較的簡単に始めることが出来るくせに、何年たってもつまらないバグにハマったりするものです。今日は、CSSをデバッグする手順を紹介します。特にCSS初心者の方々に参考にしていただければ光栄です。ただ、ここで紹介しているのは、CSSの問題解決の方法ではありません。CSS上の問題点の原因を、自分で見つけるためにとるべき手段です。見つかった問題点を、どうやって解決するかは、ここでは触れないのでがっかりしないでくださいね。<br/>
+<br/>
+※以下の手順は、下記のサイトをパクッ･･･、じゃなくて、翻訳しつつ簡単にまとめたものです。<br/>
+参考: <a href="http://www.subcide.com/tutorials/debuggingcss/">http://www.subcide.com/tutorials/debuggingcss/</a><br/>
+<span style="FONT-WEIGHT:bold"><br/>
+まず、問題あるって認めましょう。</span><br/>
+見なかったフリをしたい気持ちはよくわかります、が。 <span style="FONT-WEIGHT:bold"><br/>
+<br/>
+人的ミスをつぶそう</span><br/>
+<ul>
+  <li>
+    スペルをチェックしよう
+  </li>
+</ul>
+<ul>
+  <ul>
+    <li>
+      HTMLとCSSとで、スペルは一致していますか？<br/>
+    </li>
+  </ul>
+</ul>
+<ul>
+  <li>
+    パスをチェックしよう
+  </li>
+</ul>
+<ul>
+  <ul>
+    <li>
+      CSSファイルや、CSSファイルの中で指定されている背景画像などのパスは、適切ですか？<br/>
+    </li>
+  </ul>
+</ul>
+<ul>
+  <li>
+    大文字・小文字をチェックしよう
+  </li>
+</ul>
+<ul>
+  <ul>
+    <li>
+      #myAwsomeID と #myawesomeidは、CSSでは異なったIDとして扱われます。<br/>
+    </li>
+  </ul>
+</ul>
+<span style="FONT-WEIGHT:bold"><br/>
+Validateしよう</span><br/>
+タグの閉じ忘れやquotaitonの閉じ忘れなど、目をシバシバさせて見つけようとしても見つけられなかったしょうもないミス、拾ってくれます。<br/>
+<br/>
+<span style="FONT-WEIGHT:bold">よくある現象を把握しよう</span><br/>
+CSSで頻発するバグは、既にほかの人によって見つけられていることがほとんどです。
+<ul>
+  <li>
+    floatされた同士のdivで3pxの隙間、開いてる？
+  </li>
+  <li>
+    ブロックの横幅が思うようにならない？
+  </li>
+  <li>
+    <a href="http://labs.unoh.net/2007/04/ie6_css_border-left_padding-bot.html" title=" IE6 + CSS 『border-leftとpadding-bottom』の謎">border-leftのあるブロックを何度も繰り返すとちょっとずつずれていく？</a>
+  </li>
+</ul>
+問題となっている現象をじっくり把握したら、大体あとはgoogleなんかで解決法が見つかるはずです。その問題が、当然のことですが、ブラウザ限定なものなのか、全ブラウザで共通して起こる現象なのかもチェックしましょう。<br/>
+<br/>
+<span style="FONT-WEIGHT:bold">継承しているものを把握しよう</span><br/>
+問題となっている要素そのものに指定されているスタイルを検証してみても、問題が解決されないとき、十中八九問題は、その要素の親要素以上のレベルにあります。継承されているスタイルを全部検証するには、Firefoxの拡張、<a href="https://addons.mozilla.org/ja/firefox/addon/1843" title="Fire Bug">Fire
+Bug</a>
+が超便利です。要素に継承される全てのスタイル定義を、ズラーっと順番に並べてくれる上、例えばその要素のfont-size指定が、親要素のfont-size指定を上書きしている場合は、親要素のfont-sizeには打ち消し線を入れてくれます。CSSの一つ一つの定義をon/offできる上、その場でCSSを編集して試せたりもします。んー、手放せない一品です。<br/>
+<br/>
+<span style="FONT-WEIGHT:bold">測ってみよう</span><br/>
+ズレいているならズレの幅を、隙間が生じているなら隙間の幅、横幅縦幅がブラウザ間で違うなら、その差を、とにもかくにも測ってみましょう。測るのには、やっぱりものさし。<a href="https://addons.mozilla.org/ja/firefox/addon/60" title="Web Developer">Web
+Developer</a>
+（Firefoxの拡張）や、<a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=e59c3964-672d-4511-bb3e-2d5e1db91038&amp;displaylang=en" title="IE Developer Toolbar">IE
+Developer Toolbar</a>
+のような開発者、デザイナー向けのツールにもものさしはありますが、さっき山岡さんに教えてもらった<a href="http://www.vector.co.jp/soft/win95/util/se013576.html" title="ものさしツール">ものさしツール</a>
+が便利そうです。ピクセル単位できれいにそろっているか、チェックするのに便利です。そして、そのズレや隙間や幅の違いが、どこから来ているものなのかCSSで捜索です。たとえば、隙間が15pxだったら、marginとpaddingを足したら15pxになるのかもしれないし、二つ並んでいるdivのmargin-leftとmargin-rightの合計が、15pxなのかもしれない。どこかで指定したborderの幅かもしれませんし、IEのバグを踏んでいるのかもしれません。数字が与えてくれるヒントは、結構ありますよ！<br/>
+<br/>
+<span style="FONT-WEIGHT:bold">Doctypeを確認しよう</span><br/>
+適切なDoctypeを使っていますか？CSSは、Doctypeにしたがって解釈されるので、誤ったDoctypeを使用していたりDoctypeをまったく使用していなかったりすると、CSSのデバッグは、バスケのルールを参照して、サッカーの審判をしているようなもんです（んあ？）。<br/>
+参考:
+<a href="http://hxxk.jp/2006/12/19/2100" title="http://hxxk.jp/2006/12/19/2100">http://hxxk.jp/2006/12/19/2100</a><br/>
+<br/>
+<span style="FONT-WEIGHT:bold">問題を隔離しよう</span><br/>
+もし、それでも問題が解決されなかったら、大胆な行動に出るべし。CSSやHTMLを少しずつ、削っていきましょう。削ってはリフレッシュ！削ってはリフレッシュ！こうして、問題が再現しないところまで来たら、フフフ、そこなんですね。<br/>
+<br/>
+<span style="FONT-WEIGHT:bold">人の助けを借りよう</span><br/>
+フォーラム、コミュニティ、リアルな人の輪、ネットで働く人間だったら駆使できるはず。活発なコミュニティだったら、即効返事が返ってきますよ。その際、気をつけることは、『上記の全てを検証したうえで』、どのブラウザ、どのDoctypeでそのようなバグが出ているのかをなるべく具体的に記述すること。何がどこで問題となっているか、を明確にせずに質問しようとしても、忙しいプロはなかなか救いの手を差し伸べてくれようとはしてくれません。「問題を隔離」して、問題が出ている箇所と、問題に影響を与えているかもしれない親要素と、そのそれぞれに指定されているスタイルも、忘れずに記述しましょう。<br/>
+<br/>
+<span style="FONT-WEIGHT:bold">「オマケ」息抜きしよう</span><br/>
+CSSのデバッグをしていると、たまに発狂したくなります。だんだん目が画面よりに吸い付いていって、隣に座っている営業の女の子に「ねぇ、こわいよ。」と静かにたしなめられたりします。で、そんなときに外の空気を吸いに行ったりして、戻ってくると、なんか知らないけど問題が解決したり・・・。そんなこと、ありませんか？私には多々あります。問題が不可解に思われれば思われるほど、人はそこに吸いつけられるものです。気がついたらトイレを我慢してたり、息吸うの忘れてたり！お願いです、覚えていてください。行き詰ったら、一呼吸・・・。ふぅ～。<br/>
+<br/>
+<br/>
+それでは、私も一呼吸入れてきますー。<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+<br/>
+{% endraw %}

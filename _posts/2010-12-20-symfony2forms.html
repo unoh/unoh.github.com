@@ -1,0 +1,225 @@
+---
+layout: post
+title: "Symfony2のFormsを使ってみる"
+---
+{% raw %}
+<p>
+こんにちは。目下Symfony2を勉強中のtakaです。
+</p>
+
+<p>
+Symfony1.4ではsfFormを使った事があるのですが、いくらか苦戦したというか、sfWidgetFormが面倒というか、これは使えば楽なのか？何なのか？良く判らなかったので、今回Symfony2でどのように実装していくのかFormsを試してみました。
+</p>
+
+<p>
+まず、Symfony2についてですが、12/01時点ではSymfony2 PR4が<a href="http://symfony-reloaded.org/">公式サイト</a>にて公開されていました。今回はこれを使ってやってみます。環境は適当にCentOS5.5にPHP5.3などなどを入れてcheck.phpが動く事を確認しました。ダウンロードして展開するとsandboxとありHelloアプリケーションが既に用意されています。
+</p>
+
+<p>Controller名はhello/signupとします。</p>
+
+<div>src/Application/HelloBundle/Resources/config/routing.yml</div>
+<pre class="code">
+  1 signup:
+  2     pattern:  /hello/signup
+  3     defaults: { _controller: HelloBundle:Hello:signup }
+  4 
+  5 hello:
+  6     pattern:  /hello/:name
+  7     defaults: { _controller: HelloBundle:Hello:index }
+</pre>
+
+<p>Formの内容Entityを定義するところからはじめます。</p>
+
+<div>src/Application/HelloBundle/Entity/Customer.php</div>
+<pre class="code">
+  1 &lt;?php
+  2 namespace Application\HelloBundle\Entity;
+  3 
+  4 class Customer
+  5 {
+  6     public $name;
+  7     private $age = 20;
+  8 
+  9     public $address;
+ 10 
+ 11     public $email;
+ 12 
+ 13     public $emails = array('1' => 'a', '2' => 'b', '3' => 'c');
+ 14 
+ 15     public function getAge()
+ 16     {
+ 17         return $this->age;
+ 18     }
+ 19 
+ 20     public function setAge($age)
+ 21     {
+ 22         $this->age = $age;
+ 23     }
+ 24 }
+</pre>
+
+<p>
+顧客情報として名前や年齢などを定義します。publicで定義した項目については自動でアクセッサが用意されるようですが、privateで定義した項目については（ここでは年齢）アクセッサを自前で用意してあげる必要があるようです。
+</p>
+
+<div>src/Application/HelloBundle/Entity/Address.php</div>
+<pre class="code">
+  1 &lt;?php
+  2 namespace Application\HelloBundle\Entity;
+  3 
+  4 class Address
+  5 {
+  6     public $street;
+  7     public $zipCode;
+  8 }
+</pre>
+
+<p>
+住所を定義する場合はこのように分けて、目的毎にしておくと良いようです。また、Formの定義はすべてEntity以下に配置します。
+</p>
+
+<p>Formの定義が終わったら次はViewです。</p>
+
+<div>src/Application/HelloBundle/Resources/views/Hello/signup.php</div>
+<pre class="code">
+  1 &lt;?php $view->extend('HelloBundle::layout.php') ?&gt;
+  2 
+  3 &lt;form action="#" method="post"&gt;
+  4     &lt;?php echo $view['form']->render($form) ?&gt;
+  5 
+  6     &lt;input type="submit" value="Send!" /&gt;
+  7 &lt;/form&gt;
+</pre>
+
+<p>
+共通部品のlayout.phpとformタグのみと至ってシンプルです。Formオブジェクトをrenderに渡すだけです。Formオブジェクトの中身はControllerの方で実装します。
+</p>
+
+<p>FormといえばValidationです。Formの定義同様にEntityに配置します。</p>
+
+<div>src/Application/HelloBundle/Entity/Registration.php</div>
+<pre class="code">
+  1 &lt;?php
+  2 namespace Application\HelloBundle\Entity;
+  3 
+  4 class Registration
+  5 {
+  6     /** @validation:Vaild */
+  7     public $customer;
+  8 
+  9     /** @validation:AssertTrue(message="Please accept the terms and conditions.") */
+ 10     public $termsAccepted = false;
+ 11 
+ 12     public function process()
+ 13     {
+ 14         // 特にエラーもなければ保存やリダイレクト等の処理
+ 15     }
+ 16 }
+</pre>
+
+<p>
+アノテーションを使って定義します。顧客情報の入力と規約に同意することを定義しています。もし$termsAcceptedがTrueで無い場合はmesseage以下の文字列が表示されエラーとなります。process()メソッドは成功時にPOSTデータの登録なり確認なりの処理を実装します。
+</p>
+
+<p>Controllerです。ここではsignupActionを実装しています。</p>
+
+<div>src/Application/HelloBundle/Controller/HelloController.php</div>
+<pre class="code">
+  1 &lt;?php
+  2 
+  3 namespace Application\HelloBundle\Controller;
+  4 
+  5 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
+  6 
+  7 use Application\HelloBundle\Entity\Customer;
+  8 use Application\HelloBundle\Entity\Registration;
+  9 use Symfony\Component\Form\Form;
+ 10 use Symfony\Component\Form\TextField;
+ 11 use Symfony\Component\Form\IntegerField;
+ 12 use Symfony\Component\Form\FieldGroup;
+ 13 use Symfony\Component\Form\RepeatedField;
+ 14 use Symfony\Component\Form\CollectionField;
+ 15 use Symfony\Component\Form\CheckboxField;
+ 16 
+ 17 class HelloController extends Controller
+ 18 {
+ 19     public function indexAction($name)
+ 20     {
+ 21         return $this->render('HelloBundle:Hello:index.twig', array('name' => $name));
+ 22 
+ 23         // render a PHP template instead
+ 24         // return $this->render('HelloBundle:Hello:index.php', array('name' => $name));
+ 25     }
+ 26 
+ 27     public function signupAction()
+ 28     {
+ 29         $registration = new Registration();
+ 30         $registration->customer = new Customer();
+ 31 
+ 32         $form = new Form('registration', $registration, $this->get('validator'));
+ 33         $form->add(new CheckboxField('termsAccepted'));
+ 34 
+ 35         $group = new FieldGroup('customer');
+ 36 
+ 37         $group->add(new TextField('name'));
+ 38         $group->add(new IntegerField('age'));
+ 39         $form->add($group);
+ 40 
+ 41         /* グループ化したり様々なフィールドを追加できる
+ 42         $group = new FieldGroup('address');
+ 43         $group->add(new TextField('street'));
+ 44         $group->add(new TextField('zipCode'));
+ 45         $form->add($group);
+ 46 
+ 47         $form->add(new RepeatedField(new TextField('email')));
+ 48 
+ 49         $form->add(new CollectionField(new TextField('emails')));
+ 50         */
+ 51 
+ 52         if ('POST' === $this->get('request')->getMethod()) {
+ 53             $form->bind($this->get('request')->request->get('registration'));
+ 54 
+ 55             if ($form->isValid()) {
+ 56                 // Validation True
+ 57                 $registration->process();
+ 58             }
+ 59         }
+ 60 
+ 61         return $this->render('HelloBundle:Hello:signup.php', array(
+ 62             'form' => $form
+ 63         ));
+ 64     }
+ 65 }
+</pre>
+
+<p>
+基本的なテキストボックスやチェックボックス、数値や日付といったFormコンポーネントが用意されており、適宜useで読み込みます。Formオブジェクトのaddメソッドで簡単に追加できます。FieldGroupは項目をグループ化するもので、Formタグ上ではregistration[customer][name]のようにアクセスできます。
+</p>
+
+<p>
+55行目の$form->isValid()はValidationが成功時にTrueとなり処理が続行され、失敗時にはFalseとなりエラーメッセージと共にViewに表示されます。
+</p>
+
+<p>
+Formオブジェクトにはエラーであれば$form['name']->getErrors()、Formデータであれば$form['name']->getData()のようにしてアクセスする事が可能です。また、registration[_token]という形でCSRFプロテクトが埋め込まれるようになっていました。
+</p>
+
+<p>
+目的毎に切り分けておくことができ、組み合わせて使いやすいのではないかと思います。公式サイトのドキュメントにはこれ以外にも沢山のコンポーネントが用意されている事が書かれてありますので、今後色々と組み合わせて試してみたいと思います。
+</p>
+
+<br />
+
+<p>
+<a href="http://www.symfony.gr.jp/blog/20111121-symfony2-workshop-1">第1回Symfony2勉強会</a>に引き続き勉強会を行うそうです。興味のある方は参加してみてはいかがでしょうか。
+</p>
+
+<p>
+<a href="http://atnd.org/events/10869">ATND 第2回 Symfony2勉強会 (1/15)</a>
+</p>
+
+<br />
+
+<div style="margin:0;padding:.5em;border:2px solid #ccc">Zynga Japanでは積極的にエンジニアを採用しています。<br />
+<a href="http://www.zynga.co.jp/recruit/recruit.php?siteid=unohlabs">採用ページ</a>をご覧になり、興味のある方はぜひご応募ください。</div>
+{% endraw %}

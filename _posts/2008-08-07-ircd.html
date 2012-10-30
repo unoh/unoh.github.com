@@ -1,0 +1,56 @@
+---
+layout: post
+title: "ircdをインストールしたのでメモ"
+---
+{% raw %}
+<p>Keitaです。</p>
+
+<p>個人的にはIRCをかなり使っていて、会社でも使えたらなーとおもってインストールしてみました。
+とはいえ残念ながら僕ともう一人がちょこちょこ使ってるレベルですが、とりあえずインストールしてみたので、そのメモ書きです。</p>
+
+<p>手元でさっくり動く個人のローカルのテスト環境が今Fedora8なのでそれで説明したいと思います。</p>
+
+<p>まずインストールですが、Fedora8の環境でRPMが用意されていてさっくりうごくのが、<a href="http://ircd-hybrid.com/">ircd-hybrid</a>なのでこれで入れてしまいます。</p>
+
+<pre class="code">
+sudo yum install ircd-hybrid
+</pre>
+
+<p>とりあえずインストールので、初心者な僕は、立ち上げてログインしてみようと思いました。</a>
+
+<pre class="code">
+sudo service ircd start
+</pre>
+
+<p>立ち上がったように見えますが、実際には起動してないように見えます。
+とりあえずログを見てみます。</p>
+
+/var/log/ircd/ircd.conf
+<pre class="code">
+[2008/8/x xxxx] You haven't read your config file properly.
+[2008/8/x xxxx] There is a line in the example conf that will kill your server if not removed.
+[2008/8/x xxxx] Consider actually reading/editing the conf file, and removing this line.
+</pre>
+
+<p>要約すると、「設定ファイルとかちゃんと読めや」ということらしいです。</p>
+<p>で、実際設定ファイルを読んでみるといろいろ設定しないといけない項目があるのがわかります。その中で、上記のメッセージを出す設定が一箇所あるのですが、配布元があえて設定ファイルをちゃんと読んでほしくて忍ばせているものだと思いますので、こちらで具体的な箇所を書くのは控えさせていただきます。</p>
+
+
+<p>そういうわけで、実際の設定の編集ですが、デフォルトでインストールされているircd.confは、コメントなど結構冗長に設定されているので、/usr/share/doc/ircd-hybrid-7.2.3/simple.confからファイルをコピーし、そちらを使いました。</p>
+
+<p>とりあえずローカルからつなぐだけなら下記の一箇所を設定することで動作するようです。
+(公開したりきちっと運用するなら設定ファイルをきちっと理解する必要があります。）</p>
+<ul>
+<li>serverinfoのsidに適切な文字列をいれる</li>
+</ul>
+
+<p>上記を設定して、</p>
+<pre class="code">
+<strike>sudo service ircd start</strike> //間違ってた
+sudo /sbin/service ircd start
+</pre>
+<p>で起動し、LimeChatでアクセスすると、
+アクセスできることが確認できました。</p>
+
+<p>そういうわけで、たとえ一人になってもがんばって会社のIRCは使い続けたいと思います。手短ですがこの辺で。</p>
+{% endraw %}

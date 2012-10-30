@@ -1,0 +1,84 @@
+---
+layout: post
+title: "symfonyでgettext"
+---
+{% raw %}
+<p>
+yamaokaです。最近、PHPのフレームワークの<a href="http://www.symfony-project.com/">symfony</a>をいじっています。
+</p>
+
+<p>
+<a href="http://www.symfony-project.com/book/1_0/13-I18n-and-L10n">symfonyでメッセージの国際化を行う</a>場合、
+デフォルトでは<a href="http://www.oasis-open.org/committees/tc_home.php?wg_abbrev=xliff">XLIFFの形式</a>を使うようになっています。
+その他、gettextやデータベースからメッセージリソースを取得できるようにもなっているのですが、
+その方法があまり公開されていません。
+</p>
+
+<p>
+今回は<a href="http://www.gnu.org/software/gettext/">gettext</a>を利用してメッセージの国際化を行う方法を紹介します。
+gettextに関する基本的な情報については、
+<a href="http://ja.wikipedia.org/wiki/Gettext">Wikipediaの該当項目</a>や
+<a href="http://www.unoh.net/mt32/mt-search.cgi?IncludeBlogs=2&search=gettext">ウノウラボの過去記事</a>
+などを参考にどうぞ。実際の動作はsymfony 1.0.8で確認しています。
+</p>
+
+<ol>
+  <li>
+    apps/&lt;yourapp&gt;/config/settings.ymlに下記を追記
+    <pre class="code"><code>all:
+  .settings:
+    i18n: on                   # 国際化を有効に
+    standard_helpers: [I18N]   # ヘルパーとしてI18Nを追加
+    charset: UTF-8             # 文字コード設定
+</code></pre>
+  </li>
+  <li>
+    apps/&lt;yourapp&gt;/config/i18n.ymlを編集
+    <pre class="code"><code>all:
+  default_culture: ja_JP   # デフォルト言語を日本語に
+  source: gettext          # gettextを使う設定
+</code></pre>
+  </li>
+  <li>
+    テンプレートファイル内にメッセージを記述しておく
+    <pre class="code"><code>&lt;p&gt;&lt;?php echo __('Hello!'); ?&gt;&lt;/p&gt;</code></pre>
+  </li>
+  <li>アプリケーションディレクトリに移動</li>
+  <li>
+    xgettextコマンドを使ってi18n/messages.potを作成
+    <pre class="code"><code>$ xgettext --keyword=__ -l php -o i18n/messages.pot \
+   `find modules -name \*.php -type f`
+</code></pre>
+  </li>
+  <li>
+    msginitコマンドを使ってi18n/ja_JP/messages.poを作成
+    <pre class="code"><code>$ msginit -i i18n/messages.pot -o i18n/ja_JP/messages.po -l ja</code></pre>
+  </li>
+  <li>
+    messages.poの文字コード設定の部分をUTF-8に変更、リソースを追記
+    <pre class="code"><code>"Content-Type: text/plain; charset=UTF-8\n"</code></pre>
+    <pre class="code"><code>msgid &quot;Hello!&quot;
+msgstr &quot;こんにちはこんにちは！&quot;
+</code></pre>
+  </li>
+  <li>
+    msgfmtコマンドを使ってi18n/ja_JP/messages.moを作成
+    <pre class="code"><code>$ msgfmt -o i18n/ja_JP/messages.mo i18n/ja_JP/messages.po</code></pre>
+  </li>
+  <li>
+    表示させてみる
+    <pre class="code"><code>こんにちはこんにちは！</code></pre>
+  </li>
+</ol>
+
+<p>
+いかがでしょうか。XML形式でわかりやすいXLIFFもいいのですが、
+<a href="http://labs.unoh.net/2007/08/_pootle.html">Pootle</a>などの周辺ツールも揃っているので、
+使い慣れたgettextを使うことができるメリットはまだまだあると思います。
+</p>
+
+<p>
+symfonyでgettextを使おうと思っている方の手助けになれば幸いです。
+</p>
+
+{% endraw %}

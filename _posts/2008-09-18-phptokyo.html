@@ -1,0 +1,87 @@
+---
+layout: post
+title: "PHPからTokyoｘｘｘを使おうとした時の話"
+---
+{% raw %}
+モテ系の方と服を買いにいったKeitaです。<br />
+<br />
+やっとこれで、かっこよくなって、彼女できるかと思っていたのですが、残念ながら服を買っただけでは彼女はできそうにはないです。秋服なので涼しくなったら着てモテモテになりたいと思います。<br />
+<br />
+さて、<a href="http://qdbm.sourceforge.net/mikio/">平林</a>さんが開発されている<a href="http://tokyocabinet.sourceforge.net/">TokyoCabinet</a>、<a href="http://tokyocabinet.sourceforge.net/tyrantdoc/">TokyoTyrant</a>、<a href="http://tokyocabinet.sourceforge.net/dystopiadoc/">TokyoDystopia</a>は個人的にでたまに暇を見つけて仕事では使いもしないのに検証作業をしています。<br />
+<br />
+PHPから使う方法を社内勉強会で簡単に解説をしたのでそれを、それをテキスト起こしておいておきます。<br />
+<br />
+
+<hr />
+まず簡単に各アプリケーションについて解説しますと。<br />
+<br />
+<dl>
+ <dt>Tokyo Cabinet</dt>
+ <dd>
+  <ul>
+   <li>ハッシュ型のデータベース</li>
+   <li>というよりデータベースマネージャ</li>
+   <li>インターフェースはCのAPI</li>
+   <li>高速</li>
+   <li>TokyoDystopia、TokyoTyrantのストレージエンジン</li>
+  </ul>	
+ </dd>
+</dl>
+
+<dl>
+ <dt>Tokyo Tyrant</dt>
+ <dd>
+  <ul>
+   <li>TokyoCabinetのネットワークインターフェース</li>
+   <li>memcached互換のインターフェース</li>
+   <li>オリジナルのネットワークインターフェース（細かくやろうとするとこちらを使うことになる)</li>
+  </ul>	
+ </dd>
+</dl>
+
+<dl>
+ <dt>Tokyo Dystopia</dt>
+ <dd>
+  <ul>
+   <li>TokyoCabinetをストレージエンジンとした前文検索エンジン</li>
+   <li>インターフェースはCのAPI</li>
+  </ul>	
+ </dd>
+</dl>
+
+といった感じになります。<br />
+おそらく、Webアプリケーションからは、TokyoTyrantを直接使ったり、TokyoDystpiaにネットワークインターフェースを一枚かぶせて使うことになると思います。<br />
+<br />
+大まかに図にしてみると以下のようになります。<br />
+<br />
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="TOkyo.jpg" src="http://labs.unoh.net/TOkyo.jpg" width="400" height="400" class="mt-image-none" style="" /></span>
+<br />
+<br />
+それぞれPHPから利用するためには以下のようなモジュールを使うことになります。<br />
+
+<dl>
+ <dt>Tokyo Cabinet</dt>
+ <dd>
+TokyoCabinetをPHPから直接使うには、<a href="http://d.hatena.ne.jp/rsky/20071228/1198841053">id:rskyさんのモジュール</a>が利用できます。	
+ </dd>
+</dl>
+
+<dl>
+ <dt>Tokyo Tyrant</dt>
+ <dd>
+TokyoTyrantは基本的にPHPからはmemcache互換のインターフェースを使うと簡単に利用できますが、PHPのmemcacheの関数はいくつか不足している機能があるので、個人的には、拙作のTokyoTyrantのネイティブなネットワークAPIのインターフェースをしゃべる<a href="http://coderepos.org/share/browser/lang/php/Net_TokyoTyrant">pure phpライブラリを</a>使うことにしています。<br />
+<br />
+<a href="http://labs.gree.jp/Top/OpenSource/libmemcached.html">gree labsさんで公開されてるmemcachedのインターフェース</a>だとまた事情はかわってくるかもしれませんが、さすがに出たてでまだまったく検証できていません。
+ </dd>
+</dl>
+
+
+<dl>
+ <dt>Tokyo Dystopia</dt>
+ <dd>
+TokyoDystopiaを使う場合は<a href="http://labs.gree.jp/Top/OpenSource/TokyoDystopia.html">gree labsさんで公開されている</a>ライブラリを利用することになります。
+ </dd>
+</dl>
+<br />
+そんなわけで、ほとんどのモジュールがPHPから使えることがわかっていただけたかと思います。もちろん、それぞれ要検証ですが、この記事が何かの折、誰かの役に立てば幸いです。
+{% endraw %}

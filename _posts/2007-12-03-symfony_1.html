@@ -1,0 +1,23 @@
+---
+layout: post
+title: "symfonyでよくあるトラブル"
+---
+{% raw %}
+<p>yukiです。</p>
+<p>今回はsymfony+MySQLを使って開発していた際に遭遇したトラブルとその対処を紹介したいと思います。</p>
+<h3>(1) ビルドしたPropelクラスで、DATETIME値が'0000-00-00 00:00:00'の時</h3>
+<p>SQLとしては問題なくとも、getTimeStampで取得する際にエラーになります。<br>
+NULL値を使うのが一番なのですが、外部の設計だったりするなど今回は変更できない場合に該当しました。<br>
+symfony側でも<a title="trac" href="http://trac.symfony-project.com/ticket/1344" id="t2ke">trac</a> で認識はされていますが、<a title="Creole" href="http://creole.phpdb.org/trac/" id="d-e2">Creole</a> の問題として対処しないことになっているようですので、今度はCreoleの<a title="trac" href="http://creole.phpdb.org/trac/ticket/66" id="d1h6">trac</a> を見てみると、対処されているのがわかり、freeze化していれば影響は該当サイトのみにとどまりますので、今回は自作パッチを当てて対処しました。<br>そのうちsymfony側で対応してくれることを期待しておきます。</p>
+<h3>(2) カラム名に予約語を使わない</h3>
+<p>これもありがちですが、カラム名に「count」などの予約語を使うと、自動生成されたPropelのBaseオブジェクトを利用しようとすると、オブジェクト定数として利用しているため二重宣言となり、FATALエラーとなります。(phpNameでエイリアスをつけても駄目)propel-build-modelコマンドは普通に通過しますので見落としますが、注意してください。</p>
+<h3>(3) redirect での引数の型が違う</h3>
+<p>これも若干はまりどころですが、redirectする際、'module/action'と文字列で'/'で区切って記述しますが、routingを利用して引数も渡したい場合、素直に書くと'foo/bar/variable'となります。<br>しかしこのように正直に書いても'variable'が絶ち落とされてしまいます。<br>この場合はどうするかというと、まずrouting.ymlで下記のように書いてあるものとして、</p>
+<pre class="code"><code>foo_bar_hoge:
+  url:      /foo/bar/:hoge
+  param:    { module: home, action: bar }</code></pre>
+<p>次に、redirectメソッドの引数は素直に書くのではなく、<span style="font-weight: bold;">配列</span>で渡します。<br>
+</p><pre class="code"><code>$this-&gt;redirect(array('module' =&gt; 'foo', 'action' =&gt; 'bar', 'hoge' =&gt; 'variable'));</code></pre>
+<p>これで正しくリダイレクトされ、引数も渡されます。</p>
+<p>この様に若干ドキュメントに書いていないトラブルはあるものの、逆に書いていない部分で便利な機能があったりしますので(特にヘルパー)、ぜひ一度ソースを読んでみてはいかがでしょうか。</p>
+{% endraw %}

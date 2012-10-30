@@ -1,0 +1,262 @@
+---
+layout: post
+title: "Ext JS 2.0正式版リリース - 1.xから2.0への移行のメモ"
+---
+{% raw %}
+<p>isogawaです。</p>
+
+<p>以前紹介したJavaScriptフレームワーク<a href="http://extjs.com/">Ext JS</a>のメジャーバージョンアップである2.0の正式版が、先週末にリリースされました。</p>
+
+<p>Ext 2.0が提供する機能については、以下のサンプルページをご覧いただくのが手っ取り早いでしょう。</p>
+
+<ul>
+  <li><a href="http://extjs.com/deploy/dev/examples/">Ext 2.0 Samples</a></li>
+</ul>
+
+<p>さて、Ext 2.0は従来の1.xから大幅に刷新されており、残念ながら1.xとの互換性は高くありません。おそらく1.x用に書かれたコードの殆どは、そのままでは2.0で動作しないでしょう。以下にマイグレーション用のドキュメントが用意されていますが、かなりの量で、ひと通り目を通すだけでも大変です。</p>
+
+<ul>
+  <li><a href="http://extjs.com/learn/Ext_1_to_2_Migration_Guide">Ext 1 to 2 Migration Guide</a></li>
+</ul>
+
+<p>以下では、自分がこれまでに作成した1.x用のコードに対して2.0へのマイグレーションを行ってみた際に気付いた点をまとめてみました。ただし、以下の内容がマイグレーションのすべてを網羅しているわけではなく、また実際のところ、細々とした変更が結構あって、すべて覚えてなかったりするので万全ではない点、ご留意ください（例によって、間違ってるところがあるようでしたら、コメントなどで遠慮なくご指摘ください）。</p>
+
+<p>以下のコードは抜粋です。全ソースは、お手数ですが<a href="http://labs.unoh.net/2007/12/11/download/ext-2.0-migration-examples.zip">こちら</a>からダウンロードしてご覧ください。</p>
+
+<h3>グリッド</h3>
+
+<p>Ext.grid.GridはExt.grid.GridPanelに変更になりました。これは親クラスがObservableからPanelに変更されたためで、単なる名称の変更ではなく、従来のExt.gridとExt.GridPanelが統合されたものになっています。</p>
+
+<p>従って根本的には、1.xのExt.grid.Gridと2.0のExt.grid.GridPanelは別物なのですが、Ext.grid.Grid<strong>だけ</strong>のマイグレーションに限れば、従来との互換性はかなり高く、1.xのコードの多くはわずかな修正で移行できるのではないかと思われます。</p>
+
+<p>以下は、<a href="http://extjs.com/learn/Tutorial:Introduction_to_Ext_2.0">Tutorial:Introduction to Ext 2.0</a>にある非常にシンプルなグリッドの例を、1.1.1と2.0の場合で対比できるように書き直したものです。</p>
+
+<h4>Ext 1.1.1</h4>
+
+<pre class="code"><code>var grid = new Ext.grid.<span style="color:#00f">Grid</span>(<span style="color:#00f">'grid-example', </span>{
+  <span style="color:#00f">ds</span>: new Ext.data.Store({
+    data:   myData,
+    reader: myReader
+  }),
+  <span style="color:#00f">cm: new Ext.grid.ColumnModel(</span>[
+    {header: 'Company',   width: 120, sortable: true, dataIndex: 'company'<span style="color:#00f">, id: 'company'</span>},
+    {header: 'Price',     width:  90, sortable: true, dataIndex: 'price'},
+    {header: 'Change',    width:  90, sortable: true, dataIndex: 'change'},
+    {header: '% Change',  width:  90, sortable: true, dataIndex: 'pctChange'},
+    {header: 'Updated',   width: 120, sortable: true, dataIndex: 'lastChange', renderer: Ext.util.Format.dateRenderer('m/d/Y')}
+  ]<span style="color:#00f">)</span>,
+  <span style="color:#00f">autoExpandColumn: 'company'</span>
+});
+<span style="color:#00f">grid.render();</span></code></pre>
+
+<h4>Ext 2.0</h4>
+
+<pre class="code"><code>var grid = new Ext.grid.<span style="color:#00f">GridPanel</span>({
+  <span style="color:#00f">renderTo: 'grid-example',</span>
+  <span style="color:#00f">store</span>: new Ext.data.Store({
+    data:   myData,
+    reader: myReader
+  }),
+  <span style="color:#00f">columns:</span> [
+    {header: 'Company',   width: 120, sortable: true, dataIndex: 'company'},
+    {header: 'Price',     width:  90, sortable: true, dataIndex: 'price'},
+    {header: 'Change',    width:  90, sortable: true, dataIndex: 'change'},
+    {header: '% Change',  width:  90, sortable: true, dataIndex: 'pctChange'},
+    {header: 'Updated',   width: 120, sortable: true, dataIndex: 'lastChange', renderer: Ext.util.Format.dateRenderer('m/d/Y')}
+  ],
+  <span style="color:#00f">viewConfig: {forceFit: true}</span>
+});</code></pre>
+
+<ul>
+  <li>
+    <p>これはグリッドに限ったことではありませんが、Ext 1.xでは多くのコンストラクタで、その第1パラメータにそのオブジェクトの描画先となるHTML要素を指定していましたが、Ext 2.0ではこの指定は全面的に廃止されています。コンストラクタのパラメータはコンフィグオプションのみに変更され、要素の指定はコンフィグのapplyToまたはrenderTo（あるいはrender()メソッドのパラメータ）で指定します。</p>
+    <p>上の1.1.1の例ではExt.grid.Gridコンストラクタの第1パラメータで指定しているHTML要素ID「grid-example」は、2.0の例ではrenderToコンフィグで指定しています。そして、applyTo/renderToコンフィグが指定してあるインスタンスは、明示的にrender()メソッドを記述する必要はなくなりました。</p>
+  </li>
+  <li>
+    <p>これも全体的に変更された点ですが、1.xでは明示的にインスタンスを生成する必要のあったコンフィグなどの多くが、2.0では簡略化されています。</p>
+    <p>上の1.1.1の例ではグリッドでのカラムモデルにExt.grid.ColumnModelのインスタンスを指定していますが、2.0ではコンフィグオプションのcolumnsで、簡単に指定できるようになっています（従来通りの指定も可能です）。</p>
+  </li>
+  <li>
+    <p>グリッドは要素の横幅に対してカラムの幅を自動的に調整する機能があります。これは1.xでは、カラムにIDを割り振った上で、コンフィグオプションのautoExpandColumnにそのIDを指定していましたが、必然的に調整の対象となるのはひとつのカラムに限定されていました。2.0ではコンフィグオプションに「viewConfig: {forceFit: true}」と指定することで、各カラムの幅が調整されます。</p>
+  </li>
+</ul>
+
+<h3>グリッドパネルとツールバー</h3>
+
+<p>上述の通り、Ext 2.0ではExt.gridとExt.GridPanelがExt.grid.GridPanelに統合されました。Ext 1.xではグリッドをレイアウトに組み込むには、Ext.GridPanelのインスタンスを別途にあらためて作成する必要がありましたが、2.0では、従来Ext.GridPanelに対して行っていた指定を、Ext.grid.GridPanelのコンフィグにまとめられるようになりました。</p>
+<p>また、1.xではグリッドパネルにツールバーを組み込むにはそのパネルのヘッダ/フッタを取得し、Ext.Toolbarのインスタンスを作成する必要がありましたが、2.0ではツールバーもtbarコンフィグでまとめて指定できるようになりました。</p>
+
+<h4>Ext 1.1.1</h4>
+
+<pre class="code"><code>var grid = new Ext.grid.Grid('grid-example', {
+  // 上のグリッドの例と同じなので省略
+  // ...
+  autoExpandColumn: 'company'
+});
+grid.render();
+
+/* Grid Panel and Toolbar */
+var gridPanel = new Ext.GridPanel(grid, {title: 'My First Grid'});
+var gridPanelToolbar = new Ext.Toolbar(grid.getView().getHeaderPanel(true));
+gridPanelToolbar.addButton({
+    text: 'Click here to show dialog',
+    handler: this.showDialog.createDelegate(this)
+});</code></pre>
+
+<h4>Ext 2.0</h4>
+
+<pre class="code"><code>var grid = new Ext.grid.GridPanel({
+  // 上のグリッドの例と同じなので省略
+  // ...
+  viewConfig: {forceFit: true},
+
+  title: 'My First Grid',
+  header: false,
+  tbar: [{
+    text: 'Click here to show dialog',
+    handler: this.showDialog.createDelegate(this)
+  }]
+});</code></pre>
+
+<h3>レイアウト</h3>
+
+<p>レイアウトは2.0で最も変更の大きいもののひとつで、クラス構造そのものが全面的に変更されています（詳細は<a href="http://extjs.com/learn/Ext_1_to_2_Migration_Guide#Converting_BorderLayout_to_2.0">Ext 1 to 2 Migration Guide - Converting BorderLayout to 2.0</a>をご覧ください）。</p>
+
+<p>東西南北と中央の各リージョンにパネルを配していくというコンセプトは同様ですが、その手順は大きく異なります。</p>
+
+<p>以下の例は、Extの利用例として多く見られる、ブラウザ画面の全体にレイアウトを配置するレイアウトのものです。1.xでは、これはExt.BorderLayoutの描画先にdocument.bodyを指定して行っていましたが、2.0ではExt.BorderLayoutは廃され、こうしたレイアウトを実現する、専用のExt.Viewportクラスが用意されています。</p>
+
+<h4>Ext 1.1.1</h4>
+
+<pre class="code"><code>Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
+var layout = new Ext.BorderLayout(document.body, {
+  west: {
+    title: 'West Panel',
+    width: 200,
+    split: true,
+    collapsible: true,
+    autoScroll: true
+  },
+  center: {
+    tabPosition: 'top',
+    closeOnTab: true,
+    autoScroll: true
+  }
+});
+layout.beginUpdate();
+layout.getRegion('west').add(new Ext.ContentPanel('west'));
+var center = layout.getRegion('center');
+center.add(gridPanel);
+center.add(new Ext.ContentPanel('tab', {title: 'Tab', closable: true}));
+center.showPanel(gridPanel);
+layout.restoreState();
+layout.endUpdate();</code></pre>
+
+<h4>Ext 2.0</h4>
+
+<pre class="code"><code>Ext.state.Manager.setProvider(new Ext.state.CookieProvider());
+new Ext.Viewport({
+  layout: 'border',
+  items: [
+    {
+      region: 'west',
+      contentEl: 'west',
+      title: 'West Panel',
+      width: 200,
+      split: true,
+      collapsible: true,
+      autoScroll: true
+    },
+    {
+      region: 'center',
+      xtype: 'tabpanel',
+      tabPosition: 'top',
+      activeTab: 0,
+      items: [
+        grid,
+        {contentEl: 'tab', title: 'Tab', autoScroll: true, closable: true}
+      ]
+    }
+  ]
+});</code></pre>
+
+<ul>
+  <li>
+    <p>1.xのExt.BorderLayoutでは、コンストラクタでは各リージョンのプロパティのみを指定し、実際のパネルの配置はbeginUpdate()からendUpdate()の間で順次add()していくという手順でしたが、2.0ではコンフィグで一括して行えるようになりました。</p>
+    <p>また、リージョンをネストする場合、1.xでは入れ子ごとにExt.BorderLayoutインスタンスを用意し、Ext.NestedLayoutPanelを使って親のレイアウトに組み込んでいく必要がありましたが、2.0ではitemsコンフィグをネストするだけで、簡単に複雑なレイアウトを実現できるようになりました。</p>
+  </li>
+  <li>
+    <p>Ext.state.Managerを使ったレイアウトの復元は、1.xではrestoreState()を明示的に実行する必要がありましたが、2.0ではこれは必要なくなりました。</p>
+  </li>
+</ul>
+
+<h3>ダイアログ</h3>
+
+<p>Ext 1.xでのExt.BasicDialogやExt.LayoutDialogは2.0では廃され、Ext.Windowクラスに置き換えられました。Ext.Windowクラスは、Ext.Viewportクラスと同様にレイアウト構成などすべてコンフィグで行え、ボタンやキー操作などの定義もすべてコンフィグで行えるようになっています。</p>
+
+<h4>Ext 1.1.1</h4>
+
+<pre class="code"><code>showDialog: function() {
+  if (!dialog) {
+    dialog = new Ext.LayoutDialog('dialog', {
+      title: 'A Dialog',
+      modal: true,
+      width: 320,
+      height: 240,
+      shadow: true,
+      proxyDrag: true,
+      center: {
+        tabPosition: 'top',
+        closeOnTab: true,
+        autoScroll: true
+      }
+    });
+    dialog.addButton('Close', dialog.hide, dialog);
+    dialog.addKeyListener(Ext.EventObject.ESC, dialog.hide, dialog);
+    var dialogLayout = dialog.getLayout();
+    dialogLayout.beginUpdate();
+    dialogLayout.add('center', new Ext.ContentPanel('dialog-body', {title: 'Hello', autoScroll: true}));
+    dialogLayout.add('center', new Ext.ContentPanel('tab', {title: 'Tab', autoScroll: true, closable: true}));
+    dialogLayout.endUpdate();
+  }
+  dialog.show();
+}</code></pre>
+
+<h4>Ext 2.0</h4>
+
+<pre class="code"><code>showDialog: function() {
+  if (!dialog) {
+    dialog = new Ext.Window({
+      applyTo: 'dialog',
+      title: 'A Dialog',
+      modal: true,
+      width: 320,
+      height: 240,
+      layout: 'fit',
+      items: [{
+        region: 'center',
+        xtype: 'tabpanel',
+        tabPosition: 'top',
+        activeTab: 0,
+        items: [
+          {contentEl: 'dialog-body', title: 'Hello', autoScroll: true},
+          {contentEl: 'tab', title: 'Tab', autoScroll: true, closable: true}
+        ]
+      }],
+      buttons: [{
+        text: 'Close',
+        handler: function() {
+          dialog.hide();
+        }
+      }],
+      keys: [{
+        key: Ext.EventObject.ESC,
+        handler: function() {
+          dialog.hide();
+        }
+      }]
+    });
+  }
+  dialog.show();
+}</code></pre>
+{% endraw %}

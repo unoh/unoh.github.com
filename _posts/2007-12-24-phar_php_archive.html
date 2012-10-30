@@ -1,0 +1,168 @@
+---
+layout: post
+title: "意外と身近なphar - PHp ARchive"
+---
+{% raw %}
+<p>こんにちは。shimookaです。</p>
+<p>今回は意外と古くて身近、でも意外と知られていないphar（PHp ARchive）を取り上げてみました。</p>
+
+<h3>pharとは？</h3>
+<p>pharとはPHp ARchiveの略で、その名の通りPHPスクリプトのアーカイブです。含まれる内容はPHPスクリプトである必要はなく、複数のファイルを含めることができます。Javaの世界で言うjarに近いもので、拡張子は「.phar」となることが一般的です。<p>
+
+<p>pharの特徴としては、以下のものが上げられます。<p>
+
+<ul>
+<li>アーカイブするファイルの圧縮をサポート（gzip・bz2）</li>
+<li>署名のサポート（md5・sha1）</li>
+<li>phar拡張モジュールを使用することで、アーカイブを展開することなく透過的に利用可能</li>
+</ul>
+
+<h3>pharの中身と使い道</h3>
+<p>pharファイルは大まかには、データとスタブ、マニフェスト（アーカイブの情報を格納したバイナリデータ）で構成されます。前述のアーカイブに含まれるファイルはデータとして保存されています。スタブは、含まれているデータを処理するためのスクリプトのかたまりです。これをうまく使うことで、インストーラを作ることができます。つまり、</p>
+
+<ul>
+<li>データ：インストールしたいファイル</li>
+<li>スタブ：ファイルをインストールするPHPスクリプト</li>
+</ul>
+
+<p>という構成ということです。Windows版のPHPに付属している「go-pear.phar」という3MBほどのファイルがあります。これをテキストエディタなどで開くと文字化けしているように見えますが、別に文字化けしている訳ではなく、マニフェストの部分が「文字化けしたように見え」ているだけです。</p>
+
+<p>逆に、「何もしない」スタブを用意することで、純粋なアーカイブになります。</p>
+
+<h3>pharファイルを作ってみる</h3>
+<p>では、phar拡張モジュール使ってpharアーカイブを作ってみます。phar拡張モジュールはPHP5.2.0以降が必要で、2007/12/23時点の最新版はphar1.2.3です。</p>
+<p>UNIX系OSの場合、インストールはpeclコマンドでOKです。インストール後、php.iniにextensionディレクティブを追加しておきます。</p>
+
+<pre class="code">
+$ sudo pecl install phar
+$ sudo echo "extension=phar.so" &gt;&gt; /path/to/php.ini
+</pre>
+
+<p>今回はクラスを定義した3つのPHPスクリプトを1つのpharにまとめてみます。インストーラではない純粋なアーカイブです。まずは、クラスを定義したファイルは以下の通りです。</p>
+
+<p>Foo.class.php</p>
+
+<pre class="code">
+&lt;?php
+class Foo
+{
+    public function getName() {
+        return __CLASS__;
+    }
+    public function execute() {
+        return 'This is ' . $this-&gt;getName();
+    }
+}
+</pre>
+
+<p>Bar.class.php</p>
+
+<pre class="code">
+&lt;?php
+class Bar
+{
+    public function getName() {
+        return __CLASS__;
+    }
+    public function execute() {
+        return 'This is ' . $this-&gt;getName();
+    }
+}
+</pre>
+
+<p>Hello.class.php</p>
+
+<pre class="code">
+&lt;?php
+class Hello
+{
+    public function getName() {
+        return __CLASS__;
+    }
+    public function greet() {
+        return 'Hello, world!';
+    }
+}
+</pre>
+
+<p>次に、上記3ファイルを1つのphar（test.phar）にまとめるPHPスクリプトですが、簡単な以下のようになります。</p>
+
+<p>create_phar.php</p>
+
+<pre class="code">
+&lt;?php
+$files = array('Foo.class.php', 'Bar.class.php', 'Hello.class.php');
+
+// pharインスタンスを生成
+$phar = new Phar(dirname(__FILE__) . '/test.phar', 0, 'test.phar');
+
+// ファイルをアーカイブに追加
+foreach ($files as $filename) {
+    $phar[$filename] = file_get_contents($filename);
+}
+
+echo "created\n";
+</pre>
+
+<p>実行結果は次の通りで、pharを作成する際にphp.iniの設定「phar.readonly」が0である必要があります。</p>
+
+<pre class="code">
+$ php -d phar.readonly=0 create_phar.php
+created
+$ ls test.phar
+test.phar
+$
+</pre>
+
+<p>また、phar拡張モジュールはストリームラッパーも提供しています。pharストリームラッパーを使う場合は以下の通りです。</p>
+
+<p>create_phar_wrapper.php</p>
+
+<pre class="code">
+&lt;?php
+$files = array('Foo.class.php', 'Bar.class.php', 'Hello.class.php');
+
+// ファイルをアーカイブに追加
+foreach ($files as $filename) {
+    file_put_contents(
+        'phar://test2.phar/' . $filename,
+        file_get_contents($filename));
+
+}
+
+echo "created\n";
+</pre>
+
+<p>作成されたtest.pharを利用する側のコードですが、以下のような感じです。require/includeする際にpharストリームラッパーを使って、アーカイブされたファイルを指定します。</p>
+
+<p>test_phar_client.php</p>
+
+<pre class="code">
+&lt;?php
+// pharに含まれるファイルを取り出す
+require_once 'phar://test.phar/Foo.class.php';
+require_once 'phar://test.phar/Hello.class.php';
+
+$foo = new Foo();
+echo $foo-&gt;execute() . "\n";
+
+$greet = new Hello();
+echo $greet-&gt;greet() . "\n";
+</pre>
+
+<p>実行すると、以下のようになります。</p>
+
+<pre class="code">
+$ php test_phar_client.php
+This is Foo
+Hello, world!
+$ 
+</pre>
+
+<h3>まとめ</h3>
+
+<p>ざっとですがpharについて紹介してみました。</p>
+<p>PHPには発音の仕方が分からない名前のものが多いですが、「phar」はどう発音するんでしょうか。。。これが一番の問題点かも知れません。</p>
+<p>phar拡張モジュールは、「PHP5.3でcoreに入れたいよ」とか「次期PEARであるPEAR2で使われるかも」とか、不確定ですがいろいろと情報がありますので、今後pharを見る機会が増えるのではないかと思います。</p>
+<p>個人的にはもうちょっと深堀りしてみたいと思っていますので、この続きは<a href="http://www.doyouphp.jp/index.shtml" title="Do You PHP?">Do You PHP?</a>で;-)</p>
+{% endraw %}

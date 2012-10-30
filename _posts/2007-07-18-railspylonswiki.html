@@ -1,0 +1,319 @@
+---
+layout: post
+title: "Rails風フレームワークPylonsで簡易Wikiを作ってみる"
+---
+{% raw %}
+<p>Yet Another Sakatokuです。今回はPyhonで書かれたRuby on Rails風のフレームワーク<a href="http://www.pylonshq.com/" target="_blank">Pylons</a>の使い方を簡単に紹介したいと思います。</p>
+<p>PylonsはPythonのWebフレームワークとしては、現在のところ、Django, TurboGearsにつぐ三番手(以下)と見なされていますが、TurboGears 2がPylonsと合流して、Pylons上に旧TurboGearsのAPIを提供していくことが表明されましたので、今後大きな勢力になっていくと思われます。</p>
+
+<h3>サンプル・アプリケーション</h3>
+<p>サンプルとして、簡易Wiki(CoCoWiki)を作ってみました。以下のURLからダウンロードできるので参考にしてみてください。</p>
+
+<a href="http://labs.unoh.net/download/cocowiki.tar.gz">cocowiki.tar.gz</a>
+
+<p>Pylonsの開発サーバ上で動作させるには、ダウンロードしたtar.gzを解凍し、cocowikiディレクトリで"paster serve"コマンドで実行します。</p>
+<pre class="code"><code>$ tar xzf cocowiki.tar.gz
+$ cd cocowiki
+$ paster serve development.ini
+</code></pre>
+
+<p>上手く動作していれば、http://localhost:5000/にアクセスすると次のような画面が表示されると思います。</p>
+
+<a href="http://photozou.jp/photo/show/784/4033532"><img src="http://art8.photozou.jp/pub/784/784/photo/4033532.jpg" alt="cocowiki" width="450" height="399" style="border: none;"></a><br><a href="http://photozou.jp/photo/show/784/4033532">cocowiki</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a>
+
+<p>動作確認はWindows版Python2.5.1, Linux版Python2.4.3で行いました。後述の通り、あらかじめPylonsとSAContextをインストールしている必要があります。また、Python2.4以前のバージョンの場合は、<a href="http://www.python.org/pypi/pysqlite/2.0.3" target="_blank">pysqlite2</a>ライブラリも必要です。</p>
+
+<h3> Pylonsのインストール</h3>
+<p>例によってeasy_installを使ってインストールします。ただ、僕の環境ではsetuptoolsのバージョンが古いというエラーが発生したので、最初に以下のURLから最新版のsetuptoolsをダウンロードし、インストールしました。</p>
+<p><a href="http://cheeseshop.python.org/pypi/setuptools" target="_blank">http://cheeseshop.python.org/pypi/setuptools</a></p>
+
+<p>次に、Pylonsをインストールします。現在配布されているバージョンは0.9.6RC1です。</p>
+<pre class="code"><code>$ easy_install -U Pylons
+</code></pre>
+
+<p>これで、Pylonsの依存するライブラリがすべてインストールされるはずです。</p>
+<ul>
+<li> <a href="http://pythonpaste.org/script/" target="_blank">PasteScript</a></li>
+<li> <a href="http://pythonpaste.org/deploy/" target="_blank">PasteDeploy</a></li>
+<li> <a href="http://www.sqlalchemy.org/" target="_blank">SQLAlchemy</a></li>
+<li> <a href="http://www.makotemplates.org/" target="_blank">Mako</a></li>
+<li> <a href="http://cheeseshop.python.org/pypi/decorator/" target="_blank">decorator</a></li>
+<li> <a href="http://beaker.groovie.org" target="_blank">Beaker</a></li>
+<li> <a href="http://pylonshq.com/WebHelpers/" target="_blank">WebHelpers</a></li>
+<li> <a href="http://routes.groovie.org/" target="_blank">Route</a></li>
+<li> <a href="http://formencode.org/" target="_blank">FormEncode</a></li>
+<li> <a href="http://undefined.org/python/#simplejson" target="_blank">simplejson</a></li>
+<li> <a href="http://somethingaboutorange.com/mrl/projects/nose/" target="_blank">nose</a></li>
+</ul>
+
+<p>Pylons 0.9.6の大きな変更点として、データベース接続にSAContextというライブラリの使用が推奨されるようになったことがあります。今回作成するアプリケーションではこのSAContextを使うので、これもインストールしておきます。</p>
+<pre class="code"><code>$ easy_install -U SAContext
+</code></pre>
+
+<h3> プロジェクトを作成する</h3>
+<p>新しくPylonsプロジェクトの作成するには"paster create"コマンドを使います。</p>
+<p>プロジェクト名は、"cocowiki"としました。</p>
+<pre class="code"><code>$ paster create --template=pylons cocowiki
+$ cd cocowiki
+</code></pre>
+
+<p>開発用のサーバを起動するには、"paster serve"コマンドを使います。</p>
+<pre class="code"><code>$ paster serve development.ini
+</code></pre>
+
+<h3> アプリケーションの設定</h3>
+<p>まずdevelopment.inにアプリケーションの設定を記述します。</p>
+<p>今回はSessionを使わないので、とりあえずはデータベースの設定のみです。</p>
+<p>sqliteを使うことにしましたが、SQLAlchemyがサポートするデータベースならば何でも構いません。</p>
+<pre class="code"><code>sqlalchemy.default.uri = sqlite:///%(here)s/data/cocowiki.sqlite.db
+sqlalchemy.default.echo = true
+sqlalchemy.default.echo_pool = false
+sqlalchemy.default.pool_recycle = 3600
+</code></pre>
+
+<p>SQLAlchemyのサポートするデータベースとURIの記述の仕方については、<a href="http://www.sqlalchemy.org/docs/dbengine.html" target="_blank">こちらのドキュメント(英語)</a>を参照してみてください。</p>
+<h3> モデル定義とデータベースの初期化</h3>
+<p>次にモデルの定義をcocowiki/model/__init__.pyに記述します。</p>
+<pre class="code"><code># -*- coding: utf-8 -*-
+# cocowiki/model/__init__.py
+from sqlalchemy import *
+from sqlalchemy.ext.assignmapper import assign_mapper
+
+from urllib import quote
+from datetime import datetime
+
+from sacontext import PylonsSAContext
+
+# Pylons 0.9.6から以前のpylons.databasesがdeprecated扱いになりました。
+# 代わりにSAContextのPylonsSAContextを使うことが推奨されています。
+# 詳しくはhttp://sluggo.scrapping.cc/python/sacontext/を参照してください。
+sac = PylonsSAContext()
+sac.add_engine_from_config(None)
+
+# テーブル定義
+pages = Table(&#39;pages&#39;, sac.metadata,
+              Column(&#39;id&#39;, Integer, primary_key=True),
+              Column(&#39;word&#39;, Unicode(250), nullable=False, unique=True),
+              Column(&#39;content&#39;, Unicode, nullable=False),
+              Column(&#39;created_at&#39;, DateTime, default=datetime.now()),
+              Column(&#39;updated_at&#39;, DateTime, default=datetime.now(), onupdate=datetime.now()),
+              mysql_engine=&#39;InnoDB&#39;,
+              )
+
+# Wikiのページに相当するドメインオブジェクト
+class Page(object):
+    def __init__(self, word=None, content=None):
+        self.word = word
+        self.content = content
+
+    def __repr__(self):
+        return &#39;&lt;cocowiki.model.Page &quot;%s&quot;&gt;&#39; % self.word
+
+    def get_absolute_url(self):
+        &quot;&quot;&quot;
+        このオブジェクトのURLを取得します
+        これはPylonsの流儀ではないかもしれませんが便利です！
+        &quot;&quot;&quot;
+        return &#39;/%s&#39; % quote(self.word.encode(&#39;utf-8&#39;))
+
+# AssignMapperを使ってテーブルとドメインオブジェクトを
+# マッピングします
+assign_mapper(sac.session_context,
+              Page,
+              pages)
+</code></pre>
+
+<p>モデルの設計は、あっさりとしたもので済ませることにしました。</p>
+<p>いくつか注釈を付け加えるならば、</p>
+<ul>
+<li> このような単純な例ならば、<a href="http://elixir.ematia.de/" target="_blank">Elixir</a>というSQLAlchemyのラッパーライブラリを使う手もあります。このライブラリを使うと、モデル定義をよりRails的に(ActiveRecord的に)行うことができます。ただ、個人的にはあまり好みではないので使っていません。</li>
+<li> Pylonsのサンプルでは、しばしば、"assign_mapper"ではなく"mapper"が使われていますが、assign_mapperの方がコードが簡潔になるのでお勧めです。</li>
+<li> もっと大きなアプリケーションを書く場合、project/model/__init__.pyにドメインオブジェクトの定義も、テーブルの定義も一緒に書いてしまうと収拾が付かなくなります。本来ならば、project/model/tables.py, project/model/domains.py...のように細かくモジュールを分けるのがお勧めです。このアプローチは<a href="http://www.sqlalchemy.org/trac/browser/sqlalchemy/trunk/test/zblog" target="_blank">SQLAlchemyのサンプル(test/zblog)</a>が参考になります。</li>
+</ul>
+
+
+<p>データベースの初期化のコードは、cocowiki/websetup.pyに記述しておきます。</p>
+<pre class="code"><code># -*- coding: utf-8 -*-
+&quot;&quot;&quot;Setup the cocowiki application&quot;&quot;&quot;
+from paste.deploy import appconfig
+from pylons import config
+
+from cocowiki.config.environment import load_environment
+
+def setup_config(command, filename, section, vars):
+    &quot;&quot;&quot;Place any commands to setup cocowiki here&quot;&quot;&quot;
+    conf = appconfig(&#39;config:&#39; + filename)
+    load_environment(conf.global_conf, conf.local_conf)
+
+    from sqlalchemy import exceptions
+    from cocowiki.model import sac, Page
+    sac.metadata.create_all(checkfirst=True)
+
+    try:
+        start_page = Page(&#39;StartPage&#39;, u&#39;ここうぃきの世界にようこそ&#39;)
+        sac.session_context.current.flush()
+    except exceptions.SQLError, e:
+        pass
+
+</code></pre>
+
+<p>コマンドラインから、"paster setup-app"コマンドを使うと、このコードを実行することができます。</p>
+<pre class="code"><code>$ paster setup-app development.ini
+</code></pre>
+
+<h3> コントローラの作成, ルーティングの設定</h3>
+<p>コントローラを作成します。</p>
+<pre class="code"><code>$ paster controller page
+</code></pre>
+
+<p>これで、cocowiki/controllers/pages.pyにPagesControllerというコントローラクラスが生成されます。このコントローラのメソッドに各処理(アクション)を実装していきます。</p>
+<p>それらのアクションとURLを対応付けているのが、cocowiki/config/routing.pyです。ルーティングについて簡潔にまとまっているページがなかなか見つからないので、<a href="http://routes.groovie.org/manual.html" target="_blank">Routeのドキュメント</a>にあたるのが一番早そうです。今回は、ドキュメントを参考に次のようなURL設計にしてみました。</p>
+<dl>
+<dt>/list</dt>
+<dd>登録済みのページ一覧の表示</dd>
+<dt>/WikiWord</dt>
+<dd>WikiWordというページの表示</dd>
+<dt>/WikiWord;edit</dt>
+<dd>WikiWordというページの編集(新規登録)フォームの表示</dd>
+</dl>
+
+<p>"/list"で一覧表示というのが、あまりエレガントではないかもしれません。また、リソースの新規作成と更新をURL上でも、HTTPメソッドの上でも区別しないことにしています。"/WikiWord"というURLにPOSTすると、ページがすでにある場合は更新し、無い場合は新規作成します。</p>
+<p>このような動作に対応するrouting.pyは、以下のようになります。</p>
+<pre class="code"><code># cocowiki/config/routing.py
+
+def make_map():	
+	# ...略
+
+    # 登録されている単語を表示するページです。
+    map.connect(&#39;list&#39;, controller=&#39;pages&#39;, action=&#39;index&#39;)
+
+    # Wikiの編集フォームのページ
+    map.connect(&#39;*(word);edit&#39;, controller=&#39;pages&#39;, action=&#39;edit&#39;)
+
+    # Wiki更新のアクションのマッピングです。
+    # フォームの内容にエラーがある場合は、再度上のeditページを表示します。
+    map.connect(&#39;*word&#39;, controller=&#39;pages&#39;, action=&#39;update&#39;, conditions={&#39;method&#39;:&#91;&#39;POST&#39;]})
+
+    # Wikiの個々のページです。
+    # 上記のform, edit, list以外の単語がWikiワードになります。
+    map.connect(&#39;*word&#39;, controller=&#39;pages&#39;, action=&#39;show&#39;)
+
+    return map
+</code></pre>
+
+<p>Wikiとは違って、リソースをデータベースのinteger型のキーで識別するようなアプリケーションでは、Rails風(REST風)のURLマッピングが使えます。この場合は、コントローラを"paster restcontroller"で作成します。</p>
+<pre class="code"><code>$ paster restcontroller object objects
+</code></pre>
+<p>"paster restcontroller"に関しては、<a href="http://d.hatena.ne.jp/perezvon/20070323/1174638173" target="_blank">別の場所でメモを残した</a>ことがあるので、興味がある方は参照してみてください。Pylons 0.9.6になっても、この部分は変わっていないと思います。</p>
+
+<h3> コントローラの実装</h3>
+<p>いよいよコントローラにロジックを書いていくわけですが、すべてのアクションについて解説していくと長くなるので、ページの取得の部分(showメソッド)を例にとって、Pylonsの基本を説明していきます。</p>
+<pre class="code"><code>class PagesController(BaseController):
+    def show(self, word=None, format=&#39;html&#39;):
+        &quot;&quot;&quot;
+        Wikiワード&quot;Word&quot;を表示します。
+        WordがNoneの場合、つまりURLが&quot;/&quot;の場合は、/StartPage
+        にリダイレクトさせます。
+        &quot;&quot;&quot;
+        if not word:
+            redirect_to(&#39;/StartPage&#39;)
+
+        c.page = Page.get_by(word=word)
+        if c.page is None:
+            # wordでページが登録されていない場合は、
+            # 新規登録のフォームを表示します。
+            return self.edit(word)
+
+        # 更新順に10件のページを取得します。
+        # limit=11で最大11件表示しているのは、「もっと見る」の
+        # リンクの表示する条件を簡略化するためです。
+        c.words = Page.select(order_by=desc(Page.c.updated_at),
+                              limit=11)
+        return render(&#39;show&#39;)
+</code></pre>
+
+<ul>
+<li> ビュー(テンプレート)に値を渡すには、"c"を使います。上記の例では、"c.page = ...", "c.words = ...."がそれに当たります。</li>
+<li> リダイレクトさせる時にはredirect_toを使います。これは例外として処理されるので、return redirect_to('/path')のようにする必要はありません。</li>
+<li> HTTPエラー(例えば404 Not Found)を返したい場合は、abort(404)を使います。</li>
+<li> 以前のバージョンのPylonsではテンプレートをレンダリングするのに、render_responseというメソッドを使っていましたが、今はrenderを使うようです。</li>
+</ul>
+<p>他のメソッドは、サンプルアプリケーションのコードを参照してください。Pylonsの流儀に慣れてしまえば、難しいことは何もしていないことがお分かりになると思います。</p>
+
+<h3> テンプレートの作成</h3>
+<p>テンプレートは、cocowiki/templatesに配置します。現在のPylonsの標準テンプレートエンジンはMakoで、上述のrenderメソッドを使った場合、render('show')ならばcocowiki/templates/show.makが使用されます。</p>
+<p>Makoの構文は<a href="http://labs.unoh.net/2007/05/python_1.html" target="_blank">以前簡単に紹介した</a>とおりですが、今回は継承機能を使ってみました。Makoの継承機能については<a href="http://d.hatena.ne.jp/perezvon/20070616/1181978006" target="_blank">こちらのメモ</a>もご覧下さい。</p>
+<p>実際のcocowiki/templates/show.makは次のようになっています。</p>
+<pre class="code"><code>&lt;%inherit file=&quot;base.mak&quot; /&gt;
+&lt;%def name=&quot;title()&quot;&gt;${c.page.word | h}&lt;/%def&gt;
+&lt;h2&gt;${title()}&lt;/h2&gt;
+${ h.cocowiki_markup(c.page.content) }
+&lt;h3&gt;${ _(&#39;Menu&#39;) }&lt;/h3&gt;
+&lt;ul&gt;
+  &lt;li&gt;${ h.link_to(_(&#39;Edit this page&#39;), h.url_for(word=c.page.word, action=&#39;edit&#39;)) }&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;h3&gt;${ _(&#39;Recent changes&#39;) }&lt;/h3&gt;
+% if c.words:
+&lt;ul&gt;
+% for word in c.words&#91;:10]:
+  &lt;li&gt;&lt;a href=&quot;${word.get_absolute_url()}&quot;&gt;${word.word | h}&lt;/a&gt;&lt;/li&gt;
+% endfor
+&lt;/ul&gt;
+  % if len(c.words) &gt; 10:
+    &lt;span&gt;&raquo; ${ h.link_to(_(&#39;See more&#39;), h.url_for(word=None, action=&#39;index&#39;)) }&lt;/span&gt;
+  % endif
+% else:
+  &lt;p&gt;${_(&#39;No pages&#39;)}&lt;/p&gt;
+% endif
+</code></pre>
+
+<p>Pylonsのテンプレートについてまず知っておくべきことは、次のようなことです。</p>
+<ul>
+<li> コントローラで割り当てた変数は、テンプレートからも"c"で参照できます。</li>
+<li> "h"を使うと、cocowiki/lib/helpers.pyに定義されている関数、変数を参照できます。上記の例で言うならば、h.cocowiki_markup, h.link_to, h.url_for等がそれに当たります。</li>
+<li> 今回は使いませんでしたが、"g"を使って、cocowiki/lib/app_globals.pyに定義されている値を参照することができます。これはアプリケーション共通の設定を参照するのに便利です。</li>
+<li> "request"を使って、そのリクエストの根底にあるWSGIRequestオブジェクトを参照することができます。これは、リクエストのPATH_INFOを調べたりする際に使用できます。</li>
+</ul>
+
+<h3>独自のビュー・ヘルパー関数を定義する</h3>
+<p>今回作成したアプリケーションでは、cocowiki/lib/helpers.pyに簡易Wiki記法をHTMLに変換するcocowiki_markupという関数を定義しています。</p>
+<pre class="code"><code># -*- coding: utf-8 -*-
+from webhelpers import *
+from urllib import quote
+import re
+from cgi import escape
+
+WIKI_WORD_RE = re.compile(r&#39;&#92;&#91;&#92;&#91;(.+?)&#92;]&#92;]&#39;)
+
+def cocowiki_markup(value):
+    &quot;&quot;&quot;
+
+    WIKIのページデータをHTMLに変換します。
+    &quot;&quot;&quot;
+    def repl(matcher):
+        word = matcher.group(1)
+        return &#39;&lt;a href=&quot;%s&quot;&gt;%s&lt;/a&gt;&#39; % (quote(word.encode(&#39;utf-8&#39;)),
+                                        escape(word))
+
+    # markdown記法で変換
+    value = markdown(value)
+
+    # http://example.com, mail@example.comをリンクに変換
+    value = auto_link(value)
+
+    # &#91;&#91;word]]という表記をWikiワードとして扱う
+    value = WIKI_WORD_RE.sub(repl, value)
+
+    return value
+</code></pre>
+
+<h3>静的なファイルの配信</h3>
+<p>cocowiki/publicに置いたファイルは静的なファイルとして配信することができますので、ここにスタイルシートや画像をおきました。</p>
+
+<h3>まとめと謝辞</h3>
+<p>以上、Pylonsの概要を駆け足で紹介しました。サンプルアプリケーションと合わせて参照していただくことを念頭に執筆しましたので、かなり説明を省略しているところもあるかと思います。</p>
+<p>分かりにくいところや、間違いがあった場合は、お気軽にコメントやトラックバックをいただけましたら幸いです。</p>
+<p>また、サンプルアプリケーションのテンプレートには、<a href="http://stans.xtr.jp/" target="_blank">stans</a>さんが配布されているテンプレートを利用させて頂きました。ありがとうございました。</p>
+
+{% endraw %}

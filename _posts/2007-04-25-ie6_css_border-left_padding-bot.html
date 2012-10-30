@@ -1,0 +1,120 @@
+---
+layout: post
+title: "IE6 + CSS 『border-leftとpadding-bottom』の謎"
+---
+{% raw %}
+こんばんは、sashaです。<br/><br/>
+
+次のような形のスタイルを実装しようとしていて、<br/>
+<a href="http://photozou.jp/photo/show/784/3034153"><img src="http://art7.photozou.jp/pub/784/784/photo/3034153.jpg" alt="実例" width="159" height="163" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/784/3034153">実例</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br/><br/>
+
+IE5.5や6でこんな状況に出会ったことはありませんか？<br/>
+（赤と青のボーダーは、elementの境目がわかりやすいように入れてあります）<br/><br/>
+<a href="http://photozou.jp/photo/show/784/3034151"><img src="http://art7.photozou.jp/pub/784/784/photo/3034151.jpg" alt="実例バグ" width="173" height="264" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/784/3034151">実例バグ</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br/><br/>
+
+どこがおかしいかお分かりになりますでしょうか。2項目目の赤と青で囲まれたテキストが、左に飛び出ていますね。その下にあるテキストまで、左にずれてます。<br /><br />
+これは、多くのデザイナーの悩みの種である、「IE」の代表的なバグのひとつです。<br/><br/>
+
+このバグを再現させるのに必要なことはたったこれだけ。<br/>
+<ul>
+    <li>「divの中にdiv」など、ブロック要素を2重にする</li>
+    <li>外側のブロック要素に、border-leftとpadding-bottomを定義する</li>
+</ul>
+
+以上。これだけでIEさんの地雷を踏めます。<br/><br/>
+
+以下のHTML構成を見てください。<br/><br/>
+<pre class="code">
+&lt;div class="sec"&gt;
+    &lt;p class="caps"&gt;caption 1&lt;/p&gt;
+    &lt;h2&gt;TITLE TITLE TITLE TITLE&lt;/h2&gt;
+&lt;/div&gt;
+&lt;p&gt;Lorem ipsum dolor sit amet, consectetuer adipiscing elit. ................&lt;/p&gt;
+&lt;div class="sec"&gt;
+    &lt;p class="caps"&gt;caption 2&lt;/p&gt;
+    &lt;h2&gt;TITLE TITLE TITLE TITLE&lt;/h2&gt;
+&lt;/div&gt;
+&lt;p&gt;Lorem ipsum dolor sit amet, consectetuer adipiscing elit. ................. &lt;/p&gt;
+&lt;div class="sec"&gt;
+    &lt;p class="caps"&gt;caption 3&lt;/p&gt;
+    &lt;h2&gt;TITLE TITLE TITLE TITLE&lt;/h2&gt;
+&lt;/div&gt;
+&lt;p&gt;Lorem ipsum dolor sit amet, consectetuer adipiscing elit....................&lt;/p&gt;
+</pre>
+これに、次の次のCSS定義を適用します。
+<pre class="code">
+.sec{
+  padding-bottom: .5em;
+  border-left: 20px solid silver;
+}
+h2{ /*見やすさのため。バグには関係ありません */
+  border: 1px solid red;
+  margin: 0;
+}
+.caps{ /*見やすさのため。バグには関係ありません */
+  border: 1px solid blue;
+  margin: 0;
+}
+</pre>
+すると、ずれるんですね。しかも、borderの太さの分(ここでは大げさに20px) x 反復回数の分だけどんどんずれて行きます。
+値をemにしても、%にしても、pxにしても、関係ないようです。<br/>
+
+<a href="http://photozou.jp/photo/show/784/3034150"><img src="http://art7.photozou.jp/pub/784/784/photo/3034150.jpg" alt="バグ" width="417" height="302" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/784/3034150">バグ</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br/><br/>
+
+<pre class="code">
+.sec{
+  padding-bottom: .5em;
+  border: 20px solid silver;
+}
+</pre>
+のように、borderで四方を囲んだり、border-topだけ、border-rightだけ、border-bottomだけ指定するには、まったく問題ありません。Firefoxと同じような、予想通りの結果を得ることが出来ます。<br/>
+<a href="http://photozou.jp/photo/show/784/3034149"><img src="http://art7.photozou.jp/pub/784/784/photo/3034149.jpg" alt="4辺にborder" width="421" height="424" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/784/3034149">4辺にborder</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br/><br/>
+
+これに対して、
+<pre class="code">
+.sec{
+  padding: .5em;
+  border-left: 20px solid silver;
+}
+</pre>
+のように、paddingは、padding-bottomを0以外にすることを意味する指定が入ると、アウトです。<br /><br />
+
+さて、どうしたら解決できるでしょうか。以下に考えられる解決策をいくつか挙げておきます。もちろん、他にもあるかもしれません。とっておきの方法がありましたらご一報ください。<br /><br />
+
+(1) border-leftとpadding-bottomというコンビネーションを避ける<br/>
+触らぬ神にたたりなしです。こそーっと逃げましょう。
+たとえば、padding-bottomを0にするのも、正しい逃げの手段です。<br /><br />
+border-bottomが0なら大丈夫なので、
+<pre class="code">
+.sec{
+  padding: .5em;
+  padding-bottom: 0;
+  border-left: 20px solid silver;
+}
+</pre>
+これならOK。<br/><br/>
+(2)border-leftだけでなく、border-bottomを与える<br/>
+<pre class="code">
+.sec{
+  padding-bottom: .5em;
+  border-left: 20px solid silver;
+  border-bottom: 1px solid silver;
+}
+</pre>
+<a href="http://photozou.jp/photo/show/784/3034209"><img src="http://art8.photozou.jp/pub/784/784/photo/3034209.jpg" alt="border-bottomを与えてみる" width="372" height="316" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/784/3034209">border-bottomを与えてみる</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br /><br />
+背景と同一色にすれば、問題は解決です。<br />
+<a href="http://photozou.jp/photo/show/784/3034210"><img src="http://art8.photozou.jp/pub/784/784/photo/3034210.jpg" alt="border-bottomをbackgroundと同じ色にしてみる" width="370" height="315" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/784/3034210">border-bottomをbackgroundと同じ色にしてみる</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br />
+理不尽ですが、不気味ですが、仕方ありません。<br/><br/>
+
+(3)Holly Hackする<br>
+以下を挿入すれば、回避できます。<br>
+<pre>
+/* Hides from IE-mac \*/
+* html .sec {height: 1%;}
+/* End hide from IE-mac */
+</pre>
+<br /><br />
+どの方法が良いか、ここでは議論は避けますが、あなたの信念にぴったりの方法を選んでください。<br /><br />
+
+それでは、また。
+{% endraw %}

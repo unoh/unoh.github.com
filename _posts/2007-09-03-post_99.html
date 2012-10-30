@@ -1,0 +1,122 @@
+---
+layout: post
+title: "携帯のエラーメールの種類"
+---
+{% raw %}
+<p>harukiです。</p>
+<p>
+メールを送信するサイトの場合、メールアドレスのクリーニングは定期的に行うべきです。
+そのためにはエラーメールを解析しなければなりません。
+</p>
+<p>
+そこで、エラーメールの種類をまとめてみました。
+</p>
+
+<h3>SMTPエラー</h3>
+<p>
+存在しないメールアドレスや、正しい形式でないメールアドレスの場合は、
+DoCoMo,au,SoftBankの3キャリアともSMTPエラーになります。
+</p>
+
+<p>
+例として、以下の条件でメールを送信したとします。<br />
+<blockquote>
+From: <i>sender@example.com</i><br />
+Return-Path: <i>bounce@example.com</i><br />
+To: <i>アドレス＠docomo.ne.jp</i>
+</blockquote>
+</p>
+
+<p>
+MTAにより異なりますので、ここではPostfixを例にします。<br />
+Postfixではmultipart/reportのメールが<i>bounce@example.com</i>に届きます<br />
+(※ 必要な情報のみに省略しています)
+</p>
+
+<pre class="code">
+From: MAILER-DAEMON@example.com (Mail Delivery System)
+Subject: Undelivered Mail Returned to Sender
+To: <i>bounce@example.com</i>
+Content-Type: multipart/report; report-type=delivery-status;
+	boundary="boudary/example.com"
+
+This is a MIME-encapsulated message.
+
+--boudary/example.com
+Content-Description: Notification
+Content-Type: text/plain
+
+(メッセージ)
+
+<<i>アドレス＠docomo.ne.jp</i>>: host mfsmax.docomo.ne.jp[203.138.180.240] said: 550
+    Unknown user <i>アドレス＠docomo.ne.jp</i> (in reply to end of DATA command)
+
+--boudary/example.com
+Content-Description: Delivery report
+Content-Type: message/delivery-status
+
+X-Postfix-Sender: rfc822; <i>sender@example.com</i>
+
+Final-Recipient: rfc822; <i>アドレス＠docomo.ne.jp</i>
+Action: failed
+Status: 5.0.0
+Diagnostic-Code: X-Postfix; host mfsmax.docomo.ne.jp[203.138.180.240] said: 550
+	Unknown user <i>アドレス＠docomo.ne.jp</i> (in reply to end of DATA
+	command)
+
+--boudary/example.com
+Content-Description: Undelivered Message
+Content-Type: message/rfc822
+
+(ヘッダ)
+From: <i>sender@example.com</i>
+To: <i>アドレス＠docomo.ne.jp</i>
+
+(本文)
+
+--boudary/example.com--
+</pre>
+
+<p>
+Content-Type: message/rfc822のToから、「<i>アドレス＠docomo.ne.jp</i>」を取得できます。
+</p>
+
+<h3>特殊なエラーメール</h3>
+<p>
+auとSoftBankでは、上記のエラーに加えて、一旦受信されてから送り返されてくるものがあります。
+種類は4つあります。<br />
+(※ ここでも必要な情報のみに省略しています)
+</p>
+
+<ul style="list-style:none">
+<li>1. multipart/report</li>
+<li>2. text/plain</li>
+<li>3. multipart/mixed</li>
+<li>4. multipart/mixed(自動転送先)</li>
+</ul>
+
+<h3>1. multipart/report</h3>
+<p>
+   Postfixの例で書いたものがサーバから送られてきます。<br />
+   auとSoftBankにこのタイプがあります。
+</p>
+<h3>2. text/plain</h3>
+<p>
+   拒否している場合のauのエラーメールです。<br />
+   ※ &lt;<i>アドレス＠ezweb.ne.jp</i>&gt;の行がない場合もあります。
+</p>
+<pre class="code">
+Content-Type: text/plain; charset=iso-2022-jp
+From: Postmaster@ezweb.ne.jp
+To: <i>bounce@example.com</i>
+Subject: Mail System Error - Returned Mail
+
+次のあて先へのメッセージはエラーのため送信できませんでした。
+
+<<i>アドレス＠ezweb.ne.jp</i>>
+
+送信先メールアドレスが見つからないか、
+送信先メールサーバの事由により送信できませんでした。
+メールアドレスをご確認の上、再送信してください。
+Each of the following recipients was rejected by a remote mail server.
+{% endraw %}

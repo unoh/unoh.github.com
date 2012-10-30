@@ -1,0 +1,84 @@
+---
+layout: post
+title: "Ext JSをUIに使って携帯サイトのシミュレータを作ってみた"
+---
+{% raw %}
+<p>五十川です。</p>
+
+<p>携帯サイトの見栄えをシミュレートするウェブアプリ作りました。と言っても、実際に作ったのはかれこれ半年以上前で、手直ししてから公開しようと思ってたら、結局「guid=ON」を付け足したくらいであとは放置だったので、さすがにいい加減晒そうと。</p>
+
+<p>任意のヘッダでリクエストして、レスポンスの絵文字とか変換してサイトの見栄えを確認するというものですが、これはそもそもExt JSをいじってた頃に、Ext JSでこういうの作ればいい感じになるんじゃね？ということで、丁度2.0がリリースされた頃にデモ用に作ったものなのでした（なので、かれこれ半年以上前）</p>
+
+<p>実機テストの代用になるわけでは、もちろんありませんが、絵文字も含めたマルチキャリアでの見栄えを手軽に確認したいときなどに、わりと便利に使えてたりします。</p>
+
+<h3>スクリーンショット</h3>
+
+<p>機種ごとのプリセットのヘッダグループをYAMLファイルに書いておいて、以下のようにプルダウンメニューから選択して切り替えます。この画面で直接ヘッダの値を書き換えたり、任意のヘッダを追加したりもできます。</p>
+
+<div><a href="http://photozou.jp/photo/show/784/10507746" title="リクエストヘッダ/機種の選択・編集"><img src="http://art2.photozou.jp/pub/784/784/photo/10507746.png" width="450" height="338" alt="リクエストヘッダ/機種の選択・編集" /></a></div>
+
+<p>レスポンスのヘッダとボディ（HTMLソース）を確認できますが、HTMLソースは以下のようにタグなどを色分けして、行番号を付けて表示します。</p>
+
+<div><a href="http://photozou.jp/photo/show/784/10507747" title="レスポンスボディ/HTMLの確認"><img src="http://art7.photozou.jp/pub/784/784/photo/10507747.png" width="450" height="338" alt="レスポンスボディ/HTMLの確認" /></a></div>
+
+<p>アクセス履歴を保存してドメイン別に表示します。ページタイトル、URL、アクセス日時で並べ替えができ、それぞれダブルクリックで、そのページに再度アクセスできます。</p>
+
+<div><a href="http://photozou.jp/photo/show/784/10507330" title="ドメイン別アクセス履歴の表示"><img src="http://art1.photozou.jp/pub/784/784/photo/10507330.png" width="450" height="338" alt="ドメイン別アクセス履歴の表示" /></a></div>
+
+<h3>その他の機能</h3>
+
+<ul>
+  <li>QRコード表示します。</li>
+  <li>Basic認証をエミュレートします（開発環境には必須かな）</li>
+  <li>iモードの「UTN」と「guid=ON」をエミュレートします。リクエストヘッダのUser-Agentに個体識別情報が含まれる場合は、UTN属性のある要素からのリクエストでは個体識別情報を含むUser-Agentを、それ以外は個体識別情報を除去したUser-Agentを送信します。同様に、リクエストURLのクエリーストリングに「guid=ON」が含まれる場合、X-Dcmguidヘッダが設定されてれば送信します。</li>
+  <li>iモード以外ではCookieの送受信をエミュレートします。</li>
+</ul>
+
+<p>サーバサイドのプログラムは諸般の事情でPHP4スクリプトです（PHP5でも動作確認してます）。PHP4でのHTMLスクレイピングには限度があるので、そのあたりの処理は限定的になってます。</p>
+
+<h3>試してみようと思ったかたは</h3>
+
+<p><del>以下アーカイブをどうぞ。</del></p>
+
+<p><del>mobile-simulator-1.0.tar.gz</del></p>
+
+<p><a href="http://code.google.com/p/japanese-mobile-phone-simulator/">Google Code</a>に移動しました（2008-07-10）</p>
+
+<p>しかしこいつは、各機能を実現するのにさまざまなオープンソースソフトウェアを利用させていただく他力本願なつくりなので、アーカイブの中身だけでは動きません。以下利用させていただいているソフトウェアの一覧です。それぞれ必要な段取りは、アーカイブのREADMEをご覧ください。</p>
+
+<dl>
+  <dt><a href="http://extjs.com/products/extjs/">Ext JS 2.x</a></dt>
+  <dd>
+    <p>2.0と2.1で確認してます。それ以前のバージョンでは動きません。</p>
+  </dd>
+  <dt><a href="http://php-develop.org/MobilePictogramConverter/">MobilePictogramConverter 絵文字変換ライブラリ</a></dt>
+  <dd>
+    <p>絵文字の変換表示にはこちらを利用させていただいてます。</p>
+  </dd>
+  <dt><a href="http://www.swetake.com/qr/qr_cgi.html">QRcode Perl CGI &amp; PHP scripts ver. 0.50</a></dt>
+  <dd>
+    <p>QRコードの表示にはこちらを利用させていただいてます。</p>
+  </dd>
+  <dt><a href="http://pear.php.net/package/HTTP_Client">PEAR HTTP_Client</a></dt>
+  <dd>
+    <p>仮想HTTPクライアントのコアはこちら。</p>
+  </dd>
+  <dt><a href="http://pear.php.net/package/Text_Highlighter">PEAR Text_Highlighter</a></dt>
+  <dd>
+    <p>レスポンスボディの強調表示に。</p>
+  </dd>
+  <dt><a href="http://sourceforge.net/projects/spyc/">spyc 0.3</a></dt>
+  <dd>
+    <p>YAMLのパースはこちら。</p>
+  </dd>
+  <dt>Jsphon - JSON in PHP</dt>
+  <dd>
+    <p>JSONのエンコード/デコードはこちら。</p>
+  </dd>
+  <dt><a href="http://www.famfamfam.com/lab/icons/silk/">SILK ICONS</a></dt>
+  <dd>
+    <p>アイコン画像に利用させていただいています。</p>
+  </dd>
+</dl>
+
+{% endraw %}

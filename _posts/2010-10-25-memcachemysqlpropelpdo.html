@@ -1,0 +1,115 @@
+---
+layout: post
+title: "MemcacheとMySQLのデータ不整合をPropelPDOで解決してみる"
+---
+{% raw %}
+<p>こんにちは市丸です。</p>
+
+<p>Zynga Japanでは単純なPrimaryKeyをキャッシュする際、symfonyのPeerをオーバーライドし自動的にキャッシュ＆クリアしています。</p>
+
+<p>UserPeer.php</p>
+<pre class="code">
+class UserPeer extends BaseUserPeer
+{
+    public static function retrieveByPK($pk, PropelPDO $con = null)
+    {
+        if (!$data = /* Cacheからとるよ */) {
+            $data = parent::retrieveByPK($pk, $con);
+            /* "User_$pk"みたいなキーでCacheするよ */
+        }
+        return $data;
+    }
+    public static function doInsert($values, PropelPDO $con = null)
+    {
+        /* Cacheクリアするよ */
+        return parent::doInsert($values, $con);
+    }
+
+    public static function doUpdate($values, PropelPDO $con = null)
+    {
+        /* Cacheクリアするよ */
+        return parent::doUpdate($values, $con);
+    }
+
+    public static function doDelete($values, PropelPDO $con = null)
+    {
+        /* Cacheクリアするよ */
+        return parent::doDelete($values, $con);
+    }
+}
+</pre>
+
+<p>ただし、ソーシャルゲームのように、2人以上のユーザーが同じテーブルを参照する場合、MemcacheとMySQLのデータ不整合に気をつけないといけません。</p>
+
+<img src="http://labs.unoh.net/bad.png" alt="bad.png" class="mt-image-center" style="text-align: center; display: block; margin: 0 auto 20px;" />
+
+<p>このように、トランザクションのcommit前に別のユーザーからアクセスされると、CacheとMySQLのデータに不整合が起こります。</p>
+
+<img src="http://labs.unoh.net/good.png" alt="good.png" class="mt-image-center" style="text-align: center; display: block; margin: 0 auto 20px;" />
+
+<p>正しくは、このようにcommit後にキャッシュを削除しなければなりません。</p>
+
+<p>そこで、PropelPDOを改変しcommit後にキャッシュ削除しましょう。</p>
+
+<p>MemPropelPDO.php</p>
+<pre class="code">
+class MemPropelPDO extends PropelPDO {
+    protected $memcacheKeys = array();
+
+    public function addMemcacheKey($key) {
+        $this->memcacheKeys[] = $key;
+    }
+
+    public function commit(){
+        parent::commit();
+        foreach($this->memcacheKeys as $key){
+            // よしなにCache削除してくだされ。
+        }
+    }    
+}
+</pre>
+
+<p>database.yml</p>
+<pre class="code">
+all:
+ db1:
+   class:        sfPropelDatabase
+   param:
+     classname:  MemPropelPDO
+     （略）
+</pre>
+
+<p>User.php</p>
+<pre class="code">
+class User extends BaseUser
+{
+    public function save(PropelPDO $con = null)
+    {
+        if (!is_null($con)) {
+            $con->addMemcacheKey("User_".$this->getPrimaryKey())
+        }
+        return parent::save($con);
+    }
+}
+</pre>
+
+<p>【仕上げ】トランザクションを使う場合はsaveメソッドにMemPropelPDOを渡します</p>
+
+<pre class="code">
+        $userModel = UserPeer::retrieveByPK(1);
+        $userModel->setStatus(2); //statusを1->2にしてみる
+
+        $con = Propel::getConnection(); // database.yml で指定したMemPropelPDO
+        $con->beginTransaction();
+        try {
+            $userModel->save($con);
+            $con->commit();
+        } catch (Exception $e) {
+            $con->rollback();
+            throw $e;
+        }
+</pre>
+
+<p>まあ、忘れずにcommit後にキャッシュクリアすればいいんだけどね！(爆)</p>
+
+{% endraw %}

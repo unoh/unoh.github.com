@@ -1,0 +1,345 @@
+---
+layout: post
+title: "仮想マシンとLVM2で簡単サーバ構築"
+---
+{% raw %}
+<p>はじめまして、7月に入社いたしましたsatoshiと申します。</p>
+<p>会社でも自宅でもPCをMacにして、Linuxと同じ操作感で使用できて快適な今日この頃ですが、皆様いかがお過ごしでしょうか?</p>
+<p>今回、KVM(Kernel-based Virtual Machine)とLVM(Logical Volume Manager)を使用して、サーバ構築すると便利なケースを紹介したいと思います。</p>
+<p>新しくサーバを構築する場合、OSインストールイメージをDVDに焼いて、DVDをドライブに挿入して、手順の通り選択して...となると思います。
+(中には、Cobblerを使用しているという先進的な方もいらっしゃるかもしれませんが)</p>
+<p>仮想マシンでは新たにサーバ環境を構築する場合、既存の仮想ディスクをコピーして使い回せるのでインストールの手間を簡略化できます。
+さらに、一歩進んでLVMで作成したスナップショットLVを使用すると消費するディスク領域を大幅に節約できます。</p>
+<p>今すぐにデモ環境を用意したいとか、Webサーバは共通のものを使いたいが、アプリケーションがPHPとPythonって環境が異なるとか
+OSをアップグレードしたらどうなるかチェックしたいとか...等々いろいろ利用ケースを考えてみました。</p>
+<div class="section" id="id1">
+<h2>前提環境</h2>
+<p>作成する仮想マシンは、ベース環境となる仮想マシンを必要としますのであらかじめ作成しておく必要があります。
+さらに、スナップショットLVを利用した仮想マシン使用時は、元の仮想マシン(ベース環境)を停止しておきます。
+また、インストール時のパラメータを変更すれば、XenやほかのLinuxディストリビューションでも流用可能だと思います。</p>
+<p><strong>物理マシン(ホスト環境)</strong></p>
+
+<p>物理マシン(サーバ機)にインストールした環境をホスト環境と呼ぶことにします。</p>
+<p>KVMを仮想マシンに使用する場合は、ほぼ強制的にCPU仮想化支援機能が有効化されていることが必要です。</p>
+<dl class="docutils">
+<dt>CPU仮想化支援機能</dt>
+<dd>IntelVT-x OR AMD-V</dd>
+<dt>OS</dt>
+<dd>CentOS5.5</dd>
+<dt>仮想マシンソフトウェア</dt>
+<dd>KVM</dd>
+
+<dt>仮想マシン管理ライブラリ</dt>
+<dd>Libvirt</dd>
+<dt>ボリューム管理</dt>
+<dd>LVM2</dd>
+</dl>
+<p><strong>仮想マシン(ベース環境,クローン環境)</strong></p>
+<p>複製元となる環境をベース環境と呼ぶことにします。</p>
+<p>複製元からデータをコピーして作成した環境をクローン環境と呼ぶことにします。</p>
+<dl class="docutils">
+<dt>OS</dt>
+
+<dd>CentOS5.5</dd>
+<dt>仮想ディスク</dt>
+<dd>LVM2のLV(Logical Volume)</dd>
+</dl>
+<p><strong>仮想マシン(オンデマンド環境)</strong></p>
+<p>ベース環境のLVから作成したスナップショットLVを利用した環境をオンデマンド環境を呼ぶことにします。</p>
+<dl class="docutils">
+<dt>OS</dt>
+<dd>CentOS5.5</dd>
+<dt>仮想ディスク</dt>
+
+<dd>LVM2のスナップショットLV</dd>
+</dl>
+</div>
+<div class="section" id="id2">
+<h2>手順</h2>
+<div class="section" id="id3">
+<h3>事前準備</h3>
+<p>まずは、ベース環境の仮想マシンを作成します。
+diskオプションに指定しているpoolは、VG(Volume Group)です。このように指定するとVGからLVが自動的に作成されます。
+(LV名は、nameオプションで指定した名称+.img)</p>
+<p><em>ベース環境作成</em>:</p>
+<pre class="code">
+# VGをlibvirtで管理
+$ sudo virsh pool-create-as ServiceVG00 --type=lvm2 --target=/dev/ServiceVG00
+# ベース環境の仮想マシンを作成
+$ sudo virt-install \
+--location http://ftp.riken.jp/Linux/centos/5/os/x86_64/ \
+--accelerate \
+--name basevm \
+--ram 1024 \
+--vcpus 2 \
+--noacpi \
+--os-variant rhel5.4 \
+--network bridge:br0 \
+--extra-args console=ttyS0,115200n8 \
+--disk pool=ServiceVG00,bus=virtio,size=48,cache=writethrough \
+--noreboot \
+--keymap=ja
+
+#インストーラが起動するので、OSのインストールを行います。
+インストールを開始しています...
+(...)
+Guest installation complete... you can restart your domain
+by running 'virsh start basevm'
+
+</pre>
+<p>インストールが完了したら、ホストOSにて仮想マシンの時刻設定を行います。</p>
+<p><em>仮想マシンの時刻設定</em>:</p>
+<pre class="code">
+# 仮想マシンの時刻設定変更
+$ sudo virsh edit basevm
+&lt;domain type='kvm'&gt;
+  &lt;name&gt;basevm&lt;/name&gt;
+  &lt;uuid&gt;bd55f202-cfd4-3d8b-ef23-d9e4d37c4711&lt;/uuid&gt;
+
+(...)
+  &lt;/features&gt;
+  &lt;clock offset='localtime'/&gt;     # &lt;= 'utc'を'localtime'に変更
+  &lt;on_poweroff&gt;destroy&lt;/on_poweroff&gt;
+(...)
+&lt;/domain&gt;
+</pre>
+<p>後は、いつも通りOSの初期設定を行います。
+(時刻設定、ネットワーク設定、パッケージインストール・更新等)</p>
+
+<p><em>ベース環境初期設定</em>:</p>
+<pre class="code">
+# 仮想マシンの起動
+$ sudo virsh start basevm
+# ゲストOSにログインして初期設定
+$ sudo virsh console basevm
+connect to domain basevm
+Escape character is ^]
+
+(...)
+CentOS release 5.5 (Final)
+Kernel 2.6.18-194.8.1.el5 on an x86_64
+
+basevm login:~root
+Password:
+Last login: Sun Aug  1 19:34:34 2010 from 192.168.100.8
+[root&#64;basevm ~]#
+</pre>
+</div>
+<div class="section" id="id4">
+<h3>ケース1: 開発環境を複製する</h3>
+<p>個人ごとの開発環境を複製して、個別に環境をカスタマイズしたいという場合、ベース環境に必要なパッケージをインストールし、そのベース環境のLVを元にスナップショットLVを作成し、オンデマンド仮想マシンを作成すれば簡単に作成できます。
+また、スナップショットLVに割り当てるディスク容量はデータが変更される分のみ見積もればよいので、ディスク容量を大幅に節約できます。</p>
+<p><strong>手順</strong></p>
+<ol class="arabic">
+<li><p class="first">ベース環境のゲストOSで必要なパッケージをインストール</p>
+
+</li>
+<li><p class="first">仮想マシン(ベース環境)をシャットダウン</p>
+
+</li>
+
+<p><strong>必要な分だけ以下の操作を繰り返す</strong></p>
+
+<li><p class="first">ベース環境用LVのスナップショットLVを作成</p>
+<blockquote>
+<p><em>スナップショットLVの作成</em>:</p>
+<pre class="code">
+# ベース環境LVのパスを確認
+$ sudo virsh dumpxml basevm | grep -A5 '&lt;disk'
+    &lt;disk type='block' device='disk'&gt;
+
+      &lt;driver name='qemu' cache='writethrough'/&gt;
+      &lt;source dev='/dev/ServiceVG00/basevm.img'/&gt; #&lt;= LVのパス
+      &lt;target dev='vda' bus='virtio'/&gt;
+    &lt;/disk&gt;
+    &lt;interface type='bridge'&gt;
+# スナップショットLVの作成(ベース環境に対してディスク容量を1/48で設定)
+$ sudo lvcreate -s -L 1G -n snapvm.img /dev/ServiceVG00/basevm.img
+
+</pre>
+</blockquote>
+</li>
+<li><p class="first">作成したスナップショットLVを使用し、オンデマンド仮想マシンを作成</p>
+<blockquote>
+<p>OSのインストールはスキップできるので一瞬で仮想マシンの作成は完了します。
+diskオプションに指定しているvolはスナップショットLVを指定しますが、指定方法は&quot;Pool名/Volume名&quot;となります。
+(Libvirtで管理されているPoolからLVを作成すると自動的にLibvirtの管理下に入ります)</p>
+<p><em>オンデマンド仮想マシンの作成</em>:</p>
+<pre class="code">
+$ sudo virt-install \
+    --import \
+    --accelerate \
+    --name snapvm \
+    --ram 1024 \
+    --vcpus 2 \
+    --noacpi \
+    --os-variant rhel5.4 \
+    --network bridge:br0 \
+    --extra-args console=ttyS0,115200n8 \
+    --disk vol=ServiceVG00/snapvm.img,bus=virtio,cache=writethrough \
+    --noreboot \
+    --keymap=ja
+
+インストールを開始しています...
+Guest installation complete... you can restart your domain
+by running 'virsh start snapvm'
+</pre>
+</blockquote>
+
+</li>
+<li><p class="first">オンデマンド環境の仮想マシンに展開されたOSの各種調整(主にネットワーク設定)</p>
+<blockquote>
+<p>オンデマンド環境の仮想マシンで動作するOSは、元のベース環境とほぼ同じですが、MACアドレスの書換等ネットワーク周りの設定が自動的に変更されています。
+環境依存の部分(ホスト名、ユーザパスワード)の変更を行えば、ベース環境のデータを共有しつつも、それぞれ別の開発環境として使用することが可能になります。</p>
+</blockquote>
+</li>
+<li><p class="first">個別の環境作成</p>
+<blockquote>
+<p>後は、アプリケーションのデプロイをするだけで専用の開発環境が作成できます。</p>
+</blockquote>
+</li>
+</ol>
+<p>必要がなくなれば、仮想マシンを停止しスナップショットLVを削除するだけです。</p>
+
+<blockquote>
+<hr />
+<div class="tip">
+
+<p class="first admonition-title">Tip</p>
+<dl class="docutils">
+<dt>スナップショットLVの拡張方法</dt>
+<dd>スナップショットLVは通常のLVと同じく拡張が可能ですので、当初の見積もりよりデータの変更量が大きかった場合、下記のコマンドによりディスク容量の拡張できます。</dd>
+</dl>
+<p><em>LVのディスク容量の拡張</em>:</p>
+<pre class="last code">
+# さらに+1G拡張する
+$ sudo lvextend -L +1G /dev/ServiceVG00/snapvm.img
+</pre>
+</div>
+<hr />
+<blockquote>
+
+</div>
+<div class="section" id="id5">
+<h3>ケース2: オンデマンド環境の構成を実稼働環境として使用</h3>
+<p>オンデマンド環境のスナップショットLVをバックアップすると、ベース環境のデータとスナップショットに書き込まれたデータが取得できるので、それを新たに作成したLVに書き込みます。
+これにより、ベース環境ともオンデマンド環境とも独立したサーバ環境を構築することができます。
+オンデマンド環境の場合、大半のデータをベース環境と共存していましたが、この環境の場合は、すべてのデータをコピーしたクローン環境ですので、全く別の環境として構築することが可能です。</p>
+<p><strong>手順</strong></p>
+<ol class="arabic">
+<li><p class="first">仮想マシンを停止</p>
+</li>
+<li><p class="first">新規仮想マシンを稼働させるLVを作成</p>
+<blockquote>
+<p>作成するLVのサイズはベース環境のLVと同等以上にします。</p>
+
+<p><em>LVの作成</em>:</p>
+<pre class="code">
+$ sudo lvcreate -L 48G -n prod01.img ServiceVG00
+</pre>
+</blockquote>
+</li>
+<li><p class="first">スナップショットLVを利用して仮想イメージを新規LVにコピー</p>
+<blockquote>
+<p>ベース環境のデータとスナップショットに書き込まれたデータを新たに作成したLVにコピーします。
+(ディスク容量が大きければそれだけ時間がかかります。)</p>
+<p><em>仮想イメージをLVにコピー</em>:</p>
+<pre class="code">
+
+$ sudo dd if=/dev/ServiceVG00/snapvm.img of=/dev/ServiceVG00/prod01.img bs=8192
+</pre>
+</blockquote>
+</li>
+<li><p class="first">仮想マシンを起動し、ゲストOSの設定を修正</p>
+<blockquote>
+<p>手順は、ケース1の4.以降と同様です。</p>
+</blockquote>
+</li>
+</ol>
+</div>
+<div class="section" id="os">
+<h3>ケース3: 仮想サーバのOSパッケージを実際にインストール・アップグレードした場合の影響が知りたい</h3>
+<p>yumコマンド等を使用すればいろいろそのパッケージの依存関係とか教えてくれますが、実際にアップグレードしてみないとわからないことも多々あります。
+同じ環境の仮想サーバを複数台用意していたとして、そのスペアをアップグレードを試す環境として使うことが多いと思いますが、もし失敗した場合、スペアを破棄しなければならず再インストールということになってしまいます。
+実際に試す環境として、スペアから作成したスナップショットLVを使用したオンデマンド仮想マシンを利用することもできます。
+これなら失敗したとしてもスペアの環境には影響せず、かつ何度もアップグレードを試すことができます。</p>
+
+<p><strong>手順</strong></p>
+<ol class="arabic">
+<li><p class="first">仮想マシンの一時停止(virsh suspend)</p>
+<blockquote>
+<p><em>仮想マシンの一時停止</em>:</p>
+<pre class="code">
+$ sudo virsh suspend basevm
+</pre>
+</blockquote>
+</li>
+<li><p class="first">仮想マシンLVのスナップショットLVを取得</p>
+</li>
+
+<li><p class="first">スナップショットLVを使用して、新規オンデマンド仮想マシンを作成</p>
+</li>
+<li><p class="first">オンデマンド環境のOSにログインし、実際にパッケージのアップグレード</p>
+</li>
+<li><p class="first">問題なかったら、オンデマンド環境を停止し削除</p>
+</li>
+<li><p class="first">一時停止状態の既存仮想マシンを再開し、パッケージのアップグレード</p>
+<blockquote>
+<p><em>仮想マシンの再開</em>:</p>
+<pre class="code">
+$ sudo virsh resume basevm
+
+</pre>
+</blockquote>
+</li>
+</ol>
+<p>インストール・アップグレードで失敗しても、2-5の手順を何度でもやり直すことができます。</p>
+</div>
+</div>
+<div class="section" id="id6">
+<h2>最後に</h2>
+<p>今回使用したKVMは、Kernel-based...と名前の通りKernelに組み込まれ、標準のOSをそのままに動作させることが可能になっています。
+KernelがバージョンアップするごとにKVMも機能強化されていくのでさらに使いやすくなっていくことでしょう。</p>
+<p>コマンドラインが扱いづらいという方は、GUIデスクトップベース・Webベースのツールがリリースされていますのでそちらを使えばよいでしょう。</p>
+<p>GUIデスクトップクライアント</p>
+
+<ul class="simple">
+<li>virt-manager( <a class="reference external" href="http://virt-manager.et.redhat.com/">Virtual Machine Manager</a> )</li>
+</ul>
+<blockquote>
+<hr />
+<div class="note">
+<p class="first admonition-title">Note</p>
+<p class="last">今回使用したコマンド <tt class="docutils literal"><span class="pre">virt-install</span></tt> も上記と同一プロジェクトの成果物です。</p>
+</div>
+<hr />
+</blockquote>
+<p>Webアプリケーション</p>
+
+<ul class="simple">
+<li><a class="reference external" href="http://karesansui-project.info/">Karesansui</a></li>
+</ul>
+<p>大規模VM管理プラットフォーム</p>
+<ul class="simple">
+<li><a class="reference external" href="https://fedorahosted.org/ovirt/">oVirt</a></li>
+</ul>
+</div>
+<div class="section" id="id7">
+<h1>参考</h1>
+<p>仮想化およびLVMについては下記が参考になります。</p>
+
+<p><strong>Virtualization</strong></p>
+<p><a class="reference external" href="http://www.redhat.com/docs/ja-JP/Red_Hat_Enterprise_Linux/5.4/html/Virtualization_Guide/index.html">仮想化ガイド</a></p>
+<p><strong>KVM</strong></p>
+<p><a class="reference external" href="http://www.jp.redhat.com/magazine/jp/201006/rhel.html">レッドハット・ニュースレター Vol.45 |</a></p>
+<p><a class="reference external" href="http://www.atmarkit.co.jp/flinux/rensai/kvm02/kvm02a.html">＠IT：KVMの導入と基本的な使い方（1/3）</a></p>
+<p><strong>LVM</strong></p>
+<p><a class="reference external" href="http://www.itmedia.co.jp/enterprise/0307/11/epn01.html">エンタープライズ：特集：LVMによるディスクパーティションの動的化（前編） (1/7)</a></p>
+<p><a class="reference external" href="http://tldp.org/HOWTO/html_single/LVM-HOWTO/">LVM HOWTO</a></p>
+<p><a class="reference external" href="http://www-06.ibm.com/jp/domino01/mkt/cnpages7.nsf/page/default-000B6F74">IBM Linux at IBM | Linux LVM Survival Guide (LVM2)</a></p>
+
+<p><strong>Libvirt</strong></p>
+<p><a class="reference external" href="http://www.ibm.com/developerworks/jp/linux/library/l-libvirt/">libvirt 仮想化ライブラリーの徹底調査</a></p>
+<p><a class="reference external" href="http://www.jp.redhat.com/magazine/jp/201002/rhel.html">レッドハット・ニュースレター Vol.41 | 今さら聞けないlibvirt、はじめの一歩</a></p>
+</div>
+{% endraw %}

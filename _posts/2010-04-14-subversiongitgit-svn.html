@@ -1,0 +1,93 @@
+---
+layout: post
+title: "subversionリポジトリでもgitが使えるgit-svn"
+---
+{% raw %}
+<p>yukiです。<br />
+空前のGitブームもだいぶ落ち着き、最近はGit記事をあまり見かけなくなりましたが、今日は空気を読まずにGit、それもgit-svnについて利用例を挙げつつご紹介しようと思います。<br />
+さらっと紹介されている記事は多いのですが、実際にこう使っている、などの例があまりなかったので、今回利用例を含めてご紹介していけたらと思っているので、もっと便利な使い方があるよ！という方の突っ込みをお待ちしております。<br />
+まずgit-svnについてご紹介すると、その名の通りgitとsubversionをつなぐ役割を果たすもので、subversionのリポジトリからgitでcloneして利用出来るというものです。<br />
+インストールはyum一発で簡単に入ります。<br />
+<pre class="code"># yum install git-svn</pre>
+よくある例としては、業務で使うリポジトリはSubversionのまま使い続けているけど、個人的な開発時にはGitを使って管理したい！がユースケースかなと思っています。<br />
+Git便利！だけどリポジトリはsubversion！とか、「あるある」という感じのパターンですね。<br />
+個人的にはsubversionでcheckoutしたディレクトリに対してgit initして使っていた時期もありましたが、差分をいちいちGitに読ませるなど面倒臭くて脱落してしまいました。</p>
+
+<h3>利用しているsubversionリポジトリからclone</h3>
+<pre class="code">% git svn clone svn+ssh://svn.example.com/path/to/repository/project/trunk .</pre>
+
+<p>cloneに-sオプションを付けると、trunk/branches/tagsディレクトリの構成の場合は、そちらも変換してcloneしてくれます。<br />
+ローカルブランチを見てみるとmasterしかありません。
+<pre class="code">% git branch
+master</pre>
+リモートブランチを見てみるとtrunkやsubversionで切ったブランチが見えるはずです。
+<pre class="code">% git branch -r
+branche1
+trunk</pre>
+</p>
+
+<p>git svn cloneしたリポジトリはgitとして扱えるので、お気づきの方もいるとは思いますが、単純にこのリポジトリを中央リポジトリ的な扱いをすれば、簡単にsubversionから移行する事も出来るかと思います。(空ディレクトリや属性などの問題は別途解決するとして、今回のgit-svnの紹介では触れません)</p>
+
+<p>次は個人的な利用法ですが、ウノウではBTSを使ってプロジェクト管理を行なっていますので、各チケット毎にbranchを切っています。モテな言い方をすればチケット駆動開発ですね。<br />
+たとえば、チケット番号#687, #690, #702の3つを請け負っている場合、こんな感じでチケット毎にbranchを切ります。
+<pre class="code">% git branch 687_xxxxxxxxx trunk
+% git branch 690_yyyyyyyyy trunk
+% git branch 702_zzzzzzzzz trunk</pre>
+xxxxxxなどの部分には、端的にチケットを表す文字を入れるようにしています。こうするとgit branchコマンドでチケット番号とその中身が一発で分かるのでそうしています。
+<pre class="code">% git branch
+687_xxxxxxxxx
+690_yyyyyyyyy
+702_zzzzzzzzz
+master</pre>
+
+チケット別にブランチを分けると、subversionでありがちな同一ファイルで別内容の更新がかぶらない、のが一番のメリットだと思っています。<br />
+よくあるのが、同一ファイル内にコミット前のレビュー状態のコードと、現在進行しているチケットの更新が重複してしまう場合があります。<br />
+こうなると一緒にcommitするか、別に分けるためにバックアップを取っておいて1つずつの更新に分けてcommitすることになるので、前者は変更履歴から確認するのが大変ですし、後者は手動でマージしなければならないので単純に面倒です。</p>
+
+<p>あとの流れはgitとほぼ一緒ですが、subversionでやってたアレは一体どうやるの？的コマンドを一覧で紹介します。</p>
+
+<h3>リポジトリのupdate内容を取り込んで更新</h3>
+<p>
+<pre class="code">% svn update</pre>
+に相当するものとして、
+<pre class="code">% git svn rebase</pre>
+になります。<br />
+ひとつ注意する点は、rebaseするブランチに変更がある場合はエラーになってしまうので、後述のstash系コマンドを用いて一旦退避させた後、rebaseします。<br />
+具体的には
+<pre class="code">% git stash save ← 一時退避
+% git svn rebase ← rebase
+% git stash pop  ← 退避から適用</pre>
+という流れになります。</p>
+
+<h3>ローカルにコミット</h3>
+<pre class="code">% git commit</pre>
+<p>こちらは通常のgitのcommitになります。この時点ではsubversionへcommitは行なわれません。通常のgitのcommitなので、取り消すことも可能です。</p>
+
+<h3>subversionにコミット</h3>
+<pre class="code">% git svn dcommit</pre>
+<p>このコマンドでsubversionのリポジトリにコミットすることができます。--dry-runでコミット内容を確認できる(といってもgitのコミットなのでハッシュですが)ので便利です。<br />
+--dry-runすると
+<pre class="code">Committing to svn+ssh://svn.example.com/path/to/repository/project/trunk ...
+diff-tree 74478a3b09e42b69ebac855a253d193c18962165~1 74478a3b09e42b69ebac855a253d193c18962165</pre>
+と出て確認出来ます。ローカルにコミットが複数あれば、その分diff-treeが増えていきます。<br />
+こちらもgit svn rebaseと同様に、ローカルに変更があると
+<pre class="code">Cannot dcommit with a dirty index.  Commit your changes first, or stash them with `git stash'.</pre>
+とエラーが出て実行できませんので、まずstashすることになります。<br />
+具体的には
+<pre class="code">% git stash save ← 一時退避
+% git svn dcommit --dry-run ← 確認
+% git svn dcommit ←コミット
+% git stash pop  ← 退避から適用</pre>
+
+<p>差分(diff)やブランチの削除などについてはGitとまったく同様に利用出来るので割愛しています。</p>
+
+<p>駆け足でしたが、これ以外はGitの使い方と全く一緒なので非常に便利に使っています。<br />
+1チケット1ブランチで競合を気にせず開発できるのは、精神衛生上とても助かっていると感じています。<br />
+まわりに使っている方があまりいないので、便利さが伝わって一人でも多くの利用者が増えるといいなと思いつつ、今回はこのへんで。</p>
+
+<div style="margin:0;padding:.5em;border:2px solid #ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br />
+<a href="http://www.unoh.net/recruit.html">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください。<br/>
+<a href="http://www.find-job.net/fj/showjob.cgi?id=50212">Find Job!</a>でも募集してます！</div>
+
+
+{% endraw %}

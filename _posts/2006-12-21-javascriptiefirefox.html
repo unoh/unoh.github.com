@@ -1,0 +1,72 @@
+---
+layout: post
+title: "JavaScriptでクリップボードを使う(IE/Firefox)"
+---
+{% raw %}
+<STYLE>
+<!--
+.js_src {
+    border: 1px gray solid;
+    background: #FFFFFF;
+    margin: 10px 30px;
+    padding: 4px 8px;
+    overflow: auto;
+    max-height: 400px;
+    color: black;
+}
+-->
+</STYLE>こんにちは、さかとくです。師走で忙しいですね。今回は、JavaScriptでクリップボードを使うプログラムを作ってみます。IEとFirefoxで動く簡単なライブラリを作ってみましたので、参考にしてください。<br/>
+<br/>
+IEだけで動かすのは、簡単なのですが、FireFoxではクリップボードを操作する方法がありません。そこで、FireFoxでも使えるようにFlashを使って工夫してみます。<br/>
+<br/>
+まず、参考までにIEでクリップボードを扱うJavaScriptを見てみましょう。IEなら以下のように一行書くだけです。<br/>
+<div class="js_src">
+// クリップボードに Helloと書き込む（IEのみ）<br/>
+clipboardData.setData("Text", "Hello");
+</div>
+<br/>
+FireFoxでコピーするためには、Flashを使います。Flashでは以下のように書くと、"Hello"という文字列をクリップボードに書き込みます。Flashなら、IEだろうが、FireFoxだろうが動きますので、これを利用します。<br/>
+<div class="js_src">
+// クリップボードに Helloと書き込む（Flash）<br/>
+System.setClipboard( "Hello" );</div>
+<br/>
+Flash Player8以降では、JavaScriptからFlashを自由に操作するExternal APIというものがあります。これを利用すれば、JavaScriptから、クリップボードを操作することができます。<br/>
+
+<br/>MTASCというフリーのFlashコンパイラを使うと以下のように書けます。
+<div class="js_src">import flash.external.ExternalInterface;<br/>
+class clipbrd {<br/>
+&nbsp;static function main () { var clip = new clipbrd(); }    <br/>
+&nbsp;function clipbrd() {<br/>
+&nbsp;&nbsp;ExternalInterface.addCallback("copyText", this, copyText);<br/>
+&nbsp;}<br/>
+&nbsp;function copyText(s:String) {<br/>
+&nbsp;&nbsp;System.setClipboard(s);<br/>
+&nbsp;}<br/>
+}</div>
+
+これで、バッチリですね！
+コンパイルした完成品を以下においておきます。<br/>
+<a href="http://labs.unoh.net/clipbrd.zip">ファイルをダウンロード</a>
+<br/>
+このライブラリの使い方を以下に書いておきますので、使ってみてください。<br/>
+<br/>
+■[使い方]<br/>
+<br/>
+(1) 以下のファイルをHTMLと同じフォルダか参照できるところにコピー<br/>
+-clipbrd.swf<br/>
+-clipbrd.js<br/>
+-swfobject.js<br/>
+<br/>
+(2) 以下のコードをHTMLに貼り付ける<br/>
+--- ここから ---<br/>
+&lt;script type="text/javascript" src="swfobject.js"&gt;&lt;/script&gt;<br/>
+&lt;script type="text/javascript" src="clipbrd.js"&gt;&lt;/script&gt;<br/>
+--- ここまで ---<br/>
+<br/>
+(3) クリックしたらコピーするようにする場合には以下のように記述<br/>
+<br/>
+--- ここから ---<br/>
+clipbrd.copyText("hogehoge");<br/>
+--- ここまで ---<br/>
+<br/>
+{% endraw %}

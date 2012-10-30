@@ -1,0 +1,79 @@
+---
+layout: post
+title: "TextMateの設定メモ"
+---
+{% raw %}
+<p>はじめまして、 1月から入社した市丸です。</p>
+<p>
+入退社にあたり開発環境を1から作り直すこととなり、久しぶりにTextMateの設定をやり直しました。<br>
+その際、役立ったリンクとPHP開発で使う際のオススメ設定など、私的なメモかもしれませんが、ご紹介いたします。
+</p>
+
+<p>
+マルチバイト対応のVer.2が出るといってはや2〜3年。このまま消えてしまうのか...<br>
+もう一度TextMateの特徴をまとめたいと思います。
+</p>
+<h3>TextMateの特徴(2010/03現在)</h3>
+<ul>
+<li>日本語はUTF-8のみ</li>
+<li>半角カナが判別しにくい</li>
+<li>NFS経由でプロジェクトを作ると重い。(50個ぐらいなら快適)</li>
+<li>次期バージョンアップがこない</li>
+<li>$55</li></ul>
+<p>
+基本的にマルチバイト関係があやしいです。<br>
+以下にオススメの設定方法を記載します。
+</p>
+<h3>1. 日本語フォント入れる。</h3>
+<p>
+<a href="http://d.hatena.ne.jp/hetima/20061102/1162435711">http://d.hatena.ne.jp/hetima/20061102/1162435711<br>
+配布サイト
+</a>
+</p>
+<p>
+<a href="http://t32k.com/mol/2009/08/textmate-japanese/">http://t32k.com/mol/2009/08/textmate-japanese/<br>
+解説わかりやすい
+</a>
+</p>
+<h3>2. 日本語入力のFix</h3>
+<p>
+<a href="http://hetima.com/textmate/index.html">http://hetima.com/textmate/index.html<br>
+配布サイト
+</a>
+</p>
+
+<h3>3. 日本語入力時に誤動作するSnippetをオフに</h3>
+<p>
+Bundles -> BundleEditor -> ShowBundleEditorからBundleEditorを開く<br>
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="textmate_snap.png" src="http://labs.unoh.net/textmate_snap.png" width="600" class="mt-image-none" style="" /></span>
+<pre class="code"><code>HTML -> Spesial: Return Inside Empty Open/Close Tag
+Activationの右の入力ボックスを選択し×
+</code></pre>
+※日本語入力の決定Enterが反応するため
+</p>
+<h3>4. 全角スペースの色を変える</h3>
+<p>
+<a href="http://blog.asial.co.jp/506">http://blog.asial.co.jp/506</a><br>
+ほんとに助かりました。
+</p>
+<h3>5.SvnMateまたはProjectPlusを入れる</h3>
+<p>
+<a href="http://ciaranwal.sh/category/textmate">http://ciaranwal.sh/category/textmate
+</a><br>
+私はSvnMateを利用しています。
+</p>
+
+<p>インストール方法</p>
+<pre class="code"><code>cp -r SVNMate.tmplugin ~/Library/Application\ Support/TextMate/PlugIns/
+<code></pre>
+<br>
+<p>
+以上です。<br>
+Ver2待ちの皆様。なんとか凌ぎましょう。
+</p>
+<br>
+<div style="margin:0;padding:.5em;border:2px solid 
+#ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br /><a
+href="http://www.unoh.net/recruit.html"> 採用ページ</a>をご覧になり興味のある方、ぜひご応募ください。<br/><a
+href="http://www.find-job.net/fj/showjob.cgi?id=50212">Find Job!</a>でも募集してます！</div>
+{% endraw %}

@@ -1,0 +1,97 @@
+---
+layout: post
+title: "JavaでMP3を再生する"
+---
+{% raw %}
+<p>こんにちは。NAKAMURAです。最近ではFlashでMMLやDTMの話題など、音楽好きには嬉しい情報が飛び交っています。
+ここは音楽ネタで便乗してみたいところですので、JavaでMP3を再生する方法を紹介してみたいと思います。</p>
+<p><a href="http://java.sun.com/products/java-media/jmf/">Java Media Framework API</a>を利用する方法もありますが、今回はLGPLライセンスで公開されている
+<a href="http://www.javazoom.net/javalayer/javalayer.html">JLayer</a>を利用してMP3を再生してみます。</p>
+<h3>再生してみる</h3>
+<p>早速、JLayerを使ってMP3を再生するサンプルクラスを作ってみました。<a href="http://www.javazoom.net/javalayer/sources.html">ダウンロードページ</a>よりjarを取得してクラスパスに追加しています。</p>
+<pre class="code"><code>package net.unoh.mp3;
+
+import java.io.BufferedInputStream;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+import javazoom.jl.decoder.JavaLayerException;
+import javazoom.jl.player.Player;
+
+public class MyPlayer {
+
+    private Player player;
+
+    private BufferedInputStream stream;
+
+    public void play(String file)
+    throws JavaLayerException, FileNotFoundException {
+        stream = new BufferedInputStream((new FileInputStream(file)));
+        player = new Player(stream);
+        player.play();
+    }
+
+    public void close() throws IOException {
+        if (player != null) {
+            player.close();
+        }
+        if (stream != null) {
+            stream.close();
+        }
+    }
+
+    public static void main(String[] args) {
+        MyPlayer player = new MyPlayer();
+        try {
+            player.play("Pull Me Under.mp3");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (JavaLayerException e) {
+            e.printStackTrace();
+        } finally {
+            if (player != null) {
+                try {
+                    player.close();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+}</code></pre>
+<p>実行すると、お気に入りのPull Me Underを再生することが出来ました。</p>
+<h3>少しだけ深追いしてみる</h3>
+<p>これだけでは面白くありませんので、JLayerのソースコードを少し追ってみることにします。</p>
+<p>javazoom.jl.player.Playerクラスのplayメソッドをみてみると、</p>
+<pre class="code"><code>while (frames-- &gt; 0 &amp;&amp; ret)
+{
+    ret = decodeFrame();
+}</code></pre>
+<p>というwhileループがあります。ここが再生のループのようです。</p>
+<p>次にdecodeFrameメソッドを見てみると、audioという変数がwriteしているのがわかります。</p>
+<pre class="code"><code>out = audio;
+if (out!=null)
+{
+    out.write(output.getBuffer(), 0, output.getBufferLength());
+}</code></pre>
+<p>続いて、audio変数の実体のJavaSoundAudioDeviceFactoryを見てみるとwriteImplメソッドでSourceDataLineのwriteをしていることがわかります。</p>
+<pre class="code"><code>protected void writeImpl(short[] samples, int offs, int len)
+    throws JavaLayerException
+{
+    if (source==null)
+        createSource();
+
+    byte[] b = toByteArray(samples, offs, len);
+    source.write(b, 0, len*2);
+}</code></pre>
+<p>これで音を出力することができるのがわかりますが、MP3のフォーマットの制御はどうなっているのでしょうか。</p>
+<p>もう一度PlayerクラスのdecodeFrameメソッドを見てみると、decoder変数がアウトプットに必要な情報を取得しているようです。</p>
+<pre class="code"><code>SampleBuffer output = (SampleBuffer)decoder.decodeFrame(h, bitstream);</code></pre>
+<p>javazoom.jl.decoder.DecoderクラスのdecodeFrameメソッドから呼ばれているretrieveDecoderメソッドでMP3のメタ情報の読み込みが行われているのが解ります。</p>
+<h3>まとめ</h3>
+<p>JavaでMP3を再生してみました。javax.sound.sampled.AudioFormatクラスやjavax.sound.sampled.SourceDataLineクラスを使ったことのある人であれば、大体想像通りのことをやっているなと思われたのではないでしょうか。</p>
+<p>Javaで音を再生してみよう思われた方の参考になれば幸いです。</p>
+
+{% endraw %}

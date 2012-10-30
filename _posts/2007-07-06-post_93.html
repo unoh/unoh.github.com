@@ -1,0 +1,47 @@
+---
+layout: post
+title: "メンテナンス画面を簡単に出してみる"
+---
+{% raw %}
+カレーはあまり好きじゃないKeitaです。<br />
+<a href="http://www.eigaseikatu.com/">映画サイトの映画生活</a>のデザインリニューアルをして、いくつかデザイン以外の修正もあり、サーバ停止時間が発生するため、メンテナンス画面を作ることにしました。今日はその簡単なトピックスを書いてみたいと思います。<br />
+
+まず最初に、メンテナンス画面は次のような形の要件があるかなと思っています。
+<dl>
+<li>ドメイン以下すべてがメンテナンス画面になる</li>
+<li>クローラー対策でヘッダで503を出力する</li>
+<li>癒される</li>
+</dl>
+
+特にクローラー対策は、クローラーがきておかしいものをキャッシュされると結構痛いかなと思うので、503が的確かはともかく、そこらへんのエラーを出すことにしました。<br />
+<br />
+最初、ここら辺のすべての処理をmod_rewriteだけで実現できるかなと思ったのですが、残念ながら、mod_rewriteでは300番系のエラーを出すことができますが、503のエラーは出せないようなのでさくっと簡単なものを作るの「には」便利とかいわれてるPHPで、さくっと、503を出すことにしました。(もともと、映画生活がPHPなので深く考える必要なかったというのが理由です。）<br />
+<br />
+
+まず、いろいろ考えるのも面倒なので、mod_rewriteをこんな感じに設定します。
+<pre class="code">
+RewriteEngine on
+RewriteRule ^503/ - [L]
+RewriteRule ^.*$ 503/503.php
+</pre>
+これで、設定されているディレクトリ以下が503ディレクトリ以外全部 /503/503.phpに飛ばされます。<br />
+<br />
+503.phpには次のように書きました。<br />
+<pre class="code">
+&lt?php
+    header ('HTTP/1.0 503 Service Temporarily Unavailable');
+    include(dirname(__FILE__) . '/maintenance.html');
+</pre>
+<br />
+これで、503を出力しつつmaintenance.htmlを表示します。<br />
+これで、すべてのアクセスでメンテナンス画面を出力することができます。<br />
+<br />
+maintenance.htmlにPHPコードがかいてあると、それが実行されてしましまうので、<strike>file_get_contetns</strike>file_get_contentsとか使うほうがいいかもしれません。<br />
+<br />
+あと、maintenance.html内に、画像など外部リソースのリンクを張るときは、503ディレクトリに入れるのとそれをフルパス記載することわすれないように注意してください。<br />
+<br />
+それでは実際に使われたメンテナンス画像をごらんください。<br />
+<a href="http://photozou.jp/photo/show/784/3900211"><img src="http://art7.photozou.jp/pub/784/784/photo/3900211.jpg" alt="maintenance" width="210" height="397"></a><br><a href="http://photozou.jp/photo/show/784/3900211">maintenance</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a>
+<br />
+なんらかのご参考になれば幸いとおもいつつ、もっとうまい方法があるような気がするのでもしよろしければ、フィードバックをいだければと思います。
+{% endraw %}

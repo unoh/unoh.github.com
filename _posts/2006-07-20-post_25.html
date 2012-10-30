@@ -1,0 +1,442 @@
+---
+layout: post
+title: "ユーザビリティ・ガイドライン"
+---
+{% raw %}
+sashaです。
+
+naoya君が前回のエントリーで振ってくれたように、ジョエルテストの話から、ユーザビリティ・テストをどこまで行うかという話になりました。<br /><br />
+
+私が今まで見たユーザビリティ系の記事の中には、追求したら悟りが開けそうな、限りなく奥深いものもありましたが、適度に深く、満遍なくカバーしている<a href="http://web.mit.edu/is/usability/usability-guidelines.html">ユーザビリティ・ガイドライン（原文）</a>を見つけ、以降これを参考にしています。少し前に翻訳しましたので、今日はそれをご紹介いたします。<br /><br />
+
+一般ユーザー向けのWebサービスでは、全部のチェック項目が該当するわけではありません。個人的には、各項目のスコアより、「スコアの説明」という欄を重視しています。現状では何が問題であり、どう解決するべきなのか、そういった思考のプロセスが、「ユーザーのことを思うこと」だと思うのです。<br /><br />
+
+いま、ウノウではフォト蔵のデザイン見直しを行っております。私たちのデザインを省み、ユーザーのことを思うプロセスを、大事にしたいと思います。<br /><br />
+
+（この下に原文を翻訳した表が見えない場合は、「続きを読む」からご覧ください。）
+
+<table cellspacing="0" cellpadding="0" border="1">
+  <tr bgcolor="#cccc99" valign="bottom">
+    <th align="center"><strong>ナビゲーション</strong></th>
+    <th align="center"><strong>スコア</strong></th>
+    <th align="center"><strong>スコアの説明</strong></th>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">サイト内のどこにいるのかが一目でわかる</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+
+  </tr>
+  <tr>
+    <td valign="top" width="63%">メインページへのリンクが一目でわかる</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">サイト内の重要なセクションにメインページから直行できる</td>
+
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">大規模サイトにおいてのサイトマップ完備</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+
+  <tr>
+    <td valign="top" width="63%">(必要に応じて）使いやすいサーチ機能完備</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr bgcolor="#cccc99">
+    <th valign="top" align="center"><strong>機能性</strong></th>
+
+    <th valign="bottom" align="center"><strong>スコア</strong></th>
+    <th valign="bottom" align="center"><strong>スコアの説明</strong></th>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">初心者ユーザーもエキスパートユーザーも同等に対応</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+
+  </tr>
+  <tr>
+    <td valign="top" width="63%">機能が明確にラベル付けされている</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">サイトを出ることなく基本的な機能を使用できる</td>
+
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td width="63%" height="20" valign="top">サイトに価値を付加する場合のみプラグインを使用</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+
+  <tr bgcolor="#cccc99">
+    <th valign="top" align="center"><strong>ユーザーコントロール</strong> </th>
+    <th valign="bottom" align="center"><strong>スコア</strong></th>
+    <th valign="bottom" align="center"><strong>スコアの説明</strong></th>
+  </tr>
+  <tr>
+
+    <td valign="top" width="63%">ユーザーのワークフローを反映している</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">ユーザーはどのような操作でも途中でキャンセルできる</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+
+  </tr>
+  <tr>
+    <td valign="top" width="63%">全てのページに明確な出口がある</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">低速コネクションに対応すべく、各ページのサイズは50K以下である</td>
+
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">全ての適切なブラウザに対応</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+
+  <tr bgcolor="#cccc99">
+    <th valign="top" align="center"><strong>言語とコンテンツ</strong></th>
+    <th valign="bottom" align="center"><strong>スコア</strong></th>
+    <th valign="bottom" align="center"><strong>スコアの説明</strong></th>
+  </tr>
+  <tr>
+
+    <td valign="top" width="63%">最重要の情報やタスクが最も目立つ</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">関連性の低い、あるいは重要性の低い情報は含まれていない</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+
+  </tr>
+  <tr>
+    <td valign="top" width="63%"> 関連した情報がグループ化されている<br />
+      - 同ページや同メニューにて<br />
+    - 同ページ内の同セクションにおいて</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+
+  </tr>
+  <tr>
+    <td valign="top" width="63%">専門用語を極力回避した、シンプルな言語を使用している</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">段落は簡潔である</td>
+
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">リンクは簡潔で、直感的に想像しやすく、テキストの中に埋まれることなく視覚的に明確である</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+
+  <tr>
+    <td valign="top" width="63%">用語が定義されている</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr bgcolor="#cccc99">
+    <th valign="top" align="center"><strong>オンラインヘルプ　と　ユーザーガイド</strong></th>
+
+    <th valign="bottom" align="center"><strong>スコア</strong></th>
+    <th valign="bottom" align="center"><strong>スコアの説明</strong></th>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">ヘルプやインストラクションの必要性は最小限</td>
+    <td valign="top" width="7%">&nbsp;</td>
+
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">ヘルプやインストラクションが必要な場合は、容易に参照可能</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr bgcolor="#cccc99">
+
+    <th valign="top" align="center"><strong><a name="feedback" id="feedback"></a>システム／ユーザー・フィードバック</strong></th>
+    <th valign="bottom" align="center"><strong>スコア</strong></th>
+    <th valign="bottom" align="center"><strong>スコアの説明</strong></th>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">何が起こっているかが常に明確（視覚的なヒントがある）</td>
+
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">ユーザーは必要に応じて、メールでフィードバックを与えられる</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+
+  <tr>
+    <td valign="top" width="63%">ユーザーはメールやフォームを使用して、サイトのフィードバックを送信できる</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">フォームの送信の際には、確認画面が用意されている</td>
+    <td valign="top" width="7%">&nbsp;</td>
+
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">システムのフィードバックは瞬時に返される</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+
+    <td valign="top" width="63%">特定のプラグインやブラウザバージョンが要求される場合には、ユーザーは通知を受ける</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">最後にアップデートされた日時を、各ページに明記されている</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+
+  </tr>
+  <tr bgcolor="#cccc99" valign="middle">
+    <th align="center"><strong>ウェブ・アクセシビリティ </strong><br />
+        <a href="http://www.w3.org/TR/WAI-WEBCONTENT">W3C　ツール、チェックリスト、ガイドライン</a> </th>
+    <th align="center"><strong>スコア</strong></th>
+    <th align="center"><strong>スコアの説明</strong></th>
+
+  </tr>
+  <tr>
+    <td valign="top" width="63%"> ウェブ標準を準処： <a href="http://www.w3.org/TR/REC-html40/">HTML 4.0,</a> <a href="http://www.w3.org/TR/1999/REC-CSS1-19990111">Cascading                    Style Sheets (CSS1)</a> <br />
+    レイアウトやスタイルにCSSが使用されている</td>
+    <td valign="top" width="7%">&nbsp;</td>
+
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%"><a href="http://www.w3.org/TR/WAI-WEBCONTENT/#gl-provide-equivalents">イメージとアニメーション：</a><br />
+      ALT属性がイメージ、アニメーションその他のオブジェクトに使用されている</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+
+  <tr>
+    <td valign="top" width="63%"><a href="http://www.w3.org/TR/WAI-WEBCONTENT/#tech-client-side-maps">イメージマップ</a><br />
+      イメージマップのホットスポットにはクライアントサイトのマップとテキスト表示を完備</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%"><a href="http://www.w3.org/TR/WAI-WEBCONTENT/#gl-provide-equivalents">マルチメディア<br />
+
+    </a>オーディオにはキャプションや歌詞等、ビデオには描写表現が用意されている</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">PDFは、ウェブ用のフォーマットを用意する</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+
+  </tr>
+  <tr>
+    <td valign="top" width="63%">リンクのラベルは文脈の中において意味のあるものである</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%"><a href="http://www.w3.org/TR/WAI-WEBCONTENT/#gl-structure-presentation">ページの体系 </a> <br />
+
+      ヘッドタイトル、リスト、そして一貫した構成によって体系付けられている</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%"><a href="http://www.w3.org/TR/WAI-WEBCONTENT/#gl-provide-equivalents">グラフとチャート<br />
+    </a>グラフとチャートには要約やLONGDESC属性が用いられている</td>
+
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%"><a href="http://www.w3.org/TR/WAI-WEBCONTENT/#gl-provide-equivalents">スクリプト、アプレット＆プラグイン</a><br />
+    スクリプト、アプレット、プラグインには、代替コンテンツが用意されている</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+
+  </tr>
+  <tr>
+    <td valign="top" width="63%"><a href="http://www.w3.org/TR/WAI-WEBCONTENT/#gl-new-technologies">フレーム</a><br />
+    NOFRAMEオプションと、意味の通じるタイトルが用意されている</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+
+    <td valign="top" width="63%"><a href="http://www.w3.org/TR/WAI-WEBCONTENT/#gl-table-markup">テーブル<br />
+    </a>テーブルの要約が用意されており、テーブル構造の一行一行が理にかなったものである</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%"><a href="http://www.w3.org/TR/WAI-WEBCONTENT/#validation">バリデーション（有効性）</a><br />
+
+    Site has been validated using the W3Cの <a href="http://validator.w3.org/">HTML                    Validation Service</a>や<a href="http://www.cast.org/bobby/">Bobby                    Accessibility Checker</a>を利用し有効性が保障されている</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">様々なプラットフォーム (UNIX, Windows, Mac)、様々なブラウザ(Netscape 3, 4, 6, 7; IE 5, 6; lynx)でテストされている</td>
+
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr bgcolor="#cccc99">
+    <th valign="top" align="center"><strong>一貫性</strong></th>
+    <th valign="bottom" align="center"><strong>スコア</strong></th>
+    <th valign="bottom" align="center"><strong>スコアの説明</strong></th>
+
+  </tr>
+  <tr>
+    <td valign="top" width="63%">一つのアイテムを表現するのに、一貫した語彙や文章が使用されている</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">リンクがリンク先のページタイトルを反映している</td>
+
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">ブラウザのページタイトルは、意味あるもので、そのページの最重要セクションのヘッダーを反映している</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+
+  <tr bgcolor="#cccc99">
+    <th valign="top" align="center"><strong>エラーの回避と修正</strong></th>
+    <th valign="bottom" align="center"><strong>スコア</strong></th>
+    <th valign="bottom" align="center"><strong>スコアの説明</strong></th>
+  </tr>
+  <tr>
+
+    <td valign="top" width="63%">サイトの使用が記憶に頼らずとも、認識に頼って達成できる</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">様々なユーザーの行動に対応している</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+
+  </tr>
+  <tr>
+    <td valign="top" width="63%">ユーザーのアクション（例えばフォームの記入例等）について、簡潔な説明が用意されている</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">エラーメッセージが視覚的に明確である</td>
+
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">エラーメッセージが解りやすい文章である</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+
+  <tr>
+    <td valign="top" width="63%">エラーメッセージは、問題の解決に役立つものである</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">エラーメッセージには明確な出口が用意されている</td>
+    <td valign="top" width="7%">&nbsp;</td>
+
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">エラーメッセージにはアシスタンスのためのコンタクトが用意されている</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr bgcolor="#cccc99">
+
+    <th valign="top" align="center"><strong><a name="arch-vis-clarity" id="arch-vis-clarity"></a>構築的・視覚的明確さ</strong></th>
+    <th valign="bottom" align="center"><strong>スコア</strong></th>
+    <th valign="bottom" align="center"><strong>スコアの説明</strong></th>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">ユーザーの視点に立ったサイトの体系付けである</td>
+
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">体系付けや、意味づけのために、飛ばし読みしやすいデザインである</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+
+  <tr>
+    <td valign="top" width="63%">サイトデザインやレイアウトは直感的にわかりやすく簡潔である</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">サイトデザインやレイアウトは、ユーザーの生産性を高める場合においてのみ豊富である</td>
+    <td valign="top" width="7%">&nbsp;</td>
+
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">十分な余白があり、ページがきつすぎない</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+
+    <td valign="top" width="63%">不必要なアニメーションは回避されている</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+  <tr>
+    <td valign="top" width="63%">リンク（訪問済み、未訪問）は明確でわかりやすい</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+
+  </tr>
+  <tr>
+    <td valign="top" width="63%">太字や斜体は選択的に用いられている</td>
+    <td valign="top" width="7%">&nbsp;</td>
+    <td valign="top" width="30%">&nbsp;</td>
+  </tr>
+</table>
+{% endraw %}

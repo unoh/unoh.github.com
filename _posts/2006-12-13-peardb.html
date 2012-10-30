@@ -1,0 +1,369 @@
+---
+layout: post
+title: "PEAR::DBをオーバーロードして手軽にロギングとプロファイリングする"
+---
+{% raw %}
+<p>
+ウノウに入社してからすっかりエンゲル係数と体重が増加して困っているjokagiです．
+このまま年を越すのは微妙なので効果的なダイエット方法を教えてください．
+ということでエントリをはじめたいと思います．
+</p>
+<p>
+さて今回はよくある「データベースのアクセスログ取りたいね」とか「プロファイルを楽に取りたいね」という要求をふとひらめいたアイデアでお手軽に実現してみました．
+</p>
+<p>
+まず．いきなりすみませんが案件的にテスト実装した環境がPHP 4を使用していたため，この実装はまだPHP 5以上での動作は確認していません．
+また，今更メンテナンスモードで消える運命のPEAR::DBを扱うのかよ!!という方もいらっしゃると思いますが，とりあえず気づかなかったことにしてください．
+</p>
+
+
+<h3>基本的で最低限のPEAR::DBの使い方</h3>
+<p>
+PEAR::DBを丁寧に説明してもきりがないのでざっくりだけ．
+下記はMySQLにつないであるテーブルからある条件の行を取ってくる例です．
+</p>
+
+<div class="source-code">
+<pre>
+$dsn = 'pgsql://user:pass@localhost/database';
+$db = &DB::connect($dsn);
+if (!DB::isError($db)) {
+    $sql = 'SELECT * FROM a_table WHERE name = ?';
+    $res = &$db->query($sql, array('username'));
+    if (!DB::isError($res)) {
+        while ($row =& $res->fetchRow()) {
+            processRow($row);
+        }
+    }
+}
+</pre>
+</div>
+
+<p>
+このレベルから何をやっているか分からない方は<a href="http://pear.php.net/manual/ja/">公式マニュアル</a>の<a href="http://pear.php.net/manual/ja/package.database.db.php">PEAR::DB</a>の項目でいろいろなサンプルが用意されているので参考にしてください．
+</p>
+
+<h3>PEAR::DBをどう料理するか</h3>
+<p>
+ありがちなPEAR::DBの拡張パターンとしてextendsで継承し，DSNを何らかの方法で勝手に取得してオブジェクトのインスタンスを行うという感じがあると思います．
+また，さらにクエリログを取りたい!!などになると，ぱっと思いつくものは下記の方法しかありませんでした．
+
+<ol>
+<li>新規ドライバーを作成する．上記例だとDB_pgsqlを派生し，DB_mypgsqlみたいなクラスのファイルを作成し，DSNでそれを指定する(つまり「mypgsql://user:pass@localhost/database」)みたいなDSNにする)．ってすごいダサいクラス名ですね(凹)このクラスでログを取ったり時間を計測したりする．</li>
+<li>DB::<a href="http://pear.php.net/manual/ja/package.database.db.db.connect.php">connect</a>()が返すオブジェクトをプロパティに持つクラスを作成し，<a href="http://pear.php.net/manual/ja/package.database.db.db-common.query.php">query</a>()など問い合わせに必要なメソッド群をDB_pgsqlにバケツリレーし，ログを取ったり時間を計測する処理を随時挟んでいく．</li>
+</ol>
+
+<p>
+「新規ドライバーを作成する」の方は実際にはPEAR::DBの実装が駄目すぎるので(個人的主観ですが)綺麗に実装できません(ドライバークラスのファイルは必ずディレクトリ名「DB」の下にないといけないとか)．
+後者も必要分メソッドを作るとヘタしたらquery()，getOne()，getAll()，...など結構沢山のメソッドを(ただバケツリレーするだけの単調なコードを)記述しなければいけません．
+前者は個人的にやる気が起こらなかったので後者をどうにか楽にできないかなーと考えていたのですが，簡単にできるんですよ．オーバーロードで．
+</p>
+
+<h3>オーバーロードって何?</h3>
+<p>
+一般的な話でもPHP的な話でもちゃんと書くと今晩寝られなくなるのでやりません．
+ここでいうオーバーロードは一言で言うと「動的にクラスメソッドやプロパティを追加する」みたいなことができる仕組みです．
+ざっとした概念は<a href="http://php.net/overload">PHPの公式マニュアル</a>でも読んでください．
+だけではアレなのでとりあえず簡単なサンプルを用意してみました．
+</p>
+
+<div class="source-code">
+<pre>
+class ShowMessage
+{
+    function ShowMessage()
+    {
+    }
+
+    /**
+     *  オーバーロードクラスの動的メソッドの処理を行う
+     *  特殊メソッド．$methodが「say」で始まる場合，
+     *  1個目の引数を表示します．
+     *
+     *  このコードはPHP 4でしか動かないことに注意
+     *
+     *  @param string $method 実行されたメソッド名
+     *  @param string $argument メソッドに付加された引数
+     *  @param mixed $return メソッドの返り値への参照
+     */
+    function __call($method, $argument, &$return)
+    {
+        $result = null;
+        if (preg_match('/^say([a-z]+)$/i',$method,$matches) && isset($argument[0])) {
+            printf("%s is say '%s'\n", $matches[1], $argument[ 0]);
+            $result = true;
+        } else {
+            $result = false;
+        }
+        return $result;
+    }
+}
+overload('ShowMessage');
+</pre>
+</div>
+
+<p>
+これを実行した結果はこんな感じです．
+ここでは上記クラスをShowMessage.phpというファイル名で保存した前提になっています．</p>
+
+<div class="command">
+<pre>
+$ php -r '
+  require_once "ShowMessage.php";
+  $obj = &new ShowMessage;
+  $obj->sayTom("Hello!");
+  $obj->sayGeoge("Guha!");'
+  $obj->foo("Guha!");'
+tom is say 'Hello!'
+geoge is say 'Guha!'
+PHP Warning:  Call to undefined method showmessage::foo() in Command line code on line 6
+</pre>
+</div>
+
+<p>
+クラスShowMessageのメソッドはShowMessage()と__call()だけです．前者は単なるコンストラクタで，今回のように動的にメソッドが増えて見えるのは__call()の処理によるところが大きいです．
+この辺り分からないけど興味のある人はマニュアルを参考にしつつサンプルクラスを弄ってみてください．
+</p>
+
+<h3>PEAR::DBをオーバーロードで料理してみよう</h3>
+<p>
+さてここまでで大体想像はついたでしょうか?
+このエントリのはじめの方で「DB_common::connect()が返すオブジェクトをプロパティに持つクラスを作成し，query()など問い合わせに必要なメソッド群をDB_pgsqlにバケツリレーし，ログを取ったり時間を計測する処理を随時挟んでいく」という方法を紹介しましたが，今から新しくクラスをオーバーロード前提で実装します．
+</p>
+<p>
+段々長くなってきたので細かい説明は省いて調理後のコードをさっさと出します．
+下記例はとりあえずconnect()でデータベースに接続後，__call()を使用してquery()，getOne()，getAll()だけ対応させます．
+</p>
+
+<div class="source-code">
+<pre>
+class MyDB
+{
+    var $_db;
+
+    function MyDB()
+    {
+        $this->_db = null;
+    }
+
+    function getDsn()
+    {
+        $result = null;
+
+        /*
+         *  ちゃんとした作りにするなら設定ファイルなりから
+         *  DSNを生成して返します
+         */
+        $result = 'pgsql://user:pass@localhost/database';
+
+        return $result;
+    }
+
+    function connect()
+    {
+        $result = null;
+
+        $result = &DB::connect($this->_getDsn());
+        if (!DB::isError($db)) {
+            //  接続に成功したときだけ維持
+            $this->_db = &$db;
+        } else {
+            $this->_db = null;
+        }
+
+        return $result;
+    }
+
+    /**
+     *  オーバーロードクラスの動的メソッドの処理を行う
+     *  特殊メソッド．$methodが「say」で始まる場合，
+     *  1個目の引数を表示します．
+     *
+     *  このコードはPHP 4でしか動かないことに注意
+     *
+     *  @param string $method 実行されたメソッド名
+     *  @param string $argument メソッドに付加された引数
+     *  @param mixed $return メソッドの返り値への参照
+     */
+    function __call($method, $argument, &$return)
+    {
+        $result = null;
+
+        $funcs = array('query', 'getone', 'getall');
+        if ($this->_db !== null && in_array(strtolower($method), $funcs)) {
+            $return = call_user_func(array($this->_db, $method), $argument);
+            $result = true;
+        } else {
+            $result = false;
+        }
+
+        return $result;
+    }
+}
+overload('MyDB');
+</pre>
+</div>
+
+<p>
+このコードのキモになるのはcall_user_func()ですね．
+$funcsに許可するメソッド名があったら全部call_user_func()経由で$this->_dbに丸投げします．
+もっと対応したいメソッドがでてきたら$funcsに追加すればいいのです．
+楽ですね…いや手動で追加するのは本当は面倒じゃないか!!
+</p>
+<p>
+ってことで手抜きをするためにもう少し労力を割きます．
+やることは簡単で，PHPの<a href="http://php.net/classobj">クラスオブジェクト関数群</a>に<a href="http://php.net/get_class_methods">get_class_methods</a>()という「クラスメソッドの名前を連想配列として返す(マニュアルより引用)」という関数があります．
+ようはこの関数経由でメソッド一覧を取得し，それを__call()内で使用すればいいですね．
+ってことで改変してみました．
+</p>
+
+<div class="source-code">
+<pre>
+class MyDB
+{
+    var $_db;
+    var $_overloadFunctions;
+
+    function MyDB()
+    {
+        $this->_db = null;
+        $this->_overloadFunctions = array();
+    }
+
+    function getDsn()
+    {
+        $result = null;
+
+        /*
+         *  ちゃんとした作りにするなら設定ファイルなりから
+         *  DSNを生成して返します
+         */
+        $result = 'pgsql://user:pass@localhost/database';
+
+        return $result;
+    }
+
+    function connect()
+    {
+        $result = null;
+
+        $result = &DB::connect($this->_getDsn());
+        if (!DB::isError($db)) {
+            //  接続に成功したときだけ維持
+            $this->_db = &$db;
+            $this->_overloadFunctions = get_class_methods(get_class($db));
+        } else {
+            $this->_db = null;
+            $this->_overloadFunctions = array();
+        }
+
+        return $result;
+    }
+
+    /**
+     *  オーバーロードクラスの動的メソッドの処理を行う
+     *  特殊メソッド．$methodが「say」で始まる場合，
+     *  1個目の引数を表示します．
+     *
+     *  このコードはPHP 4でしか動かないことに注意
+     *
+     *  @param string $method 実行されたメソッド名
+     *  @param string $argument メソッドに付加された引数
+     *  @param mixed $return メソッドの返り値への参照
+     */
+    function __call($method, $argument, &$return)
+    {
+        $result = null;
+
+        $funcs = array('query', 'getone', 'getall');
+        if ($this->_db !== null && in_array(strtolower($method), $funcs)) {
+            $return = call_user_func(array($this->_db, $method), $argument);
+            $result = true;
+        } else {
+            $result = false;
+        }
+
+        return $result;
+    }
+}
+overload('MyDB');
+</pre>
+</div>
+
+<p>
+これでPEAR::DBのDB_commonのメソッドはすべて使えるようになりました(といってもすべてのメソッドが正しく動作するかテストしたわけではないですが)．
+ここまでできたらMyDBのオブジェクトは通常のDB_commonのオブジェクトとほぼ等価に使用できると思います．
+</p>
+
+<h3>プロファイルやログの処理はどうしたらいいか</h3>
+<p>
+DB_coomonとほぼ等価に動作するMyDBのオブジェクトがあるので，__call()内でcall_user_func()をする前後で時間を計測したり，$methodを見てログを吐いたりすることであたかもPEAR::DBをそのまま使っているようでいて実は勝手にロギングされているといった使い方ができるようになります．
+下記は__call()内で時間を計測する例です．
+</p>
+
+<div class="source-code">
+<pre>
+    function __call($method, $argument, &$return)
+    {
+        $result = null;
+
+        $funcs = array('query', 'getone', 'getall');
+        if ($this->_db !== null && in_array(strtolower($method), $funcs)) {
+            //  call_user_func()の実行前時間を保存
+            list($start_usec, $start_sec) = explode(" ", microtime());
+            $start_time = (float)$start_usec + (float)$start_sec;
+
+            $return = call_user_func(array($this->_db, $method), $argument);
+
+            //  call_user_func()の実行後時間を保存
+            list($end_usec, $end_sec) = explode(" ", microtime());
+            $end_time = (float)$end_usec + (float)$end_sec;
+
+            //  call_user_func()の前後の時間から差分を出す
+            //  出した後は各自適切に処理をしましょう
+            $diff_time = $end_time - $start_time
+
+            //  call_user_func()の実行条件を定数LOG_FILEが示す
+            //  ファイルに記録する例
+            $line = strftime("%Y-%m-%d %H:%M:%S");
+            $line ,= " Method:$method Argument:".serialize($argument);
+            $line .= " Result:".serialize($return);
+            $line .= " Time:".diff_time;
+            error_log($line, 3, LOG_FILE);
+            $result = true;
+        } else {
+            $result = false;
+        }
+
+        return $result;
+    }
+</pre>
+</div>
+
+<h3>おしまい</h3>
+<p>
+今回のエントリで紹介しているオーバーロードとcall_user_func()の併用を実装に取り込むと下記のようなメリットがあります．
+</p>
+
+<ul>
+<li>PEAR::DB専用の考え方ではないので，一般的なクラスでもアイデアは使用できる<li>
+<li>基本的に使いたいメソッドが増えるたびに何らかの修正をする必要がない</li>
+<li>クラスの仕様(特にメソッド数など)に特にとらわれずに簡単に実装ができる<li>
+<li>場合によっては多重継承的な効果を持ったクラスを作ることができる<li>
+</ul>
+
+<p>
+いいことばかりを書いていますが，問題点もあります．
+</p>
+
+<ul>
+<li>オーバーロードを用いるとPhpDocumentorなどでドキュメントの自動生成を行いづらい</li>
+<li>オーバーロード自体のノウハウがまだ一般的に広く存在しない</li>
+<li>__call()の仕様がPHP 4とPHP 5で異なる(PHP 5の場合，引数は2つになる)</li>
+</ul>
+
+<p>
+こういうオーバーロードは私も初めて使用したのでどういう問題があるかはまだ未知数です．
+とりあえず今回の手段はこれからも注意深く使ってみようと思います．
+</p>
+{% endraw %}

@@ -1,0 +1,54 @@
+---
+layout: post
+title: "正方形なサムネイルを簡単に出す"
+---
+{% raw %}
+Keitaです。<br />
+バレンタインデーも近づいてきた今日この頃皆様どうお過ごしでしょうか。<br />
+例年、僕はとても憂鬱なのですが、今年は、ImageMagickがあるのでとてもハッピーになれそうです。<br />
+そんなどうでもいいことはおいて、たまに、Webサービスで正方形でサムネイルを出しているサイトがあると思います。<br />
+具体的にいうとこんな感じの画像が<br />
+<a href="http://photozou.jp/photo/show/784/17561757"><img src="http://art4.photozou.jp/pub/784/784/photo/17561757.jpg" alt="sample" width="450" height="301" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/17561757">sample</a> posted by <a href="http://photozou.jp/user/top/784">(C)フォト蔵</a><br />
+こんな感じの画像になるイメージです。<br />
+<a href="http://photozou.jp/photo/show/784/17561846"><img src="http://art7.photozou.jp/pub/784/784/photo/17561846.jpg" alt="sample_imagick" width="200" height="200" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/17561846">sample_imagick</a> posted by <a href="http://photozou.jp/user/top/784">(C)フォト蔵</a><br />
+<br />
+こういう画像をPHPで作る場合には、imagickを使うと簡単に作れます。<br />
+<br />
+<pre class="code"><code>&lt;?php
+  $width = 200;
+  $height = 200;
+  //Imagick
+  $image = new imagick();
+  $image->readImage('sample.jpg');
+  $image->cropThumbnailImage($width, $height);
+  $image->writeImage('sample_imagick.jpg');
+</code></pre>
+ついでに、MagickWandForPHPで作る場合にはこんな感じで作れます。<br />
+<pre class="code"><code>&lt;?php
+  $width = 200;
+  $height = 200;
+  //MagickWand
+  $image_handle = NewMagickWand();
+  MagickReadImage($image_handle, 'sample.jpg');
+  $width_org = MagickGetImageWidth($image_handle);
+  $height_org = MagickGetImageHeight($image_handle);
+
+  $scale_w = $width / $width_org;
+  $scale_h = $height / $height_org;
+
+  $scale = ($scale_w < $scale_h) ? $scale_h : $scale_w;
+  
+  $width_thumbnail = $width_org * $scale;
+  $height_thumbnail = $height_org * $scale;
+
+  $x = ($width_thumbnail - $width) / 2;
+  $y = ($height_thumbnail - $height)/ 2;
+
+  MagickThumbnailImage($image_handle, $width_thumbnail, $height_thumbnail);
+  MagickCropImage($image_handle, $width, $height, $x, $y);
+
+  MagickWriteImage($image_handle, 'sample_magickwand.jpg');
+</code></pre>
+皆様のご参考になれば幸いです。
+
+{% endraw %}

@@ -1,0 +1,113 @@
+---
+layout: post
+title: "inline-blockでマルチカラムレイアウト"
+---
+{% raw %}
+<p>
+yamaokaです。
+</p>
+
+<p>
+2007年7月19日、CSS 2.1が再び<a href="http://www.w3.org/News/2007#item155">勧告候補になりました</a>。正式な勧告になるのは来年になりそうですが、CSSに携わっている人は今のうちから<a href="http://www.w3.org/TR/CSS21/">内容</a>に目を通しておくといいかもしれません。
+</p>
+
+<blockquote cite="http://www.w3.org/News/2007#item155">
+adds a few highly requested features including the inline-block value for the display property, the color orange and the values pre-wrap and pre-line for the white-space property. 
+</blockquote>
+
+<p>
+勧告候補になるにあたり、新たに追加された機能は上記引用の通りです。
+</p>
+
+<p>
+今回は、試しにinline-blockを使ったマルチカラムレイアウトを作ってみようと思います（inline-blockに関しては既にOperaとSafariで先行実装されており、試すことができます）。
+</p>
+
+<p>
+今までマルチカラムなレイアウトを作るには2通りの方法がありました。
+</p>
+
+<ol>
+  <li>ブロック要素をfloatさせて並べる方法</li>
+  <li>ブロック要素をposition指定して並べる方法</li>
+</ol>
+
+<p>
+それぞれの実装方法に関しては、「<a href="http://www.lucky-bag.com/archives/2007/08/css-framework.html">
+Lucky bag::blog: CSSによる段組レイアウトのフレームワーク</a>」が詳しいので参考にしてみてください。いずれの方法も一般的なものですが、導入には多少の注意が必要です（Internet Explorerのfloat関連のバグとか、position指定による弊害とか）。
+</p>
+
+<p>
+では、inline-blockを使うとどうなるのでしょうか。2カラムのレイアウトを試しに作ってみます。
+</p>
+
+<p>
+まずはHTML、シンプルに。
+<pre class="code"><code>&lt;div id=&quot;container&quot;&gt;
+  &lt;div id=&quot;contents&quot;&gt;
+    &lt;p&gt;
+      contents&lt;br&gt;contents&lt;br&gt;contents&lt;br&gt;contents&lt;br&gt;
+      contents&lt;br&gt;contents&lt;br&gt;contents&lt;br&gt;contents&lt;br&gt;
+      contents&lt;br&gt;contents&lt;br&gt;contents&lt;br&gt;contents&lt;br&gt;
+      contents&lt;br&gt;contents&lt;br&gt;contents&lt;br&gt;contents&lt;br&gt;
+    &lt;/p&gt;
+  &lt;/div&gt;&lt;div id=&quot;sidebar&quot;&gt;
+    &lt;p&gt;
+      sidebar
+    &lt;/p&gt;
+  &lt;/div&gt;
+&lt;/div&gt;
+</code></pre>
+</p>
+
+<p>
+そしてCSS。
+<pre class="code"><code>#container {
+  width: 530px;
+  margin: 0 auto;
+  border: solid 1px #808080;
+  background-color: #eee;
+}
+#contents {
+  display: inline-block;
+  width: 300px;
+  margin: 10px;
+  background-color: #fcc;
+  vertical-align: top;
+}
+#sidebar {
+  display: inline-block;
+  width: 200px;
+  margin: 10px 10px 10px 0;
+  background-color: #ccf;
+  vertical-align: top;
+}
+</code></pre>
+</p>
+
+<p>
+それをOpera（バージョン9.22、Windows版）で表示させてみた結果。
+<a href="http://photozou.jp/photo/show/784/4268498"><img src="http://art6.photozou.jp/pub/784/784/photo/4268498.png" alt="inline-block" width="450" height="363" style="border:0" /></a>
+</p>
+
+<p>
+以上の手順で、2カラムのレイアウトがとても簡単にできてしまいました。これはいいですね。特に悩むような箇所もなく、非常にシンプルに記述することができます。3カラムにする場合は、単純にもう一つinline-blockなブロックを追加すればよさそうです。
+</p>
+
+<p>
+Internet ExplorerやFirefoxでinline-blockが実装されるのはまだまだ先になりそうですが、マルチカラムレイアウトが非常に簡単にできるようになるので、早く実装されてほしいところですね。
+</p>
+
+<p>
+ちなみに、#contentsと#sidebarのvertical-align属性にtopを指定しているのは、内包されるブロック要素の上側に寄せて配置するためです。<a href="http://www.w3.org/TR/CSS21/visuren.html#inline-formatting">Inline formatting context</a>という章に、以下のように書いてありました。
+</p>
+
+<blockquote cite="http://www.w3.org/TR/CSS21/visuren.html#inline-formatting">
+When the height of a box B is less than the height of the line box containing it, the vertical alignment of B within the line box is determined by the 'vertical-align' property. 
+</blockquote>
+
+<p>
+また、HTMLで#sidebarのdivの開始タグを#contentsの閉じタグの直後に書いているのは、Operaで表示した場合に2つのブロックの間に謎のスペースが開いてしまうのを防ぐためです。改行などを入れるとスペースが開いてしまうようなのでこうしています。
+</p>
+
+{% endraw %}

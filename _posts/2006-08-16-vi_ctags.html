@@ -1,0 +1,7 @@
+---
+layout: post
+title: "vi + ctags : 関数等の定義位置にジャンプ"
+---
+{% raw %}
+こんにちは，ttsuruoka です．<br /><br /><br />vi で PHP のコードを見ているときに，<br /><br /><pre class="source_code"><br />myhogefunc($foo, CONST_BAR);<br /></pre><br /><br />のような処理があって，myhogefunc() や定数 CONST_BAR がどんな定義になっているか知りたいときには，ctags が使えます．<br /><br />vi と ctags を連携させると，myhogefunc() の上や CONST_BAR の上にカーソルを置いて CTRL + ] を押すだけで，それが定義されている場所までジャンプすることができます．<br /><br />* ctags のダウンロードとインストール<br />- http://pcmania.jp/~moraz/tools/ctags.html<br /><br />ctags をインストールしたら，<br />タグファイル（tags）を作成します．<br />タグファイルは，関数等の定義位置が記録されるファイルです．<br /><br />カレントディレクトリ以下の PHP (*.php) のクラス，関数，定数から，タグファイルを作成：<br /><br /><pre class="source_code"><br /> $ ctags -R --langmap=PHP:.php --php-types=c+f+d ./<br /></pre><br /><br />あとは，普通に PHP のファイルを開き，調べたい対象の上にカーソルを置いて， CTRL + ] で OK です．<br /><br /><br />また，タグファイルを元にした入力補完も使えます（INSERT モードで CTRL + x, CTRL + ]）が， <br />前後の変換候補が見にくい（見えない）のであまり使い勝手はよくありません．<br /><br />それから変数の定義位置もタグファイルに含めることができるようなのですが，<br />これは vi の単語検索（検索対象上でアスタリスク）で十分対応できるため上では使っていません．<br /><br /><br />（環境：VIM6.3）
+{% endraw %}

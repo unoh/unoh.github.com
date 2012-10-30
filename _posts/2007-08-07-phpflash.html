@@ -1,0 +1,85 @@
+---
+layout: post
+title: "PHPで暗号化して、Flashで復号してみたときのメモ"
+---
+{% raw %}
+Keitaです。<br />
+<br />
+もう、半年くらい前になりますが、画像をFlashとPHPの間だけデータを暗号化できないかなーとおもって試したことがあります。結論としては、Flashで解読できているということは、Flashをうまいことやればデータが抜き出せるし、そもそも、暗号化する意味が個人的に皆無だったのと、画像ほど大きいデータになると解読に時間がかかってしまったので、「あー、まぁほかにやることもあるし、いいや」とおもって、忘れることにしました。<br />
+<br />
+でも、まぁ昔こういうことやって遊んだなぁという記録と、もしかすると誰かの役にたつかと思い記事にさせていだきます。<br />
+<br />
+環境は、サーバサイドはPHP5で、クライアントは、Flex2で作成しました。<br />
+<br />
+PHP側でデータをこんな感じに暗号化して、それをクライアントで受け取る感じにしました。<br />
+暗号化形式は、Blowfishを利用しました。<br />
+<br />
+まず、データの暗号化の部分ですが、これはPHPのPEARの<a href="http://pear.php.net/package/Crypt_Blowfish">Crypt_Blowfish</a>を使いました。<br />
+<br />
+<pre class="code">
+    $filename = 'filename.jpg';
+    include_once 'Crypt/Blowfish.php';
+    $keyword = 'test';
+    $data = file_get_contents($filename);
+    $blowfish =& Crypt_Blowfish::factory('ecb', $keyword);
+    echo $blowfish->encrypt($data);
+</pre>
+<br />
+こんな感じで適当にファイルを変換してHTTP通信で送信します。（実際は静的化していました）<br />
+<br />
+Flash側は、AS3のライブラリである<a href="http://crypto.hurlant.com/">As3Crypto</a>を使いこんな感じのコードを書きました。ちなみに、暗号化したい対象が画像だったので、Loaderを使っています。<br />
+<br />
+※AS3とかFlex2とかは、僕は、初心者なのでだめだめな感じなので、ソースを公開するのけど、たぶんちゃんとは使えないような気がします。<br />
+<br />
+<pre class="code">
+package jp.comuni.loader{
+(中略)
+    public function CryptLoader(params: Object)
+    {
+        this.crypt = getCrypt(params);
+    }
+
+    private function getCrypt(params: Object): ICipher        {
+        var pad:IPad = new NullPad();
+        var key: ByteArray = Hex.toArray(Hex.fromString(params.key));
+        var crypt:ICipher =
+            Crypto.getCipher('blowfish-ecb', key, pad);
+    
+        pad.setBlockSize(crypt.getBlockSize());
+        if (crypt is IVMode) {
+            trace('IVMode');
+            var ivmode:IVMode = crypt as IVMode;
+            ivmode.IV = Hex.toArray('');
+        }
+        return crypt;
+    }
+    
+    private function decrypt(data: ByteArray): ByteArray
+    {
+        crypt.decrypt(data);
+        return Hex.toArray(Hex.fromArray(data));
+    }
+(後略）
+}
+</pre>
+<a href="CryptLoader.as">実際のソース</a><br />
+<br />
+<br />
+呼び出し側
+<pre class="code">
+    params = {key : 'passcode'} 
+    var request:URLRequest=new URLRequest("http://example.com/pathtodata");
+    var cryptloader:CryptLoader = new CryptLoader(params);
+
+    cryptloader.loadURL(request);
+</pre>
+<br />
+ざっくりとこんな感じで、暗号化の意味はあんまりないものの、Webサーバ～ブラウザの上で動作するFlashまで一応それっぽい暗号化をするするアプリケーションを作ることができました。<br />
+<br />
+ここらへんまじめに考えると、SSLとか公開鍵方式とかまじめに考えていく必要があるのですが、結局、ほかのことに興味がいってしまい今のところ完成させる気がないのがお恥ずかしい気持ちになりつつ、忘れることにしました。<br />
+<br />
+もし、これを見た誰かがなんらかの成果物をだす参考（暗号化、復号化のサンプルくらいにはなるはず）になれれば、それはそれで、きっとささやかながら、誰かを幸せにできたということなので、それはそれでうれしいかなと思います。<br />
+<br />
+
+※ はてブにいただいたコメントによると暗号化に対する言葉は復号だということでタイトルを変更させていただきました。ご指摘ありがとうございました。
+{% endraw %}

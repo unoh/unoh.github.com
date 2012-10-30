@@ -1,0 +1,69 @@
+---
+layout: post
+title: "マシン語を学ぶ子ども達"
+---
+{% raw %}
+<p>
+尾藤正人(a.k.a BTO)です
+</p>
+
+<p>
+コンピュータは低レベルのシステムを抽象化することで、どんどん扱いやすいものに進化してきました。
+コンピュータの歴史は抽象化の歴史だと言い換えるのは大げさかもしれませんが、近いものはあるかもしれません。
+ウノウで行うプログラミングはWebプログラミングがほとんどですが、WebプログラミングはPerl, PHP, Python, RubyのようなLLを使ってプログラムを書くことが多いかと思います。
+LLは高度に抽象化されて低レベルで行っている処理を意識せずに記述することができる大変優れた言語です。
+LLでプログラムを記述するにあたって低レベルのシステムを理解する必要があるとは思いませんが、知っていて損はない知識です。
+</p>
+
+<p>
+<a href="http://d.hatena.ne.jp/shi3z/20070911">少し前にマシン語についての話が話題になりました。</a>
+ちょうどタイミングよく社内勉強会の当番が回ってきたので、マシン語(というかアセンブリ言語を含む低レベルなシステムの話題)について勉強会をやってみることにしました。
+せっかくなので資料を公開しますので、もしよかったらご覧下さい。
+</p>
+
+<object width="450" height="500"><param name="allowScriptAccess" value="SameDomain" /><param name="movie" value="http://static.scribd.com/FlashPaperS3.swf?guid=fcfgctelfx2lt&amp;document_id=403614" /><embed width="450" height="500" src="http://static.scribd.com/FlashPaperS3.swf?guid=fcfgctelfx2lt&amp;document_id=403614" type="application/x-shockwave-flash"></embed> </object>
+
+<p>
+ざっくりとした内容は以下になります
+</p>
+
+<ul>
+<li>コンピュータの簡単な歴史</li>
+<li>CPUアーキテクチャ</li>
+<li>MIPSのアセンブリ言語</li>
+<li>デモ</li>
+</ul>
+
+<p>
+通称で「パタヘネ本」と呼ばれる情報科学の教科書で世界的に広く使われている著名な本があるのですが、これを題材に作成しました。
+パタヘネ本はコンピュータの基本的な仕組みを幅広く、しっかりと扱った素晴らしい名著です。
+ぜひ、一読をおすすめします。
+邦訳で第三版まで出ていますが、第三版は大幅に内容が削られてCDに収録されています。
+僕は紙媒体で読みたかったので、あえて第二版を購入しました。
+</p>
+
+<p>
+デモでは実際にMIPSエミュレータであるSPIMを使って、MIPSのアセンブリ言語を実行して出力結果の確認を行いました。
+</p>
+
+<p>
+<a href="http://pages.cs.wisc.edu/~larus/spim.html">SPIM</a>
+</p>
+
+<p>
+実行例となるプログラムは大学の講義資料が公開されていましたので、そちらを利用させていただきました。
+</p>
+
+<p>
+<a href="http://brain.cc.kogakuin.ac.jp/~kanamaru/lecture/MP/final/">マイクロプロセッサおよび演習 (最終稿)</a>
+</p>
+
+<p>
+MIPSのようなRISC処理系は命令体系が簡単で非常に理解しやすくなっています。
+x86系列は命令体系が複雑になってて、初めて学ぶには内容が難しいかもしれません。
+まずはパタヘネ本を片手にMIPSを勉強する方が理解するには近道ではないでしょうか。
+<p>
+
+<div class="amazlet-box" style="margin-bottom:0px;"><div class="amazlet-image" style="float:left;"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/482228056X/unoh-22/ref=nosim/" name="amazletlink" target="_blank"><img src="http://ecx.images-amazon.com/images/I/21AWVPJBTPL.jpg" alt="コンピュータの構成と設計―ハードウエアとソフトウエアのインタフェース〈上〉" style="border: none;" /></a></div><div class="amazlet-info" style="float:left;margin-left:15px;line-height:120%"><div class="amazlet-name" style="margin-bottom:10px;line-height:120%"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/482228056X/unoh-22/ref=nosim/" name="amazletlink" target="_blank">コンピュータの構成と設計―ハードウエアとソフトウエアのインタフェース〈上〉</a><div class="amazlet-powered-date" style="font-size:7pt;margin-top:5px;font-family:verdana;line-height:120%">posted with <a href="http://www.amazlet.com/browse/ASIN/482228056X/" title="コンピュータの構成と設計―ハードウエアとソフトウエアのインタフェース〈上〉" target="_blank">amazlet</a> on 07.10.23</div></div><div class="amazlet-detail">ジョン・L. ヘネシー デイビッド・A. パターソン John L. Hennessy David A. Patterson 成田 光彰 <br />日経BP社 (1999/05)<br />売り上げランキング: 53721<br /></div><div class="amazlet-review" style="margin-top:10px; margin-bottom:10px"><div class="amazlet-review-average" style="margin-bottom:5px">おすすめ度の平均: <img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-5-0.gif" alt="5.0" /></div><img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-5-0.gif" alt="5" /> コンピューターアーキテクチャのとても良い教科書<br /><img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-5-0.gif" alt="5" /> 最も良い入門書<br /><img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-5-0.gif" alt="5" /> 新人ＳＥ必読<br /></div><div class="amazlet-link" style="margin-top: 5px"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/482228056X/unoh-22/ref=nosim/" name="amazletlink" target="_blank">Amazon.co.jp で詳細を見る</a></div></div><div class="amazlet-footer" style="clear: left"></div></div>
+
+{% endraw %}

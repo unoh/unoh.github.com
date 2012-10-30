@@ -1,0 +1,193 @@
+---
+layout: post
+title: "DjangoのURL逆引き機能"
+---
+{% raw %}
+<p>Chihiroです。</p>
+ <p>今回は、Django 0.96以降から改善が進んでいるDjangoのURL逆引き機能に関して紹介したいと思います。この機能を上手く使うと、<a href="http://www.djangoproject.com/">Django</a>を使ったWeb開発において、URLの設計と維持にかかる手間を大幅に削減できます。</p>
+ <p><a href="http://michilu.com/django/doc-ja/index/">公式ドキュメントの日本語訳</a>にもこの機能の説明はありますが、説明が分散していて全体像が見えにくいと思いますので、この機能を使わない場合の問題点を指摘し、次に使った場合、ルーティング、モデル、ビュー、テンプレートがそれぞれどのように書けるかを説明したいと思います。</p>
+
+ <p>なお、動作確認はSubversionから取得した開発版Django(rev.6447)を使用して行っています。</p>
+ <h3> Django0.96以前のURL定義の問題点</h3>
+ <p>Djangoの大きな特徴として、「自由なURL設計」がありますが、一方でモデル、テンプレート、ビュー、ルーティングにおいて冗長にURLの定義しなくてはいけないという問題点がありました。</p>
+ <p>例えば、</p>
+<pre class="code"><code>http://example.com/entries/1978/
+</code></pre>
+
+ <p>というURLで指示されるリソース(例えばブログのエントリ)を考えた場合、まずurls.pyに記述するルーティング定義(URLConf)に、次のような設定を行う必要があります。</p>
+<pre class="code"><code>patterns += (&#39;myaproject.myapp.views&#39;,
+             (r&#39;^entries/(?P&lt;entry_id&gt;&#92;d+)/&#39;, &#39;edit_entry&#39;),
+             )
+</code></pre>
+
+<p>次に、Adminツールなどの恩恵を受けるために、Djangoの流儀に従って、次のような感じでモデルにget_abosolute_urlメソッドを実装していました。</p>
+
+<pre class="code"><code>from django.db import models
+
+class Entry(models.Model):
+    title = models.CharField(max_length=250)
+    content = models.TextField()
+
+    def get_absolute_url(self):
+      return &#39;/entries/%s/&#39; % self.id
+
+    def __unicode__(self):
+        return self.title
+</code></pre>
+
+ <p>URLConfで書いたr'^entries/(?P&lt;entry_id&gt;\d+)/'は正規表現で、モデルに書いたのは'/entries/%s/'というフォーマット文字列という違いはありますが、似たような定義を繰り返しています。</p>
+ <p>さらに、リソースを参照したり、リソースに対して何らかの操作を行ったりする場合、そのためのURLのフォーマットをテンプレート内に直接書く必要があります。</p>
+
+ <p>例えば、あるブログのエントリの編集画面のURLを"/entries/{entry_id}/edit/"のように設計した場合、テンプレートの中に次のように書くことになるでしょう。</p>
+<pre class="code"><code>{% if entries %}
+&lt;ul&gt;
+  {% for entry in entries %}
+  &lt;li&gt;{{ entry.title|escape }}&lt;a href=&quot;/entries/{{ entry.id }}/edit/&quot;&gt;{% trans &quot;Edit&quot; %}&lt;/a&gt;&lt;/li&gt;
+
+  {% endfor %}
+&lt;/ul&gt;
+{% endif %}
+</code></pre>
+<p>ここまでの例で分かるように、モデル、ルーティング、テンプレートにおいて、"^entries/(?P&lt;entry_id&gt;\d+)/"、"/entries/%s/"、 "/entries/{{ entry.id }}/edit/"のように、似たようなURLの定義を繰り返す必要がありました。</p>
+
+<h3> URL定義のDRY化</h3>
+<p>開発版Djangoでは、URLConfでのURL定義を元に、ビュー関数名からリソースのURLの解決を行えるようになりました。分かりやすく言うと、urls.pyにURL設計をまとめることができるようになったのです。</p>
+<p>基本的なCRUDを例にとって説明します。</p>
+<p>まず、URLConfは次のように定義できます。</p>
+<pre class="code"><code># -*- coding: utf-8 -*-
+# myproject/urls.py
+from django.conf.urls.defaults import *
+from myapp.models import Entry
+
+urlpatterns = patterns(
+    &#39;myproject.myapp.views&#39;,
+
+    # エントリの新規作成
+    url(r&#39;^entries/new/$&#39;,
+        &#39;create_entry&#39;,
+        name=&#39;create_entry&#39;),
+
+    # エントリの編集
+    url(r&#39;^entries/(?P&lt;entry_id&gt;&#92;d+)/edit/$&#39;,
+        &#39;edit_entry&#39;,
+        name=&#39;edit_entry&#39;),
+
+    # エントリの削除
+    url(r&#39;^entries/(?P&lt;entry_id&gt;&#92;d+)/delete/$&#39;,
+        &#39;delete_entry&#39;,
+        name=&#39;delete_entry&#39;),
+)
+
+urlpatterns += patterns(
+    &#39;django.views.generic.list_detail&#39;,
+
+    # エントリ一覧
+    # GenericViewを使います
+    url(r&#39;^entries/$&#39;,
+        &#39;object_list&#39;,
+        dict(queryset=Entry.objects.all(),
+             allow_empty=True),
+        name=&#39;show_entries&#39;
+
+        ),
+
+    # エントリ詳細
+    # GenericViewを使います
+    url(r&#39;^entries/(?P&lt;object_id&gt;&#92;d+)/$&#39;,
+        &#39;object_detail&#39;,
+        dict(queryset=Entry.objects.all()),
+        name=&#39;show_entry_detail&#39;
+        ),
+    )
+
+urlpatterns += patterns(
+    &#39;django.views.generic.simple&#39;,
+
+    # 上のどれでもない場合は/entries/にリダイレクト
+    url(r&#39;&#39;,
+        &#39;redirect_to&#39;,
+        dict(url=&#39;/entries/&#39;)
+        ),
+
+    )
+
+</code></pre>
+
+<p>上のコード例にあるように、開発版Djangoでは、今までのタプル(シーケンス)でのURL定義の他に、新たに<a href="http://michilu.com/django/doc-ja/url_dispatch/#id7">urlという関数</a>で定義を行えるようになりました。この関数を使うと、名前つきのURLパターンを定義するのが多少楽になります。</p>
+<p>名前つきをURLパターンを使った方が、URL定義の逆引きをするときにタイプ量が減るという単純なメリットもありますが、名前付きURLを使わないと解決できないケースもあります。詳しくは<a href="http://michilu.com/django/doc-ja/url_dispatch/#naming-url-patterns">公式のドキュメント</a>を参照してください。</p>
+<p>開発版Djangoの機能を活用すると、URLの設計(URLのフォーマットを決める作業)はこのURLConfの中で完結し、モデル・ビュー・テンプレートでは、URLパターンの名称とモデルのキーなどのパラメータからURLを決定することができるようになります。</p>
+<p>まず、モデルでは、permalinkデコレータ関数を使うと、URLConfに基づいてモデルのURLを構成することができます。(<a href="http://michilu.com/django/doc-ja/model-api/#permalink">公式ドキュメントによる解説</a>)</p>
+
+<pre class="code"><code>from django.db import models
+from django.db.models import permalink
+
+class Entry(models.Model):
+    title = models.CharField(max_length=250)
+    content = models.TextField()
+
+    @permalink
+    def get_absolute_url(self):
+        return (&#39;show_entry_detail&#39;, &#91;str(self.id)])
+
+    def __unicode__(self):
+        return self.title
+</code></pre>
+
+<p>ビュー関数からURLの解決を行う場合には、reverse関数を使います。(<a href="http://michilu.com/django/doc-ja/url_dispatch/#reverse">公式ドキュメントによる解説</a>)</p>
+<pre class="code"><code># -*- coding: utf-8 -*-
+from django.shortcuts import *
+from django.http import *
+from django.core.urlresolvers import reverse
+import django.newforms as forms
+
+from models import Entry
+
+EntryForm = forms.models.form_for_model(Entry)
+
+def create_entry(request):
+    &quot;&quot;&quot;
+    新しいエントリを作成する。
+    作成後は、エントリ一覧のページにリダイレクトする。
+    &quot;&quot;&quot;
+    form = EntryForm(request.POST or None)
+    if form.is_valid():
+        entry = form.save()
+        return HttpResponseRedirect(reverse(&#39;show_entries&#39;))
+
+    return render_to_response(&#39;myapp/entry_form.html&#39;, {&#39;form&#39;: form})
+</code></pre>
+
+ <p>テンプレート内からURLを解決する場合は、{% url %}タグを使います。(<a href="http://michilu.com/django/doc-ja/templates/#url">公式ドキュメントによる解説</a>)</p>
+ <p>このタグは、{% url URLパターンの名前 パラメータ %}のように使います。</p>
+
+<pre class="code"><code>{% load i18n %}
+{% extends &quot;base.html&quot; %}
+{% block content %}
+&lt;div&gt;
+  &lt;a href=&quot;{% url create_entry %}&quot;&gt;{% trans &quot;Post a new entry&quot; %}&lt;/a&gt;
+&lt;/div&gt;
+
+{% if object_list %}
+  &lt;ul&gt;
+  {% for entry in object_list %}
+    &lt;li&gt;{{ entry.title|escape }}
+        (&lt;a href=&quot;{% url edit_entry entry_id=entry.id %}&quot;&gt;{% trans &quot;Edit&quot; %}&lt;/a&gt; |
+         &lt;a href=&quot;{% url delete_entry entry_id=entry.id %}&quot;&gt;{% trans &quot;Delete&quot; %}&lt;/a&gt;)
+    &lt;/li&gt;
+  {% endfor %}
+  &lt;/li&gt;
+{% else %}
+  &lt;p&gt;{% trans &quot;No entries&quot; %}&lt;/p&gt;
+{% endif %}
+{% endblock %}
+</code></pre>
+
+<h3> まとめ</h3>
+
+<p>permalink, reverse, {% url %}を使うと、URL設計を変更したい場合などに、変更にかかるコストを大幅に削減できます。またURL設計をURLConfに集約できるので、コードやテンプレートの可読性も高まります。</p>
+<p>例えば、「当初、"/entries/{entry_id}/"のようなURLをブログ・エントリのパーマリンクとしていたが、開発段階でパーマリンクを"{entry_id}/"に変更することになった」というケースを考えてみてください。この場合でも、permalink, reverse, {% url %}を使っていれば、URLConfを書き換えるだけで済みます。</p>
+<p>今回のコード例は下記のリンクからダウンロードできますので、どうぞご利用ください。</p>
+<p><a href="http://labs.unoh.net/download/djagno071003.tgz">django071003.tgz</a></p>
+
+
+{% endraw %}

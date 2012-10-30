@@ -1,0 +1,112 @@
+---
+layout: post
+title: "日本語とPHP"
+---
+{% raw %}
+<style type="text/css">
+table.yamaoka_ { margin:left: 1em; border-collapse: collapse; }
+table.yamaoka_ th, table.yamaoka_ td { border: 1px solid #fff; }
+</style>
+
+<p>yamaokaです。</p>
+
+<p>
+PHPで日本語を扱う場合、mbstringモジュールを利用する場合が多いと思います。
+日本語に特有の機能（カタカナの全角/半角変換など）も備わっていて、とても便利です。
+しかし、日本以外ではmbstringモジュールはあまり利用されていないようです。
+代わりに利用されているのがiconvモジュールで、
+最近話題のフレームワーク、<a href="http://www.symfony-project.com/">symfony</a>でも
+国際化の機能を実現するために内部で利用されています。
+</p>
+
+<p>
+iconvモジュールはPHP 5でPHPの本体に組み込まれました。
+別途用意して組み込む必要があるmbstringモジュールと違って、最初から使用できるので便利ですね。
+PHPのマニュアルの<a href="http://jp.php.net/manual/ja/ref.iconv.php">iconv関数</a>のページを見ると、
+いくつかの関数が定義されているのがわかります。
+それぞれ、<a href="http://jp.php.net/manual/ja/ref.mbstring.php">mbstring関数</a>との
+対応表を作ってみました。
+</p>
+
+<table class="yamaoka_">
+<thead>
+<tr><th>iconv関数</th><th>mbstring関数</th></tr>
+</thead>
+<tbody>
+<tr><td>iconv_get_encoding</td><td>mb_http_input, mb_http_output, mb_internal_encoding</td></tr>
+<tr><td>iconv_mime_decode_headers</td><td>mb_decode_mimeheader</td></tr>
+<tr><td>iconv_mime_decode</td><td>mb_decode_mimeheader</td></tr>
+<tr><td>iconv_mime_encode</td><td>mb_encode_mimeheader</td></tr>
+<tr><td>iconv_set_encoding</td><td>mb_http_output, mb_internal_encoding</td></tr>
+<tr><td>iconv_strlen</td><td>mb_strlen</td></tr>
+<tr><td>iconv_strpos</td><td>mb_strpos</td></tr>
+<tr><td>iconv_strrpos</td><td>mb_strrpos</td></tr>
+<tr><td>iconv_substr</td><td>mb_substr</td></tr>
+<tr><td>iconv</td><td>mb_convert_encoding</td></tr>
+<tr><td>ob_iconv_handler</td><td>mb_output_handler</td></tr>
+</tbody>
+</table>
+
+<p>
+mbstring関数は上に挙げた関数以外にも定義されているので、mbstring関数の方が機能的には豊富です。
+また、php.iniで設定できる内容の対応表も作ってみました。
+</p>
+
+<table class="yamaoka_">
+<thead>
+<tr><th>iconvセクション</th><th>mbstringセクション</th></tr>
+</thead>
+<tbody>
+<tr><td>iconv.input_encoding</td><td>mbstring.http_input</td></tr>
+<tr><td>iconv.internal_encoding</td><td>mbstring.internal_encoding</td></tr>
+<tr><td>iconv.output_encoding</td><td>mbstring.http_output</td></tr>
+</tbody>
+</table>
+
+<p>
+php.iniで設定することができる内容もmbstringモジュールの方が多く、
+iconvモジュールで実現できることはmbstringモジュールと比較すると
+かなり制限があることがわかります。
+</p>
+
+<p>
+また、サポートされているエンコーディングの種類が異なります。
+</p>
+
+<p>
+mbstringモジュールでサポートされているエンコーディングは、
+<a href="http://jp.php.net/manual/ja/function.mb-list-encodings.php">mb_list_encodings関数</a>などで確認することができます。
+また、<a href="http://jp.php.net/manual/ja/ref.mbstring.php">マニュアルにも詳細に記載されて</a>います。
+SJIS-winやeucJP-winなど、Windows特有のエンコーディングにも対応しています。
+</p>
+
+<p>
+それに対して、iconvモジュールでサポートされる文字セットはOSのiconvライブラリの実装に依存します。
+詳細は<a href="http://www.gnu.org/software/libiconv/">libiconvのサイト</a>を参照してください。
+ここで注意すべきなのは、Windows上で扱われる文字セット（cp932など）がサポートされていないことです。
+この場合、全角のローマ数字などが正常に変換されない場合があるので注意が必要です。
+この件に関しては、<a href="http://www.miraclelinux.com/technet/samba30/iconv_issues.html">Samba国際化プロジェクトのページ</a>
+に詳しくまとめられているので参考になります。
+</p>
+
+<p>
+上記のような現状から考えると、mbstringモジュールを利用することが日本語を扱う一番の早道です。
+ですが、オープンソースのプロジェクトなどでmbstringモジュールの使用を前提にできない場合、iconv関数を利用する必要があるかもしれません。
+また、個人的に海外のレンタルサーバなどを利用する場合は、<a href="http://sourceforge.jp/projects/mbemulator/">mbstringエミュレータ</a>や
+<a href="http://www.spencernetwork.org/">jcode.php</a>を利用するのがお勧めです。
+mbstringとほぼ同等の機能を、ライブラリとして利用することができます。
+</p>
+
+<p>
+PHP 6ではInternational Components for Unicode（ICU）を利用して
+Unicodeがサポートされます。日本語の取り扱いも変わってくると思われるので、要チェックですね。
+</p>
+
+<p>以下追記です:</p>
+<ul>
+<li>iconv関数自体はPHP 4のころから存在します。PHPに標準で組み込まれるようになったのがPHP 5からです。</li>
+<li>Linuxだとglibcのiconvでcp932がサポートされており、使用可能のようです。</li>
+<li>日本語とPHPについてもっと詳しく知りたい方は、書籍の<a href="http://www.amazon.co.jp/exec/obidos/ASIN/4798111058/unoh-22/ref=nosim/">『超・極める！ PHP』</a>がお勧めです。</li>
+</ul>
+
+{% endraw %}

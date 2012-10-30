@@ -1,0 +1,170 @@
+---
+layout: post
+title: "iPhoneアプリRjDjのシーン開発入門"
+---
+{% raw %}
+<p>こんにちは、五十川です。</p>
+
+<p>RjDjというiPhoneアプリをご存知でしょうか。既によく知られたアプリですが、音声入力やタッチパネル、加速度センサーなど、iPhoneのデバイスインタフェースを使って、ユニークな音響をインタラクティブに作り出すことができるアプリです。と言っても、RjDj自体はその上で動作するアプリケーションのプラットフォームであり、さまざまなアプリケーションをインストールすることで、それぞれに異なるサウンドが体験できます。</p>
+
+<p>RjDj上で動作するアプリケーションは「シーン」と呼ばれます。</p>
+
+<p>以下のビデオの冒頭で流れる映像の音声は、<a href="http://rjdj.me/music/Damian%20Stewart/Eargasm/">Eargasm</a>というシーンによる録音で、緩やかに流れる背景音に、深いエコーがかかった子供の声が重なり、なんだか夢の中にでも迷い込んだかのような雰囲気が醸し出されます。このシーンは、iPhoneのマイクが拾った音をリアルタイムに加工しており、それを加速度センサーがさらに変化させています。</p>
+
+<p><a href="http://www.youtube.com/watch?v=Q5Oa61KIBvs">http://www.youtube.com/watch?v=Q5Oa61KIBvs</a></p>
+
+<p>以下のビデオは<a href="http://rjdj.me/music/Amaury%20Hazan/Strike%20v2.0/">Strike</a>（ストライキ）というシーンのデモンストレーションです。このシーンはビデオでご覧の通り、iPhoneのタッチパネルと加速度センサーの操作によって、さまざまな音が鳴り出し、それが次々と変化して複雑なビートが形成されていきます。</p>
+
+<p><a href="http://www.youtube.com/watch?v=g8PiKnEioTA">http://www.youtube.com/watch?v=g8PiKnEioTA</a></p>
+
+<p>以下のオーディオは<a href="http://rjdj.me/music/Kids%20on%20DSP/Doppelganger/">Doppelganger</a>（ドッペルゲンガー）というシーンを渋谷駅で録音したものです。iPhoneのマイクが拾った構内アナウンスや列車の入線音などが強烈に加工され、カオスな音響が生み出されています。</p>
+
+<p><a href="http://rjdj.me/user/ucb/recording/22348/">http://rjdj.me/user/ucb/recording/22348/</a></p>
+
+<p>以下のオーディオは<a href="http://rjdj.me/music/Stefan%20Smulovitz/Time/">Time</a>というシーンによる録音で、女声のインプロビゼーションがタッチパネル操作でランダムに再生され、幾重にも折り重なっていきます。波のような音は加速度センサーに反応して再生されています。</p>
+
+<p><a href="http://rjdj.me/user/ucb/recording/22351/">http://rjdj.me/user/ucb/recording/22351/</a></p>
+
+<p>RjDjは、現在はiPhone（およびマイクを繋いだiPod touch）のみに提供されていますが、他のデバイスへの提供やプラットフォームのオープンソース化が表明されています。</p>
+
+<h3>RjDjとPure Data（PD）</h3>
+
+<p>RjDjのコアは、マルチメディア向けのビジュアルプログラミング言語であるPure Data（PD）のランタイムをiPhoneにインプリメントしたものです。PDは、同種の商用ソフトウェアであるMax/MSPのもともとの開発者ミラー・パケットさんが、オリジナルのMaxを再設計して作りあげたフリーソフトウェアです。<br />
+PDのプログラムは「パッチ」と呼ばれますが、RjDjのアプリケーションであるシーンは、このPDのパッチで構成されます。</p>
+
+<p>PDは、Max/MSPと異なりフリーソフトウェアであるため、誰でも手軽にRjDjのシーン開発を始められます。また、テキストベースのプログラミング言語では複雑になりがちな音声処理プログラムを、VPLならではのグラフィカルな操作によって、比較的容易に開発することができます。</p>
+
+<p>開発したシーンは、デベロッパー登録もジェイルブレイクも必要なしにiPhoneにインストールでき、また、RjDjのウェブサイト<a href="http://rjdj.me/">RjDj.me</a>でシーンを公開することも可能で、現在では有料での配信も可能になっています。</p>
+
+<h3>シーン開発の準備</h3>
+
+<p>RjDjのシーンを開発するには、なにはともあれPDが必要です。<br />
+ミラー・パケットさんによるオリジナルのPD（PDバニラ）は以下から入手できます。</p>
+
+<p><a href="http://crca.ucsd.edu/~msp/software.html">http://crca.ucsd.edu/~msp/software.html</a></p>
+
+<p>PDをインストールしたら、ひとまずオーディオ出力を確認しておくとよいでしょう。PDを起動して、Media→Test Audio and MIDIメニューを選択すると以下のようなウィンドウが表示されます。左上にある「TEST TONES」のdB値（OFF/60/80）のボックスをクリックして音が再生されることを確認してください。コンピュータにマイクが接続されていれば、中央の「monitor-inputs」をチェックすればマイクが拾った音が再生される筈です。</p>
+
+<div><a href="http://photozou.jp/photo/show/784/25778048"><img src="http://art14.photozou.jp/pub/784/784/photo/25778048.png" alt="PD - Test Audio and Midi" width="450" height="368" style="border:0" /></a></div>
+
+<p>次いで、RjDjのシーン開発者向けに用意されている、シーンのテンプレートやユーティリティ、サンプルのシーンなどをまとめたComposer's Packを以下から入手します。</p>
+
+<p><a href="http://trac.rjdj.me/wiki/ComposersPack">http://trac.rjdj.me/wiki/ComposersPack</a></p>
+
+<p>Composer's Packは任意のディレクトリに配置できますが、シーンの開発を行うには、Composer's Pack内の<code>pd</code>ディレクトリを、PDの検索パスに設定しておく必要があります。PDの検索パスは、Windows版ではFile→Pathメニュー、Mac OS X版ではPreferences→Pathメニューから設定できます。これにより<code>soudinput/soundoutput</code>など、<code>pd</code>ディレクトリ内にあるRjDj固有のアブストラクションが、PDで利用できるようになります。</p>
+
+<p>以下はRjDjのSubversionリポジトリにある<a href="http://rjdj.me/music/Mike%20Dixon/Noble%20Choir/">Noble Choir</a>というシーンの_main.pdです。緑色でvolumeと表示されているオブジェクト（アブストラクション）が<code>soudinput/soundoutput</code>ですが、検索パスが正しく設定されていれば、<code>soudinput/soundoutput</code>オブジェクトはこのように表示される筈です。</p>
+
+<div><a href="http://photozou.jp/photo/show/784/25778043"><img src="http://art12.photozou.jp/pub/784/784/photo/25778043.png" alt="Noble Choir _main.pd" width="450" height="353" style="border:0" /></a></div>
+
+<h3>iPhoneへのシーンのインストール</h3>
+
+<p>Composer's Packの<code>example_scenes</code>ディレクトリ内にはサンプルのシーンがいくつかあります。これをiPhoneにインストールしてみましょう。これにはComposer's Packに付属する、rjzserverというウェブサーバプログラムを使用します。また、iPhoneは、rjzserverを起動するコンピュータと同じWi-Fiネットワークに接続されている必要があります。</p>
+
+<p>シーンは、本来はRjDj.meからダウンロードされるわけですが、iPhoneのHTTPプロキシにrjzserverを設定し、すべてのHTTPリクエストをrjzserverに処理させることで、rjzserverを実行しているコンピュータにあるシーンを、iPhoneでダウンロードできるようになります。</p>
+
+<p>rjzserverはPythonプログラムで、Windows版とMac OS X版にはそれぞれのプラットフォーム用のアプリケーションバイナリが付属しています。例えばWindowsでは、Composer's Packの<code>rjzserver.win/rjzserver.exe</code>を起動します。</p>
+
+<p>rjzserverを起動したら、iPhoneにインストールするシーンのディレクトリを設定します。<br />
+サンプルのシーンはComposer's Packの<code>example_scenes</code>ディレクトリ内にあり、名前が「.rj」で終わるディレクトリが各シーンです。rjzserverのFile→Set scene directoryメニューを選択して表示されるファイルオープンダイアログで、<code>example_scenes</code>ディレクトリを選択します（各シーンごとのディレクトリではなく、その1ヶ上の階層を指定する点に注意してください）。</p>
+
+<p>rjzserverを起動すると <code>http://192.168.x.x:8314/</code> のようなURLが表示されます。このIPアドレスとポート番号を、iPhoneのWi-FiネットワークのHTTPプロキシに設定します。</p>
+
+<div><a href="http://photozou.jp/photo/show/784/25778054"><img src="http://art14.photozou.jp/pub/784/784/photo/25778054.png" alt="rjzserver main window" width="450" height="251" style="border:0" /></a></div>
+
+<p>iPhoneのWi-Fi設定で、接続するWi-Fiネットワーク名の右側にある矢印をタップし、Wi-Fiネットワークの設定画面を表示します。設定画面の一番下にある「HTTPプロキシ」を「手動」に変更して、rjzserverが表示しているURLのIPアドレス（192.168.x.x）を「サーバ」に、ポート番号（8314）を「ポート」に設定します。</p>
+
+<div><a href="http://photozou.jp/photo/show/784/25778061"><img src="http://art15.photozou.jp/pub/784/784/photo/25778061.jpg" alt="Wi-Fi HTTP proxy setting" width="300" height="450" style="border:0" /></a></div>
+
+<p>iPhoneのモバイルSafariで <code>http://rjdj.me/</code> にアクセスします。HTTPプロキシがrjzserverに設定されているので、本来のRjDj.meではなく、rjzserverの画面が表示されます。</p>
+
+<p>rjzserverの画面にはインストール可能なシーンの一覧が表示されます。シーン名は各シーンのディレクトリ名ですが、名前の末尾の「.rj」が「.rjz」に変わっています。この画面でシーン名のリンクを開くと、RjDjが起動しシーンのインストールが行われます。</p>
+
+<div><a href="http://photozou.jp/photo/show/784/25778057"><img src="http://art12.photozou.jp/pub/784/784/photo/25778057.jpg" alt="rjzserver on Mobile Safari" width="300" height="450" style="border:0" /></a></div>
+
+<p>なお、作業が完了した後でiPhoneのHTTPプロキシの設定を元に戻すのを忘れないでくださいね。</p>
+
+<h3>Subversionリポジトリ</h3>
+
+<p>Composer's Packに付属のサンプルシーンはプログラミングの参考となることを意図しているので、概ねシンプルで数も限られていますが、<a href="http://trac.rjdj.me/browser/trunk/rjdj_scenes">シーンのSubversionリポジトリ</a>では、アプリにバンドルされているものやRjDj.meで配信されているシーンを確認することができます。</p>
+
+<pre class="code">svn co http://svn.rjdj.me/scenes/trunk/rjdj_scenes</pre>
+
+<p>現時点ではこのリポジトリには50ヶ弱のシーンがあり、これらは上述のサンプルシーンと同様の手順で、iPhoneのRjDjに実際にインストールすることができます。</p>
+
+<h3>テンプレート</h3>
+
+<p>新たにシーンを開発する際は、Composer's Packにあるシーンのテンプレートである<code>SceneTemplate.rj</code>をコピーし、これを変更していきます。</p>
+
+<p>テンプレートは以下のファイルとディレクトリで構成されています。</p>
+
+<ul>
+    <li><code>_main.pd</code></li>
+    <li><code>Info.plist</code></li>
+    <li><code>image.jpg</code></li>
+    <li><code>rj/</code></li>
+</ul>
+
+<p><code>_main.pd</code>は、名前の通りメインのパッチです。</p>
+<p><code>Info.plist</code>はお馴染みのplistファイルで、ここにはシーンのメタデータを記述します。</p>
+<p><code>image.jpg</code>はRjDjでのシーンの再生時に表示される画像です。</p>
+
+<p>プログラミングの詳細はここでは触れませんが、サンプルのシーンを参考にすれば、簡単なパッチはすぐに作成できるでしょう。特にモジュラーシンセサイザーの仕組みをご存知なら、PDの理解は速いと思います。RjDj/PDのプログラミングに興味を持たれたかたは是非以下をご覧になってください。</p>
+
+<ul>
+  <li>
+      <a href="http://nagano.monalisa-au.org/?p=519">#001 RjDj(Single Album) | My Codex Leicester</a>
+      <p>「オトカメラ」などのiPhoneアプリの作者で、<a href="http://www.amazon.co.jp/exec/obidos/ASIN/4798118885/unoh-22/ref=nosim/">iPhone x Music -iPhoneが予言するいつか音楽と呼ばれるもの</a>の著者のひとり、永野哲久さんによる記事です。</p>
+  </li>
+  <li>
+      <a href="http://blog.makezine.com/archive/2008/11/howto_hacking_rjdj_with_p.html">Make: Online : How-to: Hacking RjDj with PD</a>
+      <p>RjDjのシーン開発の、具体的かつ詳細な解説です。</p>
+  </li>
+</ul>
+
+<p>RjDj.meのドキュメントはもちろん必読です。</p>
+
+<ul>
+  <li><a href="http://trac.rjdj.me/">RjDj Developer Wiki</a></li>
+  <li><a href="http://more.rjdj.me/howto-create-rjdj-scenes/">RjDj &raquo; How to create RjDj scenes</a></li>
+  <li><a href="http://more.rjdj.me/2009/06/23/editing-drum-patterns-in-rjdj/">RjDj &raquo; Blog Archive   &raquo; Editing Drum Patterns in RjDj</a></li>
+ </ul>
+
+<p>PD関連のリソースはWikipediaにまとめられています。</p>
+
+<ul>
+  <li><a href="http://ja.wikipedia.org/wiki/Pure_Data">Pure Data - Wikipedia</a></li>
+</ul>
+
+<p>RjDjの開発スタッフは各地でSprintと呼ばれるシーン開発のワークショップを開催しており、2009年9月10日と翌11日（つまり今週！）には日本で初めてのSprintが開催されます（残念ながら既に定員に達しているようですが）。</p>
+
+<ul>
+  <li><a href="http://tokyomax.jp/rjdj/">RjDj Sprint Tokyo</a></li>
+  <li><a href="http://more.rjdj.me/category/events/">RjDj Sprints</a></li>
+</ul>
+
+<h3>RjDj/Trippy/Shakeについて</h3>
+
+<div style="padding:.5em;border:1px solid #999;">※ 以下では「115円のRjDj」と書いていますが、これを書いた時点では一時的に有料化されていたRjDjは、アップルが無料アプリでのアプリ内課金を許可したのに伴い、2009年10月15日に<a href="http://more.rjdj.me/2009/10/15/rjdj-is-free-again/">再び無料</a>になりました。</div>
+
+<p>現時点でApp Storeで「RjDj」を検索すると、115円のRjDjと、それぞれ350円のTrippyとShakeという、3ヶのアプリが検索されます。</p>
+<p>もともとRjDjは、無料の「シングル」と有料の「アルバム」というラインアップでした。シングルはシーンがひとつだけ付属する、デモ版的位置付けのもので、その他のシーンはアルバムとして有料で販売されるというビジネスモデルだったわけです。しかしiPhone OS 3.0がもたらしたアプリ内課金によって、各シーンを個別に販売することが可能になったため、このラインアップは一新されました。</p>
+<p>115円のRjDjがかつてのシングルですが、その位置付けはもはやアルバムのデモ版であるより、アプリ内課金のプラットフォームである点に重きが置かれています。なお、無料であったシングルが有料化されたのは、アップルが無料アプリのアプリ内課金を認めていないためです。</p>
+<p>紛らわしいことに、RjDjより高価なTrippy/Shakeにはシーンのダウンロード機能がなく、従ってアプリ内課金にも対応していません。これは、今後のアルバムのリリースはアーティスト単位のものが中心になる予定で（<a href="http://rjdj.me/music/Kids%20on%20DSP/">Kids on DSP</a>のアルバムが近日リリース予定だそうです）、アーティストのアルバムに、ダウンロードによって別のアーティストのシーンが混入してしまうのは好ましくないためであると説明されています。なおアルバムの購入者は、RjDjを持っていれば、購入したアルバムに収録のシーンをRjDjに無料でダウンロードできます。</p>
+<p>なお、これまでは3ヶのアプリにはいずれも「RjDj」という名前が冠されていました。App Storeで「RjDj」を検索すると、3ヶのアプリがすべて検索されるのはこのためですが、区別を明確にするためにTrippyとshakeは、名前から「RjDj」が除かれました。</p>
+
+<h3>Jasuto</h3>
+
+<p>最後にもうひとつ別のiPhoneアプリを紹介します。RjDjやPDに興味を持たれたかたには、Jasutoというアプリも興味深いと思います。これはモジュラーシンセサイザーに分類されるアプリですが、そのコンセプトやインタフェースは、PDやMax/MSPのものに極めて近く、それをもう少しわかりやすく、ポップなインタフェースを持たせたものといった印象です。</p>
+
+<p><a href="http://www.youtube.com/watch?v=uHlrzIrimO4">http://www.youtube.com/watch?v=uHlrzIrimO4</a></p>
+
+<p>Jasutoでも音声入力や加速度センサーなどが利用できるため、RjDjのシーンのような音響を作り出すことが可能です。なによりJasutoの画期的な点は、VPL的音響プログラミングがiPhone上で直接行えるということです。実際iPhoneのようなタッチパネルインタフェースは、VPLプログラミングには最適なわけで、Jasutoはそれを実感できるアプリでもあります。</p>
+
+<h3>最後に</h3>
+
+<p>先述の通り、来週いよいよRjDj Sprint Tokyoが開催されます。RjDj自体はよく知られていますが、そのシーン開発についての記事は、前提知識を持たない初心者にとっては少々敷居の高いものが多いように思えたので、日本初のSprint開催を記念して、初歩的なことがらを解説しみました。</p>
+<p>RjDjの醍醐味のひとつは、手軽にシーンの開発が行える点にあると思います。RjDjのシーン開発ならObjective-Cもデベロッパー登録も必要なく、iPhoneのサウンドプログラミングが手軽に行えます（WindowsやLinuxでもできます！）。RjDjを楽しまれているかたは、是非オリジナルのシーン開発にも挑戦してみてください。</p>
+
+<div class="amazlet-box" style="margin-bottom:0px;"><div class="amazlet-image" style="float:left;"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4798118885/unoh-22/ref=nosim/" name="amazletlink" target="_blank"><img src="http://ecx.images-amazon.com/images/I/51ED4zfnPZL._SL160_.jpg" alt="iPhone×Music iPhoneが予言する「いつか音楽と呼ばれるもの」" style="border: none;" /></a></div><div class="amazlet-info" style="float:left;margin-left:15px;line-height:120%"><div class="amazlet-name" style="margin-bottom:10px;line-height:120%"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4798118885/unoh-22/ref=nosim/" name="amazletlink" target="_blank">iPhone×Music iPhoneが予言する「いつか音楽と呼ばれるもの」</a><div class="amazlet-powered-date" style="font-size:7pt;margin-top:5px;font-family:verdana;line-height:120%">posted with <a href="http://www.amazlet.com/browse/ASIN/4798118885/unoh-22/ref=nosim/" title="iPhone×Music iPhoneが予言する「いつか音楽と呼ばれるもの」" target="_blank">amazlet</a> at 09.09.06</div></div><div class="amazlet-detail">徳井 直生 永野 哲久 金子 智太郎 <br />翔泳社 <br />売り上げランキング: 98313<br /></div><div class="amazlet-review" style="margin-top:10px; margin-bottom:10px"><div class="amazlet-review-average" style="margin-bottom:5px">おすすめ度の平均: <img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-5-0.gif" alt="5.0" /></div><img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-5-0.gif" alt="5" /> iPhoneは音楽を変えるの？<br /></div><div class="amazlet-link" style="margin-top: 5px"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4798118885/unoh-22/ref=nosim/" name="amazletlink" target="_blank">Amazon.co.jp で詳細を見る</a></div></div><div class="amazlet-footer" style="clear: left"></div></div>
+{% endraw %}

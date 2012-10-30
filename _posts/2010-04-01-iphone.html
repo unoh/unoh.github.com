@@ -1,0 +1,93 @@
+---
+layout: post
+title: "iPhoneでモテモテアイコン（？）"
+---
+{% raw %}
+とうとう彼女ができたkeitaです。<br />
+やっと、デスマーチにもほどがある<a href="http://fixdap.com/p/cocoiti/">fixdap</a>を終了できそうです。ありがとう！<br />
+<br />
+そんなことは、どうでもよく、最近、iPhoneで複数のアイコンを並べることで画像を表示できるアプリをみて、「アプリは大変だけどWebクリップなら簡単だな」とおもって遊んでみました。<br />
+<br />
+やることとしては<br />
+<ul>
+ <li>iPhoneの画面に合わせて画像をアイコンサイズに切り分け</li>
+ <li>Webクリップとしてそれぞれの画像をhtmlに記述</li>
+ <li>iPhoneで1ページ、1ページ頑張って登録(全部で16個）</li>
+</ul>
+<br />
+になります。<br />
+
+<h2>iPhoneの画面に合わせて画像をアイコンサイズに切り分け<</h2>
+まず1個めの画像をアイコンサイズに切り分けですが大体コードとしてはこんな感じで書けます。<br />
+横幅とかサイズとかは、ドット単位で自分で数えました。<br />
+ただ、僕の目がおかしいかもしれないので数ドット単位でずれてるかもしれません。<br />
+<pre class="code">
+&lt;?php
+class IphoneIcons
+{
+    protected
+        $maxWidth = 282,
+        $maxHight = 324,
+        $iconSize = 57,
+        $spaceWidth = 18,
+        $spaceHeight = 32,
+        $image = null;
+
+    public function __construct($filename)
+    {
+        $this->image = new Imagick($filename);
+    }   
+
+    public function cropEcho($x, $y)
+    {
+        $scaleY = ($this->spaceHeight + $this->iconSize) * $y;
+        $scaleX = ($this->spaceWidth + $this->iconSize)  * $x;
+        $imageWork = $this->image->clone();
+        $imageWork->cropThumbnailImage($this->maxWidth, $this->maxHight);
+        $string = (string) $imageWork; //crop前に変換されてくれない問題対応
+        $imageWork->cropImage($this->iconSize, $this->iconSize, $scaleX, $scaleY);
+        $imageWork->setImageFormat('png');
+        header(sprintf('Content-Type:%s', $imageWork->getImageMimeType()));
+        echo $imageWork;
+    }
+}
+
+// 
+
+$icons = new IphoneIcons('machi.gif');
+$x = 0; //一番左
+$y = 0; //一番上
+$icons->cropEcho($x, $y); のアイコンをecho
+</pre>
+<br />
+
+<h2>Webクリップとしてそれぞれの画像をhtmlに記述</h2>
+Webクリップってなんぞやっていうと、57x57を用意して、iPhone用のタグを書くことによってブックマーク登録時にアイコンがiPhoneに表示される機能です、詳しくは、Appleの<a href="http://developer.apple.com/safari/library/documentation/AppleApplications/Reference/SafariWebContent/ConfiguringWebApplications/ConfiguringWebApplications.html">Specifying a Webpage Icon for Web Clip</a>あたりを参考にしてください。<br />
+
+<pre class="code">
+&lt;link rel="apple-touch-icon" href="/path/to/apple-touch-icon.gif" /&gt; //影がついて立体的になる
+&lt;link rel="apple-touch-icon-precomposed" href="/path/to/apple-touch-icon.gif" /&gt; //影がつかない
+</pre>
+
+上記のページを4x4=16ページ用意して先ほどの画像を用意したら出来上がりです。<br />
+
+
+<h2>iPhoneで1ページ、1ページ頑張って登録(全部で16個）</h2>
+用意したURLにiPhoneで1個1個アクセスして登録をしたら下記のようなiPhoneの出来上がりです。<br />
+
+
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="iphone_machi.jpg" src="http://labs.unoh.net/iphone.jpg" width="320" height="480" class="mt-image-none" style="" /></span>
+<br />
+
+
+これで合コンにモテモテになって彼女ができました。<br />
+という妄想をして、残念ながらそんなこともなく、今年度も独り身で頑張っていこうと心に強く念じる32歳春でした。<br />
+記事の内容については本当です。
+
+ご参考になれば幸いです
+
+
+<div style="margin:0;padding:.5em;border:2px solid #ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br />
+<a href="http://www.unoh.net/recruit.html">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください。<br/>
+<a href="http://www.find-job.net/fj/showjob.cgi?id=50212">Find Job!</a>でも募集してます！</div>
+{% endraw %}

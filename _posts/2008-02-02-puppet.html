@@ -1,0 +1,96 @@
+---
+layout: post
+title: "システム自動管理ツールPuppetを使ってみた"
+---
+{% raw %}
+<p>miyakeです。今日は、近頃話題のオープンソースなシステム自動管理ツール「Puppet」の小ネタをご紹介します。</p>
+<p>今回使用した環境ですが、とりあえず試してみようという感じで、CentOS5.0(x86_64)にDAGリポジトリから0.22.4をインストールしています。現時点でのstable版は0.23.2なのでやや古く、設定や機能も変わっているため、本エントリの内容が合致しない場合もあるかと思いますがご容赦ください。</p>
+
+<p>インストールや基本的な設定は、gihyo.jpにてペパボCTOのmizzyさんが執筆されている連載が大変詳しいので、そちらをご覧ください。</p>
+<ul>
+ <li><a href="http://gihyo.jp/admin/serial/01/puppet">連載：オープンソースなシステム自動管理ツール Puppet｜gihyo.jp</a></li>
+ <li><a href="http://trac.mizzy.org/puppet">puppet wiki （パペウィキ）</a></li>
+ <li><a href="http://reductivelabs.com/trac/puppet">Puppet公式</a></li>
+</ul>
+
+<p>本エントリでは、そうして試したみたところ僕自身が引っ掛かった部分などをご紹介します。</p>
+
+<p>単にpuppetmasterdとpuppetdを起動した状態だと、クライアントが定期的にマスターからマニフェストを取得しますが、通常の運用ではやはりマスターから能動的にマニフェストを配布したい場面が多いのではないでしょうか。そこで用意されているのがpuppetrunですが、個人的に欲しい挙動と少し違ったので、別のアプローチを取っています。</p>
+<p>まず、puppetrunを本格的に使うには、LDAPによるノード管理が実質ほぼ必須になってきますが、ちょっと試してみようという向きにはハードルが高いように思います。</p>
+<p>また、puppetrunをkillした時にTCP:8139を解放してくれないことがありました。「基本はpuppetrunで走らせるけど、ちょっとverboseで動かしたい」という時にこれで困りました。もっともこれは現行のバージョンでは直っている可能性も高いのですが。</p>
+<p>ちなみに、puppetdはTCP:8140、puppetrunはTCP:8139で通信を行いますが、puppetrunを使用する場合はPuppetクライアントとなるサーバがpingに応答する必要があります。どうやら、puppetrunはPuppet通信を行う前に、対象のサーバにpingを投げて疎通確認をしているようです。</p>
+
+<p>そんな経緯で、ssh経由で各クライアントのpuppetdを実行するシェルスクリプトを書きました。ssh経由で「sudo /usr/sbin/puppetd」を実行しているので、それを許可しているネットワークでしか実行出来ません。</p>
+<pre class="code"><code>#!/bin/sh
+
+PUPPET_SERVER="puppetserver"  # puppetmasterdを動かすサーバ
+PUPPET_OPTIONS="--onetime -v --logdest /var/log/puppet/puppet.log"  # puppetdの実行オプション
+
+HOGE_SERVERS=(
+HOGE01
+HOGE02
+...
+)
+
+FOO_SERVERS=(
+FOO01
+FOO02
+...
+)
+
+dopuppet() {
+    for i in $@; do echo "[$i]"; ssh $i sudo /usr/sbin/puppetd --server $PUPPET_SERVER $PUPPET_OPTIONS; echo; done
+}
+
+if [ $1 ]
+then
+    case "$1" in
+        all)
+        dopuppet ${HOGE[@]}
+        dopuppet ${FOO[@]}
+        ;;
+        hoge)
+        dopuppet ${HOGE[@]}
+        ;;
+        foo)
+        dopuppet ${FOO[@]}
+        ;;
+        *)
+        dopuppet $@
+    esac
+    exit 0
+else
+    echo "Usage: dopuppet {all|hoge|foo|[servers]}"
+    echo ""
+    echo "  dopuppet all"
+    echo "      run puppetd in all servers"
+    echo ""
+    echo "  dopuppet hoge"
+    echo "      run puppetd in hoge group"
+    echo ""
+    echo "  dopuppet foo"
+    echo "      run puppetd in foo group"
+    echo ""
+    echo "  dopuppet [servers]"
+    echo "      run puppetd in any servers like 'dopuppet server01 server02 ...'"
+    echo ""
+    echo "This script wrote by Ryo Miyake&lt;miyake@unoh.net&gt;"
+    exit 1
+fi</code></pre>
+
+<p>HOGE_SERVERSやFOO_SERVERSにサーバの一覧を記述して、それをグループとして扱います。マニフェストのクラス設定に合わせておく想定です。マニフェストと自動で同期出来ないためDRYではありませんが、「使ってみたいけどLDAPで管理するとこまではちょっとしんどい」という場合（すごくニッチかも知れませんが）にはこういうアプローチもあるよということで。マニフェストから自動的にクラス毎のサーバ定義を取得してくれるスクリプトとかあると便利かも知れません。</p>
+
+<p>スクリプト内で指定しているpuppetdの起動オプションの解説もしておきます。</p>
+<dl>
+ <dt>--onetime</dt>
+ <dd>マニフェストを一度適用したらpuppetを終了します。コマンドラインから実行する時に。</dd>
+ <dt>-v（--verbose）</dt>
+ <dd>詳細を標準出力に出す。</dd>
+ <dt>--logdest</dt>
+ <dd>ログを任意のファイルに出力。confの設定より優先されます。</dd>
+</dl>
+
+<p>上記スクリプトでは、マニフェストの適用が1サーバずつになるため、動作の詳細を把握しやすい代わりに、一定の台数を超えると実行に時間がかかりすぎるという問題もあります。</p>
+<p>100大規模以上のネットワークではやはりpuppetrunを使用するのが王道かと思いますが、ちょっと試してみたい場合の参考になれば幸いです。</p>
+
+{% endraw %}

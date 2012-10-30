@@ -1,0 +1,118 @@
+---
+layout: post
+title: "Linuxをネットワーク経由で自動インストールする方法（前編）"
+---
+{% raw %}
+ <p>miyakeです。今回は近頃流行りの、サーバの自動インストール方法をご紹介します。</p>
+ <p>1エントリにまとめるには内容が多かったので、2回に渡って書きたいと思います。ひとまず今日のところは「ネットワークブートから手動インストール」までです。</p>
+ <p>自動化の部分を期待された方は申し訳ありませんが、次回のエントリをお待ちください（普段より早めに書きたいとは思います）。</p>
+ <p>ウノウラボでは「<a href="http://labs.unoh.net/2006/07/post_26.html"> ベンチャー流サーバ構築のススメ(ソフトウェア編)</a>」と題して、OSをインストールではなくコピーする方法をご紹介しています。両者を簡単に比較してみると、それぞれ以下のような特徴があります。</p>
+
+ <h3>■OSコピーのメリット</h3>
+ <dl>
+  <dt>新サーバの環境構築の手間がほとんどない</dt>
+  <dd>最低限、IPアドレスの設定だけ変更すればすぐに実践投入できます。</dd>
+  <dt>完全に同じ構成のサーバを用意出来る</dt>
+  <dd>当然ながら、インストールされたパッケージだけでなく、サーバ内のファイルも同じになります。</dd>
+ </dl>
+ <p>既存のサービスで負荷が大きくなった時に即増設、といった用途には非常に便利です。</p>
+ 
+ <h3>■自動インストールのメリット</h3>
+ <dl>
+  <dt>物理的にディスクを移動する必要がない</dt>
+  <dd>コピーする場合はHDDを物理的につなぎ換えますが、その必要がありません。</dd>
+  <dt>サーバの構成を完全に把握できる</dt>
+  <dd>インストールするパッケージを設定ファイルで指定するため、何が入っているかが把握しやすくなります。</dd>
+  <dt>違う構成のサーバを立てやすい</dt>
+  <dd>設定ファイルを変更すれば、用途に応じたサーバが用意出来ます。</dd>
+ </dl>
+ <p>最初の項は、ネットワーク越しにディスクコピーする環境を作ればまた話は違ってきますが、今のところウノウではそうなっていません。</p>
+ <p>こちらは初期導入で大量のサーバをセットアップする場合や、用途毎にハード構成が異なる場合に有効です。</p>
+ <p>また、VMwareでテスト環境を作ったり、別のプロジェクトで新しいサーバを立ち上げるのにも便利です。</p>
+ <p>それぞれに異なる利点がありますので、用途に応じて使い分けが出来ればいいと思います。</p>
+
+ <h3>■概要</h3>
+ <p>サーバの自動インストールを行うには、以下のような行程をとります。</p>
+ <ol>
+  <li>PXEブート環境の構築</li>
+  <li>kickstartファイルの作成</li>
+  <li>サーバをPXEブートする</li>
+ </ol>
+ <p>2番のkickstartファイル（自動インストール用の設定ファイル）は次回に触れるとして、今日は1番のPXEブート環境の構築方法をご紹介します。</p>
+ <p>なお、OSはCentOS5(x86_64)を使用した場合を例としますが、他のディストリビューションでも基本は同じのはずです。</p>
+
+
+<h3>■tftp-serverの構築</h3>
+ <p>まず、PXEによるネットワークブート環境を構築します。PXEブートを行うには、新規にセットアップするサーバ以外に起動用のサーバが必要になります。</p>
+ <p>インストール用の環境は、既存のサーバ上に作ってもいいですし、VMwareで専用のサーバを作ってしまうのも手です。ノートPCに VMwareでPXEブート用のサーバを作っておくと、別の場所でサーバを新しく立ち上げるのに便利なので気に入っています。</p>
+
+ <p>PXEブートを行うには、tftpサーバとdhcpサーバ、それにインストールするOSの起動イメージが最低限必要となります。まずは以下のようにして、パッケージをインストールします。</p>
+ <pre class="code"><code>sudo yum install tftp-server dhcp</code></pre>
+ <p>tftp-serverはインストールしただけでは有効にならないので、/etc/xinetd.d/tftpを編集します。「disable = yes」となっている行を「disable = no」と変更します。</p>
+ <p>次に、PXEブート用のブートローダをコピーします。以下の作業は/tftpboot（tftp-server導入時に作られるディレクトリ）に書き込み権限を持った状態で行ってください。</p>
+ <pre class="code"><code>cd /tftpboot
+cp /usr/lib/syslinux/pxelinux.0 .</code></pre>
+ <p>pxelinux.0がどこにも見当たらない場合はsyslinuxがインストールされていない可能性がありますので、その場合はインストールしてください。CentOSでは最初から入っていました。</p>
+ <p>そして、インストールするOSの起動イメージを適当なミラーサーバからダウンロードします。</p>
+ <pre class="code"><code>mkdir centos5_64
+cd centos5_64
+wget http://ftp.iij.ad.jp/pub/linux/centos/5.0/os/x86_64/images/pxeboot/initrd.img
+wget http://ftp.iij.ad.jp/pub/linux/centos/5.0/os/x86_64/images/pxeboot/vmlinuz</code></pre>
+ <p>他のOSをインストールする場合は、それぞれのinitrd.imgとvmlinuzを用意してください。</p>
+ <p>後は、起動用の設定ファイルが必要になります。以下の内容で、/tftpboot/pxelinux.cfg/defaultを作成します。</p>
+ <pre class="code"><code>default centos5_64
+prompt 1
+timeout 15
+
+label centos5_64
+kernel centos5_64/vmlinuz
+append load initrd=centos5_64/initrd.img noipv6 devfs=nomount</code></pre>
+ <p>以上の設定が完了したら、tftp-serverを起動します。tftp-serverはxinetd上で動作するので、以下のようにします。</p>
+ <pre class="code"><code>sudo /etc/init.d/xinetd start</code></pre>
+ <p>xinetdはtftp-serverをインストールする時に一緒に入るので、個別に導入する必要はありません（CentOSの場合）。</p>
+
+ <h3>■dhcpdの構築</h3>
+ <p>インストールはtftp-serverと一緒に済ませたので、こんな感じで設定ファイルを自分の環境に合わせて書き換えます。/etc/dhcpd.confをこんな感じで書きます。</p>
+ <pre class="code"><code>ddns-update-style interim;
+ignore client-updates;
+
+subnet 192.168.10.0 netmask 255.255.255.0 {
+        option routers                  192.168.10.1;
+        option subnet-mask              255.255.255.0;
+
+        option domain-name              "dev.local";
+        option domain-name-servers      192.168.10.1;
+
+        option time-offset              -18000; # Eastern Standard Time
+
+        range dynamic-bootp 192.168.10.80 192.168.10.99;
+        default-lease-time 21600;
+        max-lease-time 43200;
+
+        filename "pxelinux.0";
+}</code></pre>
+ <p>IPの設定などは環境に合わせて適宜変更してください。PXEブート用の特別な設定は、最後の「filename」の指定だけです。ここでPXEのブートローダを指定します。</p>
+ <p>設定が終わったらdhcpdを起動します。</p>
+ <pre class="code"><code>sudp /etc/init.d/dhcpd start</code></pre>
+ <p>これでPXEブートの環境が整いました。</p>
+ <p>なお、手元の環境では問題ありませんでしたが、ルータ側のDHCP機能を有効にしている場合、もしかしたらそちらが優先されてしまうことがあるかも知れません。その場合はルータのDHCPをoffにしてください。</p>
+
+ <h3>■インストール対象のサーバを起動</h3>
+ <p>あとは、新しいサーバに電源を入れて、ネットワークから起動するだけです。BIOSの設定や起動時の操作で、ネットワークから起動してやってください。</p>
+ <p>そうすれば、PXEブート用のサーバからIPや起動イメージを取得して、Linuxのインストーラが起動するはずです。</p>
+<p><a href="http://photozou.jp/photo/show/784/5808803"><img src="http://art2.photozou.jp/pub/784/784/photo/5808803.jpg" alt="PXEブート時のイメージ" width="450" height="295" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/5808803">PXEブート時のイメージ</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a></p>
+ <p>インストールに使用するメディアは、公開ミラーのftpやhttpから取得してもいいですし、LAN内で用意してやればより高速です。もちろんローカルの光学ドライブからインストールすることも出来ますが、それだとせっかくPXEブートにした意味がありません。</p>
+
+ <h3>■まとめと予告</h3>
+ <p>今回の内容で、ネットワークブートからインストーラを起動するところまでは完了です。この時点で、Linuxのインストールに光学ドライブが不要になりました。これだけでもそれなりに便利だとは思いますが、やはりインストールまで自動でやってしまいたいですね。</p>
+ <p>ということで、次回はこのPXEブート環境を発展させて、OSのインストールを自動化します。</p>
+ <p>なお、PXEブートの設定は今回最も基本的と思われる内容だけをご紹介しましたが、pxelinux.cfg/以下の設定によって複数の起動イメージを使い分けるなど、様々なことが出来ます。そのあたりも調べてみると面白いかも知れません。</p>
+
+ <h3>■参考サイト</h3>
+ <p>本エントリを書くに当たって、主に以下のサイトを参考にさせて頂きました。この場を借りてお礼申し上げます。</p>
+ <ul>
+  <li><a href="http://itpro.nikkeibp.co.jp/article/COLUMN/20070530/272928/">第1回　ネットワーク経由でCentOSを導入する：ITpro</a></li>
+  <li><a href="http://mitty.jp/pc/networkboot/">PXEを使ったネットワークブート</a></li>
+  <li><a href="http://d.hatena.ne.jp/asaox/20060127">asaoxの日記 - PXEBootによるFedoraCore4のインストール</a></li>
+ </ul>
+{% endraw %}

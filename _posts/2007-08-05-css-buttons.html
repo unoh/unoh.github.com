@@ -1,0 +1,89 @@
+---
+layout: post
+title: "buttonタグでサブミットするあれこれ"
+---
+{% raw %}
+CSSでいつも悩まされるのはクロスブラウザですけど、フォームでは特に面倒くさい要素が山盛りですよね。ボタンの文言を動的に変えたいから画像はなるべく使いたくないけど、だからといってブラウザのデフォルトのボタンとか、味気ないですものね。<br/>
+<br/>
+今日は、フォームにつきもののボタンについて考えてみます。<br/>
+<br/>
+私たちがボタンに求めるモノって、何でしょう。<br/>
+<ul>
+  <li>
+    データを送信（submit）する
+  </li>
+  <li>
+    どのブラウザでも同じように見える
+  </li>
+  <li>
+    使い回しが聞く<br/>
+  </li>
+  <li>
+    ボタンについている文言がどんなに長くなっても、水平方向の長さがフレキシブル
+  </li>
+  <li>
+    上記のようにサイズ的にフレキシブルであっても、見た目の美しさを阻害しない<br/>
+  </li>
+  <li>
+    ボタンの大きさ＝クリックできるエリアの大きさ<br/>
+  </li>
+  <li>
+    画像がdiableされていても使用可
+  </li>
+  <li>
+    CSSがdisableされていても使用可
+  </li>
+  <li>
+    ボタンのように見えて実はただのリンクの時のもある
+  </li>
+</ul>
+<br/>
+これらの要求を解決してくれる方法が複数出てきているので、まとめてみたいと思います。<br/>
+<br/>
+共通する鍵は、inputタグの代わりに、buttonタグを使用している点です。<br/>
+<br/>
+1．今までのようにinputを使用<br/>
+<pre class="code">
+&lt;input type="submit" value="Submit" /&gt;
+</pre>
+<br />
+2．buttonタグを使ってみる <br/>
+
+<pre class="code">
+&lt;button type="submit"&gt;Submit&lt;/button&gt;
+</pre>
+<br/><br/>
+この二つの方法は、まったく同じ様に<span style="FONT-WEIGHT:bold">データを送信して、さらにタブインデックスやアクセスキーもアサインできる</span>し、状況に応じて<span style="FONT-WEIGHT:bold">disableにすることもできます</span>。
+
+見た目の違いといえば、1の方法だとSafariでデフォルトでつくアクアなデザインが、2ではつかずにFirefoxのような、面白みのないグレーのボタンになること。実はこれが、素敵なデザインのボタンを作るうえで重要な鍵なんです。input type="submit"を使用すると、Safariではアクアなあのボタンイメージを強制されてしまって、例えば
+
+<pre class="code">
+&lt;div class="submitBtn"&gt;&lt;input type="submit" value="Submit" /&gt;&lt;/div&gt;
+</pre>
+
+などとしてsubmitBtnに素敵なスタイルを施してあげても、アクアなボタンが重なってきて邪魔されます。でも、button要素なら大丈夫。<span style="FONT-WEIGHT:bold">Safariでもアクアなボタンは出てきません</span>から、ほかのブラウザと同じようにスタイルしてあげることができます。<br/><br/>
+
+もうひとつ重要な鍵は、<span style="FONT-WEIGHT:bold">button要素では中にほかのHTML要素を入れてあげられること</span>です。<br/><br/>たとえば、
+<pre class="code">
+&lt;button type="submit"&gt;&lt;img alt="print.png" src="http://labs.unoh.net/print.png" width="16" height="16" /&gt;プリント&lt;/button&gt;
+</pre>
+
+<button type="submit"><img alt="print.png" src="http://labs.unoh.net/print.png" width="16" height="16" />プリント</button><br />
+などとアイコンを入れたりというのも、これで可能になるわけです（全くスタイルしてない状態なのでずれてますが、ご勘弁ください）。<br /><br />
+
+そしてもちろん、<span style="FONT-WEIGHT:bold">CSSや画像がアクティブになっていなくても、buttonタグの行動は変わりません</span>。<br /><br />
+
+この特性を応用しているのが、下記の二つのサンプルです。それぞれ画像入りでわかりやすいサンプルを紹介してくれているので、私のほうは手を抜いて、まとめだけにします。<br/><br/>
+
+1. <a href="http://particletree.com/features/rediscovering-the-button-element/" title="基本編（Particletree）"><span style="FONT-WEIGHT:bold">基本編（Particletree）</span></a><br/><br/>
+
+ボタン自体はシンプルにbackground-colorとborderのみを使い、ボタンアクションの内容に応じて小さなアイコンを乗っける方法です。上のほうに、前述したbutton要素の特性も説明してあります。実際にデータを送信するためのボタンと、リセットなどデータを送信する必要のない場合のリンクと、どちらも同じような見た目にするために、buttonタグとaタグを同様にスタイルしています。<br/><br/>さらにアイコンを挿入することで、Web Applicationで複雑になりがちなフォームアクションを、感覚的にわかりやすく表現することができるのです。<br/><br/>
+
+2．<span style="FONT-WEIGHT:bold">応用編</span><br/><br/>
+
+上記を応用して、<a href="http://www.google.co.jp/search?hl=ja&amp;client=firefox-a&amp;rls=org.mozilla%3Aen-US%3Aofficial&amp;hs=UpL&amp;q=sliding+door+css&amp;btnG=%E6%A4%9C%E7%B4%A2&amp;lr=lang_ja" title="sliding door">sliding door</a>のテクニックでbackground-imageを使用できるようにしたのがこの二つの例。<br/><a href="http://www.oscaralexander.com/tutorials/how-to-make-sexy-buttons-with-css.html" title="Alex Griffioen方式">Alex Griffioen</a> - ここではさらに、ボタンを押したときのあのポチッという感覚を再現するために、:activeを使用しています。<br/><a href="http://www.filamentgroup.com/lab/buttonElement/" title="filament group inc.方式">Filament Group</a> - こちらではマウスオーバーしたときに画像が変わるように、:hoverが使用されています。<br/><br/>ちなみに、Alexの例ではaタグが使用されているのですが、もちろんbuttonに置き換えればデータを送信するわけです。ただ、残念ながらIEでは:active、:hoverなどのダイナミック疑似クラスはaタグ以外では有効ではありませんので、ポチッと感やマウスオーバーは犠牲にしなければなりません。<br/><br/>いかがでしたか？お試しください！
+
+<br />
+<br />
+<br />
+{% endraw %}

@@ -1,0 +1,370 @@
+---
+layout: post
+title: "ベンチャー流サーバ構築のススメ(同期ツール編)"
+---
+{% raw %}
+<p>ダイエット中で炭水化物の量が気になる尾藤正人です。</p>
+
+<p>前回のエントリ<a href="http://labs.unoh.net/2006/07/post_26.html">ベンチャー流サーバ構築のススメ(ソフトウェア編)</a>では、主にOS周りのことについて書きました。複数台のサーバを管理するのに重要なのは極力構成を同じにすることです。そうすることで管理コストが大幅に下がります。</p>
+
+<p>以前Klabさんの<a href="http://dsas.blog.klab.org/archives/50331232.html">サーバ管理者向け無精のすすめ ～ちょっと便利なツールの紹介～</a>というエントリで同期ツールの紹介がありましたが、ウノウでも同じような感じの独自ツールを作って同期をとっています。今回はこの同期ツールの紹介をしたいと思います。</p>
+
+<p>僕が shell scripter ということもあってスクリプトは全て sh で。zsh の特殊な記法が使いたかったので zsh で書いています。</p>
+
+<p><strong>凡例</strong></p>
+
+<p>全てのコマンドは最後に対象とするホスト名を指定します。all というは特殊な指定で全てのサーバに対してリクエストが送られます。</p>
+
+<p><strong>共通関数</strong></p>
+
+<p>全てのスクリプトから読み込まれる共通関数です。</p>
+
+<pre class="source_code">
+function absdirname()
+{
+        local dir=`dirname $1`
+        if [ "x$dir" = "x." ]; then
+                dir=$PWD
+        elif ! echo $dir|grep '^/' > /dev/null; then
+                dir=$PWD/$dir
+        fi
+        cd $dir
+        echo $PWD
+}
+
+function absfilename()
+{
+        local dir=`absdirname $1`
+        if [ "x$dir" = "x/" ]; then
+                dir=""
+        fi
+        echo $dir/`basename $1`
+}
+
+function get_servers()
+{
+        local servers i=1 max=12
+        while [ $i -le $max ]; do
+                servers=(${servers[@]} "s$i");
+                i=`expr $i + 1`
+        done
+        echo ${servers[@]};
+}
+</pre>
+
+<p><strong>dir_diff.sh directory host</strong></p>
+
+<p>ディレクトリ以下にあるファイルの diff を表示します。zsh の "&lt;()" という記法を使ってます。これを使うと標準出力をファイルのように扱えて直接 diff に渡せるので便利です。</p>
+
+<pre class="source_code">
+#!/bin/zsh
+source `dirname $0`/sh_functions
+PROGRAM_NAME=`basename $0`
+
+function usage()
+{
+        echo Usage: $PROGRAM_NAME directory host
+        exit $1
+}
+
+function _dir_diff()
+{
+        if [ -z "$1" -o -z "$2" ]; then
+                echo "Lack of arguments" 1>&2
+                return 1
+        fi
+
+        local source=`absfilename $1`
+        diff -u &lt;(ssh root@$2 find $source|sort) &lt;(sudo find $source|sort)|grep '^\(+\|-\)'
+}
+
+# check arguments
+if [ -z "$1" -o -z "$2" ]; then
+        usage 1
+fi
+
+if [ "x$2" != "xall" ]; then
+        _dir_diff $1 $2
+        exit $?
+fi
+for host in `get_servers`; do
+        echo ++++++++++++++++++++++++++++++++++++++
+        echo + diff from $host
+        echo ++++++++++++++++++++++++++++++++++++++
+        _dir_diff $1 $host
+        echo
+done
+</pre>
+
+<p><strong>rpm_diff.sh host</strong></p>
+
+<p>rpm パッケージの diff を表示します。サーバ間でパッケージの過不足がないかどうか確認するのに使います。</p>
+
+<pre class="source_code">
+#!/bin/zsh
+source `dirname $0`/sh_functions
+PROGRAM_NAME=`basename $0`
+
+function usage()
+{
+        echo Usage: $PROGRAM_NAME host
+        exit $1
+}
+
+function _rpm_diff()
+{
+        if [ -z "$1" ]; then
+                echo "You must specify a host name" 1>&2
+                return 1
+        fi
+
+        diff -u &lt;(ssh root@$1 rpm -qa|sort) &lt;(rpm -qa|sort)|grep '^\(+\|-\)'
+}
+
+# check arguments
+if [ -z "$1" ]; then
+        usage 1
+fi
+
+if [ "x$1" != "xall" ]; then
+        _rpm_diff $1
+        exit $?
+fi
+for host in `get_servers`; do
+        echo ++++++++++++++++++++++++++++++++++++++
+        echo + diff from $host
+        echo ++++++++++++++++++++++++++++++++++++++
+        _rpm_diff $host
+        echo
+done
+</pre>
+
+<p><strong>xdiff.sh source host</strong></p>
+
+<p>ファイルの diff をとります。設定ファイルがちゃんと同期されてるかどうか確認したりするのに便利です。</p>
+
+<pre class="source_code">
+#!/bin/zsh
+source `dirname $0`/sh_functions
+PROGRAM_NAME=`basename $0`
+
+function usage()
+{
+        echo Usage: $PROGRAM_NAME source host
+        exit $1
+}
+
+# check arguments
+if [ -z "$1" -o -z "$2" ]; then
+        usage 1
+fi
+
+if [ "x$2" != "xall" ]; then
+        _xdiff $1 $2
+        exit $?
+fi
+for host in `get_servers`; do
+        echo ++++++++++++++++++++++++++++++++++++++
+        echo + diff from $host
+        echo ++++++++++++++++++++++++++++++++++++++
+        _xdiff $1 $host
+        echo
+done
+</pre>
+
+<p><strong>xexec.sh command [options ...] host</strong></p>
+
+<p>host で指定されたサーバでコマンドを実行します。ライブラリが更新されたときに一気に全サーバで ldconfig 実行したりとか、他にもいろいろ使えます。</p>
+
+<pre class="source_code">
+#!/bin/zsh
+source `dirname $0`/sh_functions
+PROGRAM_NAME=`basename $0`
+
+function usage()
+{
+        echo "Usage: $PROGRAM_NAME command [options ...] host"
+        exit $1
+}
+
+function _xexec()
+{
+        if [ -z "$1" -o -z "$2" ]; then
+                echo "Lack of arguments" 1>&2
+                return 1
+        fi
+
+        ssh root@$2 $1
+}
+
+# check arguments
+if [ -z "$1" -o -z "$2" ]; then
+        usage 1
+fi
+
+host=
+command=
+while [ -n "$1" ]; do
+        command="$command $host"
+        host=$1
+        shift
+done
+
+if [ "x$host" != "xall" ]; then
+        _xexec $command $host
+        exit $?
+fi
+for host in `get_servers`; do
+        echo ++++++++++++++++++++++++++++++++++++++
+        echo + execute $command on $host
+        echo ++++++++++++++++++++++++++++++++++++++
+        _xexec $command $host
+        if [ $? -ne 0 ]; then
+                echo "Failed to execute on $host" 1>&2
+                exit $?
+        fi
+        echo
+done
+</pre>
+
+<p><strong>xrsync.sh source host</strong></p>
+
+<p>その名の通り rsync します。ファイルを一斉にシンクロするのに便利です。</p>
+
+<pre class="source_code">
+#!/bin/zsh
+source `dirname $0`/sh_functions
+PROGRAM_NAME=`basename $0`
+
+function usage()
+{
+        echo Usage: $PROGRAM_NAME source host
+        exit $1
+}
+
+function _xrsync()
+{
+        if [ -z "$1" -o -z "$2" ]; then
+                echo "Lack of arguments" 1>&2
+                return 1
+        fi
+
+        local opts source host
+        while [ -n "$1" ]; do
+                opts="$opts $source"
+                source=$host
+                host=$1
+                shift
+        done
+
+        local source=`absfilename $source`
+        local destination=`dirname $source`
+
+        local opts="-auvz -e ssh $opts"
+        eval sudo rsync $opts $source root@$host:$destination
+}
+
+# check arguments
+if [ -z "$1" -o -z "$2" ]; then
+        usage 1
+fi
+
+host=
+arguments=
+while [ -n "$1" ]; do
+        arguments=(${arguments[@]} $host)
+        host=$1
+        shift
+done
+
+if [ "x$host" != "xall" ]; then
+        _xrsync ${arguments[@]} $host
+        exit $?
+fi
+for host in `get_servers`; do
+        echo ++++++++++++++++++++++++++++++++++++++
+        echo + rsync to $host
+        echo ++++++++++++++++++++++++++++++++++++++
+        _xrsync ${arguments[@]} $host
+        if [ $? -ne 0 ]; then
+                echo "Failed to execute on $host" 1>&2
+                exit $?
+        fi
+        echo
+done
+</pre>
+
+<p><strong>xscp.sh source [source ...] host</strong></p>
+
+<p>こっちは scp 版。ちょっとしたファイルを同期したときに便利。</p>
+
+<pre class="source_code">
+#!/bin/zsh
+source `dirname $0`/sh_functions
+PROGRAM_NAME=`basename $0`
+
+function usage()
+{
+        echo "Usage: $PROGRAM_NAME source [source ...] host"
+        exit $1
+}
+
+function _xscp()
+{
+        if [ -z "$1" -o -z "$2" ]; then
+                echo "Lack of arguments" 1>&2
+                return 1
+        fi
+
+        local sources host
+        while [ -n "$1" ]; do
+                sources=(${sources[@]} $host)
+                host=$1
+                shift
+        done
+
+        local opts="-pr"
+        local source destination
+        for source in ${sources[@]}; do
+                source=`absfilename $source`
+                destination=`dirname $source`
+                eval sudo scp $opts $source root@$host:$destination
+        done
+}
+
+# check arguments
+if [ -z "$1" -o -z "$2" ]; then
+        usage 1
+fi
+
+host=
+sources=
+while [ -n "$1" ]; do
+        sources=(${sources[@]} $host)
+        host=$1
+        shift
+done
+
+if [ "x$host" != "xall" ]; then
+        _xscp ${sources[@]} $host
+        exit $?
+fi
+for host in `get_servers`; do
+        echo ++++++++++++++++++++++++++++++++++++++
+        echo + scp to $host
+        echo ++++++++++++++++++++++++++++++++++++++
+        _xscp ${sources[@]} $host
+        if [ $? -ne 0 ]; then
+                echo "Failed to execute on $host" 1>&2
+                exit $?
+        fi
+        echo
+done
+</pre>
+
+<p><strong>まとめ</strong></p>
+
+<p>サーバ間の同期を取るためにウノウで導入しているツール群を紹介しました。こういう細かいツールを最初に作っておくと、作業が効率よく進み非常に楽になります。ぜひ、みなさんの環境でも導入してみてはいかがでしょうか。</p>
+
+<p>何回か続けてきたベンチャー流サーバ構築のススメですが、おかげさまでみなさんから多くのトラックバック、コメント、ブックマークをいただきました。今回で大体サーバ構築に関するトピックは網羅したかと思います。何かありましたら、トラックバックなりコメントなりをいただければ幸いです。</p>
+{% endraw %}

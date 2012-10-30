@@ -1,0 +1,183 @@
+---
+layout: post
+title: "PHP標準の機能（だけ）でウェブサイトのサムネイルを作る"
+---
+{% raw %}
+<p>こんばんわ、isogawaです。</p>
+
+<p>PHP 5.2.2以降には、Windows版限定で一部のスキモノには注目の機能が追加されています。GDライブラリの開発者<a href="http://blog.thepimp.net/">Pierre-A. Joye</a>によって実装された、imageGrabScreenとimageGrabWindowのふたつの関数がそれで、それぞれ画面全体と個々のウィンドウをキャプチャーするものです。</p>
+
+<p>これを使えば、例えばInternet Explorerの画面をキャプチャーして、ウェブページのスクリーンショットやサムネイルを簡単に作成できたりします。ウェブページのキャプチャーはすでに色々な方法が知られていますが、標準機能として用意されたことで、（既存の手法と比べて性能面での優劣はさておき）実にお手軽に作成できるようになったわけです。</p>
+
+<p>てなことで、これで遊んでみようと思うのですが。まずもちろん、Windows版PHPの5.2.2以降は必須ですが、これを利用するには、Windowsのサービスとして動作しているウェブサーバに、&ldquo;デスクトップとの対話をサービスに許可&rdquo;してやる必要があります。これを設定するには、Windowsコントロールパネルの管理ツールから「サービス」を選び、ウェブサーバがApacheなら、サービスの一覧からApacheを選択して表示される画面の「ログオン」タブで、「デスクトップとの対話をサービスに許可」をチェックして、Apacheを再起動してください。</p>
+
+<div>
+<a href="http://photozou.jp/photo/show/784/4099752"><img src="http://art6.photozou.jp/pub/784/784/photo/4099752.png" alt="デスクトップとの対話をサービスに許可" width="450" height="411" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/4099752">デスクトップとの対話をサービスに許可</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a>
+</div>
+
+<p>ではまず試しにInternet Explorerのウィンドウをキャプチャーして、そのサムネイル（ここでは160×120ピクセル）を表示してみましょう。PHPからIEを操作するにはCOMを使用します。</p>
+
+<pre class="code"><code>&lt;?php
+
+$url = 'お好みのURLをどーぞ';
+
+if (!extension_loaded('gd')) {
+  exit('GD library is not loaded.');
+} elseif (!function_exists('imagegrabwindow')) {
+  exit('Function imageGrabWindow is not exist.');
+}
+try {
+  $ie = new COM('InternetExplorer.Application');
+  $handle = $ie-&gt;HWND;
+  $ie-&gt;Width = 800;
+  $ie-&gt;Height = 600;
+  $ie-&gt;Visible = true;
+  $ie-&gt;Navigate($url);
+  while ($ie-&gt;Busy) {
+    com_message_pump(4000);
+  }
+  $image = imagegrabwindow($handle);
+  $ie-&gt;Quit();
+} catch (Exception $e) {
+  exit($e->getMessage());
+}
+if (!$image) {
+  exit('Failed to grab image.');
+}
+$thumb = imagecreatetruecolor(160, 120);
+imagecopyresampled(
+  $thumb, $image,
+  0, 0, 0, 0, 160, 120, 800, 600
+);
+header('Content-Type: image/jpeg');
+imagejpeg($thumb);</code></pre>
+
+<p>ここではIEの起動時のウィンドウサイズを800×600に変更していますが、このようにIE（IWebBrowser2オブジェクト）のプロパティ/メソッドを操作することで、PHPでその動作や見た目を変更できます。IWebBrowser2オブジェクトで利用できるプロパティ/メソッドについては<a href="http://msdn2.microsoft.com/en-us/library/Aa752127.aspx">IWebBrowser2 Interface</a>を参照ください。</p>
+
+<p>なお、途中のwhile文では、ページを読み込んでいる最中の画面をキャプチャーしないように、IEがページの読み込みを完了するまで待機しています。</p>
+
+<p>さて、imageGrabScreen/imageGrabWindowが返すのはGDリソースなので、上の例のように、GDを使ってキャプチャー画像をリサイズしたり、あるいは文字や図形を重ねたりと、自由に変形できますが、さてそれではなにをしようかと思ったところで、ここで画像のリサイズコードをだらだらと書いてもしょうがないので、<a href="http://photozou.jp/basic/api">フォト蔵API</a>を利用して、作成したスクリーンショットをフォト蔵にアップロードしてみることにしました。</p>
+
+<p>以下のスクリプトの実行にはフォト蔵アカウントが必要です。もしまだアカウントをお持ちでなければ是非、<a href="http://photozou.jp/basic/regist">登録ページ</a>でユーザ登録してください！</p>
+
+<ul>
+<li>フォト蔵では、写真や動画のアップロードはアルバム単位で行います。以下のスクリプト中で指定するアルバムのIDは、アルバムを表示したページのURL（http://photozou.jp/photo/list/数字/数字）の、末尾のほうの数字になります。例えば<a href="http://photozou.jp/photo/list/784/1771">このアルバム</a>の場合、IDは「1771」です。</li>
+<li>以下ではAPIへのアクセスはPEARのHTTP_Requestで行っています。これがインストールされていない場合は、コマンドプロンプトで「pear install --alldeps HTTP_Request」と叩いてサクっとインストールしてやってください（pearコマンド自体がインストールされていない場合は、まずは「go-pear」を叩いてくださいね）。</li>
+</ul>
+
+<pre class="code"><code>&lt;?php
+
+/*
+ * Photozou username (your email address), password
+ * and the ID number of the album to which you want to post the image.
+ */
+$username = 'フォト蔵のユーザ名（メールアドレス）';
+$password = 'フォト蔵のパスワード';
+$album_id = アップロード先のアルバムのID（数字）;
+
+/*
+ * URL to be displayed in IE.
+ */
+$url = 'お好みのURLをどーぞ';
+
+/*
+ * Check if required libraries are available.
+ */
+require_once 'HTTP/Request.php';
+if (!extension_loaded('gd')) {
+  exit('GD library is not loaded.');
+} elseif (!function_exists('imagegrabwindow')) {
+  exit('Function imageGrabWindow is not exist.');
+}
+
+/*
+ * Launch Internet Explorer and capture the window image.
+ * Exit if COM throws an exception.
+ */
+try {
+  $ie = new COM('InternetExplorer.Application');
+  $handle = $ie-&gt;HWND;
+  $ie-&gt;Width = 800;
+  $ie-&gt;Height = 600;
+  $ie-&gt;Visible = true;
+  $ie-&gt;Navigate($url);
+  while ($ie-&gt;Busy) {
+    com_message_pump(4000);
+  }
+  $image = imagegrabwindow($handle);
+  $ie-&gt;Quit();
+} catch (Exception $e) {
+  exit($e-&gt;getMessage());
+}
+
+/*
+ * Save the captured image as a temporary file.
+ */
+$filename = tempnam(sys_get_temp_dir(), 'tmp');
+if (!$image || !$filename || !imagejpeg($image, $filename) || !file_exists($filename)) {
+  exit('Failed to save image.');
+}
+imagedestroy($image);
+
+/*
+ * Post the temporary file to Photozou via API.
+ */
+$request = new HTTP_Request;
+$request-&gt;setURL('http://api.photozou.jp/rest/photo_add');
+$request-&gt;addHeader('User-Agent', 'Hogebot/1.0 (Bogus)');
+$request-&gt;setBasicAuth($username, $password);
+$request-&gt;setMethod(HTTP_REQUEST_METHOD_POST);
+$request-&gt;addPostData('album_id', $album_id);
+$request-&gt;addFile('photo', $filename, 'image/jpeg');
+$result = $request-&gt;sendRequest();
+
+/*
+ * Exit if the API request was failed.
+ */
+
+$error_message = '';
+$code = $request-&gt;getResponseCode();
+if (PEAR::isError($result)) {
+  $error_message = $result-&gt;getMessage();
+} elseif (!in_array($code, array(200, 401))) {
+  $error_message = &quot;Responded status code was $code.&quot;;
+} elseif ('' == $body = $request-&gt;getResponseBody()) {
+  $error_message = 'Responded body was empty.';
+} else {
+  try {
+    $rsp = new SimpleXMLElement($body);
+  } catch (Exception $e) {
+    $error_message = $e-&gt;getMessage();
+  }
+  if (isset($rsp) and (string) $rsp['stat'] != 'ok') {
+    $api_error_messages = array();
+    foreach ($rsp-&gt;err as $error) {
+      $api_error_messages[] = (string) $error['msg'];
+    }
+    $error_message = implode(&quot;\n&quot;, $api_error_messages);
+  }
+}
+unlink($filename);
+if (!empty($error_message)) {
+  header('Content-Type: text/plain;charset=UTF-8');
+  exit($error_message);
+}
+
+/*
+ * Respond HTML if everything went well.
+ */
+echo &quot;&lt;?xml version=\&quot;1.0\&quot; encoding=\&quot;UTF-8\&quot;?&gt;\n&quot;;
+?&gt;
+&lt;!DOCTYPE html PUBLIC &quot;-//W3C//DTD XHTML 1.0 Transitional//EN&quot; &quot;http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd&quot;&gt;
+&lt;html xmlns=&quot;http://www.w3.org/1999/xhtml&quot; xml:lang=&quot;ja&quot; lang=&quot;ja&quot;&gt;
+  &lt;head&gt;
+    &lt;meta http-equiv=&quot;Content-Type&quot; content=&quot;text/html;charset=UTF-8&quot; /&gt;
+    &lt;meta http-equiv=&quot;Content-Style-Type&quot; content=&quot;text/css&quot; /&gt;
+    &lt;title&gt;Photozou&lt;/title&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+    &lt;h1&gt;Image was uploaded.&lt;/h1&gt;
+    &lt;div&gt;&lt;?php echo $rsp-&gt;large_tag ?&gt;&lt;/div&gt;
+  &lt;/body&gt;
+&lt;/html&gt;</code></pre>
+{% endraw %}

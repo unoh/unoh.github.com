@@ -1,0 +1,111 @@
+---
+layout: post
+title: "国産MySQLストレージエンジン「Spider」の作者、斯波健徳氏に聞く"
+---
+{% raw %}
+<p>こんにちは。中村です。</p>
+<p>MySQLにはMyISAM、InnoDB、CSVなどのいくつかストレージエンジンがありますが、皆さんはSpiderというストレージエンジンを聞いたことはありますでしょうか。<a href="http://spiderformysql.com/index.html">Spider Storage Engine</a>は斯波健徳さんにより作成されたDatabase Shardingを可能にするストレージエンジンでMySQL 5.1で利用可能です。</p>
+<p>先日、某集まりで斯波さんとお会いしたときにSpiderを作っているということを教えてもらったので、早速詳しい内容を教えてもらうことにしました。<br />※Spiderについての説明資料は<a href="http://www.mysqlconf.com/mysql2009/public/schedule/detail/6837">MySQLカンファレンス 2009にて斯波さんが発表</a>されたときのスライドがあります。<a href="http://assets.en.oreilly.com/1/event/21/SPIDER%20Storage%20Engine_%20Database%20Sharding%20by%20Storage%20Engine%20Presentation.zip">スライドの直リンク（zip）</a></p>
+
+<a href="http://photozou.jp/photo/show/784/23545233"><img src="http://art11.photozou.jp/pub/784/784/photo/23545233.jpg" alt="Spider Storage Engine について" width="450" height="299" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/23545233">Spider Storage Engine について</a> posted by <a href="http://photozou.jp/user/top/784">(C)フォト蔵</a>
+
+<h3>Spider Storage Engineとは？</h3>
+
+<p>Spider Storage Engine（以下Spider）はMySQL 5.1で動作するストレージエンジンです。MyISAMやInnoDBと同列の位置付けになります。Spiderをコンパイルして利用可能にするとCREATE TABLEのENGINE指定をして利用できるようになります。</p>
+<p>Spiderはデータを持たないストレージエンジンで、他のMySQLサーバーへのテーブルリンクを行います。データを持たないストレージエンジンと聞くと不思議に感じられますが、プロキシサーバのように他のMySQLサーバへ中継を行います。中継先を複数台サーバに分けることができるため負荷分散やデータ分割に利用することができます。</p>
+<pre class="code"><code>                                +----------+
+                           <=>  |  mysqld  |
+                                +----------+
+Request  =>  +----------+       +----------+
+             |  Spider  |  <=>  |  mysqld  |
+Response <=  +----------+       +----------+
+                                +----------+
+                           <=>  |  mysqld  |
+                                +----------+</code></pre>
+<p>Spiderから接続する先の"データを持つ"ストレージエンジン（上記図ではmysqld）は通常のMySQLサーバで、Spiderがインストールされている必要はありません。このおかげで、Spiderの設定さえ行えば、後は使いなれたInnoDBやMyISAMのノウハウをそのまま利用することができます。また、Spider経由に接続するからといって接続方法やSQL文などに変化はありません。</p>
+
+<h3>インストール</h3>
+<p><a href="https://launchpad.net/spiderformysql/trunk">Spider for MySQL trunk series </a>よりソースとドキュメントを取得することができます。インストール方法は配布されているドキュメントに記載があります。ここではコンパイル部分のみ転載しておきます。参照したドキュメントはspider-doc-0.12-for-5.1.35.tgzになります。</p>
+
+<pre class="code"><code>MySQLのソースの展開。
+# tar zvfx ./mysql-5.1.35.tar.gz
+
+spiderストレージエンジンのソースの展開と移動。
+# tar zvfx ./spider-0.12-for-5.1.35.tar.gz
+# mv ./spider ./mysql-5.1.35/storage
+
+コンパイル準備、コンパイル、インストール。
+# cd ./mysql-5.1.35
+# autoconf
+# automake
+# ./configure --prefix=/usr/local/mysql --localstatedir=/usr/local/mysql/data --libexecdir=/usr/local/mysql/bin --enable-thread-safe-client --enable-local-infile --with-pic --with-fast-mutexes --with-client-ldflags=-static --with-mysqld-ldflags=-static --with-zlib-dir=bundled --with-big-tables --with-ssl --with-readline --with-embedded-server --with-partition --without-innodb --without-ndbcluster --without-archive-storage-engine --without-blackhole-storage-engine --with-csv-storage-engine --without-example-storage-engine --without-federated-storage-engine --with-extra-charsets=complex
+(オプションは適当に変更すること)
+# make
+# make install</code></pre>
+
+<p>このあとにストレージエンジンとして認識させるためのSQL文をいくつか流して準備完了です。<br />※CentOS 5.3の場合、MySQL 5.1が必要とするautoconfのバージョンがCentOSのyumリポジトリよりも高いため今のところautoconf時に失敗します。</p>
+
+<h3>Spiderの利用例（テーブルパーティショニング）</h3>
+
+<p>Spiderは多くの用途に応用できますが、簡単な例としては大量データの分散があります。MySQL 5.1では標準でテーブルパーティショニングを行うことができますが、Spiderを利用することで各パーティションをそれぞれ別のサーバに割り当てることができます。参照クエリはもちろん、更新クエリも複数サーバに処理を分散できるため、レプリケーションを使ってマスタ・スレーブ構成にしているときに悩ましい更新の集中を回避できます。</p>
+
+<h3>JOIN、XAトランザクションをサポート</h3>
+
+<p>データ量や負荷が問題になったときに今まではPHPなどのアプリケーション側で複数台サーバへの分散を行うケースが多かったのではないかと思います。しかし、アプリケーション側で実装しようとすると、JOINやトランザクションなど問題があり一筋縄ではいきません。</p>
+<p>例えばサーバ1とサーバ2にデータを分割しているとします。JOINするときにはサーバ1とサーバ2の両方に接続してJOINする必要がありますが、コネクションをまたがったJOINを行うことはできないため、複数台のサーバに問い合わせるための機構を別途アプリケーション側で実装する必要があります。</p>
+<p>トランザクションについてはサーバ1でCOMMITが成功したがサーバ2でCOMMITしようとするとサーバ2が落ちていた、という場合に問題になります（データ整合性が崩れます）。対応するためにはアプリケーション側で自作のロールバックなどを実装する必要がありますが、個人的には現実的ではないと思います。</p>
+<p>SpiderではJOINおよびXAトランザクション（複数台サーバで同期をとるための仕組み）をサポートしているため、これらの悩みがなくなります。普通にJOINを使用して普通にBEGIN、COMMITすれば良いので、ローカルのInnoDBを使うのと変わりありません。</p>
+
+<h3>複数サーバに分割されていることを意識しない</h3>
+
+<p>Spiderでは「どのデータがどのサーバにあるのか」という情報をSpider側で管理してくれます。また、上記のようにJOINやXAトランザクションをサポートしているため、通常使用するSQLを特に意識することなくそのまま利用できます。つまり、あたかもローカルホストのMySQLサーバをいつも通り操作しているだけのような状態になります。</p>
+<p>このおかげで、アプリケーション側ではデータ分割などについて意識する必要がありません。うまくいけば、データベース側の設定こそ必要ですが、アプリケーションの改修を全く行わずにデータ分散などを実現することができます。</p>
+
+<h3>導入実績</h3>
+<p><a href="http://sagool.tv/">サグールテレビ</a>と<a href="http://kadokaword.jp/">カドカワード.jp</a>にて採用され、実践稼働しているそうです。利用ケースはスライドに記載されています。</p>
+
+<h3>斯波さんにスライドにないことを質問</h3>
+
+<p>せっかくオフィスにお越しいただいたので、いくつか気になることを質問してみました。</p>
+
+<p>Q1: Spiderの名前の由来は？</p>
+<p>斯波（敬称略）: リモートにあるサーバにあるデータを網を引っ掛けて取ってくるイメージでSpiderという名前になりました。</p>
+
+<p>Q2: Spiderを作ろうと思ったきっかけは何ですか？</p>
+<p>斯波: Database Shardingを実現するためです。JOINやトランザクションに対応しているものがなく、データベースだけで問題解決するのが難しかったので自分で作ることにしました。Spiderがあればアプリケーションエンジニアのリソースを使うことなくデータベースエンジニアがいるだけで問題解決できます。</p>
+
+<p>Q3: 開発を始めてからα版リリースまでどのくらいかかりましたか？</p>
+<p>斯波: 2カ月です。不具合はありましたが、やりたいことは一通り動作しました。</p>
+
+<p>Q4: どの程度のデータ量でテストしていますか？</p>
+<p>斯波: テストツールでは1億2千万件程度で行っています。</p>
+
+<p>Q5: Spiderを使うことで制限されることはありますか？</p>
+<p>斯波: 現状では全文検索とR-Treeインデックスがサポートされていません。随時対応していく予定です。
+
+<p>Q6: Spiderにはデータの冗長性やサーバトラブルを考慮した仕組みはありますか？</p>
+<p>斯波: 冗長化についてはDRDBやMySQL Clusterなど良いソリューションがありますので、Spiderと組み合わせて使うことで問題解決できます。Spider自体が機能を提供する予定は今のところありません。</p>
+
+<p>Q7: 海外での反響はありますか？</p>
+<p>斯波: たまにメールが来たりします。</p>
+
+<p>Q8: Spiderの今後について教えてください。</p>
+<p>斯波: 今年夏にGAリリースされます。秋にはSavePointの対応とDrizzleに対応予定です。冬にはOracleのテーブルへもリンクできるように対応予定です。またSpiderの力をより発揮できるように新しいストレージエンジンを現在開発中です（注記:現在は既に公開され<a href="http://wild-growth-ja.blogspot.com/2009/06/mysqlvpvertical-partitioning-01.html">ブログにエントリ</a>されています）。</p>
+
+<a href="http://photozou.jp/photo/show/784/23545237"><img src="http://art13.photozou.jp/pub/784/784/photo/23545237.jpg" alt="Spider Storage Engine について" width="450" height="299" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/23545237">Spider Storage Engine について</a> posted by <a href="http://photozou.jp/user/top/784">(C)フォト蔵</a>
+
+<h3>まとめ</h3>
+
+<p>Spider Storage EngineはGPLライセンスで公開されているオープンソースで、完全に斯波さん個人の開発成果物とのことです。サポート業務は<a href="http://st-global.com/index2.html">ST Global</a>さんでやられているみたいです。</p>
+<p>個人的な印象ですが、「既存システムでデータ量も増えてきたしそろそろ分散しないとパフォーマンスが追いつかないけれど、アプリケーションを改修しようとするとSQLたくさん直さないといけなくて大変」、という場合にSpiderはかなり相性が良いかもしれません。特に更新処理の分散ができる点が特徴的です。データの冗長性なども同時に考える必要がありますが、今後の選択肢の一つとして検討していきたいところです。</p>
+<p>興味を持たれた方は、Spiderで可能になることがその他多数スライドに掲載されていますので、是非スライドもご覧になることをお勧めします。</p>
+<p></p>
+<p>斯波さんへ、今回はウノウラボへの掲載について快諾していただきありがとうございました。</p>
+
+<h3>その他情報など</h3>
+<ul>
+  <li><a href="http://wild-growth-ja.blogspot.com/">Wild Growth 日本語</a><br />斯波さんによるSpiderやVertical Partitioningなどの情報発信ブログ</li>
+  <li><a href="http://datacharmer.blogspot.com/2009/04/test-driving-spider-storage-engine.html">Test driving the Spider storage engine - sharding for the masses (英語)</a><br />実際に使ってみた例が掲載されています</li>
+</ul>
+
+{% endraw %}

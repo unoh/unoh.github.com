@@ -1,0 +1,289 @@
+---
+layout: post
+title: "PHPで暗号化・復号あれこれ"
+---
+{% raw %}
+shimookaです。
+
+皆さんはPHPでデータの暗号化・復号をする必要に迫られた場合、どのようにしているでしょうか？今回は、PHPで利用可能なモジュールやパッケージとそれらのサンプルを3つほど挙げてみました。
+
+<h3>mcrypt拡張モジュールを使った暗号化</h3>
+libmcryptを利用したPHP拡張モジュールです。DES、3DES、Blowfish、RIJNDAEL（ラインダール：<a href="http://ja.wikipedia.org/wiki/AES%E6%9A%97%E5%8F%B7" title="AES暗号 - Wikipedia">AES暗号</a>とも呼ばれる）、<a href="http://ja.wikipedia.org/wiki/Blowfish" title="Blowfish - Wikipedia">Blowfish</a>などのブロック暗号をサポートしています。利用可能な暗号モードはCBC、OFB、CFB、ECBです。
+
+PHPで利用するには、libmcryptをインストールし、configureオプションに「--with-mcrypt」を付ける必要があります。また、PHP5以降、libmcrypt 2.5.6以降が必要です。
+
+以下は、SSHやファイル暗号化ソフトウェアなどに広く利用されている<a href="http://ja.wikipedia.org/wiki/Blowfish" title="Blowfish - Wikipedia">Blowfish</a>を使った暗号化・復号のサンプルコードです。「encrypted data」の値は、毎回変わります。
+
+
+<p><strong>※以下のサンプルは、推奨されていない関数mcrypt_cbcを使っています。代替関数のmcrypt_generic() および mdecrypt_generic()を使ったサンプルは、追記2を参照してください。</strong></p>
+
+
+<pre class="code">
+&lt;?php
+// 暗号化するデータ
+$data = '小池さんはラーメン大好き';
+$base64_data = base64_encode($data);
+echo "data : " . $data . "\n";
+
+// 暗号化キー
+$key = 'the key value for crypting';
+
+/**
+ * 初期化ベクトルを用意する
+ * Windowsの場合、MCRYPT_DEV_URANDOMの代わりにMCRYPT_RANDを使用する
+ */
+$iv = mcrypt_create_iv(mcrypt_get_iv_size(MCRYPT_BLOWFISH, MCRYPT_MODE_CBC), MCRYPT_DEV_URANDOM);
+
+// 暗号化処理
+$encrypted_data = mcrypt_cbc(MCRYPT_BLOWFISH, $key, $base64_data, MCRYPT_ENCRYPT, $iv);
+echo "encrypted data : " . base64_encode($encrypted_data)."\n";
+
+// 復号処理
+$base64_decrypted_data = mcrypt_cbc(MCRYPT_BLOWFISH, $key, $encrypted_data, MCRYPT_DECRYPT, $iv);
+$decrypted_data = base64_decode($base64_decrypted_data);
+echo "decrypted data : " . $decrypted_data . "\n";
+
+echo 'validate : ' . ($data == $decrypted_data ? 'true' : 'false') . "\n";
+</pre>
+
+ここでは、CBCモードを使用するため、mcrypt_cbc関数を使用していますが、その他としてmcrypt_encrypt関数/mcrypt_decrypt関数、mcrypt_generic関数が利用可能です。これらの詳細はPHPマニュアルを参照してください。
+
+サンプルの実行結果は以下の通りです。
+
+<pre class="code">
+$ php ./mcrypt_cbc.php
+data : 小池さんはラーメン大好き
+encrypted data : bOiwSixcIcwn58/rP5u1RPzmy0wH3T+C7cm4HDtmNDXYiG+NYEuWokFcJg1SLmcq
+decrypted data : 小池さんはラーメン大好き
+validate : true
+$
+</pre>
+
+<h3>PEAR::Crypt_Blowfishを使った暗号化</h3>
+PEARパッケージにも暗号化のパッケージが複数用意されています。先のサンプルで使用した暗号化方式<a href="http://ja.wikipedia.org/wiki/Blowfish" title="Blowfish - Wikipedia">Blowfish</a>のパッケージ<a href="http://pear.php.net/package/Crypt_Blowfish" title="PEAR :: Package :: Crypt_Blowfish">PEAR::Crypt_Blowfish</a>も用意されています。2007/11/05時点の最新版は1.1.0RC1です。インストールはpearコマンドを使ったいつもの手順でOKです。今回は、Crypt_Blowfish-1.1.0RC1をインストールしました。
+
+<pre class="code">
+$ sudo pear install -a Crypt_Blowfish
+</pre>
+
+PEAR::Crypt_Blowfishはパッケージ内部で、後述するmcrypt拡張モジュールが利用できる場合、そちらを利用するようになっています。この場合、mcrypt_generic関数を使用することになります。
+
+暗号化・復号のサンプルコードは以下の通りです。なお、以下のサンプルではCBCモードを指定しています（Crypt_Blowfishクラスのfactoryメソッドの第1引数）が、デフォルトのECBモードは現在では推奨されていないモードです。
+
+<pre class="code">
+&lt;?php
+require_once 'Crypt/Blowfish.php';
+
+echo "mcrypt module is " . (extension_loaded("mcrypt") ? "" : "not ") . "loaded\n";
+
+// 暗号化するデータ
+$data = '小池さんはラーメン大好き';
+echo "data : " . $data . "\n";
+
+// 暗号化キー
+$key = 'the key value for crypting';
+
+// CBCモードで暗号化するため、初期化ベクトルを用意する
+$iv = substr(md5(uniqid(rand(), 1)), 0, 8);
+
+// 暗号化処理
+$blowfish = Crypt_Blowfish::factory('cbc', $key, $iv);
+$encrypted_data = $blowfish->encrypt(base64_encode($data));
+echo "encrypted data : " . base64_encode($encrypted_data) . "\n";
+
+
+/**
+ * [BK]mcrypt拡張モジュールがロードされている場合、1つのインスタンスを
+ * 使い回すことができない（mcrypt_generic_deinitしていないため）ので、
+ * 再度インスタンスを取得する必要がある。イケてない。。。
+ */
+if (extension_loaded("mcrypt")) {
+	$blowfish = Crypt_Blowfish::factory('cbc', $key, $iv);
+}
+
+
+// 復号処理
+$decrypted = $blowfish->decrypt($encrypted_data);
+if (PEAR::isError($decrypted)) {
+	die($decrypted->getMessage() . "\n");
+}
+echo $decrypted . "\n";
+$decrypted_data = base64_decode($decrypted);
+
+echo "decrypted data : " . $decrypted_data . "\n";
+echo 'validate : ' . ($data == $decrypted_data ? 'true' : 'false') . "\n";
+</pre>
+
+実行結果は以下のような感じになります。「encrypted data」の値は、毎回変わります。
+<pre class="code">
+$ php ./crypt_blowfish.php
+mcrypt module is not loaded
+data : 小池さんはラーメン大好き
+encrypted data : AM7KWxcRFalD8+GNy996PEXlkcGbpo2naceGi9FlIzWpKEy3DBf7ozh1TcAgVTsH
+5bCP5rGg44GV44KT44Gv44Op44O844Oh44Oz5aSn5aW944GN
+decrypted data : 小池さんはラーメン大好き
+validate : true
+$ 
+</pre>
+
+また、mcrypt拡張モジュールがロードされている場合は、以下のようになります。
+
+<pre class="code">
+$ php ./crypt_blowfish.php
+mcrypt module is loaded
+data : 小池さんはラーメン大好き
+encrypted data : 4S39zUGp3B7GVSCkyaqQP5m9oTAzLbkMIY2yHp7cUdsrNcAhZ9Gv6XIu7XFaep7R
+5bCP5rGg44GV44KT44Gv44Op44O844Oh44Oz5aSn5aW944GN
+decrypted data : 小池さんはラーメン大好き
+validate : true
+$
+</pre>
+
+<h3>openssl拡張モジュールを使った暗号化</h3>
+openssl拡張モジュールを使って、RSA鍵（公開鍵/秘密鍵）を使った暗号化も可能です。先の<a href="http://ja.wikipedia.org/wiki/Blowfish" title="Blowfish - Wikipedia">Blowfish</a>は共通鍵（暗号化・復号に同じ鍵）を使っています。
+
+PHPで利用するには、OpenSSLパッケージをインストールし、configureオプションに「--with-openssl」を付ける必要があります。なお、OpenSSLパッケージは最新のものを使用するようにしましょう。
+
+さて、暗号化・復号を行う前に、以下のような手順で秘密鍵と公開鍵を作成しておきます。
+
+<pre class="code">
+$ mkdir certificates
+$ cd certificates/
+$ openssl genrsa -out privkey_rsa.pem
+$ openssl rsa -pubout -in privkey_rsa.pem -out pubkey_rsa.pem
+$ chmod 400 privkey_rsa.pem
+$ 
+</pre>
+
+暗号化・復号のサンプルは、<a href="http://blog.local.ch/archive/2007/10/29/openssl-php-to-java.html" title="local.ch official blog :: Using OpenSSL, RSA and RC4 to exchange encrypted data from PHP to Java">local.ch official blog</a>に掲載されているものを参考にさせていただきました。
+
+<pre class="code">
+&lt;?php
+/**
+ * $ openssl genrsa -out privkey_rsa.pem
+ * $ openssl rsa -pubout -in privkey_rsa.pem -out pubkey_rsa.pem
+ *
+ * @see http://blog.local.ch/archive/2007/10/29/openssl-php-to-java.html
+ */
+// 公開鍵・秘密鍵を保存したディレクトリ
+define('CERT_DIR', './certificates');
+
+// 暗号化するデータ
+$data = "小池さんはラーメン大好き";
+echo "data : " . $data . "\n";
+
+// 公開鍵を読み込む
+$public_key = openssl_pkey_get_public(file_get_contents(CERT_DIR . "/pubkey_rsa.pem"));
+
+// 暗号化処理
+openssl_seal($data, $encrypted_data, $env_key, array($public_key));
+echo "encrypted data : " . base64_encode($encrypted_data) ."\n";
+echo "env_key : " . base64_encode($env_key[0]) ."\n";
+
+// 鍵リソースの解放
+openssl_free_key($public_key);
+
+
+// 秘密鍵を読み込む
+$private_key = openssl_pkey_get_private(file_get_contents(CERT_DIR . "/privkey_rsa.pem"));
+
+// 復号処理
+if (!openssl_open($encrypted_data, $decrypted_data, $env_key[0], $private_key)) {
+	die(openssl_error_string() . "\n");
+}
+// 鍵リソースの解放
+openssl_free_key($private_key);
+
+echo "decrypted data : " . $decrypted_data . "\n";
+
+echo 'validate : ' . ($data == $decrypted_data ? 'true' : 'false') . "\n";
+</pre>
+
+このサンプルの実行結果は以下の通りです。
+
+<pre class="code">
+$ php ./openssl.php
+data : 小池さんはラーメン大好き
+encrypted data : zvGd1yvHmkptNOlnwg66NSHjwgjSTfNkuH8q3cesaLku115J
+env_key : hXVAaC6TmyGld+nAp4F2PJgTmItLZZ1geymEbcBboSyP3PGC/29HDsFCKU833LMNpdPggA3iziR7pp3Voaz9Hg==
+decrypted data : 小池さんはラーメン大好き
+validate : true
+$
+</pre>
+
+<h3>まとめ</h3>
+BlowfishとRSA鍵を使った暗号化・復号のサンプルをそれぞれ挙げてみましたが、いかがでしたでしょうか？本エントリが少しでもお役に立てると幸いです。
+
+<h3>参考URL・書籍</h3>
+本エントリは以下のサイト・書籍を参考に書かせていただきました。情報を公開していただいたことに改めて感謝いたします。
+
+<ul>
+<li><a href="http://docs.php.net/manual/ja/ref.mcrypt.php">PHP: mcrypt - Manual</a></li>
+<li><a href="http://docs.php.net/manual/ja/ref.openssl.php">PHP: OpenSSL - Manual</a></li>
+<li><a href="http://pear.php.net/package/Crypt_Blowfish" title="PEAR :: Package :: Crypt_Blowfish">PEAR::Crypt_Blowfish</a></li>
+<li><a href="http://blog.local.ch/archive/2007/10/29/openssl-php-to-java.html" title="local.ch official blog :: Using OpenSSL, RSA and RC4 to exchange encrypted data from PHP to Java">local.ch official blog :: Using OpenSSL, RSA and RC4 to exchange encrypted data from PHP to Java</a></li>
+<li><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4797322977/unoh-22/ref=nosim/" name="amazletlink" target="_blank">暗号技術入門-秘密の国のアリス</a>（結城 浩 (著)、ソフトバンククリエイティブ (2003年)、ISBN：4797322977）</li>
+</ul>
+
+<h3>追記（2007/11/06 14:00）</h3>
+
+はてなブックマークのコメントで「復号化ではなくstrong>復号く/strong>が正しい」旨の指摘をいただきました。仰る通りです。タイトル・本文とも修正しました。
+
+ありがとうございました。
+
+<h3>追記2（2007/11/06 14:30）</h3>
+くけーさんからコメントで「mcrypt_cbcはオンラインマニュアルに「使用すべきではありません」とある関数なので, サンプルとして挙げるのに適切ではありません.」との指摘をいただきました。大変失礼しました。仰る通りでした。。。ありがとうございました。
+
+PHPマニュアルには、「mcrypt_generic() および mdecrypt_generic()を参照」とありますので、この2関数を使ったサンプルを以下に挙げておきます。
+<pre class="code">
+&lt;?php
+// 暗号化するデータ
+$data = '小池さんはラーメン大好き';
+$base64_data = base64_encode($data);
+echo "data : " . $data . "\n";
+
+// 暗号化キー
+$key = 'the key value for crypting';
+
+/**
+ * 初期化ベクトルを用意する
+ * Windowsの場合、MCRYPT_DEV_URANDOMの代わりにMCRYPT_RANDを使用する
+ */
+$iv = mcrypt_create_iv(mcrypt_get_iv_size(MCRYPT_BLOWFISH, MCRYPT_MODE_CBC), MCRYPT_DEV_URANDOM);
+
+// 事前処理
+$resource = mcrypt_module_open(MCRYPT_BLOWFISH, '',  MCRYPT_MODE_CBC, '');;
+
+// 暗号化処理
+mcrypt_generic_init($resource, $key, $iv);
+$encrypted_data = mcrypt_generic($resource, $base64_data);
+mcrypt_generic_deinit($resource);
+
+echo "encrypted data : " . base64_encode($encrypted_data)."\n";
+
+
+// 復号処理
+mcrypt_generic_init($resource, $key, $iv);
+$base64_decrypted_data = mdecrypt_generic($resource, $encrypted_data);
+mcrypt_generic_deinit($resource);
+
+$decrypted_data = base64_decode($base64_decrypted_data);
+echo "decrypted data : " . $decrypted_data . "\n";
+
+echo 'validate : ' . ($data == $decrypted_data ? 'true' : 'false') . "\n";
+
+// モジュールを閉じる
+mcrypt_module_close($resource);
+</pre>
+
+出力結果は以下の通りです。
+
+<pre class="code">
+$ php crypt.php
+data : 小池さんはラーメン大好き
+encrypted data : ICO08auHD0ouWlCYnGXU1YsHzd4r2NEGLH+WmtijEPtyjvJlibeahccyQKs1dz95
+decrypted data : 小池さんはラーメン大好き
+validate : true
+$
+</pre>
+{% endraw %}

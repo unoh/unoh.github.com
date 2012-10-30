@@ -1,0 +1,72 @@
+---
+layout: post
+title: "配列要素の存在チェック"
+---
+{% raw %}
+<p>こんにちは。今月入社したyamaokaです。よろしくお願いいたします。</p>
+
+<p>さて、PHPで配列要素の存在チェックを行う場合、どうされていますか？　2通りの書き方があると思いますが、実は動作が異なる場合があるのです。</p>
+
+<pre class="code"><code>
+if (isset($array['foo'])) {   // （1）
+    // 存在する
+}
+if (array_key_exists('foo', $array)) {   // （2）
+    // 存在する
+}
+</code></pre>
+
+<p>（1）の場合、要素の値がnullだと存在しないものとして扱われてしまいます。（2）では、該当するキーが存在しさえすれば存在するものとして扱われます。</p>
+
+<p>配列の要素がnullになる可能性がある場合、<a href="http://jp.php.net/manual/ja/function.array-key-exists.php">array_key_exists関数</a>を用いてチェックを行う必要があります。<a href="http://jp.php.net/manual/ja/function.isset.php">isset関数</a>が使用できるのは、要素の値がnullにならないとわかっている場合だけです。</p>
+
+<p>実行速度はどうでしょうか。<a href="http://pear.php.net/package/Benchmark/">PEAR::Benchmark</a>を利用して計測してみます（計測した環境はWindows XP、PHP 4.4.4です）。</p>
+
+<pre class="code"><code>
+// PEAR::Benchmark
+require_once 'Benchmark/Iterate.php';
+
+$benchmark = new Benchmark_Iterate();
+$array = array('foo' => 'foo', 'bar' => 'bar');
+
+$benchmark->run(100, 'isset_test', array('foo', $array));
+$result = $benchmark->get();
+echo 'isset            : ', $result['mean'], "\n";
+
+$benchmark->run(100, 'array_key_exists_test', array('foo', $array));
+$result = $benchmark->get();
+echo 'array_key_exists : ', $result['mean'], "\n";
+
+function isset_test($key, $array)
+{
+    return isset($array[$key]);
+}
+
+function array_key_exists_test($key, $array)
+{
+    return array_key_exists($key, $array);
+}
+</code></pre>
+
+<p>5回計測を行った結果は以下のようになります。</p>
+
+<pre>
+1回目
+    isset            : 0.000363
+    array_key_exists : 0.000418
+2回目
+    isset            : 0.000388
+    array_key_exists : 0.000431
+3回目
+    isset            : 0.000411
+    array_key_exists : 0.000445
+4回目
+    isset            : 0.000398
+    array_key_exists : 0.000425
+5回目
+    isset            : 0.000396
+    array_key_exists : 0.000420
+</pre>
+
+<p>isset関数を用いた方が若干高速なようです。必要に応じて使い分けるのがよさそうですね。</p>
+{% endraw %}

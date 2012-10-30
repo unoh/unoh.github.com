@@ -1,0 +1,108 @@
+---
+layout: post
+title: "FFmpegで変換した3GPP動画をNTTドコモiモーションのストリーミング再生に対応させる (for Linux)"
+---
+{% raw %}
+<p>isogawaです。</p>
+
+<p>さまざまな形式の動画を携帯電話向けに変換して配信するサービスでは、変換処理をFFmpegで行っている例が多いと思われます。しかしFFmpegが出力する3GPPファイルは、NTTドコモiモーションの、ストリーミング（プログレッシブダウンロード）方式での再生はできません。QuickTime Proや携帯動画変換君で作成した動画はストリーミング再生も可能ですが、変換処理をLinux上で行っている場合には、これらを利用するわけにもいきません（できないことはないですが）。ではどうしたらいいでしょう？という小ネタ。</p>
+
+<h3 style="clear:both">なにが問題なのか</h3>
+
+<pre style="float:right;margin-left:1em;padding:1em;border:1px solid #eee;color:#eee;background-color:#000;line-height:1.1em">+--ftyp
++--free
++--mdat
++--moov
+  +--mvhd
+  +--trak
+  | +--tkhd
+  | +--mdia
+  +--trak
+  | +--tkhd
+  | +--mdia
+  +--udta</pre>
+
+<p>3GPPのファイルフォーマットについては、以前の<a href="http://labs.unoh.net/2007/09/mp43gpp3gpp2.html"> MP4/3GPP/3GPP2ファイルフォーマットの基礎知識</a>をご覧いただくとして、FFmpegが出力する3GPPファイルのAtom/ボックス構造はこんな感じになってます（例によって入れ子は端折ってます）。</p>
+
+<p>このうち、mdatボックスにはメディアデータ（動画や音声の実際のデータ）、moovボックスにはメタデータが格納されているわけですが、この構造だとメディアデータの読み込み完了後にメタデータを読み込むことになるわけで。このままでは、データを逐次読み込んで再生するプログレッシブダウンロードは無理なので、mdatとmoovの順番を入れ替えてやる必要があります。</p>
+
+<p>もうひとつ。ftypボックスにはそのファイルの互換性を示す「ブランド」値が記録されてます。iモード端末は通常のダウンロード再生ではここの値を気にしないようですが、一方ストリーミング再生の場合は、ここにiモーション対応のファイルであることを示す値（mmp4）がないとダメみたいです。</p>
+
+<p>てなことで、FFmpegで変換した3GPP動画をNTTドコモiモーションのストリーミング再生に対応させるには、以下のふたつの処理を行う必要があるようです。</p>
+
+<ol>
+  <li>mdatをmoovの後に配置する。</li>
+  <li>ftypに「mmp4」を追加する。</li>
+</ol>
+
+<h3 style="clear:both">ではどうするか</h3>
+
+<p>FFmpegのGUIフロントエンドである携帯動画変換君で作成した動画がどうして携帯電話できちんと再生できるかというと、携帯動画変換君はFFmpegで（コーデックを）変換した出力を、独自開発のツールで整形しているためです。変換処理をWindows上で行っている場合は、これらのツールが利用できますが、Linuxではそういうわけにもいきません（できないことはないですが）。</p>
+
+<p>ではLinuxではどうしようかということで。バイナリをゴリゴリ削ってファイルフォーマットを書き換えるプログラムを書き起こすのも一興ですが、上に挙げた処理については、オープンソースのマルチメディアフレームワーク<a href="http://gpac.sourceforge.net/">GPAC</a>付属のコマンドラインツール、<a href="http://gpac.sourceforge.net/packager.php">MP4Box</a>を使うと簡単に行えます。はい、ようやく本題です（笑）。</p>
+
+<h3 style="clear:both">FFmpegの出力をMP4Boxで整形する</h3>
+
+<p>以下のようなコマンドで、FFmpegで「input.avi」ファイルからMPEG4/AMRな「output.3gp」ファイルを作成したとして。</p>
+
+<pre class="code"><code>ffmpeg -i input.avi -vcodec mpeg4 -b 64k -s qcif -r 15 -acodec libamr_nb -ab 12200 -ar 8000 -ac 1 -flags bitexact output.3gp</code></pre>
+
+<p>MP4Boxで「output.3gp」ファイルを読み込み「output_mod.3gp」ファイルを作成すると。</p>
+
+<pre class="code"><code>mp4box -add output.3gp -brand mmp4:1 -new output_mod.3gp</code></pre>
+
+<pre style="float:right;margin-left:1em;padding:1em;border:1px solid #eee;color:#eee;background-color:#000;line-height:1.1em">+--ftyp
++--moov
+| +--mvhd
+| +--trak
+| | +--tkhd
+| | +--mdia
+| +--trak
+|   +--tkhd
+|   +--mdia
++--mdat
++--free</pre>
+
+<p>「output_mod.3gp」ファイルのAtom/ボックス構造を確認するとこんな感じで。ご覧のようにmdatがmoovの後に配置し直されています。</p>
+
+<p>そしてMP4Boxの「-brand」パラメータは、ftypのメジャーブランドの値をパラメータの引数で指定した文字列に変更しています（この例では「mmp4」）。</p>
+
+<p>こうして出来上がった「output_mod.3gp」ファイルは、iモード端末でストリーミング方式での再生ができるようになってると思います。</p>
+
+<ul>
+  <li>手持ちの限られた機種でしか再生を確認できていませんので、再生できねーよという場合は、機種名などを添えてコメントをいただければ幸いです。</li>
+  <li>こんな文章をここまで読んでるようなかたには既知の筈ですが、念のため。ストリーミング方式で配信する際に記述するHTMLタグは、通常のダウンロード方式のものとは異なりますのでご注意ください。</li>
+</ul>
+
+<h3 style="clear:both">MP4Boxの使い途あれこれ</h3>
+
+<p>MP4Boxは3GPPやMP4ファイルを操作するさまざまな機能が用意されており、携帯電話向けの動画を扱う際にはなにかと便利です。</p>
+
+<h4>ファイルを指定サイズで分割したり</h4>
+
+<p>例えば携帯電話向けの動画は、端末が受信可能なデータサイズの制限に応じてファイルを分割する必要が生じる場合がありますが、以下のようなコマンドで、指定のデータサイズ（以下の例では300キロバイト）以内で、動画を複数のファイルに分割してくれます。</p>
+
+<pre class="code"><code>mp4box -splits 300 large-file.3gp</code></pre>
+
+<p>ちなみにFFmpegでもファイルを分割できますが、指定のデータサイズ以内にきちんと収まらなかったり、あれこれバッドなノウハウを凝らす必要があったりするので、単純な分割であれば、MP4Boxを利用したほうがお手軽かと。</p>
+
+<h4>フラグメントを結合したり</h4>
+
+<p>あるいはFFmpegで、auの携帯電話で作成した3GPP2ファイルを変換すると、（本来の再生時間はもっと長い筈なのに）最初の15秒しか変換されない場合があったりしますが、この現象もMP4Boxを使って解消できます。</p>
+<p>この現象は3GPP2の特徴のひとつであるムービーフラグメントに因るものですが（ムービーフラグメントについては<a href="http://labs.unoh.net/2007/09/mp43gpp3gpp2.html"> MP4/3GPP/3GPP2ファイルフォーマットの基礎知識</a>の、moofボックスの説明をご覧ください）。フラグメントなファイルをMP4Boxで-addとかした出力は（明示的に指定しない限り）フラグメントが結合されるので、FFmpegでもきちんと変換できるようになります。</p>
+
+<h3 style="clear:both">MP4Boxについて</h3>
+
+<p>MP4Boxは、GNU LGPLでライセンスされるオープンソースのマルチメディアフレームワーク<a href="http://gpac.sourceforge.net/">GPAC</a>の付属ツールです。MP4Boxはコマンドラインツールですが、Windowsでは<a href="http://yamb.unite-video.com/">YAMB</a>などのGUIフロントエンドも利用できます。</p>
+
+<p>MP4Boxのドキュメントは以下にあります。</p>
+
+<ul>
+  <li><a href="http://gpac.sourceforge.net/doc_mp4box.php">MP4BOX Documentation - GPAC Project on Advanced Content</a></li>
+  <li><a href="http://agehatype0.blog50.fc2.com/blog-entry-195.html">ageha | MP4Boxの主要コマンド</a>（上のドキュメントの翻訳）</li>
+</ul>
+
+<h3>謝辞</h3>
+
+<p>この記事の元ネタ作成は<a href="http://labs.unoh.net/cgi-bin/mt-search.cgi?tag=haruk&amp;blog_id=2">harukiさん</a>に協力いただきました。Thanksでーす。</p>
+{% endraw %}

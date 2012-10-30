@@ -1,0 +1,128 @@
+---
+layout: post
+title: "PHPでコマンドラインから使えるグーグル電卓"
+---
+{% raw %}
+<p>
+こんにちは，ttsuruoka です．
+</p>
+<p>
+linux 上で使える良い電卓が見つからなかったので，
+グーグル先生の力を借りて電卓を作ることにしました．
+</p>
+<p>
+「gc」という名前の，PHP で動くプログラムです．
+ソースコードは下のほうにあります．
+</p>
+
+<strong>使い方</strong>
+<pre class="source_code"><code>
+- 足し算
+$ ./gc 10 + 1
+10 + 1 = 11
+
+- 引き算
+$ ./gc 10 - 2
+10 - 2 = 8
+
+- 掛け算
+$ ./gc 10 x 3
+10 * 3 = 30
+
+- 割り算
+$ ./gc 10 / 5
+10 / 5 = 2
+
+- 数学関数（平方根）
+$ ./gc sqr 2
+sqr(2) = 1.41421356
+
+- 数学関数（三角関数），定数（円周率）
+$ ./gc 'sin(pi/2)'
+sin(π / 2) = 1
+
+- 基数変換
+$ ./gc 2^32 - 1 in hex
+(2^32) - 1 = 0xFFFFFFFF
+
+- 物理定数
+$ ./gc electron mass
+電子の質量 = 9.10938188 * 10^-31 キログラム
+
+- 物理定数（日本語も使えます）
+$ ./gc 真空の誘電率
+真空の誘電率 = 8.85418782 * 10^-12 m^-3 kg^-1 s^4 A^2
+
+- 度量衡変換
+$ ./gc 88 mph in km/h
+88 mi/h = 141.622272 km/h
+
+- 通貨換算
+$ ./gc 100 usd in euro
+100米ドル = 79.7448166 euro
+
+- 通貨換算（日本語も使えます）
+$ ./gc 16.5億ドルは何円
+16.5億米ドル = 1973.235 億円
+</code></pre>
+
+<br>
+<strong>ソースコード</strong>
+<p>
+gc という名前で保存して，実行権限を付与してください．
+</p>
+<p>
+「#!/opt/php/bin/php」は， PHP の実行パスに合わせて変更してください．
+</p>
+<pre class="source_code"><code>
+#!/opt/php/bin/php
+&lt;?php
+error_reporting(E_ALL);
+mb_http_output(mb_internal_encoding());
+$oe = mb_internal_encoding();
+$g = 'http://www.google.co.jp/search?num=1&hl=ja&oe='.$oe.'&q=';
+
+$msg_h = &lt;&lt;&lt; EOT
+Examples:
+  gc 10 + 1
+  gc 10 - 2
+  gc 10 x 3
+  gc 10 / 5
+  gc sqr 2
+  gc 'sin(2/pi)'
+  gc 2^32 - 1 in hex
+  gc electron mass
+  gc 88 mph in km/h
+  gc 100 usd in euro
+  gc 16.5億ドルは何円？
+EOT;
+$msg_e = 'Invalid expression';
+
+if ($argc == 1) {
+    echo $msg_h."\n";
+    exit;
+}
+
+array_shift($argv);
+$q = urlencode(mb_convert_encoding(implode(' ', $argv), 'UTF-8'));
+$c = file_get_contents($g.$q);
+$ptn = '@calc_img\.gif&gt;(.+?)&lt;b&gt;(.+?)&lt;/b&gt;@';
+preg_match($ptn, $c, $matches);
+if (empty($matches[2])) {
+    echo $msg_e."\n";
+    exit;
+}
+$c = $matches[2];
+
+$r = array(
+    '@&lt;font size=-2&gt; &lt;/font&gt;@' =&gt; '',    // 1&lt;font size=-2&gt; &lt;/font&gt;000 =&gt; 1000
+    '@&lt;sup&gt;(.+?)&lt;/sup&gt;@'       =&gt; '^\1', // 10&lt;sup&gt;30&lt;/sup =&gt; 10^30
+    '@&amp;#215;@'                 =&gt; '*',   // &amp;#215; =&gt; *
+);
+$c = preg_replace(array_keys($r), array_values($r), $c);
+
+echo $c."\n";
+?&gt;
+
+</code></pre>
+{% endraw %}

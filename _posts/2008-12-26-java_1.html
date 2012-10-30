@@ -1,0 +1,62 @@
+---
+layout: post
+title: "Javaの例外処理"
+---
+{% raw %}
+<div style="margin:0;padding:.5em;border:2px solid #ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br />
+<a href="http://www.unoh.net/recruit.html">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください！！</div>
+
+<p>こんにちは。中村です。</p>
+<p>少し前になりますが、社内勉強会にてJavaの例外処理について取り上げてみました。ウノウではPHPなどのLLを使うことが多いのですが、Javaの例外処理はよくできていると思っていたので、LL言語中心の人にも参考になるかもしれないと思ったためです。社内勉強会ということで、PHPと比較して違っている点が中心になっています。</p>
+<h3>例外とは？</h3>
+<p>PHPを含め例外処理がある言語はたくさんありますが、例外を簡単に表現するとエラー検査のための方法として提供されている機構で、throwされcatchされる特徴があります。本来の動作プログラムとエラー処理を明確に分けることができて、コードが理解しやすくなったりメンテナンス性が上がったりします。</p>
+<h3>例外処理を書かないとコンパイルエラー</h3>
+<p>個人的に気に入っている箇所の一つなのですが、Javaでは例外補足（catch）コードを書くか明示的に投げなければ（throws節）コンパイルエラーで実行すらできません（RuntimeExceptionやErrorを除く、後述）。throws節に宣言された例外は、そのメソッドの呼び出し元で同様にcatchかthrowをする必要があります。よって、プログラマに例外処理を強制する特徴があります。</p>
+<pre class="code"><code>// try-catchはないが、throwsしているため呼び出し元に例外処理する
+public void read(String name)
+        throws FileNotFoundException, IOException {
+    FileReader reader = new FileReader(name);
+    reader.close();
+}
+
+// 例外補足コードがないためコンパイルエラー
+public void read(String name) {
+    FileReader reader = new FileReader(name);
+    reader.close();
+}</code></pre>
+<h3>チェックされる例外とされない例外</h3>
+<p>Javaには大きく分けてチェックされる例外とチェックされない例外があります。チェックされる例外は、上述のように例外補足コードを書くか明示的にthrowしなければコンパイルエラーで検知されます。チェックされない例外は、回避コードをプログラマが書くことができないような致命的エラーや、どのメソッドでもいつでも起きうる実行時例外（メモリオーバーなど）で、補足もthrowも強制されません。</p>
+<a href="http://photozou.jp/photo/show/784/16341843"><img src="http://art7.photozou.jp/pub/784/784/photo/16341843.png" alt="JavaException" width="435" height="285" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/16341843">JavaException</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a>
+<p>Exceptionクラスの継承関係とチェックされるかどうかは、上の図のようになります。通常プログラマが作成する例外はExceptionを拡張してチェックされる例外として作成します。</p>
+<h3>finally処理</h3>
+<p>PHPにfinallyがないのは残念ですが、例外が発生してもしなくても実行するコードをfinally節に書くことができます。次のコードでは途中でreturnがあるため、ぱっと見たところ途中で終了してしまうように見えるかもしれませんが、途中でreturnをしてもfinally節は必ず通ります（例外的にSystem.exitはその場で終了します）。</p>
+<pre class="code"><code>public static void main(String[] args) {
+    System.out.println("main");
+    boolean flag = true;
+    try {
+        if (flag) {
+            return;
+        } else {
+            throw new Exception();
+        }
+    } catch (Exception e) {
+        System.out.println("catch");
+    } finally {
+        System.out.println("finally");
+    }
+}</code></pre>
+<p>よって上記コードの出力結果は次のようになります。</p>
+<pre class="code"><code>main
+finally</code></pre>
+<p>変数flagがfalseであればmainとfinallyの間にcatchが入ります。</p>
+<h3>よくない例外処理</h3>
+<p>catchしないとコンパイルエラーになるとはいっても、次のようなコードを書けば通過してしまいます。</p>
+<pre class="code"><code>} catch (Exception e) {
+}</code></pre>
+<p>処理する必要がないと判断される場合でも、上記のようになっているとコンパイルを通すためだけに書いたコードなのか意図的なのか、または処理を書き忘れているのか一見してわからないので、意図的な場合はコメントアウトを残す場合が多いです。</p>
+<pre class="code"><code>} catch (Exception e) {
+    // do nothing
+}</code></pre>
+<h3>まとめ</h3>
+<p>エラー処理をプログラマに強制するところがJavaの例外の特徴の1つではないかと思いますが、いかがでしょうか。「コンパイルエラー」と何度も書いてしまいましたが、EclipseなどのIDEを使うと、自動的に補足するべき例外もすぐにわかるので、それほどプログラミングが苦に感じたことはありません。</p>
+{% endraw %}

@@ -1,0 +1,132 @@
+---
+layout: post
+title: "PEAR::Net_URL_MapperでURLルーティングを制御する"
+---
+{% raw %}
+<p>miyakeです。</p>
+<p>php4のサポート打ち切りが発表されて様々な物議を醸している今日この頃、皆様いかがお過ごしでしょうか。</p>
+<p>今日はphpでURLルーティングをしてくれるPEARライブラリ、Net_URL_Mapperをご紹介します。</p>
+<p>このNet_URL_Mapperはphp5専用となっており、残念ながらphp4では動作しません。また、公式ドキュメントが英語版すら用意されておらず、Web上にもほとんど資料がなく手探りで使うような状況です。</p>
+<p>そんなNet_URL_Mapperですが、個人的にはなかなか重宝しているので、少しでも使う人が増えてくれればいいな、ということで基本的な使い方をまとめてみました。</p>
+<p>では、早速コードを見てみましょう。</p>
+
+<pre class="code"><code>// $path = 'blog/view/123';
+$router = Net_URL_Mapper::getInstance();
+$router->connect('blog/:action/:id');
+var_dump($router->match($path));</code></pre>
+
+<p>$pathにコメントのような、URLから受け取った文字列が入っているという前提です。このコードを実行すると、</p>
+
+<pre class="code">array(2) {
+  ["action"]=>
+  string(4) "view"
+  ["id"]=>
+  string(3) "123"
+}</pre>
+
+<p>という出力が得られます。これだけで、「blog/(アクション名)/(id)」というURLに対するマッピングができます。お手軽ですね。</p>
+
+<p>$pathが指定のルールにマッチしない場合はmatch()はnullを返します。ルールは $router->connect(～); を書き連ねることで複数設定が可能で、最初にマッチした物が優先されます。</p>
+
+<p>このように、URL文字列からパラメータを取得するというのが、Net_URL_Mapperの一番メジャーな用途になると思います。URLマッピングを定義しているconnect()メソッドについて、もう少し詳しく見てみましょう。connect()は以下のような引数をとります。</p>
+
+<pre class="code"><code>connect(パス, [初期値の配列], [値のルール]);</code></pre>
+
+<p>パスは先程のサンプルのように、/で区切った文字列を指定します。:～ もしくは :(～) と書くことで、match()に投げる文字列の値をパラメータとして取得することができます。</p>
+<p>初期値の配列と値のルールは省略可能です。それぞれパスで指定したパラメータ名をキーとする連想配列で指定します。</p>
+<p>と言っても分かりにくいので、実際に書いてみましょう。</p>
+
+<h3>■初期値を指定した例</h3>
+
+<pre class="code"><code>$router->connect('shopping/:action', array('controller' => 'Store', 'action' => 'index'));
+var_dump($router->match('shopping'));</code></pre>
+
+<pre class="code"><code>array(2) {
+  ["controller"]=>
+  string(5) "Store"
+  ["action"]=>
+  string(5) "index"
+}</code></pre>
+
+<p>ここでmatch()に投げられたURLを表す文字列は:actionにあたる部分が省略されていますが、出力結果にはactionには初期値で設定した「index」が入っています。これは、$router->match('shopping/index'); が実行されたのと同じことになります。</p>
+<p>もう一つ設定しているcontrollerはURLのルールにはない値です。このように初期値だけを指定すると、そのルールがマッチした時にmatch()の実行結果に固定値を渡すことができます。</p>
+
+<p>このように、初期値を設定するとその値が省略可能になるので、</p>
+
+<pre class="code"><code>$router->connect('blog/:action/:id', array('controller' => 'blog', 'action' => null, 'id' => null));</code></pre>
+
+<p>のようにすれば、blog/view/3 も blog/view も blog/ もマッチさせることができます。</p>
+
+
+<h3>■ルールの指定</h3>
+
+<p>先程の例では、パスだけを指定した最小限の設定でしたが、ここに「idは数値だけに限定する」というルールを加えてみましょう。connectを呼んでいる行を以下のように変更します。</p>
+
+<pre class="code"><code>$router->connect(':controller/:action/:id', array(), array('id' => '\d+'));</code></pre>
+
+<p>ルールは正規表現で指定します。この状態で blog/view/abc を評価すると、Net_URL_Mapper_InvalidException例外が発生します。ルールにマッチしなかった場合はnullが返りますが、「マッチはしたけどルールに合致しなかった」場合は例外を投げるようになっていますので注意してください。</p>
+
+<pre class="code"><code>try {
+    $router->match($path);
+} catch (Net_URL_Mapper_InvalidException $e) {
+    header('Location: http://www.example.com/', 302);
+}</code></pre>
+
+<p>のように例外をキャッチしてリダイレクトする、といったパターンがありがちでしょうか。</p>
+<p>初期値とルールを組み合わせると、</p>
+
+<pre class="code"><code>$router->connect('blog/archive/:year/:mon/:day', array('mon' => null, 'day' => null), array('year' => '\d{4}', 'mon' => '\d{1,2}', 'day' => '\d{1,2}'))</code></pre>
+
+<p>で、</p>
+<ul>
+ <li>blog/archive/2007</li>
+ <li>blog/archive/2007/7</li>
+ <li>blog/archive/2007/12/31</li>
+</ul>
+<p>にそれぞれ対応するようなルールが書けます。基本的な使い方はざっとこんな感じです。</p>
+
+
+<h3>■ワイルドカードによるパラメータ指定</h3>
+<p>「connect()に設定するパス内でパラメータを設定するには、:～で書く」と解説しましたが、実は *params のように最初の文字をアスタリスクで指定することもできます。両者の違いはパラメータの内容に/を含められるかどうかです。</p>
+
+<pre class="code"><code>$router->connect(':controller/:action/*params', array('action' => 'index', 'params' => null));
+var_dump($router->match('user/edit/hoge/foo/bar'));</code></pre>
+
+<p>このコードを実行すると、</p>
+
+<pre class="code"><code>array(3) {
+  ["params"]=>
+  string(12) "hoge/foo/bar"
+  ["controller"]=>
+  string(4) "user"
+  ["action"]=>
+  string(4) "edit"
+}</code></pre>
+
+<p>となります。このように、パスの最後を*によるワイルドカード指定にして、まとめるという使い方が最も一般的ではないかと思います。</p>
+
+<p>また、若干変速的ですが、</p>
+<pre class="code"><code>$router->connect('user/*name/login');
+var_dump($router->match('user/foo/bar/login'));
+</code></pre>
+<p>とすれば、nameにfoo/barが入った状態でマッチします。</p>
+
+<p>他にも、</p>
+<pre class="code"><code>$router->connect(':params');
+$router->match('');</code></pre>
+<p>はnullになるけど、</p>
+<pre class="code"><code>$router->connect('*params');
+$router->match('');</code></pre>
+<p>はマッチしてarray()が返ります。使いどころがあるかは分かりませんが…</p>
+
+
+<h3>■まとめ</h3>
+<p>Net_URL_Mapperはドキュメントが整備されていませんが、テストコードはかなり分かりやすいので、<a href="http://pear.php.net/package/Net_URL_Mapper/">PEARのサイト</a>からアーカイブをダウンロードしてtests/以下のコードを読んでみることをお勧めします。</p>
+<p>また、一部を除けば追いかけやすいコードになっていますので、今までphp4を使っていてphp5はこれからだという人は、（その一部を除いて）実際にソースを追ってみるのも参考になるかも知れません。</p>
+
+<p>他にも、Net_URL_Mapperには今回の内容とは逆方向のパラメータからURLを作成する機能もあります。そちらも今回ご紹介した内容を踏まえた上でテストコードを読めば、理解するのは難しくないと思います。</p>
+
+<p>「php5専用のライブラリ」というと今までは肩身の狭い立場にあり、敬遠されがちな印象がありましたが、いよいよ目を向けていく時期に入ったように感じられます。</p>
+<p>これから先、phpとphpを使うエンジニアにとっては苦しい時期を迎えるかもしれませんが、移行できてしまえば「ちょっと洗練された開発環境がありますよ」と言えるかも知れません。</p>
+
+{% endraw %}

@@ -1,0 +1,7 @@
+---
+layout: post
+title: "OAuth プロトコルを知る"
+---
+{% raw %}
+<p>こんにちは、naoya です。</p><br /><p>昨日の社内勉強会で、OAuth について行いましたので、そのときの資料を公開します。</p><br /><br /><iframe src='http://docs.google.com/EmbedSlideshow?docid=dgf3nb3x_0rxh5vqf2' frameborder='0' width='410' height='342'></iframe><br /><br /><p>OAuth プロトコルの解説のあとに、<a href="http://twitter.com">Twitter</a> の <a href="http://twitter.com/oauth">OAuth</a> 経由でステータスを更新するクライアントを作ってみたので、そのソースコードをおいておきます。サンプルでは、現在時刻をステータスとして更新しています。ダウンロードは、<a href="http://labs.unoh.net/download/twitter_oauth_sample.zip">こちら</a>からどうぞ。ちなみに、OAuth の仕様書では、Authorization ヘッダに埋め込む方法が書いてありますが、Twitter では対応していませんでした。実際に動作を見てみたい人は、サンプルコードを設置してみてください。</p><br /><br /><p>サンプルコードに含まれているファイルは、次の通りです。</p><br /><ul><br /><li>oauth_twitter.php: まずこのファイルを開きます、Request Token リンクをクリックすると認証トークンを取得開始します</li><br /><li>oauth_twitter_access_token.php: 認証トークンとアクセストークンを交換するプログラムです</li><br /><li>oauth_twitter_callback.php: コールバック用のページです</li><br /><li>oauth_twitter_common.php: oauth 用の URL パラメータを生成する関数が含まれています、Consumer Key と Secret Key を設定する必要があるます</li><br /><li>oauth_twitter_request.php: 認証トークンを取得開始するプログラムです</li><br /><li>oauth_twitter_update_test.php: 取得したアクセストークンを使って、Twitter API を使ってステータスを更新します</li><br /></ul><br /><br /><br><br /><p><br />現在、OAuth に対応しているサイトはとても少ないですが、今後の広がりに期待したいと思います。</p><br /><br /><p><br />2008.2.6 追記：<br /><a href="http://d.hatena.ne.jp/IwamotoTakashi/20080203/p1">岩本隆史の日記帳</a>より、スライド中の発音について指摘をいただきました。僕の英訳ミスでした。もともとはオースだったということでした。スライドの方を修正させていただきました。ご指摘ありがとうございました。<br /></p><br />
+{% endraw %}

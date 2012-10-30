@@ -1,0 +1,139 @@
+---
+layout: post
+title: "Vim: ちょこっと設定、ちょこっとプラグイン。"
+---
+{% raw %}
+<p>ども。6月入社のjhoshinaです。</p>
+
+<p>まだ入社したてのつもりだったのに、ラボブログ執筆がまわってきてあたふたしています。</p>
+
+<p>何を書こうか迷ったのですが、環境も新しくなったことですし、設定しなおしたVimの設定・プラグインなどをちょこっと見ていこうかと思います。phpとsymfony関係を中心に見ていきます。</p>
+
+
+<h3 style="color:#ff9933;">雑多な設定</h3>
+
+<p>特に変わったところもないのですが一応。</p>
+
+
+<h4>~/.vimrc</h4>
+
+<pre class="code">
+set nocompatible
+set showmatch showmode showcmd
+set laststatus=2
+set statusline=%&lt;%f\ %m%r%h%w%{'['.(&amp;fenc!=''?&amp;fenc:&amp;enc).']['.&amp;ff.']'}%=%l,%c%V%8P
+
+syntax on
+filetype on
+filetype indent on
+filetype plugin on
+</pre>
+
+
+<h4>~/.vim/ftplugin/php.vim</h4>
+
+<pre class="code">
+setlocal shiftwidth=4 tabstop=4 expandtab nowrap
+
+let php_sql_query = 1
+let php_baselib = 1
+let php_htmlInStrings = 1
+let php_noShortTags = 1
+let php_parent_error_close = 1
+let php_parent_error_open = 1
+&quot;let php_folding = 1
+&quot;let php_sync_method = x
+
+&quot; for QuickFix
+setlocal makeprg=php\ -l\ %
+setlocal errorformat=%m\ in\ %f\ on\ line\ %l
+</pre>
+
+<p>自分の場合、見通しのよさと影響を重視して、ファイルタイプ別の設定は極力~/.vim/ftplugin/*.vimにsetlocalで書くようにしています。</p>
+
+<p>設定読み込みの順番はruntimepathが示すように、 ~/.vim -> (Vim標準ディレクトリ) -> ~/.vim/after となっているので、各種プラグインなどが読み込まれた後に設定が必要であれば ~/.vim/after 以下に設定してます。</p>
+
+
+<h3 style="color:#ff9933;">matchit.vim</h3>
+
+<p>PHPと直接関係ないのですが、対応する括弧に移動するコマンド「%」を拡張するマクロです。</p>
+
+<p>HTMLの対応タグにジャンプできるのはもちろんのことで、例えば、</p>
+
+<pre class="code">
+&lt;?php if ($foo): ?&gt;
+Hello World!
+&lt;?php else: ?&gt;
+Oh..
+&lt;?php endif ?&gt;
+</pre>
+
+<p>というコードがあった場合、ifの上で%を押すことによって、else、endifの場所に移動してくれます。</p>
+
+<p>matchit.vimはVimの標準配布物に含まれているため、</p>
+
+<pre class="code">
+source $VIMRUNTIME/macros/matchit.vim
+</pre>
+
+<p>と、~/.vimrcに記述するだけで有効になります。もちろん、~/.vim/pluginにコピーしても動きます。</p>
+
+
+<h3 style="color:#ff9933;">symfony.vim</h3>
+
+<ul>
+<li><a href="http://github.com/soh335/vim-symfony">soh335's vim-symfony at master - GitHub</a></li>
+</ul>
+
+<p>Symfonyでファイル間の移動などを行うプラグインです。</p>
+
+<p>Symfonyで開発をしていると、Controller-View-Model間の移動が頻繁に行われますが、このプラグインを使うと移動が楽になります。</p>
+<p>例えば、ControllerのexecuteIndex()内にカーソルがある状態で「:Sview」と打つと対応するindexSuccess.phpを、逆にindexSuccess.php上で「:Saction」と打つとアクション内の対応メソッドへとジャンプしてくれます。もちろんモデル名の上で「:Smodel」と打てば対応するモデルへと移動してくれます。</p>
+
+<p>また、symfonyコマンドを発行することも可能で、</p>
+
+<pre class="code">
+:Symfony generate:module frontend dashboard
+:Symfony cc
+</pre>
+
+<p>などと、シェルに降りるまでもなく作業が続けられます。</p>
+
+
+<h3 style="color:#ff9933;">snipMate</h3>
+
+<ul>
+<li><a href="http://www.vim.org/scripts/script.php?script_id=2540">snipMate : TextMate-style snippets for Vim</a></li>
+</ul>
+
+<p>TextMate<http://macromates.com/>にあるようなsnippetの機能を提供するプラグインです。</p>
+
+<p>同種のプラグインに<a href="http://www.vim.org/scripts/script.php?script_id=1318">snippetsEmu</a>がありますが、snippetの書きやすさからsnipMateを使っています。</p>
+
+<p>ife&lt;TAB&gt;と入力すると</p>
+
+<pre class="code">
+if (/* condition */) {
+    // code...
+} else {
+    // code...
+}
+</pre>
+
+<p>と展開されます。「/* condition */」の部分が選択された状態になっており、入力が終わったらTabを押すことによって、「// code...」の部分に移動できます。</p>
+
+<p>前述のsymfony.vimをいれてあると、以下の設定でバッファにSymfonyのファイルタイプを仕込むことができるので、symfonyのファイルを開いた場合だけに適用するsnippetを定義することもできます。</p>
+
+<pre class="code">
+autocmd User SymfonyBufInit setlocal filetype+=.symfony
+</pre>
+
+<p><a href="http://github.com/soh335/vim-symfony-snipmate">soh335's vim-symfony-snipmate at master - GitHub</a>にあるものを自分向けにいじって使っています。これで「requ&lt;TAB&gt;」と打つと「$this->getRequestParameter(&quot;&quot;);」なんて展開が可能になります。「Symfonyってメソッド名長いよね」と常々思っているので手放せません。
+
+
+<h3 style="color:#ff9933;">その他</h3>
+
+<p>他に最近ではctagsからcscopeに移行したり、project.vimをやめてNERDTreeにしたりしたのですが、まだ十分に使いこなせていない感じもあるので、このあたりはまた次の機会にでも。</p>
+
+<p>では！</p>
+{% endraw %}

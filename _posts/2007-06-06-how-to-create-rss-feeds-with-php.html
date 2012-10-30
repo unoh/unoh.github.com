@@ -1,0 +1,125 @@
+---
+layout: post
+title: "Feedcreatorのご紹介"
+---
+{% raw %}
+<p>
+yamaokaです。
+</p>
+
+<p>
+PHPでRSSフィードを出力する場合、
+皆さんはどうされているでしょうか。
+<a href="http://smarty.php.net/">Smarty</a>などの
+テンプレートエンジンを利用して自前で組み立てるのもいいですが、
+RSSフィード生成用のライブラリを使うと便利です。
+</p>
+
+<h3>Feedcreator</h3>
+
+<p>
+<a href="http://feedcreator.org/">Feedcreator</a>は、
+<a href="http://sourceforge.net/projects/feedcreator">SourceForge.net</a>で
+開発されているPHPのRSSフィード生成ライブラリです。
+<a href="http://www.bitfolge.de/rsscreator-en.html">FeedCreator.class.php</a>を
+ベースにして開発されています。
+</p>
+
+<p>
+RSS 0.91/1.0/2.0、Atom 0.3/1.0のフォーマットにそれぞれ対応しています。
+また、PIE 1.0やOPML 1.0などにも対応。ライセンスはLGPLです。
+</p>
+
+<p>
+ライブラリをダウンロードして展開すると、
+「official_demo.php」というファイルがあるので目を通しておきましょう。
+おおよその処理の流れがつかめるかと思います。
+</p>
+
+<h3>利用例</h3>
+
+<p>
+ライブラリは「feedcreator.class.php」という1つのファイルにまとめられています。
+例えば、Atom 1.0のフォーマットで「feed.xml」に出力するには以下のように記述します。
+</p>
+
+<p>
+<pre class="code"><code>define('TIME_ZONE', '+09:00');
+
+require_once '/path/to/feedcreator.class.php';
+
+$creator = new UniversalFeedCreator();
+$creator->useCached();
+$creator->title = 'タイトル';
+$creator->description = '説明文';
+$creator->link = 'http://example.com/';
+$creator->syndicationURL = 'http://example.com/feed.xml';
+
+// 記事を1つ追加
+$item = new FeedItem();
+$item->title = '記事のタイトル';
+$item->link = 'http://example.com/articles/sample';
+$item->description = '記事の短い説明';
+$item->date = '2007-06-06T12:00:00+09:00';
+$item->author = '記事の著者名';
+
+$creator->addItem($item);
+
+// ファイルとして保存する場合
+$creator->saveFeed('ATOM1.0', 'feed.xml');
+
+// ファイルに保存せずに出力する場合
+// $creator->outputFeed('ATOM1.0');
+</code></pre>
+</p>
+
+<h3>利用上の注意</h3>
+
+<h4>タイムゾーンを定義すること</h4>
+
+<p>
+必要に応じて「TIME_ZONE」という定数を定義する必要があります。
+指定された値がRSSフィード内の日付のタイムゾーンとして使用されます。
+設定しない場合のデフォルト値は「+01:00」です。
+日本で使う場合は必ず定義する必要がありますね。
+</p>
+
+<h4>エンコーディングに注意</h4>
+
+<p>
+ソースを覗いてみたところ、
+各フォーマットでデフォルトのエンコーディングを内部的に持ってしまっているようです。
+例えば、Atom 1.0は「utf-8」、RSS 2.0は「ISO-8859-1」となっています。
+RSS 2.0の場合、そのままでは日本語が使えません。
+</p>
+
+<p>
+任意のエンコーディングに変更できるような仕組みが用意されていないので、
+日本語を利用するためにはライブラリ自体に手を入れるか、
+UTF-8で利用できるAtomを利用するなどの工夫が必要になります。
+</p>
+
+<h3>最後に</h3>
+
+<p>
+PHPでRSSフィードをパースするためのライブラリは
+<a href="http://magpierss.sourceforge.net/">MagpieRSS</a>など
+いろいろあるのですが、RSSフィードを生成するためのライブラリはあまりありません。
+</p>
+
+<p>
+そうした中、<a href="http://feedcreator.org/">Feedcreator</a>は
+手軽にRSSフィードの生成を行うことができる貴重なライブラリです。
+自前で組み立てる場合はいろいろと調べる必要がありますが（RSSフィードの仕様など）、
+ライブラリを利用すればそういう面倒はありません。
+</p>
+
+<p>
+ただ、日本語を扱う上でいろいろと問題があるのも確かです。
+その問題点を認識した上でハックして利用するか、
+自前でRSSフィードを組み立てる方法を選択するか。
+あるいは、もっと柔軟に扱えるようなライブラリを作って
+公開するという選択肢もあるかもしれませんね。
+</p>
+
+{% endraw %}

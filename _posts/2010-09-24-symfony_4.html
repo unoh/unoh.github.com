@@ -1,0 +1,60 @@
+---
+layout: post
+title: "携帯とスマートフォンでsymfonyのテンプレートを切り替える"
+---
+{% raw %}
+<p>こんにちは。中村です。</p>
+<p>先日、まちつく！mixi版が<a href="http://www.unoh.net/news/2010/09/mt9smart.html">スマートフォンに対応</a>しました。</p>
+<p>スマートフォン対応にあたって、元々まちつく！が携帯専用アプリであったために変更しなければいけない点がいくつかありましたが、その中でも今回はテンプレートの切り替えについて書きたいと思います。</p>
+<p>時間的な都合もあり方針としては、基本的には携帯用のテンプレートを表示できるようにして、よく使われる機能についてはスマートフォン用のテンプレートを用意して表示するようにしました。</p>
+<p>※まちつく！で利用しているsymfonyのバージョンとは違いますが、ここでは最新バージョンの1.4.7の場合になります。</p>
+
+<h3>独自のviewクラスを定義する</h3>
+<p>どのページがスマートフォンに対応しているかを管理することなく対応したかったので、アクセスしている端末とテンプレートファイルの有無によって挙動を変更することにしました。読み込むテンプレートの切り替えを行うために独自のviewクラスを定義します。アプリケーション名がfrontendだった場合は apps/frontend/config/module.yml に次のような設定をします。</p>
+<pre class="code"><code>all:
+  view_class: myPHP</code></pre>
+<p>次にここで指定したmyPHPクラスを apps/frontend/lib/myPHPView.class.php として作成します。</p>
+
+<h3>テンプレートを切り替える</h3>
+<p>myPHPView.class.php の内容は次のような感じです（※コードはあくまでもサンプルです）。</p>
+<pre class="code"><code>&lt;?php
+class myPHPView extends sfPHPView
+{
+
+    const TOUCH_TEMPLATE_SUFFIX = 'Touch';
+
+    public function initialize($context, $moduleName, $actionName, $viewName)
+    {
+        $config = sfProjectConfiguration::getActive();
+
+        $touchViewName = $viewName . self::TOUCH_TEMPLATE_SUFFIX;
+
+        // スマートフォン用のテンプレートファイルパス
+        $touchTemplatePath = $config-&gt;getTemplateDir($moduleName, $this-&gt;getTemplate())
+                           . DIRECTORY_SEPARATOR
+                           . $actionName . $touchViewName . $this-&gt;getExtension();
+
+        // スマートフォンからのアクセスでかつテンプレートが存在する場合
+        if ($this-&gt;isTouch() &amp;&amp; is_file($touchTemplatePath)) {
+            parent::initialize($context, $moduleName, $actionName, $touchViewName);
+            $this-&gt;setDecoratorTemplate(strtolower(self::TOUCH_TEMPLATE_SUFFIX));
+        } else {
+            parent::initialize($context, $moduleName, $actionName, $viewName);
+        }
+
+        return true;
+    }
+
+    public function isTouch()
+    {
+        $ua = $_SERVER['HTTP_USER_AGENT'];
+        return (preg_match('/iPhone/', $ua) || preg_match('/Android/', $ua));
+    }
+
+}</code></pre>
+<p>スマートフォンからのアクセスでかつスマートフォン用のテンプレートファイルがある場合は parent::initialize にてスマートフォン用のテンプレートを指定しています。</p>
+<p>また、setDecoratorTemplate メソッドを利用して、デフォルトで読み込まれる apps/frontend/templates/layout.php を apps/frontend/templates/touch.php に変更してヘッダ・フッタも変更できるようにしています。</p>
+
+<h3>まとめ</h3>
+<p>sfPHPViewを継承することでテンプレート読み込みに条件分岐を追加しました。独自のviewクラスはテンプレートファイルの切り替えもそうですがviewの挙動を変更するのに有効です。</p>
+{% endraw %}

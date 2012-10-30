@@ -1,0 +1,128 @@
+---
+layout: post
+title: "Varnishの使用例とか"
+---
+{% raw %}
+<p>
+一部の人に<a href="http://twitter.com/hiro_y">鳥の人</a>として認識されているyamaokaです。
+</p>
+
+<p>
+<a href="http://photozou.jp/">フォト蔵</a>では最近<a href="http://varnish-cache.org/">Varnish</a>をコンテンツキャッシュに利用しています。
+具体的には、写真のサムネイルなどの静的なコンテンツをキャッシュするために使っていたりします。
+</p>
+
+<p>
+<a href="http://varnish-cache.org/">Varnish</a>はコンテンツキャッシュ機能を備えたHTTPアクセラレータです。
+同じような目的に使われるプロダクトとして<a href="http://www.squid-cache.org/">Squid</a>がありますが、
+それよりも高速に効率よく動作することを売りにしています。
+</p>
+
+<p>
+サーバーへのインストールについてはCentOSなどRed Hat系のLinuxであれば
+<a href="http://fedoraproject.org/wiki/EPEL">EPEL</a>からrpmを入手するか、
+ソースを展開するとredhatディレクトリにspecファイルが用意されているので
+そちらを利用すれば最新版のrpmが作成可能です。
+</p>
+
+<p>
+以下、rpmを使ってインストールしたものとして話を進めます。
+起動設定は/etc/sysconfig/varnishです。初期設定では次のような起動設定になっています（一部抜粋）。
+<pre class="code">
+DAEMON_OPTS=&quot;-a :6081 \
+             -T localhost:6082 \
+             -f /etc/varnish/default.vcl \
+             -u varnish -g varnish \
+             -s file,/var/lib/varnish/varnish_storage.bin,1G&quot;
+</pre>
+フォト蔵ではいろいろと変更して次のような設定になっています（一部抜粋）。
+<pre class="code">
+DAEMON_OPTS=&quot;-a :6081 \
+             -T &lt;自分のIPアドレス&gt;:6082 \
+             -f /etc/varnish/images.vcl \
+             -u varnish -g varnish \
+             -p thread_pools=4 \
+             -p thread_pool_min=200 \
+             -p thread_pool_max=4000 \
+             -p thread_pool_add_delay=2 \
+             -p listen_depth=4096 \
+             -p ping_interval=2 \
+             -p lru_interval=20 \
+             -p srcaddr_ttl=0 \
+             -s file,/path/to/cache/varnish_images_cache.bin,10G \
+             -h classic,500009&quot;
+</pre>
+</p>
+
+<p>
+-Tで指定できるのは管理機能へのインタフェースを提供するIPアドレスとポートです。
+自分のIPアドレスを明示的に指定することで、外部から管理機能にアクセス可能になります。
+また、<a href="http://www.nagios.org/">Nagios</a>などを利用して簡単な死活監視を行うこともできるようになります。
+</p>
+
+<p>
+キャッシュを10GBと大きめに取っていますが、これは画像ファイルをキャッシュするためです。
+HTMLなどのテキストデータであればもっと小さくていいと思います。
+</p>
+
+<p>
+Varnishのチューニングについてはなかなかweb上で記事が見つからなかったりするのですが、
+次に挙げるページがいろいろと参考になるかと思います。
+</p>
+
+<ul>
+  <li><a href="http://varnish-cache.org/wiki/Performance">Performance - Varnish</a></li>
+  <li><a href="http://kristian.blog.linpro.no/2009/10/19/high-end-varnish-tuning/">High-end Varnish-tuning « Kristian's web log</a></li>
+  <li><a href="http://kristian.blog.linpro.no/2010/01/26/varnish-best-practices/">Varnish best practices « Kristian's web log</a></li>
+  <li><a href="http://lists.varnish-cache.org/pipermail/varnish-dev/2009-February/002091.html">Is anyone using ESI with a lot of traffic?</a></li>
+</ul>
+
+<p>
+Varnishの設定ファイルはVCLというドメイン特化言語で記述します。
+フォト蔵の場合、実際の設定である/etc/varnish/images.vclは次のようになっています（一部改変して抜粋）。
+<pre class="code">
+backend web1 {
+    .host = &quot;&lt;バックエンドのサーバーのIPアドレス&gt;&quot;;
+    .port = "80";
+    .connect_timeout = 30s;
+}
+
+sub vcl_recv {
+    set req.backend = web1;
+    if (req.url ~ "_org") {
+        pass;
+    }
+    lookup;
+}
+</pre>
+</p>
+
+<p>
+フォト蔵では写真のオリジナル画像のファイル名に「_org」が含まれています。
+容量の大きいそのファイルはキャッシュせず、それ以外のファイルをキャッシュするような設定です。
+このようにVCLはわかりやすい記法で、柔軟に設定を行うことが可能になっています。
+前述の例ではバックエンドのサーバーは1つだけですが、URLに応じて異なるバックエンドサーバーを利用したり、
+複数のサーバーをバックエンドとして利用することも可能になっています。
+</p>
+
+<p>
+Varnishにはロギングのためのvarnishlogや
+統計情報を閲覧するためのvarnishstatといった便利なツールが用意されており、
+比較的扱いやすいプロダクトかなと思います。
+</p>
+
+<p>
+国内でもだんだんとVarnishの使用例が増えてきているようですが、
+実際の運用方法とか設定例の情報はまだまだ少ないのが現状かと思います。
+すこしでもVarnish導入の手助けになれば幸いです。
+</p>
+
+<div style="margin:1em 0;padding:0.5em;border:2px solid #ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br />
+<a href="http://www.unoh.net/recruit.html">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください。<br/>
+<a href="http://www.find-job.net/fj/showjob.cgi?id=76769">Find Job!</a>でも<a href="http://www.find-job.net/fj/showjob.cgi?id=50212">募集してます！</a></div>
+
+<p>
+追記: 「IP」という表記は正確ではないため、「IPアドレス」という表記に変更しました。
+</p>
+
+{% endraw %}

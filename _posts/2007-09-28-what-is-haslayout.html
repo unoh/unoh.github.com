@@ -1,0 +1,94 @@
+---
+layout: post
+title: "hasLayoutとは何か"
+---
+{% raw %}
+<p>
+yamaokaです。
+</p>
+
+<p>
+CSSに携わっている方なら、<a href="http://www.communitymx.com/content/article.cfm?page=2&cid=C37E0">Holly hack</a>を使ったことがあるかもしれません。
+<pre class="code"><code>/* Hides from IE5-Mac \*/
+* html .foo { height: 1%; }
+/* */
+</code></pre>
+</p>
+
+<p>
+Internet Explorer（以下IE）で、レイアウトに問題のある要素に
+上記のようなスタイルを指定をすると、
+あら不思議、まともな表示がなされるというものです
+（上記のままではIE7に対応していませんが…）。
+</p>
+
+<p>
+さて、どうしてレイアウトが意図したとおりに行われるようになるのでしょうか。
+</p>
+
+<h3>IEのhasLayoutプロパティ</h3>
+
+<p>
+IEでは、全ての要素が<a href="http://msdn2.microsoft.com/en-us/library/Bb250481.aspx">
+「hasLayout」という読み取り専用のプロパティ</a>を持っています。
+これはそれぞれの要素がレイアウト情報（＝要素の幅・高さなどに関する属性情報）を
+保持しているかどうかを示す値で、
+デフォルトの状態では「hasLayout = false」です。
+「hasLayout = false」の場合、幅や高さが他の要素のレイアウトに影響されて伸び縮みし、
+表示が他の要素と重なってしまう場合があります（レイアウト崩れの原因）。
+</p>
+
+<p>
+hasLayoutの値を調べたい場合、<a href="http://www.microsoft.com/downloads/details.aspx?FamilyID=e59c3964-672d-4511-bb3e-2d5e1db91038&displaylang=en">IE Developer Toolbar</a>
+で要素を選択すれば確認することができます（ちなみに、「-1」というのが「hasLayout = true」の状態で、
+「hasLayout = false」の場合、hasLayoutプロパティ自体表示されません）。
+</p>
+
+<p>
+<a href="http://photozou.jp/photo/show/784/5131020"><img src="http://art6.photozou.jp/pub/784/784/photo/5131020.png" alt="hasLayout" width="450" height="363" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/5131020">hasLayout</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a>
+</p>
+
+<h3>hasLayoutの値を切り替える</h3>
+
+<p>
+「hasLayout = false」の状態でレイアウトが崩れる場合、
+「hasLayout = true」に値を切り替えると問題が解決する場合が多いです。
+切り替える方法ですが、CSSの特定のプロパティに下記のような値を指定することで可能なようです
+（<a href="http://msdn2.microsoft.com/en-us/library/ms533776.aspx">MSDNのドキュメント</a>による）。
+</p>
+
+<table>
+  <tr><th>プロパティ</th><th>値</th></tr>
+  <tr><td>display</td><td>inline-block</td></tr>
+  <tr><td>height</td><td>any value</td></tr>
+  <tr><td>float</td><td>left or right</td></tr>
+  <tr><td>position</td><td>absolute</td></tr>
+  <tr><td>width</td><td>any value</td></tr>
+  <tr><td>writing-mode</td><td>tb-rl</td></tr>
+  <tr><td>zoom</td><td>any value</td></tr>
+</table>
+
+<h3>hasLayoutとの付き合い方</h3>
+
+<p>
+冒頭で掲げた<a href="http://www.communitymx.com/content/article.cfm?page=2&cid=C37E0">Holly hack</a>は、
+heightをスタイルで指定することで「hasLayout = true」に切り替え、
+レイアウト情報を要素に持たせるための工夫だったわけです。
+IEでレイアウト崩れがどうしても直らない場合、
+hasLayoutの値を確認してみるといいかもしれませんね。
+</p>
+
+<p>
+最後に、記事を書く上で参考にしたサイトを挙げておきます。
+</p>
+
+<ul>
+  <li><a href="http://msdn2.microsoft.com/en-us/library/Bb250481.aspx">HasLayout Overview</a></li>
+  <li><a href="http://www.satzansatz.de/cssd/onhavinglayout.html">On having layout - the concept of hasLayout in IE/Win</a></li>
+  <li><a href="http://coliss.com/articles/build-websites/operation/css/143.html">IEでのCSSのバグを回避するhasLayout | コリス</a></li>
+</ul>
+
+<p>
+【追記】参考にしたサイトとして「<a href="http://coliss.com/articles/build-websites/operation/css/143.html">IEでのCSSのバグを回避するhasLayout | コリス</a>」を追記しました。記事を書く上で非常に参考にさせていただきました。記載漏れ申し訳ありませんでした。
+</p>
+{% endraw %}

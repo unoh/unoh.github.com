@@ -1,0 +1,57 @@
+---
+layout: post
+title: "IE6でアルファチャンネルを含むPNGを表示する"
+---
+{% raw %}
+<p>yamaokaです。</p>
+
+<p>webサイトで背景が透明な画像を使用する場合、画像を透過GIFまたはアルファチャンネルを含むPNGで作成する必要があります。どちらを使用してもかまわないのですが、下図のように背景を指定した場合はPNGの方がきれいにアンチエイリアスがかかります。</p>
+
+<p><a href="http://photozou.jp/photo/show/784/2316013"><img src="http://photozou.jp/pub/784/784/photo/2316013.gif" alt="透過GIFとアルファチャンネルを含むPNGの比較" width="159" height="109"></a><br><a href="http://photozou.jp/photo/show/784/2316013">透過GIFとアルファチャンネルを含むPNGの比較</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a></p>
+
+<p>PNGを使いたくなるところですが、Internet Explorer 6（以下IE6）はアルファチャンネルに対応していないので、一工夫する必要があります。IE6でアルファチャンネルを含むPNGを表示するには、IE6のフィルタ機能である<a href="http://msdn.microsoft.com/workshop/author/filter/reference/filters/alphaimageloader.asp">AlphaImageLoader</a>を使用します。フィルタを使用すると、画像としてではなく要素の背景のように振る舞います。したがって、表示させるにはIE6でアクセスがあった場合のみ以下のような処理を行えばよいことになります。</p>
+<ol>
+  <li>imgタグのsrc属性を透過GIFに入れ替える（見えない）</li>
+  <li>imgタグのフィルタとしてAlphaImageLoaderを使用、本来表示させたい画像を指定する</li>
+</ol>
+
+<p>では、実装例です。縦横が1ピクセルの透過GIFファイルを用意し、下記のJavaScriptをロードします（ライブラリとして<a href="http://www.prototypejs.org/">Prototype.js</a>を使用しているので、併せてロードしてください）。</p>
+
+<pre class="code"><code>
+var AlphaChanneledPNG = Class.create();
+AlphaChanneledPNG.prototype = {
+  initialize: function(imgId, blankImgSrc) {
+    this.imgId = imgId;
+    this.blankImgSrc = blankImgSrc;
+    Event.observe(window, 'load', this.show.bind(this));
+  },
+  show: function() {
+    if (/MSIE (5\.5|6\.)/.test(navigator.userAgent)) {
+      imgObj = $(this.imgId);
+      orgSrc = imgObj.src;
+      imgObj.src = this.blankImgSrc;
+      imgObj.style.filter = "progid:DXImageTransform.Microsoft.AlphaImageLoader("
+                          + "src='" + orgSrc + "', sizingMethod='scale')";
+    }
+  }
+};
+</code></pre>
+
+<p>そして、アルファチャンネルを含む画像が指定されているimg要素にidを設定し、下記のようにオブジェクトを生成します。1つめの引数には対象のimg要素のidを、2つめの引数には用意しておいた透過GIFのパスを指定します。そうすることで、ページのロードが完了するタイミングでフィルタが適用されます。</p>
+
+<pre class="code"><code>
+var foo = new AlphaChanneledPNG('foo', '/path/to/blank.gif');
+</code></pre>
+
+<p>Internet Explorer 7ではアルファチャンネルがサポートされたので、フィルタを使用する必要はありません。また、上述のような処理を行うことにより、IE6に限って画像の上で右クリックして画像を保存する、という動作が行えなくなってしまうので注意する必要があります。</p>
+
+<p>【追記（2007年02月07日）】<br>
+下記の各記事で紹介されているような方法を使ってもIE6でアルファチャンネルーを含むPNG画像を正常に表示することができます。</p>
+
+<ul>
+<li><a href="http://web.kankodo.net/2007/02/01-233315.html">アルファ画像を扱うalphafilter.jsライブラリ-とあるWEBクリエイターのblog</a></li>
+<li><a href="http://d.hatena.ne.jp/amachang/20070206/1170715555">IT戦記 - 僕も半透明 png を使うためのライブラリ作った！</a></li>
+<li><a href="http://d.hatena.ne.jp/nazoking/20070206/1170767765">nazonoDiary - IE５でアルファチャンネルPNGを使うための一番簡単なライブラリ　あるいはIEの失われたテクノロジに驚異せよ</a></li>
+</ul>
+
+{% endraw %}

@@ -1,0 +1,92 @@
+---
+layout: post
+title: "ActionScript2.0のデバッグを支援する KLog を公開しました！"
+---
+{% raw %}
+<h3 id="content_1_1">KLog について</h3>
+
+<p>ウノウでFlash開発する時に密かに利用している
+ログツール「KLog」を一般公開します。</p>
+
+<h3 id="content_1_2">どうして作ったのか？ </h3>
+
+<p>こんにちは、クジラ飛行机(酒徳2号)です。
+私は、ウノウで、Flashの開発や、
+Windowsのクライアントアプリの開発を行っています。
+今回、私がFlashの開発時に使っているログ出力システム KLog を紹介します。</p>
+
+<p>ActionScript3.0(Flex2)になって、ようやく、Flashにも
+まともなプログラミングの開発環境がつきましたが、
+Flash MX2004/8/MTASCの開発は、デバッグがやり辛くて困っていました。</p>
+
+<p>特に、MTASCというフリーのFlashコンパイラを利用して開発をしていると、
+trace()命令も使えないので、デバッグが非常に困難でした。</p>
+<p>そこで、作ったのが、KLog です。</p>
+
+<a href="http://photozou.jp/photo/show/6/3663929"><img src="http://art6.photozou.jp/pub/6/6/photo/3663929.png" alt="klog - ActionScript2.0 デバッグシステム" width="450" height="258" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/6/3663929">klog - ActionScript2.0 デバッグシステム</a> posted by <a href="http://photozou.jp/mypage/top/6">(C)クジラ飛行机(峰酒徳)</a>
+
+<p>KLogを使って嬉しいことは、以下の点です。</p>
+
+<ul class="list1" style="padding-left:16px;margin-left:16px"><li>Flash の trace() 命令よりも使いやすいログ出力
+<ul class="list2" style="padding-left:16px;margin-left:16px"><li>メッセージの出力はもちろん、オブジェクトのプロパティ一覧を出力可能</li>
+<li>ログの出力先を簡単に変更できる
+<ul class="list3" style="padding-left:16px;margin-left:16px"><li>KLogServer に出力</li>
+<li>Flashの画面内に出力</li>
+<li>Firefoxのアドイン Firebug のコンソールに出力</li></ul></li></ul></li></ul>
+<ul class="list1" style="padding-left:16px;margin-left:16px"><li>ログ専用アプリ KLogServer が便利
+<ul class="list2" style="padding-left:16px;margin-left:16px"><li>ログ内の検索が簡単</li>
+<li>実行途中に変数の値を調べたり値を書き換えることができる</li>
+
+<li>常に最前面に表示させておくことが可能（意外と便利）</li></ul></li></ul>
+
+<h3 id="content_1_4">KLogの使い方</h3>
+
+<p>基本的に、KLogは、ActionScript2.0クラスの KLog.as と、
+ログを受信するWindows用ツールの KLogServer.exe の２つで構成されます。
+KLog.as は、ActionScript2.0 のクラスです。
+ログを出力したいプロジェクトに組み込んで使います。</p>
+
+<h4 id="content_1_5">手順１：KLogServerの起動</h4>
+
+<p>アーカイブに同梱されている KLogServer.exe を実行します。
+初めての実行では、ファイアウォールの設定画面が出るので、
+サーバーの起動を許可してください。</p>
+
+<h4 id="content_1_6">手順２：プロジェクトへの組み込み</h4>
+
+<p>プロジェクトと同じフォルダに、KLog.as をコピーします。</p>
+
+<p>そして、プロジェクト内で、始めに実行されるコードに、
+KLogの設定を記述します。（この手順は省略できます。）
+始めに、どこにログを出力するのかを指定します。</p>
+
+<pre><code>// ログを始める
+KLog.isTest        = true;  // KLog をはじめる
+KLog.use_textfield = false; // Flash内の画面に出力するか？
+KLog.use_server    = true;  // KLogServer に出力するか？
+KLog.use_firebug   = false; // FireBugに出力するか？</pre>
+<p>デフォルトでは、WindowsアプリのKLogServerに出力されます。</p>
+<p>そして、ログを出力したいところで、以下のように記述します。</p>
+<pre>KLog.write(&quot;ログに出力する内容&quot;);</code></pre>
+<p>これだけです。もし、オブジェクトのプロパティ一覧を表示したい場合は、
+以下のように書きます。</p>
+<pre><code>KLog.print_r( object );</code></pre>
+
+<p>そして、デバッグが終わって、ログ出力機能をオフにしたい場合は、
+以下のように KLog.isTest = false と書くと、
+ログ出力機能を行わないようになります。</p>
+
+<pre><code>KLog.isTest = false;</code></pre>
+
+<h3 id="content_1_7">備考</h3>
+
+<p>Flash Player 7以降に対応していますので、Wii 対応アプリや、
+FlashLite2.0アプリのデバッグにも最適です。</p>
+
+<h3 id="content_1_8">KLog のダウンロード</h3>
+
+<p>KLogは以下よりダウンロードできます。</p>
+<p><a href="http://aoi-project.com/download/KLog/" rel="nofollow">http://aoi-project.com/download/KLog/</a></p>
+
+
+{% endraw %}

@@ -1,0 +1,203 @@
+---
+layout: post
+title: "DRBDによるコンテンツの相互バックアップ"
+---
+{% raw %}
+こんにちは satoです。<br>
+DRBDは誤解を恐れないで、簡単に言ってしまうと、ネットワーク越しにRAID1を構築できるオープンソースのソフトウェアです。<br>
+<br>
+DRBDには以下の特徴があります。<br>
+・カーネルモジュールで動作し、有償でサポートが受けられます<br>
+・電源等が壊れても、ソフトウェアRAIDやPICカード型のRAIDと違ってサービスを続けることができます<br>
+・heartbeat等と組み合わせて、HAなシステムを構築できます<br>
+・secondary(slave、待機系)はマウントすることができません。<br>
+<br>
+DRBDの設定から使用までを簡単に解説しようと思います。また待機系が必要なのですが、待機だけではもったいないので、相互に違う領域をバックアップ(s1のsda3のバックアップ先は s2のsda3、s2のsda4のバックアップ先はs1のsda4)をしてみました。<br><br>
+
+<h2>構成</h2>
+<div style="margin-left: 6%;">
+s1.unoh.net 10.1.0.1<br>
++-------------<br>
+| sda3 (drbd0 master)<br>
++-------------<br>
+| sda4 (drbd1 slave)<br>
++-------------<br>
+<br>
+s2.unoh.net 10.1.0.2<br>
++-------------<br>
+| sda3 (drbd0 slave)<br>
++-------------<br>
+| sda4 (drbd1 master)<br>
++-------------<br>
+uname -a<br>
+Linux s1.unoh.net 2.6.18-1.2200.fc5smp #1 SMP Sat Oct 14 17:15:35 EDT 2006 i686 i686 i386 <br>GNU/Linux<br>
+</div><br>
+
+<h2>インストール</h2>
+<div style="margin-left: 6%;">
+必要なものを yum でインストールします。<br><br>
+
+yum install kernel-devel<br>
+yum install hardlink<br>
+yum install rpm-build<br>
+<br>
+最新のソースをDLします。<br>
+wget http://oss.linbit.com/drbd/0.7/drbd-0.7.22.tar.gz<br>
+<br>
+ソースからRPMをビルドします。<br>
+<br>
+tar zvxf drbd-0.7.22.tar.gz<br>
+cd drbd-0.7.22<br>
+make rpm<br>
+cd dist/RPMS/i386/<br>
+rpm -ivh drbd-0.7.22-1.i386.rpm<br>
+rpm -ivh drbd-km-2.6.18_1.2200.fc5smp-0.7.22-1.i386.rpm<br>
+</div><br>
+
+
+<h2>設定</h2>
+<div style="margin-left: 6%;">
+/etc/drbd.conf を編集します。無い場合は作成します。<br>
+<div style="margin-left: 8%;">
+resource drbd0 {  <br>
+  # 同期プロトコル A, B, C のいずれかを選択<br>
+  # A:リモートのディスクへの書き込み要求が完了した時点 <br>
+　# B:リモートのディスクのバッファキャッシュ書き込みが完了した時点<br>
+  # C:リモートのディスクへの書き込みが完了した時点<br>
+  protocol B;<br>
+  incon-degr-cmd "halt -f";<br>
+<br>
+  syncer {  # 同期の速度<br>
+        rate 200M;<br>
+  }<br>
+  disk {    # エラーが起こったときの処理<br>
+            # pass_on:上位レイヤに通知, panic:カーネルパニックになる, detach:ディスクレスモードで動作<br>
+        on-io-error pass_on;<br>
+  }<br>
+  net {     # 接続が切れた場合の処理<br>
+            # reconnect:再接続,stand_alone:1台だけで継続,freeze_io:IOを止める<br>
+        on-disconnect reconnect;<br>
+  }<br>
+<br>               
+  # 1番目のノードを定義<br>
+  on s1.unoh.net {<br>
+    device /dev/drbd0;<br>
+    disk /dev/sda3;<br>
+    address 10.1.0.1:7789;<br>
+    # メタデータの定義<br>
+    meta-disk internal;<br>
+  }<br>
+<br>
+  # 2番目のノードを定義<br>
+  on s2.unoh.net {<br>
+    device /dev/drbd0;<br>
+    disk /dev/sda3;<br>
+    address 10.1.0.2:7789;<br>
+    # メタデータの定義<br>
+    meta-disk internal;<br>
+  }<br>
+}<br>
+
+resource drbd1 {<br>
+　# drbd0 と違うところだけ記述<br>
+  # 1番目のノードを定義<br>
+  on s1.unoh.net {<br>
+    device /dev/drbd1;<br>
+    disk /dev/sda4;<br>
+    address 10.1.0.1:7790;<br>
+    # メタデータの定義<br>
+    meta-disk internal;<br>
+  }<br>
+<br>
+  # 2番目のノードを定義<br>
+  on s2.unoh.net {<br>
+    device /dev/drbd1;<br>
+    disk /dev/sda4;<br>
+    address 10.1.0.2:7790;<br>
+    # メタデータの定義<br>
+    meta-disk internal;<br>
+  }<br>
+}<br>
+</div>
+<br>
+DRBDをスタートします<br>
+
+/etc/init.d/drbd start<br>
+
+以下のような状態 Inconsistent(同期がとれていない状態) になります<br>
+cat /proc/drbd<br>
+<div style="margin-left: 8%;">
+version: 0.7.22 (api:79/proto:74)<br>
+ 0: cs:Connected st:Secondary/Secondary ld:Inconsistent<br>  
+    ns:71984032 nr:0 dw:71984032 dr:52390757 al:169318 bm:0 lo:0 pe:0 ua:0 ap:0<br>
+ 1: cs:Connected st:Secondary/Secondary ld:Inconsistent <br> 
+    ns:45988528 nr:0 dw:45988528 dr:91767569 al:185559 bm:0 lo:0 pe:0 ua:0 ap:0<br>
+</div>
+<br>
+本来ならここでprimaryモードに移行するために<br>
+<br>
+drbdadm -- --do-what-I-say primary drbd0<br>
+<br>
+と行うのですが、これを行うと、一旦ディスクを同期するため、<br>
+サイズによってはかなりの時間がかかってしまいます。<br>
+<br>
+この作業をスキップするために以下のスクリプトを使用します。<br>
+<br>
+wget http://svn.drbd.org/drbd/branches/drbd-0.7/testing/read_gc.pl<br>
+wget http://svn.drbd.org/drbd/branches/drbd-0.7/testing/write_gc.pl<br>
+<br>
+read_gc.pl resource_name<br>
+write_gc.pl resource_name 1<br>
+<br>
+/etc/init.d/drbd restart<br>
+<br>
+プライマリーに移行します<br>
+s1.unoh.net にて　drbdadm primary drbd0<br>
+s2.unoh.net にて　drbdadm primary drbd1<br>
+<br>
+cat /proc/drbd<br>
+<br>
+<div style="margin-left: 8%;">
+version: 0.7.22 (api:79/proto:74)<br>
+ 0: cs:Connected st:Primary/Secondary ld:Consistent  <br>
+    ns:71984032 nr:0 dw:71984032 dr:52390757 al:169318 bm:0 lo:0 pe:0 ua:0 ap:0<br>
+ 1: cs:Connected st:Secondary/Primary ld:Consistent  <br>
+    ns:45988528 nr:0 dw:45988528 dr:91767569 al:185559 bm:0 lo:0 pe:0 ua:0 ap:0 <br>
+<br>
+</div>
+Consistent となって同期がとれていることがわかります<br>
+<br>
+mkfs.ext3 /dev/drbd0<br> 
+mount /dev/drbd0 /mnt/drbd0 <br>
+とするとファイルシステムを作成し、デバイスをマウントすることができます<br>
+</div><br>
+
+<h2>テスト</h2>
+<div style="margin-left: 6%;">
+s1.unoh.net で適当なファイルを作成します。<br>
+cd /mnt/drbd0<br>
+touch hoge<br>
+ls -la<br>
+-rw-rw-r--  1 unoh  unoh       0 12月 25 14:39 hoge<br>
+
+デバイスをアンマウントしてセカンダリーに移行します<br>
+cd ..<br>
+umount /mnt/drbd0<br>
+drbdadm secondary drbd0<br>
+<br>
+s2.unoh.net でプライマリーにして、デバイスをマウントします。<br>
+<br>
+drbdadm primary drbd0<br>
+mount /dev/drdb0 /mnt/drbd0 <br>
+<br>
+作成したファイルがあるか確認します<br>
+<br>
+cd /mnt/drbd0<br>
+ls -la<br>
+-rw-rw-r--  1 unoh  unoh       0 12月 25 14:39 hoge<br>
+</div><br><br>
+
+DRBDの設定のために
+以下の書籍を参考にしました。<br>
+<div class="amazlet-box" style="margin-bottom:0px;"><div class="amazlet-image" style="float:left;"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4798011894/unoh-22/ref=nosim/" name="amazletlink" target="_blank"><img src="http://images-jp.amazon.com/images/P/4798011894.09.MZZZZZZZ.jpg" alt="Linuxアドバンストネットワークサーバ構築ガイド HAサーバ構築編" style="border: none;" /></a></div><div class="amazlet-info" style="float:left;margin-left:15px;line-height:120%"><div class="amazlet-name" style="margin-bottom:10px;line-height:120%"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4798011894/unoh-22/ref=nosim/" name="amazletlink" target="_blank">Linuxアドバンストネットワークサーバ構築ガイド HAサーバ構築編</a><div class="amazlet-powered-date" style="font-size:7pt;margin-top:5px;font-family:verdana;line-height:120%">posted with <a href="http://www.amazlet.com/browse/ASIN/4798011894/unoh-22" title="Linuxアドバンストネットワークサーバ構築ガイド HAサーバ構築編" target="_blank">amazlet</a> on 06.12.25</div></div><div class="amazlet-detail">デージーネット <br />秀和システム <br />売り上げランキング: 14319<br /></div><div class="amazlet-review" style="margin-top:10px; margin-bottom:10px"><div class="amazlet-review-average" style="margin-bottom:5px">おすすめ度の平均: <img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-4-5.gif" alt="4.5" /></div><img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-5-0.gif" alt="5" /> ミッションクリティカルなサーバを構築するなら<br /><img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-3-0.gif" alt="3" /> 構築から運用まで担当する方向け<br /><img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-5-0.gif" alt="5" /> 高度だが説明はわかりやすい<br /></div><div class="amazlet-link" style="margin-top: 5px"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4798011894/unoh-22/ref=nosim/" name="amazletlink" target="_blank">Amazon.co.jp で詳細を見る</a></div></div><div class="amazlet-footer" style="clear: left"></div></div>
+{% endraw %}

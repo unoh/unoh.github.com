@@ -1,0 +1,186 @@
+---
+layout: post
+title: "PHPテンプレートエンジンTwigをいじってみました"
+---
+{% raw %}
+<p>今年のX'masは一人で高いシャンパンを買って飲もうとおもってるKeitaです。</p>
+
+<p>しばらく、情報収集をさぼっている間に、symfonyの開発元であるSensio Labsから、PHPのテンプレートエンジンTwigが出ていたので、1時間ほど試してみました。</p>
+<p>つかってみたよーとか、ここきついとかありましたら、コメントなどで教えていただけるとうれしいです。</p>
+
+<h2>インストール</h2>
+<p><a href="http://www.twig-project.org/installation">本家サイトのINSTALLATION</a>を参考に僕はtar.gzのファイルを手動どインストールして試してみました。</p>
+
+<p>インストールはpearコマンドなどでもできるようです。</p>
+というか、www.twig-project.orgのフッタを見てみるとPEAR Serverも自作してること発見してびっくりました。</p>
+
+
+<h2> テンプレート側</h2>
+<p>テンプレート側のコードは下記のように記述します。</p>
+
+<pre class="code">
+&lt;html&gt;
+&lt;title&gt;title&lt;/title&gt;
+&lt;/html&gt;
+&lt;body&gt;
+メリー {{ congratulation }}!!
+メリー {{ congratulation|safe }}!!
+&lt;/body&gt;
+</pre>
+
+<h2> 実際のコード</h2>
+<p>テンプレートを呼び出す側のコードは<a href="http://www.twig-project.org/book/03-Twig-for-Developers">Twig for Developers</a>にあります。</p>
+<p>これをほぼ丸写しして下記のようなコードを書いてみました。</p>
+
+<pre class="code">
+&lt?php
+require_once '/path/to/twig/lib/Twig/Autoloader.php';
+Twig_Autoloader::register();
+
+$loader = new Twig_Loader_Filesystem('/path/to/template/'); //(1)ファイルのほかに文字列直接とか配列を指定できる。
+$twig = new Twig_Environment($loader,
+array(
+  'cache' => '/path/to/var/tmp/cache',
+  'auto_reload' => true, //デフォルトがfalseなわきゃないと思うだけど
+)
+);
+$escaper = new Twig_Extension_Escaper(true); //(2) デフォルトHTMLエスケープしてパラメータをつけるとエスケープしないようなコードがかける
+$twig->addExtension($escaper);
+
+$template = $twig->loadTemplate('nomal.html');
+echo $template->render(array('congratulation' => 'X\'ss'));
+</pre>
+
+
+<p>実行してみると下記のようなHTMLが出力されます。</p>
+
+<pre class="code">
+&lt;html&gt;
+&lt;title&gt;title&lt;/title&gt;
+&lt;/html&gt;
+&lt;body&gt;
+メリー X&amp;#039;ss!!
+メリー X'ss!!
+&lt/body&gt;
+</pre>
+
+
+<p>(1) の部分でファイルからの読み込みが指定されてますが配列や文字列そのももの指定できるようような指定ができます。また、Loader自体の拡張も、たとえばMySQLやKVS的なものからデータを読み込むような指定もできます。</p>
+
+<p>(2)の部分は、変数の出力時に何も指定しなければエスケープ処理を行うようにしてあります。
+エスケープしない場合は{{hoge|safe}}のような記述します。
+また上記設定しない場合は{{hoge|e}}とった感じの書き方でエスケープされます。</p>
+
+<h2>テンプレート継承</h2>
+テンプレートを下記のように記述します。<br />
+base.html
+<pre class="code">
+&lt;html&gt;
+&lt;title&gt;{% block title %}テスト{% endblock %}&lt;/title&gt;
+&lt;/html&gt;
+&lt;body&gt;
+{% block body %}
+本文だよ
+{% endblock %}
+&lt;/body&gt;
+</pre>
+
+title.html
+<pre class="code">
+{% extends "base.html" %}
+{% block title%}継承テスト{% endblock %}
+</pre>
+
+<p>title.htmlを実行すると下記のような出力が行われます。</p>
+<pre class="code">
+&lt;html&gt;
+&lt;title&gt;継承テスト&lt;/title&gt;
+&lt;/html&gt;
+&lt;body&gt;
+
+本文だよ
+
+&lt;/body&gt;
+</pre>
+
+<h2>キャッシュされるテンプレート</h2>
+<p>どうやって継承とかしているのなーと思いキャッシュされたテンプレートを覗いてみました。</p>
+<pre class="code">
+&lt;?php
+
+/* base.html */
+class __TwigTemplate_0071f6af5144b1d5aaf62ae6db08f444 extends Twig_Template
+{
+  public function display(array $context)
+  {
+    // line 1
+    echo "&lt;html&gt;
+&lt;title&gt;";
+    // line 2
+    $this-&gt;block_title($context);
+    echo "&lt;/title&gt;
+&lt;/html&gt;
+&lt;body&gt;
+";
+    // line 5
+    $this-&gt;block_body($context);
+    // line 7
+    echo "
+&lt;/body&gt;
+";
+  }
+
+  // line 2
+  public function block_title($context)
+  {
+    echo "テスト";
+  }
+
+  // line 5
+  public function block_body($context)
+  {
+    echo "
+本文だよ
+";
+  }
+
+}
+</pre>
+
+title.html
+<pre class="code">
+&lt;?php
+
+$this->loadTemplate("base.html");
+
+/* title.html */
+class __TwigTemplate_f7f5efb7dcc094ca38d2c84bd671d4bc extends __TwigTemplate_0071f6af5144b1d5aaf62ae6db08f444
+{
+  public function display(array $context)
+  {
+
+    parent::display($context);
+  }
+
+  // line 2
+  public function block_title($context)
+  {
+    echo "継承テスト";
+  }
+
+}
+</pre>
+
+なるほど、クラスを生成して普通の継承を行っているんですね。
+よく考えれば当たり前な気がしますが正直、Smartyなどのテンプレートエンジンは素のPHPっぽいテンプレートを返すのでクラスを吐き出すというのが自分的にはとても新鮮でした。
+
+<h2>感想</h2>
+触ってみた時間は短いですが、「あぁ考えられているな」と感じました。
+そのほかにもSandboxやデバッグなどの機能があるみたいですが試せてはいません。
+また、マルチバイトがかなり意識されていて、Filterのソースコードを見ると、mb_stringがあった場合には、それを使って処理するようになっています。海外のアプリケーションでmb_stringを使っているものを久しぶりに見ました。
+
+PHPのテンプレートエンジンといえば、PHPそのものはもちろん、Smartyが有名ですが、これはこれで、メジャーバージョン3のベータ版が出ていたりしてそれはそれで興味深いですので正式版がでたら使ってみたいと思います。
+
+何かのご参考になれば幸いです。
+
+{% endraw %}

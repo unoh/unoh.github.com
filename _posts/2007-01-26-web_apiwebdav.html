@@ -1,0 +1,51 @@
+---
+layout: post
+title: "Web APIとしてのWebDAV"
+---
+{% raw %}
+<p>komagataです。</p>
+
+<p>社内の勉強会でWebDAVについて発表したので資料を公開します。<br />
+（この資料は少し言い過ぎなので２割増しで聞いといて下さい）</p>
+
+<p><img id="slide_webdav" src="http://labs.unoh.net/webdav/WebDAV1.png" /></p>
+<p>[<a href="javascript:slideWebDAV.first()">&lt;&lt;</a>　<a href="javascript:slideWebDAV.prev()">Prev</a>　<a href="javascript:slideWebDAV.next()">Next</a>　<a href="javascript:slideWebDAV.last()">&gt;&gt;</a>]　<a href="http://labs.unoh.net/WebDAV.pdf">WebDAV.pdf(741KB)</a></p>
+<script type="text/javascript" src="http://labs.unoh.net/js/Animation/Cube.js"></script>
+<script type="text/javascript">
+var slideWebDAV = {
+  img: function () {
+    return document.getElementById('slide_webdav');
+  },
+  first: function () {
+    var cube = new Animation.Cube('slide_webdav', 'http://labs.unoh.net/webdav/WebDAV1.png');
+    cube.clockWise = false;
+    cube.rotateSeconds = 1.000;
+    cube.rotate();
+  },
+  last: function () {
+    var cube = new Animation.Cube('slide_webdav', 'http://labs.unoh.net/webdav/WebDAV32.png');
+    cube.rotateSeconds = 1.000;
+    cube.rotate();
+  },
+  next: function() {
+    var img = this.img();
+    if (img.src.match(/(\d+)\.png$/)) {
+      var src = RegExp.leftContext + Math.min(Math.max(parseInt(RegExp.$1) + 1, 1), 32) + '.png';
+      var cube = new Animation.Cube('slide_webdav', src);
+      cube.rotateSeconds = 1.000;
+      cube.rotate();
+    }
+  },
+  prev: function() {
+    var img = this.img();
+    if (img.src.match(/(\d+)\.png$/)) {
+      var src = RegExp.leftContext + Math.min(Math.max(parseInt(RegExp.$1) - 1, 1), 32) + '.png';
+      var cube = new Animation.Cube('slide_webdav', src);
+      cube.clockWise = false;
+      cube.rotateSeconds = 1.000;
+      cube.rotate();
+    }
+  }
+};
+</script>
+{% endraw %}

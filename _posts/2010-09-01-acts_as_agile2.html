@@ -1,0 +1,146 @@
+---
+layout: post
+title: "アジャイルな開発をチームでやってみた(2010年版)  - その2"
+---
+{% raw %}
+<p>テストコード書いてますか？　<a href="http://hiroki.jp">HIROKI</a>です。</p>
+
+<p><a href="http://labs.unoh.net/cgi-bin/mt-search.cgi?tag=murahashi&blog_id=2">murahashi</a>に続いて、テストファーストを導入してみての振り返りをします。
+まず、どうやってチームにテストファーストのスタイルを持ち込んだのか。</p>
+
+<h3>1．テストが重要だという共通認識を持つ。</h3>
+
+<p>前のプロジェクトではテストコードは、ほとんどありませんでした。
+その中で、開発になれていない人や新たに人が投入され、
+極少数ですが、デグレーションが起きました。</p>
+
+<p>その経験を元にテストが重要だという共通認識を持つことができました。</p>
+
+
+<h3>2．プロジェクト開始時からテストファーストに踏み切る気持ちが必要</h3>
+
+<p>
+テストコードを書かなければコミットさせない。ぐらいの気持ちが必要です。
+実際に何度も、本格的な実装が始まる前から口にしていました。
+「うちのチームはテストを書かなければコミットを許さない。」と。
+</p>
+
+<h3>3．でも、テストコード書いたことないよ？</h3>
+<p>
+テストコードを書いたことのないメンバーもいるかと思います。
+そんな人は下記の参考書を写経することから始めましょう。
+</p>
+<iframe src="http://rcm-jp.amazon.co.jp/e/cm?lt1=_blank&bc1=000000&IS2=1&bg1=FFFFFF&fc1=000000&lc1=0000FF&t=unoh-22&o=9&p=8&l=as1&m=amazon&f=ifr&md=1X69VDGQCMF7Z30FM082&asins=4894717115" style="width:120px;height:240px;" scrolling="no" marginwidth="0" marginheight="0" frameborder="0"></iframe>
+
+<p>symfonyを使うことが前提だったので、上記の本をlimeで置き換えて写経しました。</p>
+<p>また、下記のような動画もとても参考になります。</p>
+
+<ul>
+	<li>ruby札幌 スはスペックのス〜RSpecによるテスト駆動開発の実演〜 <a href="http://www.nicovideo.jp/watch/sm2370458">その1</a> <a href="http://www.nicovideo.jp/watch/sm2370872">その2</a> <a href="http://www.nicovideo.jp/watch/sm2371011">その3</a></li>
+
+
+<li><a href="http://gihyo.jp/dev/serial/01/tdd">［動画で解説］和田卓人の"テスト駆動開発"講座</a></li>
+
+</ul>
+<h3>4．そんなこと言っても、自主的に学習する人ばかりでないよ？</h3>
+
+<p>初日にペアプロしちゃいましょう。</p>
+<p>
+そのチームでTDDに一番詳しい人と、TDD初心者な人をペアにして、
+実装を始める初日かその前（できるだけはやく）にペアプロをしましょう。
+</p>
+
+<p>
+ペアプロは1モジュール書き上げるくらいが良いかと思います。
+そのチームで利用する開発環境の基本的なテストコードの書き方として後に参考にします。
+</p>
+
+<p>
+私のチームではsymfony+memcached+lime+hudsonという環境でしたので、
+どのタイミングでfixtureを流してmemcachedをクリアして、
+どういったテストの書き方をしていくのか参考になるものを1つ作り上げました。
+(細部に関してはチームみんなの意見をあつめて、検討してつくりました。)
+</p>
+
+<p>これができれば他のモジュールにも適応して開発していくだけです。</p>
+
+<h3>5．じゃあ、やってみた経験から為になること教えてよ？</h3>
+
+<p>symfonyでテストファーストを実施してみた経験から具体例をあげてみます。<p>
+
+<h3>fixtureを理想的なものを最初につくっておく</h3>
+<p>
+テーブルの定義だけではなくて、
+テーブルの中身のサンプルを全部のテーブル用意しておくこと。
+データ自体は簡単なデータでよい。
+</p>
+<p>
+モジュールをつくる度にあらたなfixtureをつくることを避けられる。
+fixtureをつくるのが結構めんどくさい。
+テストを書きたいのにデータがないというフラストレーションがたまる。
+結局、つくらないといけないけど、他のモジュールで使っているfixtureと整合性がとれているのか？
+</p>
+
+<p>規模が大きくなればなるほど、面倒なことになります。</p>
+
+<h3>limeのOKメソッドは使うな</h3>
+<p>bool値をチェックするメソッドとしてokメソッドがLimeには用意されていますが、
+これを使用することを非推奨としました。</p>
+
+<p>たとえば、テストが失敗したケースを考えると。</p>
+<pre class="code">$test->ok(false);</pre>
+
+<p>実行画面</p>
+
+<pre class="code">not ok 21
+#     Failed test (./hogeTest.php at line 34)
+</pre>
+
+
+<p>という感じで返ってきます。ですが、isメソッドで書けば</p>
+
+<pre class="code">$test->is(false,true,trueが返ってくるはず);</pre>
+
+<pre class="code">not ok 22 - trueが返ってくるはず
+#     Failed test (./hogeTest.phpat line 35)
+#            got: false
+#       expected: true</pre>
+
+<p>という感じで出力が返ってくる。コメントもあるので、わかりやすい。</p>
+
+<p>okメソッドだけだと情報が少なくて苦労するケースがあるので、面倒でもisメソッドで書くことにしました。</p>
+
+<h3>コメントではなくて、コードに含めろ</h3>
+
+<p>非推奨</p>
+<pre class="code">// trueが返ってくるはず
+$test->is($foo->bar(),true);</pre>
+     
+<pre class="code">not ok 22
+#     Failed test (./hogeTest.phpat line 35)
+#            got: false
+#       expected: true</pre>
+
+<p>推奨</p>
+<pre class="code">$test->is($foo->bar(),true,trueが返ってくるはず);</pre>
+
+<pre class="code">not ok 22 - trueが返ってくるはず
+#     Failed test (./hogeTest.phpat line 35)
+#            got: false
+#       expected: true</pre>
+
+<p>コメントを元にテストの場所や書いたテストの意図がわかるので、メソッドに含めましょう。</p>
+
+<h3>まとめ</h3>
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><a href="http://labs.unoh.net/assets_c/2010/09/build_status-212.html" onclick="window.open('http://labs.unoh.net/assets_c/2010/09/build_status-212.html','popup','width=500,height=400,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false"><img src="http://labs.unoh.net/assets_c/2010/09/build_status-thumb-200x160-212.png" width="200" height="160" alt="build_status.png" class="mt-image-center" style="text-align: center; display: block; margin: 0 auto 20px;" /></a></span>
+<p>このグラフがhudsonが1回目のビルドから529回目のビルドまでのテストにかかった時間と成功・失敗の結果です。</p>
+<p>チーム全体で常にすべてのテストをパスしている状態を保つという意識とそれに伴う行動の結果です。</p>
+
+<p>Files=59, Tests=3152  </p>
+<p>現時点で59ファイル、3152のテストをパスしています。</p>
+<p>赤色の部分も目立ちますが、テストが成長していることが目で見てわかります。
+こうやって、テストに支えられていることも再認識することも大切なことなのかな。とも思います。</p>
+
+<p>今回は、チームでテストファーストをやるためのステップと、少し具体的な例を紹介してみました。</p>
+
+{% endraw %}

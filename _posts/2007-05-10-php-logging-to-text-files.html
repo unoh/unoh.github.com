@@ -1,0 +1,158 @@
+---
+layout: post
+title: "PHPによるテキストファイルへのロギング"
+---
+{% raw %}
+<p>
+yamaokaです。
+</p>
+
+<p>
+PHPでwebアプリケーションを作成するとき、
+皆さんはロギング（ログの出力）をどうされているでしょうか。
+今回は、テキストファイルへロギングする方法をいくつか紹介したいと思います。
+</p>
+
+<ul>
+<li><a href="#error_log_function">error_log関数</a></li>
+<li><a href="#syslog_function">syslog関数</a></li>
+<li><a href="#pear_log">PEAR::Log</a></li>
+<li><a href="#log4php">log4php</a></li>
+<li><a href="#zend_log">Zend_Log</a></li>
+</ul>
+
+<h3 id="error_log_function">error_log関数</h3>
+
+<p>
+PHPでは、標準の関数として
+<a href="http://jp.php.net/manual/ja/function.error-log.php">error_log関数</a>が用意されています。
+使い方はとてもシンプルです。2番目の引数に「3」を指定することで、
+テキストファイルにログを出力することができます。
+<pre class="code"><code>error_log('message', 3, '/var/tmp/app.log');</code></pre>
+</p>
+
+<h3 id="syslog_function">syslog関数</h3>
+
+<p>
+また、<a href="http://jp.php.net/manual/ja/function.syslog.php">syslog関数</a>も
+標準で用意されている関数です。syslog経由でテキストファイルにログを出力することができます。Windowsの場合は、イベントログでエミュレートされます。
+<pre class="code"><code>define_syslog_variables();
+openlog('App log', LOG_PID | LOG_PERROR, LOG_LOCAL0);
+syslog(LOG_INFO, 'message');
+closelog();
+</code></pre>
+</p>
+
+<p>
+error_log関数とsyslog関数を紹介しましたが、
+もちろん、通常のファイル書き込みと同じように
+<a href="http://jp.php.net/manual/ja/ref.filesystem.php">ファイルシステム関数</a>を利用してロギングしてもいいですね。
+いずれにせよ、ログのフォーマットやログレベルの設定ができないので、
+必要な場合は自分でライブラリとして実装しなくてはいけません。
+</p>
+
+<h3 id="pear_log">PEAR::Log</h3>
+
+<p>
+<a href="http://pear.php.net/">PEAR</a>で利用できるロギングユーティリティとして、
+<a href="http://pear.php.net/package/Log">PEAR::Log</a>があります。
+テキストファイルへのロギングの他に、Eメールやデータベースなどへのロギングに対応しています。
+ロギングのフォーマットによっては他のPEARライブラリに依存していることがあるので、注意が必要です。
+<pre class="code"><code>$conf = array('mode' => 0644);
+$log =& Log::singleton('file', '/var/tmp/app.log', 'ident', $conf, PEAR_LOG_INFO);
+$log->log('message');
+</code></pre>
+</p>
+
+<h3 id="log4php">log4php</h3>
+
+<p>
+Javaに<a href="http://logging.apache.org/log4j/docs/">log4j</a>というロギングの定番ライブラリがありますが、
+<a href="http://logging.apache.org/log4php/">log4php</a>はそのPHP版です。
+Apacheの<a href="http://logging.apache.org/">Logging Service Project</a>で開発されています。
+log4jと同じように、ログの出力フォーマットの制御を細かく行うことができるのが特徴です。
+テキストファイルへのロギングの他に、Eメール、データベース、ソケット経由などへのロギングに対応しています。
+</p>
+
+<p>
+<pre class="code"><code>// 設定
+define('LOG4PHP_DIR', 'lib/log4php');
+define('LOG4PHP_CONFIGURATION', './log4php.properties');
+
+$logger =& LoggerManager::getLogger('App');
+
+// ログ出力
+$logger->info('message');
+
+LoggerManager::shutdown();
+</code></pre>
+</p>
+
+<p>
+ログの出力フォーマット、出力先などはすべて設定ファイル（上記例なら「log4php.properties」）で指定します。
+設定ファイルの記述は以下のようになります。
+<pre class="code"><code># ログ出力設定（テキストファイル、ログレベルはDEBUG）
+log4php.rootLogger=DEBUG, R
+
+# サイズベースのテキストログローテート
+log4php.appender.R=LoggerAppenderRollingFile
+log4php.appender.R.File=app.log
+log4php.appender.R.Append=true
+log4php.appender.R.MaxBackupIndex=5
+log4php.appender.R.MaxFileSize=1000
+log4php.appender.R.layout=LoggerPatternLayout
+log4php.appender.R.layout.ConversionPattern="%d %5p [%x] - %m%n"
+</code></pre>
+</p>
+
+<h3 id="zend_log">Zend_Log</h3>
+
+<p>
+<a href="http://framework.zend.com/">Zend Framework</a>の中に、
+<a href="http://framework.zend.com/manual/ja/zend.log.html">Zend_Log</a>というモジュールがあります。
+テキストファイルへのロギングの他に、標準出力、データベースなどへのロギングに対応しています。
+Zend Frameworkの1モジュールですが、単体でも問題なく利用することができます。
+PHP5以上でないと動作しません。
+</p>
+
+<p>
+ログレベルを自分で定義できたり、フォーマッタやフィルタの機能が備わっているので、
+カスタマイズが自由にできるという点でいいかもしれません。
+それぞれ用意されている抽象クラスを継承して、必要な実装をすれば自由に機能を追加することができます。
+</p>
+
+<p>
+<pre class="code"><code>// 出力フォーマット
+$format = '%timestamp% %priorityName% (%priority%): %message%' . PHP_EOL;
+$formatter = new Zend_Log_Formatter_Simple($format);
+
+$writer = new Zend_Log_Writer_Stream('/var/tmp/app.log');
+$writer->setFormatter($formatter);
+
+// 出力レベル
+$filter = new Zend_Log_Filter_Priority(Zend_Log::INFO);
+
+$logger = new Zend_Log();
+$logger->addWriter($writer);
+$logger->addFilter($filter);
+
+// ログ出力
+$logger->info('message');
+</code></pre>
+</p>
+
+<h3>最後に</h3>
+
+<p>
+何かしらのフレームワークを利用する場合、
+そのフレームワークに付属するロギングモジュールを利用することが多いかと思います。
+しかし、PEAR::Logやlog4phpなどのようなロギングユーティリティを使うと、
+よりきめ細かなロギングが可能になることもあるのではないでしょうか。
+車輪の再発明をしないために、いくつかロギングユーティリティを知っておくのも悪くないと思います。
+</p>
+
+<p class="yamaoka_postscript" >
+※syslog関数に関する記述を追記しました（2007年5月11日）。
+</p>
+
+{% endraw %}

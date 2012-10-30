@@ -1,0 +1,179 @@
+---
+layout: post
+title: "Wii対応サイト向けコマンド入力ライブラリ"
+---
+{% raw %}
+<p>
+尾藤正人 a.k.a BTO です。
+</p>
+
+<p>
+先週末開発合宿に行ってきました。
+開発合宿のレポートはまた後日書きますので、しばしお待ちを。
+</p>
+
+<p>
+僕は今回の開発合宿でWii対応サイト向けのコマンド入力ライブラリを作りました。
+まずはデモをご覧ください。
+</p>
+
+<p>
+<a href="http://labs.unoh.net/misc/wii/">wii.js デモ</a>
+</p>
+
+<p>
+別にWiiでなくても、ちゃんと普通のブラウザでも動作しますので、恐れずにカーソルキーでコマンドを入力してもらえればと思います。
+</p>
+
+<p>
+WiiでWebにアクセスしているとパスワードの入力にかなり抵抗を感じます。
+通常PCからWebにアクセスするときは一人でアクセスしますが、
+Wiiでアクセスするときは一緒にみる事が多いのでパスワードをあまり入力したくありません。
+インターネットチャンネルが正式版になってから、
+入力した文字が「*」で隠されるようになりましたが、
+それでも入力している動作は丸見えです。
+そこでコマンドでパスワードが入力できればいいのではないかと思い、
+今回のライブラリを作成しました。
+</p>
+
+<h3>使い方</h3>
+
+<ul>
+<li>prototype.jsを組み込む
+<li><a href="http://labs.unoh.net/misc/wii/wii.js">wii.js</a>を組み込む
+<li>wii_command = new Wii.Command('password_field'); // "password_field"はパスワードフィールドのid
+<li>wii_command.replace();
+</ul>
+
+<p>
+newしてreplace()を実行します。
+replace()を実行するとパスワードフィールドをリンクに置き換えてくれます。
+</p>
+
+<h3>メッセージを変更する</h3>
+
+<p>
+デフォルトだと英語のメッセージが表示されます。
+メッセージは"linkMessage", "promptMessage"で変更できます。
+"linkMessage"にパスワードフィールドを置き換えるアンカータグのメッセージを、
+"promptMessage"にウィンドウに表示するメッセージを指定します。
+</p>
+
+<pre class="code"><code>
+  var wii_command = new Wii.Command('password_field');
+  wii_command.linkMessage = "クリックしてパスワードコマンドを入力してください"
+  wii_command.promptMessage = "パスワードコマンドを入力してAボタンを押してください"
+  wii_command.replace();
+</code></pre>
+
+<h3>別のウィンドウライブラリを使用する</h3>
+
+<p>
+wii.jsではデフォルトでウィンドウを表示する簡単なクラスWii.Windowを使っています。
+これは外部から変更可能です。
+ウィンドウの表示、非表示には、それぞれshowWindow(), hideWindow()というメソッドを呼んでいますので、これを上書きしてください。
+</p>
+
+<pre class="code"><code>
+  var wii_command = new Wii.Command('password_field');
+  wii_command.showWindow = function() {
+    // ウィンドウを表示する
+  }
+  wii_command.hideWindow = function() {
+    // ウィンドウを隠す
+  }
+  wii_command.replace();
+</code></pre>
+
+<h3>対応する文字を変更する</h3>
+
+<p>
+実はwii.jsで入力されたコマンドは、単にそれぞれのキーを文字に対応させているだけです。
+デフォルトのキーマーップは次のようになってます。
+</p>
+
+<pre class="code"><code>
+  keyMap: {
+    Up:    'k', Down:  'j', Left:  'h', Right: 'l', A:     'a', B:     'b',
+    1:     '1', 2:     '2', Plus:  '+', Minus: '-'},
+</code></pre>
+
+<p>
+つまり"上上下下左右左右"と入力するとパスワードフィールドには"kkjjhlhl"が入力されます。
+このキーマップは次のようにして変更可能です。
+</p>
+
+<pre class="code"><code>
+  var wii_command = new Wii.Command('password_field');
+  wii_command.keyMap = {
+    Up:    'u', Down:  'd', Left:  'l', Right: 'r', A:     'a', B:     'b',
+    1:     '1', 2:     '2', Plus:  '+', Minus: '-'};
+  wii_command.replace();
+</code></pre>
+
+<p>
+このキーマップの場合、"上上下下左右左右"というコマンドで"uuddlrlr"が入力されます。
+</p>
+
+<h3>毎回設定するのが面倒なのでサブクラスを作る</h3>
+
+<p>
+毎回設定するのが面倒な場合はサブクラスを作ることができます。
+サブクラスを作ると毎回上書きしなくてすむようになって便利です。
+</p>
+
+<pre class="code"><code>
+MyWiiCommand = function() {
+  Wii.Command.apply(this, arguments);
+};
+MyWiiCommand.prototype = new Wii.Command;
+Object.extend(MyWiiCommand.prototype, {
+  // ここで適当に上書き
+});
+
+// MyWiiCommandを使う
+(new MyWiiCommand('password_field')).replace();
+</code></pre>
+
+<h3>Wiiリモコンイベント処理クラス - Wii.Controller</h3>
+
+<p>
+wii.jsにはWiiリモコンのイベントを扱うクラスWii.Controllerがあります。
+WiiだけでなくIE, Firefox, Operaにも対応していて、
+"上", "下", "左", "右", "A", "B", "1", "2", "+", "-"のイベントを扱う事ができます。
+</p>
+
+<p>
+Wii.Controllerはnewして、handlerにキーイベントを扱うハンドラーを登録することで使う事ができます。
+newするとすぐにキーイベントの取得ができるようになります。
+キーイベントの取得を中止したい時はend()を呼んで、
+再開したい時はstart()を呼びます。
+</p>
+
+<pre class="code"><code>
+  var wii_controller = new Wii.Controller;
+  wii_controller.handler = function(event, keyCode) {
+    alert('keyCode');
+  };
+
+  // キーの読み取りを中止する
+  wii_controller.end();
+
+  // キーの読み取りを再開する
+  wii_controller.start();
+</code></pre>
+
+<h3>まとめ</h3>
+
+<p>
+開発合宿でWii対応サイト向けコマンド入力ライブラリを作成しました。
+このライブラリに関しては特に権利は主張する気は全くないので、ご自由に使用していただければ幸いです。
+一応、修正BSDライセンスにしておきます。
+</p>
+
+<h3>ダウンロード</h3>
+
+<p>
+<a href="http://labs.unoh.net/misc/wii/wii.js">wii.js</a>
+</p>
+{% endraw %}

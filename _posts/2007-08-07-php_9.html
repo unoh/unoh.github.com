@@ -1,0 +1,58 @@
+---
+layout: post
+title: "携帯サイト作成のためにも使えるPHPのライブラリ"
+---
+{% raw %}
+<p>harukiです。</p>
+
+<p>
+携帯サイト作成の際に使えるPHPのライブラリを知っているだけ羅列してみます。
+</p>
+
+<h3><a href="http://pear.php.net/package/Net_UserAgent_Mobile">Net_UserAgent_Mobile</a></h3>
+<p>
+基本となるライブラリです。機種判定など、様々な用途に使用します。<br />
+細かい情報については、スクレイピングなどをしたりして自前で用意する必要があります。
+</p>
+
+<h3><a href="http://pear.php.net/package/Mail">PEAR::Mail</a></h3>
+<p>
+メールの送信に使用できます。<br />
+特殊な送信の際は、Mail::factory()にsmtpで使用することになりますが、キャリアの迷惑メールの設定にも気をつける必要があります。
+</p>
+
+<h3><a href="http://php.y-110.net/wiki/index.php?%B7%C8%C2%D3%A1%A7%A5%C7%A5%B3%A5%E1%A1%BC%A5%EB%A1%A7MIME%A5%D5%A5%A9%A1%BC%A5%DE%A5%C3%A5%C8%A4%CE%B0%E3%A4%A4">Mail_mime_Decomail</a> (Y-110's Wiki)</h3>
+<p>
+Mail_mimeと同じ使い方で、デコメール送信用にMIMEを組み立てることができるのでとても便利です。
+</p>
+
+<h3><a href="http://pear.php.net/package/Mail_mimeDecode">Mail_mimeDecode</a></h3>
+<p>
+空メール・エラーメールなどを受け取って解析する際に使用します。<br />
+解析の際には、Mail_RFC822::parseAddressListも使用します。
+</p>
+
+<h3><a href="http://pear.php.net/package/Net_IPv4">Net_IPv4</a></h3>
+<p>
+キャリアのIP帯域の判定に使用します。
+</p>
+
+<h3><a href="http://pear.php.net/package/HTTP_Download">HTTP_Download</a></h3>
+<p>
+auでのFlashや動画などの分割ダウンロードの際にも使用できます。<br />
+setContentType()でvideo/3gpp2などが指定できないので、手を加える必要があります。
+</p>
+
+<h3>画像処理</h3>
+<p>
+使える画像の種類が違うため変換したり、リサイズなどの処理のために使用します。<br />
+ライブラリについては<a href="http://labs.unoh.net/2007/05/php_7.html">こちらのエントリ</a>に詳しくまとめられています。
+</p>
+
+<p>
+上記のライブラリで、ある程度、末端の処理の手間を省けるのではないでしょうか。<br />
+それ以外の処理は、普段使用しているフレームワークなどでがんばることになります。。。<br />
+<br />
+便利なライブラリがあったらぜひ教えて下さい。
+</p>
+{% endraw %}

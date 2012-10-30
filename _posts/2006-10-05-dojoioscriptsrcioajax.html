@@ -1,0 +1,97 @@
+---
+layout: post
+title: "Dojoで簡単にクロスドメインAjaxを実現"
+---
+{% raw %}
+こんにちわ、hideです。<br />
+<br />
+最近、JavaScriptライブラリの<a href="http://dojotoolkit.org/">Dojo</a>を使い初めて、その便利さに目覚めてしまいました。Ajaxで使用される通常のXMLHttpRequestではセキュリティ上の理由から、現在表示しているページ以外のドメインに対してリクエストを送ることができません。そこで考え出されたのが、JSONP(JSON with padding)という方法です。JavaScriptのインクルードは、同一ドメインでなくても読み込めるという性質を利用しています。<br />
+<br />
+    <script type="text/javascript" src="http://labs.unoh.net/html/dojo-0.3.1-ajax/dojo.js"></script>
+    <script type="text/javascript">
+      dojo.require("dojo.io");
+      dojo.require("dojo.io.ScriptSrcIO");
+
+      function getJSONP() {
+        dojo.io.bind({
+          url: 'http://api.search.yahoo.com/ImageSearchService/V1/imageSearch?appid=jsondemo&output=json&results=20&query=beach',
+          transport: "ScriptSrcTransport",
+          jsonParamName: "callback",
+          load: function(type, data, event, kwArgs) {
+            showOutput(data);
+          }
+        });
+      }
+
+      function showOutput(json) {
+        data = json['ResultSet']['Result'];
+        var html = '';
+        for (var i=0; i<data.length; i++) {
+          html += '<a href="'+data[i].RefererUrl+'">';
+          html += '<img src="' + data[i].Thumbnail.Url + '" height="100"></a>';
+        }
+        document.getElementById('output').innerHTML = html;
+      }
+    </script>
+<br />
+まずは下のボタンを押してみてください。実際にYahoo!から画像検索が実行されます。サーバを介さずにブラウザから直接Yahoo!APIを呼び出しているところがポイントです。<br />
+<br />
+    <input type="button" onclick="getJSONP()" value="SAMPLE"/>
+    <div id="output"></div>
+
+<br />
+<br />
+簡単に説明するとこういう仕組みです。次のようにリクエスト時のパラメータとして、callback関数を指定します。<br />
+<pre class="source_code">http://example.com/json/?callback=importJS</pre>
+
+サービス提供側は、このcallback関数でくくってデータを返します。
+<pre class="source_code">importJS([{"color":"red", "price":100}, {"color":"blue", "price":200}]);</pre>
+
+このレスポンスは、JavaScriptとして実行されるので、importJSという関数を自分で用意しておけば、JSON形式のデータを引数で受け取って処理できるというわけです。このJSONPは、いろいろなJavaScriptライブラリから使えるのですが、DoJoを利用すると通常のXMLHttpRequestと同じように利用することができます。<br />
+<br />
+次が、サンプルコードです。<br />
+
+<pre class="source_code">
+&lt;html&gt;
+  &lt;head&gt;
+    &lt;script type="text/javascript" src="dojo.js"&gt;&lt;/script&gt;
+    &lt;script type="text/javascript"&gt;
+      dojo.require("dojo.io");
+      dojo.require("dojo.io.ScriptSrcIO");
+
+      function getJSONP() {
+        dojo.io.bind({
+          url: 'http://api.search.yahoo.com/ImageSearchService/V1/imageSearch?appid=jsondemo' +
+                '&output=json&results=20&query=beach',
+          transport: "ScriptSrcTransport",
+          jsonParamName: "callback",
+          load: function(type, data, event, kwArgs) {
+            showOutput(data);
+          }
+        });
+      }
+
+      function showOutput(json) {
+        data = json['ResultSet']['Result'];
+        var html = '';
+        for (var i=0; i&lt;data.length; i++) {
+          html += '&lt;a href="'+data[i].RefererUrl+'"&gt;';
+          html += '&lt;img src="' + data[i].Thumbnail.Url + '" height="100"&gt;&lt;/a&gt;';
+        }
+        document.getElementById('output').innerHTML = html;
+      }
+    &lt;/script&gt;
+  &lt;/head&gt;
+  &lt;body&gt;
+
+    &lt;input type="button" onclick="getJSONP()" value="Run"/&gt;
+    &lt;div id="output"&gt;&lt;/div&gt;
+
+  &lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+このDojoですが、<a href="http://d.hatena.ne.jp/amachang/20061004/1159968041" target="_balnk">IT戦記さんのブログ</a>で紹介されているように<a href="http://mochikit.org/" target="_blank">MochiKit</a>を管理下に置けたりしてかなり面白いです。難点は日本語の情報がほとんどないことですが、本家のドキュメントが充実しているので使い方は理解できるんじゃないかと思います。<br />
+<br />
+今、僕はDojoとPythonで書かれた非同期フレームワークTwistedをバックエンドにおいたComet型チャットを作っているので、近いうちに公開したいと思います。<br />
+{% endraw %}

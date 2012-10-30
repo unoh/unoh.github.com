@@ -1,0 +1,91 @@
+---
+layout: post
+title: "FlashでWiiリモコンのイベントを取得する方法まとめ"
+---
+{% raw %}
+<h3>FlashでWiiリモコンのイベントを取得する方法まとめ</h3>
+
+<p>ここでは、任天堂Wii上で、Flashゲームなどを作るのに必須である、Wiiリモコンを操作する方法を紹介します。</p>
+
+<h3>ウノウで酒徳率急上昇の真相</h3>
+
+<p>こんにちは。酒徳峰章です。これまでの人生で「酒徳」という名字の人は、妻と家族親族だけだったのですが、なんと、先日より、ウノウ（株）に、酒徳千尋さんが入社されました。そこで、酒徳２号（もしくは、クジラ飛行机）と呼んで下さい。酒徳千尋（１号）さん、ともども、今後ともよろしくお願いします。(※私の方が先に入社しているのですが、酒徳１号をかけて勝負したところ負けてしまったので、私が２号となりました。)</p>
+
+
+<h3>Wiiの可能性</h3>
+
+<p>先日より、Nintendo Wiiについて研究しております。Wiiを使うと、お茶の間のＴＶでインターネットができるようになります。これは、とてもすごいことで、Wiiが持つ今後の可能性にワクワクしています。</p>
+
+<p>但し、お試し版のブラウザ上のFlashでは、使えると思っていた「XMLSocket」が使えないという不具合を発見しました。製品版で直っていることを願います。</p>
+
+<p>そんなわけで、今日は、Wiiのインターネットチャンネル上で使える、簡単なチャットを作ったりして研究をしてみました。その成果として、Wiiリモコンを操作する方法を紹介します。</p>
+
+
+<h3>WiiリモコンのイベントをJavaScriptで取る</h3>
+
+<p>Wiiリモコンを操作する方法は、既にいくつか研究がなされていまして、下記のサイトが参考になります。</p>
+
+<ul>
+<li><a href="http://www.bolinfest.com/wii/overview.php">wii.js(JavaScriptライブラリ)</a>
+<li><a href="http://www.wiicade.com/api.aspx">WiiCade api(Flashライブラリ)</a>
+<li><a href="http://aralbalkan.com/825">Using the Wiimote buttons in Flash</a>
+<li><a href="http://d.hatena.ne.jp/kujirahand/searchdiary?word=%2a%5bWii%5d">Wiiまとめ</a>
+</ul>
+
+<p>その中で、<a href="http://www.bolinfest.com/wii/overview.php">wii.js</a> は非常に使いやすく、JavaScriptから、以下のように書くだけで、Wiiリモコンのイベントを検出することができます。</p>
+
+<table border=1><tr><td><pre>var wiimote = new Wiimote();
+// イベント
+wiimote.handleA = function() {
+  alert('Aボタンが押されたよ!');
+  return true;
+}
+// コントローラを登録
+wii.addController(wiimote);</pre></td></tr></table>
+
+
+<h3>WiiリモコンのイベントをFlashで...(失敗)</h3>
+
+<p>JavaScriptで簡単にキーイベントを取ることができるので、Flashでも簡単にできるだろうと、いつもの要領で、Keyイベントにイベントを登録して、実行してみるのですが、うまくいきません。</p>
+
+<p>それで、WiiCadeのWiiのFlash用ライブラリを使ってみるものの、うまくいきません。実は、これは、WiiCadeにゲームをアップロードして、WiiCadeの中でないと使えないというものなのです！なんと。（2007年4月現在）</p>
+
+<p>FlashでWiiリモコンのキーイベントを取得する方法を調べてみると、下記の手順でJavaScriptと連携してイベントを取るとうまく行くことが解りました。</p>
+<UL>
+<li>(1) JavaScriptで onKeyPress(), onKeyDown(), onKeyUp()などのイベントを取る
+  <li>(2) Flashのオブジェクトに設定する
+</UL>
+特にポイントとなるのが、JavaScriptで、onKeyPress() を受け取るようにすると、普段は、拡大やブックマークなどに使用される(1)や(2)などの特殊キーを無効にし、ブラウザ側で好きな処理を行うことができました。下記のようなコードで検証しました。<BR>
+<BR>
+<TABLE border="1">
+    
+      <tr>
+        <td>
+        <pre>&lt;script type=&quot;text/javascript&quot;&gt;
+function a_press(e) {
+  var keyCode = e.which;
+  alert(&quot;press &quot; + keyCode);
+  return false; // ----------- (*1)
+}
+&lt;/script&gt;
+&lt;body onKeyPress=&quot;return a_press(event)&quot;&gt;</pre>
+        </td>
+      </tr>
+    
+  </TABLE>
+  <P>ポイントは、(*1)の部分で、ここで false を返さないと、特殊キーを無効にできません。</P>
+  <P>次に、キーイベントをFlash側に伝える方法ですが、こちらも工夫が必要です。Flash8からは、JavaScriptと相互に通信する ExternalInterface という機能があるのですが、WiiのFlash7では、これが使えません(泣)。</P>
+  <P>そのため、com.quasimondo.wii.WiiMoteから取得したFlashのコードを見てみると、FlashのStageサイズ変更のイベントを介して、キーイベントを取っています。手順は下記の通りです。</P>
+  <UL>
+    <li>(1)１ページに２つのFlashを作る。１つは、ゲーム用のFlash(A)１つは、キーイベントを取得する専用(B)。
+    <li>(2)JavaScriptでキーイベントを取ったら、キーイベント取得用Flash(B)のオブジェクトの「width」と「height」をキーコードの番号やキーの状態に変更する。
+    <li>(3)Stage変更イベントを取ったら、実際のゲーム用のFlashオブジェクトへ、LocalConnectionを使って通知する。
+  </UL>
+  <P>ちょっと複雑ですが、WiiCadeのAPIでもLocalConnectionのコードを見つけましたので、似たような感じで行っているっぽいです。</P>
+  <H3>最後に</H3>
+  <P>WiiでいろいろとFlashを動かして試してみましたが、ちょっと不便な点も分かって来ました。まず、上記のように面倒な手順を踏まないと、キーイベントが取れないこと（マウスは
+onPress イベントで取れます）。それから、ブラウザ上では、リンクの上にポインタが来ると、ぶるっと震えてクリックできることがわかるのですが、Flashでは、これができません。（裏技で振るわせる方法ないでしょうか？）また、Wiiリモコンのポインタの座標は取れますが、Wiiゲームに必須の傾きや速度のセンサは取得できません。</P>
+<P>今後は、これを踏まえて、作る側で工夫して、面白いコンテンツを作っていけたらいいなぁと思います。</P>
+<P><I>※私が現在開発中の、<A href="http://aoi-project.com/">Web開発環境「葵2」</A>でも、Wii上で日本語プログラミングができるようにする予定です。</I></P>
+
+{% endraw %}

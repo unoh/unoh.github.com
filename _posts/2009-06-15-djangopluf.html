@@ -1,0 +1,117 @@
+---
+layout: post
+title: "Django風ＰＨＰフレームワークPlufを試してみました"
+---
+{% raw %}
+最近マジクエストというアトラクションにはまっています。<br />
+Keitaです。<br />
+<br />
+PHPには、CakePHPやsymfony、EthnaやrhacoとかCodeIgniterやPiece Frameworkなどなどいろいろフレームワークがありますが、探してみるとこういったよく耳にするフレームワークのほかにもいろいろなフレームワークがあります。<br />
+<br />
+<a href="http://d.hatena.ne.jp/shimooka/20090108">Do You PHP はてな</a>の記事で知ったのですが、<a href="http://devreview.com/big-list-of-php-frameworks/">The Big List of PHP Frameworks</a>といった記事も出ているようです。<br />
+<br />
+最近では、RubyのSinatraライクなフレームワークもちょこちょこ出てきているようで、<a href="http://labs.unoh.net/cgi-bin/mt-search.cgi?tag=yamaoka">yamaoka</a>が社内の勉強会にて発表してくれていました。
+<br />
+さて、その<a href="http://devreview.com/big-list-of-php-frameworks/">The Big List of PHP Frameworks</a>の僕自身そのリストの膨大さに愕然としてまったくその内容やソースを追いかけていませんでしたのですが、先日偶然に「Django風のルーティングなフレームワークほしいなー」とか考えて探していたらPlufというフレームワークがひっかりましたので、簡単に試してみました。
+
+<h2>Plufの特色</h2>
+詳しくは<a href="http://www.pluf.org/doc/">公式のドキュメント</a>を見てもらうとしておおむねざっくりと僕の理解で書かせていただくと、Djangoの機能を「シンプル」に実装したPHPフレームワークというイメージです。<br />
+なぜシンプルにという部分を強調したかというと、難しいと思われる機能をシンプルに実装することによって非常に高速に動作します。<br />
+<br />
+ここらへん難しいことをシンプルに行うというPHPの思想（？）にあってるなという印象があります。
+また、Python風のコードを移植するとなんとなくコードの書き方もPython風にしたくなりますが、PHPの標準のコードともいえるPEAR風の書き方になっておりここらへんも個人的にはとてもポイントが高かったです。<br />
+
+<h2>シンプルなコード</h2>
+<pre class="code">
+$ctl[] = array('regex' => '#^/hello$#',
+               'base' => '/index.php',
+               'model' => 'Unoh_Views',
+               'method' => 'hello');
+</pre>
+<br />
+<pre class="code">
+class Unoh_Views 
+{
+    public function hello($req, $arg)
+    {
+        return new Pluf_HTTP_Response('Hello Pluf!');
+    }
+}
+</pre>
+<br />
+ルーティングは正規表現で記述します。
+正規表現や名前つきの正規表現をサポートします。
+
+<pre class="code">
+$ctl[] = array('regex' => '#^/sample/(<year>\d+)/$#',
+               'base' => '/index.php',
+               'model' => 'Unoh_Views',
+               'method' => 'year');
+</pre>
+<br />
+<pre class="code">
+class Unoh_Views 
+{
+    public function hello($req, $arg)
+    {
+        return new Pluf_HTTP_Response($arg['year']);
+    }
+
+}
+</pre>
+
+
+<h2>テンプレート</h2>
+テンプレートエンジンを独自（？）にもっており継承をサポートしています。
+<pre class="code">
+$ctl[] = array('regex' => '#^/template/$#',
+               'base' => '/index.php',
+               'model' => 'Unoh_Views',
+               'method' => 'template');
+</pre>
+Views
+<pre class="code">
+    public function template($req, $arg)
+    {
+        return Pluf_Shortcuts_RenderToResponse('unoh/template.html',
+                                                array('data' => 'data')
+                                               );
+    }
+</pre>
+<br />
+Base.html(元になるHTML)
+<pre class="code">
+&lt;html&gt;
+&lt;head&gt;
+&lt;title&gt;{block title}{/block}&lt;/title&gt;
+&lt;/head&gt;
+&lt;a href="{url 'Unoh_Views::date', array('2009', '06')}"&gt;2009/06&lt;/a&gt;
+{block body}{/block}
+&lt;/html&gt;
+</pre>
+<br />
+template.html(実際に表示するhtml)
+<pre class="code">
+{extends 'unoh/base.html'}
+
+{block title}test{/block}
+{block body}&lt;span style="color:red"&gt;ボディ&lt;/span&gt;{/block}
+</pre>
+
+またテンプレート関数のurlはディスパッチャの設定の指定を見てURLを生成してくれます。<br />
+
+<h2>そのほか</h2>
+formやバリデートを行うクラスや、ORマッパができるモデルやテストツールマイグレーションまでかなり幅広く用意されていますが今回は省略します。<br />
+
+
+<h2>まとめ</h2>
+PHPには追いきれないほどのフレームワークがあります。<br />
+もちろんすべてを使う必要はありませんが、フレームワークにはそれぞれいろいろなノウハウが入っており、コードを読んで勉強するというは非常によいことかなと考えています。<br />
+<br />
+また有名どころではなくても面白いものがいっぱいありますので、是非、いろいろなフレームワークを試すととても勉強になりそうです。<br />
+<br />
+何かのご参考になれば幸いです。
+
+
+
+{% endraw %}

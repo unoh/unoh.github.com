@@ -1,0 +1,115 @@
+---
+layout: post
+title: "User Agent Profileについて"
+---
+{% raw %}
+<p>
+harukiです。
+</p>
+<p>
+端末に関する詳細な情報が少ないため苦労することが多いケータイサイト開発ですが、
+その手がかりとなる情報にUser Agent Profile(UAProf)があります。
+</p>
+<p>
+国内で対応しているのはSoftBankの3G端末です。
+</p>
+<p>
+SoftBankの3G端末はリクエストにX-Wap-Profileヘッダがある端末があります。
+</p>
+<p>
+(例)SoftBank 911SHの場合
+</p>
+<pre class="code">
+X-Wap-Profile:http://www.sharp-mobile.com/UAProf/911SH_SHJ001_3g.xml
+</pre>
+<p>
+<a href="http://www.sharp-mobile.com/UAProf/911SH_SHJ001_3g.xml">
+http://www.sharp-mobile.com/UAProf/911SH_SHJ001_3g.xml
+</a>
+</p>
+<p>&nbsp;</p>
+<p>
+UAProfについては、以下がとてもわかりやすいです。<br />
+Forum Nokia - User Agent Profile の基本 - ツール &amp; SDK - テクニカルインフォメーション<br />
+<a href="http://www.nokia.co.jp/forum/developer/tech_doc/browsing/user_agent_profile/">http://www.nokia.co.jp/forum/developer/tech_doc/browsing/user_agent_profile/</a>
+</p>
+<p>&nbsp;</p>
+<p>
+国内のケータイでは標準の以下の6つに加え
+<ul>
+ <li>HardwarePlatform</li>
+ <li>SoftwarePlatform</li>
+ <li>BrowserUA</li>
+ <li>NetworkCharacteristics</li>
+ <li>WapCharacteristics</li>
+ <li>PushCharacteristics</li>
+</ul>
+</p>
+<p>
+別途、以下の2つも含まれています。
+<ul>
+<li>MmsCharacteristics (MMSに関するプロパティ)</li>
+<li>Streaming (ストリーミング関連)</li>
+</ul>
+</p>
+
+<p>
+細かい情報などは以下にあります。
+<ul>
+<li>
+OMA公式：UAProfのスキーマ<br />
+<a href="http://www.openmobilealliance.org/tech/profiles/">http://www.openmobilealliance.org/tech/profiles/</a>
+</li>
+<li>
+OMA公式：UAProfのボキャブラリ一覧<br />
+<a href="http://www.openmobilealliance.org/tech/profiles/ccppschema-20030226.html">http://www.openmobilealliance.org/tech/profiles/ccppschema-20030226.html</a>
+<li>
+UAProf（＋MMS）リファレンス<br />
+<a href="http://www.developershome.com/wap/uaprofRef/">http://www.developershome.com/wap/uaprofRef/</a>
+</li>
+</ul>
+</p>
+
+<p>&nbsp;</p>
+
+<p>
+しかし残念なことに、技術資料のHTTP編によると、
+<blockquote>
+  2007年以降発売の3GC端末では、本ヘッダを送出しない端末がある。
+</blockquote>
+と書かれていて、実際にSoftBank 913SHなどでは送出されてきません。
+</p>
+<p>
+UAProfも間違いがあったりして、100％信用できる情報ではありませんが、情報が少ないケータイサイト作成者には有益な情報ですので、
+メーカーの方々は是非とも情報を提供していただきたいです。
+</p>
+
+<h3>海外ケータイのUAProf</h3>
+<p>
+海外でのDDR(Device Description Repository)は以下のようなところもあります。(日本のケータイの情報は足りないです)
+<ul>
+ <li>
+  WURFL<br />
+  <a href="http://wurfl.sourceforge.net/">http://wurfl.sourceforge.net/</a>
+ </li>
+ <li>
+  UAProfile.com and DetectRight<br />
+  <a href="http://www.uaprofile.com/">http://www.uaprofile.com/</a>
+ </li>
+</ul>
+</p>
+
+<p>
+上記のWURFLのAPIを使ったものとしてWALLがあります。
+WALLは共通のマークアップを書くことにより端末に応じてタグを吐き分けてくれるライブラリです。
+<a href="http://wurfl.sourceforge.net/java/index.php">http://wurfl.sourceforge.net/java/index.php</a><br />
+WALL 4 PHP<br />
+<a href="http://wall.laacz.lv/">http://wall.laacz.lv/</a>
+</p>
+
+<p>&nbsp;</p>
+
+<p>
+ケータイサイト開発で手詰まりになった際には、（もしかしたら）手がかりになることもあるかもしれません。
+</p>
+{% endraw %}

@@ -1,0 +1,86 @@
+---
+layout: post
+title: "3G携帯のみに限定したサイトを作る場合"
+---
+{% raw %}
+<p>harukiです。</p>
+
+<p>
+最近では3Gのみ対応というサイトも増えてきています。
+そこで、3Gに限定した場合の端末の対応具合をまとめてみました。
+</p>
+
+<p>以下を該当の機種として進めます。</p>
+<table>
+ <tr><th>DoCoMo</th><td>FOMA(※)</td></tr>
+ <tr><th>au</th><td>WAP2.0</td></tr>
+ <tr><th>SoftBank</th><td>3GC型</td></tr>
+</table>
+<p>※XHTML対応機種(FOMA 2001,2002,2101V以外)</p>
+
+<h3>●記述言語</h3>
+<p>HTMLが必須ではなくなり、XHTML「のみ」という選択も可能になります。</p>
+
+<h3>●文字コード</h3>
+<p>Shift_JISに加えてUTF-8、EUC-JPも使えるようです。</p>
+
+<h3>●ページサイズ</h3>
+<table>
+ <tr><th>DoCoMo</th><td>100KB</td></tr>
+ <tr><th>au</th><td>テキスト9KB程度以内</td></tr>
+ <tr><th>SoftBank</th><td>300KB</td></tr>
+</table>
+<p>テキストと画像のサイズ合計で1.2KB, 5KB, 7.5KB, 10KBということをあまり気にしなくてもよくなります。</p>
+
+<h3>●画像</h3>
+<table>
+ <tr><th>DoCoMo</th><td>GIF / JPEG</td></tr>
+ <tr><th>au</th><td>GIF / JPEG / PNG</td></tr>
+ <tr><th>SoftBank</th><td>GIF / JPEG / PNG</td></tr>
+</table>
+<p>よほどのことがない限り、GIFとJPEGで事足ります。</p>
+
+<h3>●メール</h3>
+<p>端末が受信可能な文字コードは以下になります。</p>
+<table>
+ <tr><th>DoCoMo</th><td><b>Shift_JIS</b> / ISO-2022-JP</td></tr>
+ <tr><th>au</th><td><b>Shift_JIS</b> / <b>JIS</b> / ISO-2022-JP</td></tr>
+ <tr><th>SoftBank</th><td><b>UTF-8</b> / ISO-2022-JP</td></tr>
+</table>
+<p>3キャリアすべてで、<b>太字</b>になっている文字コードでは、メールに絵文字を含めることが可能です。</p>
+
+<p>また、サイズは以下になります。</p>
+<table>
+ <tr><th>DoCoMo</th><td>全角5,000文字</td></tr>
+ <tr><th>au</th><td>全角5,000文字</td></tr>
+ <tr><th>SoftBank</th><td>300Kbyte</td></tr>
+</table>
+<p>500Byteや384Byteという制限もありません。</p>
+
+<p>デコメールやデコメ絵文字の受信にも対応しているものも多いです。</p>
+
+<h3>●その他</h3>
+<p>3Gの場合に、比較的対応している機能もあります。</p>
+<h4>・Flash</h4>
+<p>それぞれのキャリアでの対応するFlash Liteのバージョンは以下のとおりです。</p>
+<table>
+ <tr><th>DoCoMo</th><td>1.0 / 1.1<br />
+ 900iシリーズのみ1.0、以降は1.1</td></tr>
+ <tr><th>au</th><td>1.1 / 2.0<br />
+ WIN端末では比較的対応しています。</td></tr>
+ <tr><th>SoftBank</th><td>1.1 / 2.0<br />
+ 50％ぐらい対応しているようです。</td></tr>
+</table>
+
+<h4>・動画</h4>
+<p>対応機種はMPEG-4に対応しています。</p>
+<table>
+ <tr><th>DoCoMo</th><td>3GPP</td></tr>
+ <tr><th>au</th><td>AMC / 3GPP2</td></tr>
+ <tr><th>SoftBank</th><td>3GPP</td></tr>
+</table>
+<p>MNG,Nancyなどはありません。</p>
+
+<p>と、3Gに限定することにより、かなり差異が少なく、敷居も低くなっています。
+携帯用のサイトを作成したことがない方は、ここから手をつけてみてはいかがでしょうか。</p>
+{% endraw %}

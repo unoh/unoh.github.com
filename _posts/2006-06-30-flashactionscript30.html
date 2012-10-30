@@ -1,0 +1,41 @@
+---
+layout: post
+title: "次期FlashのActionScript3.0使ってみる"
+---
+{% raw %}
+さかとくです。<br/>
+
+<p>次期Flashに搭載予定のActionScript3.0のベータ版が<a href="http://labs.adobe.com/">Adobe Labs</a>からダウンロードできます。</p>
+
+<p>(注意)2007年3月現在、<a href="http://www.adobe.com/jp/products/flex/">Adobeのページ</a>より正式にダウンロードできるようになりました</p>
+
+<p>開発環境一式をダウンロードすると、すぐにActionScript3.0を試すことができます。</p>
+
+<p>画面に丸を書くプログラムは以下のようになります。</p>
+
+<table bgcolor="#E0E0E0"><tr><td><code><pre><font color="#000044">package {
+	import flash.display.MovieClip;
+	import flash.display.Graphics;
+
+	public class test extends MovieClip
+	{
+		public function test()
+		{
+			this.graphics.beginFill(0xFF0000);
+			this.graphics.drawCircle(50,50,30);
+			this.graphics.endFill();
+		}
+	}
+}</font></pre></code></td></tr></table>
+<br/>
+Javaが分かる人なら、なんとなく使えるのではないでしょうか。AS3は今までのActionScriptと違って、自然なプログラムが書けるのが魅力です。
+
+<p>※Flex2 SDKについてThinkITに記事を寄稿しました。:<br/>
+<a href="http://www.thinkit.co.jp/free/article/0611/11/1/">http://www.thinkit.co.jp/free/article/0611/11/1/</a>
+</p>
+
+<p>※また、以下にActionScript3.0についてのまとめを書いていますので参考にしてください。
+<a href="http://aoi-project.com/flash/wiki/wiki.aoi">http://aoi-project.com/flash/wiki/wiki.aoi</a>
+</p>
+
+{% endraw %}

@@ -1,0 +1,374 @@
+---
+layout: post
+title: "PHP5.3の新機能まとめ"
+---
+{% raw %}
+<p>先日から「<a href="http://www.gnucash.org/">GnuCash</a>」使って家計簿を付け始めたyukiです。<br />
+だいぶ長いこと複式簿記に触れていなかったので、思い出すのに一苦労でした。家計簿で「損益計算書」や「貸借対照表」、「キャッシュフロー」を見てみると新たな発見があっていいですね。是非オススメです。</p>
+
+<div style="margin:0;padding:.5em;border:2px solid
+#ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br />
+<a href="http://www.unoh.net/recruit.html">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください！！</div>
+
+<p>さて今回は、先日の社内勉強会で行った「いまさらPHP5.3をあらためて見てみる」をレポートします。機能をサンプルコード交えてざっとチェックしていっただけですが、参考になれば幸いです。</p>
+
+<p>参考:<a href="http://www.php.net/manual/ja/migration53.php">PHP 5.2.x から PHP 5.3.x への移行</a></p>
+
+<h3>新機能</h3>
+新機能からチェックしていきます。まずは話題になっていた名前空間などから。
+<h4>名前空間</h4>
+<pre class="code"><code># global.php
+
+namespace {
+
+class MyProject
+{
+    public function getName()
+    {
+        return 'global';
+    }
+}
+
+}
+
+# unoh.php
+
+namespace unoh {
+
+class MyProject
+{
+    public function getName()
+    {
+        return 'unoh';
+    }
+}
+
+}
+
+# photo.php
+
+namespace unoh\photo {
+
+class MyProject
+{
+    public function getName()
+    {
+        return 'photozou';
+    }
+}
+
+# machi.php
+
+namespace unoh\machi {
+
+class MyProject
+{
+    public function getName()
+    {
+        return 'machi';
+    }
+}
+
+}
+
+# sample.php
+
+require 'global.php';
+require 'unoh.php';
+require 'photo.php';
+require 'machi.php';
+
+// requireした名前空間には影響を受けない
+var_dump(__NAMESPACE__);
+
+$a = new MyProject;
+var_dump($a->getName());
+
+// globalを指定してnewする
+$a = new \MyProject;
+var_dump($a->getName());
+
+// unoh空間のクラスを指定してnewする
+$a = new \unoh\MyProject;
+var_dump($a->getName());
+
+// 下位空間のクラスを指定してnewする
+$a = new \unoh\photo\MyProject;
+var_dump($a->getName());
+
+$a = new \unoh\machi\MyProject;
+var_dump($a->getName());
+
+// エイリアス作成
+use \unoh\photo\MyProject as photozou;
+var_dump(new photozou);
+
+// エイリアスでタイプヒンティングしたらどうなるか？
+class TypeHint
+{
+    public function hint(photozou $a)
+    {
+        var_dump($a);
+    }
+}
+
+$a = new TypeHint;
+
+$photozou = new photozou;
+$a->hint($photozou);
+
+$photozou = new \unoh\photo\MyProject;
+$a->hint($photozou);</code></pre>
+以上のコードを実行した時、結果は次のようになります。
+<pre class="code"><code>string(0) ""
+string(6) "global"
+string(6) "global"
+string(4) "unoh"
+string(8) "photozou"
+string(5) "machi"
+object(unoh\photo\MyProject)#2 (0) {
+}
+object(unoh\photo\MyProject)#1 (0) {
+}
+object(unoh\photo\MyProject)#3 (0) {
+}</code></pre>
+<p>ほぼ予想通りでしたが、タイプヒンティングにエイリアスが利用できるのは便利な反面、混乱の元になるかもしれません。手元環境しだいですが、バックスラッシュもあまり違和感を感じませんでした。</p>
+
+<h4>遅延静的束縛</h4>
+静的呼び出し時にstaticキーワードが使えるようになりました。実際の動作は以下のような感じです。
+<pre class="code"><code># self.php
+
+class A {
+    public static function who() {
+        echo __CLASS__ . "\n";
+    }
+    public static function test() {
+        self::who();
+    }
+}
+
+class B extends A {
+    public static function who() {
+         echo __CLASS__ . "\n";
+    }
+}
+
+B::test();
+
+# static.php
+
+class A {
+    public static function who() {
+        echo __CLASS__ . "\n";
+    }
+    public static function test() {
+        static::who();
+    }
+}
+
+class B extends A {
+    public static function who() {
+         echo __CLASS__ . "\n";
+    }
+}
+
+B::test();</code></pre>
+<p>違いはClass Aのtestメソッド内での呼び出しです。それぞれselfがA、staticがBと表示されます。</p>
+
+<h4>ジャンプラベル (制限付きgoto)</h4>
+<p>素人にはお勧めできない諸刃の剣、一歩間違えるとスパゲッティコード生成機のgoto文です。</p>
+<pre class="code"><code># goto.php
+
+for ($i = 0; $i < 100; $i++) {
+    for ($j = 0; $j < 100; $j++) {
+        if ($i > 50 && $i === $j ) {
+            goto wall;
+        }
+    }
+}
+
+echo '超えられない壁';
+exit;
+
+wall:
+echo '超えてしまった！';</code></pre>
+<p>結果は予想通り「超えてしまった！」と出ます。では次のコードはどうなるでしょうか？</p>
+<pre class="code"><code># goto2.php
+
+$photo = 'フォト蔵';
+
+loop:
+if ($photo === 'A') {
+    goto A;
+} elseif ($photo === 'B') {
+    goto B;
+} else {
+    goto C;
+}
+exit;
+
+C:
+echo 'C';
+goto B;
+exit;
+
+A:
+echo 'A';
+goto loop;
+exit;
+
+B:
+echo 'B';
+goto A;
+exit;</code></pre>
+<p>このくらいならまだ判別できますが、だんだんわかりにくくなってきました。ちなみにこれを実行するとCBACBACBA...と無限ループします。</p>
+<pre class="code"><code># goto3.php
+
+class myClass
+{
+    public function jump()
+    {
+        goto out;
+    }
+}
+
+$v = new myClass;
+$v->jump();
+exit;
+
+out:
+echo 'OUT!';</code></pre>
+<p>これは次の出力になります。</p>
+<pre class="code"><code>Fatal error: 'goto' to undefined label 'out' in /home/edy/php5.3/goto/goto3.php on line 8</code></pre>
+<p>ご覧のとおりメソッドの内外に出入りはできないようです。</p>
+
+<h4>クロージャ (ラムダ/無名関数)</h4>
+<p>コールバックに無名関数が指定できるようになりました。</p>
+<pre class="code"><code># callback.php
+
+$system = array('leopard','vista');
+
+$upgrade = array_map(function($value) {
+    if ($value === 'leopard') {
+        return 'snow '.$value;
+    } elseif ($value === 'vista') {
+        return 'windows7';
+    }
+}, $system);
+
+var_dump($upgrade);</code></pre>
+<p>ぱっと見がなんだかJavascriptっぽくなってますね。結果は以下の通りです。</p>
+<pre class="code"><code>array(2) {
+  [0]=>
+  string(12) "snow leopard"
+  [1]=>
+  string(8) "windows7"
+}</code></pre>
+<p>スコープ外の変数を利用する場合は次のようになります。</p>
+<pre class="code"><code># use.php
+
+$args = 'B';
+
+$patternA = function($value) use ($args) {
+    $args = 'C';
+    return "Value: $value Args: $args";
+};
+
+$patternB = function() use (&$args) {
+    $args = 'D';
+};
+
+var_dump($args);
+var_dump($patternA('A'));
+$patternB();
+var_dump($args);</code></pre>
+<p>結果は以下の通りです。</p>
+<pre class="code"><code>string(1) "B"
+string(16) "Value: A Args: C"
+string(1) "D"</code></pre>
+<p>&amp;の有無で挙動が代わるので注意が必要です。</p>
+
+<p>他には以下のような変更がありました。便利なのが追加された印象ですね。</p>
+<ul>
+<li>マジックメソッド__callStatic、__invoke</li>
+<li>Nowdoc(静的なクラスメンバ/定数も)</li>
+<li>定数 はクラス外const宣言</li>
+<li>三項演算子 ?:</li>
+</ul>
+<p>この中だと、とくに三項演算子に注意が必要です。式の結果がtrueであれば「式の結果」を、でなければ?:に続くものを返します。</p>
+
+<h3>非推奨関数</h3>
+<ul>
+<li>call_user_method()</li>
+<li>call_user_method_array()</li>
+<li>ereg()</li>
+<li>ereg_replace()</li>
+<li>eregi()</li>
+<li>eregi_replace()</li>
+<li>session_register()</li>
+<li>session_unregister()</li>
+<li>session_is_registered()</li>
+<li>split()</li>
+<li>spliti()</li>
+</ul>
+<p>もともと非推奨だったものが継続されているイメージですが、ereg系はまだ現役でコードに存在すると思いますので、注意が必要ですね。動かないわけではないので、今のところ実害はないと思います。</p>
+
+<h3>パラメータ変更</h3>
+<p>目に付いたのはこのあたりです。</p>
+<dl>
+<dt>nl2br()</dt>
+<dd>is_xhtml が追加されました。<dd>
+<dt>round()<dt>
+<dd>mode が追加されました。</dd>
+<dt>json_encode()</dt>
+<dd>options が追加されました。</dd>
+<dt>json_decode()</dt>
+<dd>depth が追加されました。</dd>
+<dt>Exception::__construct</dt>
+<dd>previous が追加されました。ネストした例外補足の時など、以前の例外を追加して統合するため。</dd>
+</dl>
+
+<h3>新クラス</h3>
+<h4>日付・時刻</h4>
+<ul>
+<li>DateInterval</li>
+<li>DatePeriod</li>
+</ul>
+<p>DateTimeクラス自体も強化されたので、date()とかmktime()とかtime()とかで泥臭さが軽減されるかもしれません。個人的には嬉しい機能追加です。</p>
+
+<h4>Phar</h4>
+<ul>
+<li>Phar</li>
+<li>PharData</li>
+<li>PharException</li>
+<li>PharFileInfo</li>
+</ul>
+
+<h4>SPL</h4>
+<p>Heap,Queue,Stack,FixedArray,ObjectStorageなどのデータ構造系が追加されています。</p>
+<ul>
+<li>FilesystemIterator</li>
+<li>GlobIterator</li>
+<li>MultipleIterator</li>
+<li>RecursiveTreeIterator</li>
+<li>SplDoublyLinkedList</li>
+<li>SplFixedArray</li>
+<li>SplHeap</li>
+<li>SplMaxHeap</li>
+<li>SplMinHeap</li>
+<li>SplPriorityQueue</li>
+<li>SplQueue</li>
+<li>SplStack</li>
+</ul>
+
+<h3>その他</h3>
+<p>その他細かくは以下のあたりが気になりました。</p>
+<ul>
+<li>SplFileInfo::getpathinfo() メソッドは、パス名に関する情報を返すようになりました。</li>
+<li>GD関数では、imagefilter() 関数を使ってモザイク効果を適用できるようになりました。</li>
+<li>var_dump() 関数の出力に private なオブジェクトメンバの値も含まれるようになりました。</li>
+<li>property_exists() 関数はプロパティのアクセス制限に関係なくプロパティの存在をチェックするようになりました(method_exists() と似た動作をします)</li>
+<li>getimagesize() 関数は、アイコンファイル (.ico) をサポートするようになりました。</li>
+</ul>
+<p>なぜモザイクが...</p>
+{% endraw %}

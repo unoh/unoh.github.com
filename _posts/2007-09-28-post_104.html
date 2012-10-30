@@ -1,0 +1,105 @@
+---
+layout: post
+title: "携帯サイトとクローラ"
+---
+{% raw %}
+<p>harukiです。</p>
+<p>
+ケータイユーザも検索エンジンから来るユーザも増えています。<br />
+そのため、携帯サイトも検索エンジンのクローラへ対応する必要があります。
+</p>
+
+<h3>・Mobile Link Discoveryの記述を追加する</h3>
+<p>
+PC用のページのheadタグ内に
+<blockquote>
+&lt;link rel=&quot;alternate&quot; media=&quot;handheld&quot; href=&quot;(ケータイURL)&quot; /&gt;
+</blockquote>
+の記述を追加するだけです。
+</p>
+<p>
+Mobile Link Discoveryに対応しているサイトでは、ケータイからのアクセス時に直接アクセスしてもらえるようになります。
+</p>
+
+<p>
+Mobile Link Discovery 仕様<br />
+<a href="http://www.sixapart.jp/docs/tech/mobile_link_discovery_ja.html">http://www.sixapart.jp/docs/tech/mobile_link_discovery_ja.html</a>
+</p>
+
+<p>&nbsp;</p>
+
+<p>
+検索エンジンでは、Googleモバイルのgoogle mobile proxy<br />
+<a href="http://www.google.co.jp/gwt/n">http://www.google.co.jp/gwt/n</a>や
+</p>
+
+<p>
+Yahoo!モバイルでの検索→PCサイトの結果のところにケータイサイトのURLが追加されるようです。
+</p>
+
+<p>
+(他の検索エンジンでは対応してたり、してなかったりします)
+</p>
+
+<p>
+また、はてなMobileGatewayも対応しています。<br />
+<a href="http://mgw.hatena.ne.jp/help">http://mgw.hatena.ne.jp/help</a>
+</p>
+
+<p>&nbsp;</p>
+<p>
+PC用のページに1行追加するだけですので簡単です。
+</p>
+<p>
+…ということで、昨日、<a href="http://vpop.jp/">ビデオポップ</a>と<a href="http://sugu.cc/">sugu.CC</a>にも追加しておきました。
+</p>
+
+
+<h3>・ケータイ検索エンジン用クローラ対策</h3>
+
+<p>
+先ほどのMobile Link Discoveryは主にPC用の検索エンジンのクローラ等への対応になります。<br />
+対応しておいて損はないという程度だと思います。
+</p>
+
+<p>
+やはり、ケータイサイトであるならば、ケータイ用の検索エンジンのクローラに対応してあげるほうが効果は高いです。
+</p>
+
+<p>
+サイトでSessionや端末IDを使用する場合は、各キャリアのIPアドレス帯域による制限を行っていると思います。<br />
+しかし、それではクローラのアクセスも弾かれてしまいますので、クローラにもケータイ向けのページを表示してあげる必要があります。
+</p>
+
+<p>
+対応する際には、以下の順序で対応していくのがいいと思います。
+<ul>
+ <li>プログラムでキャリアのIP帯によるアクセスなのかを判断できるようにする<br />
+  .htaccessなどでうまくやる方法があれば教えて下さい
+ </li>
+ <li>クローラのIPもしくはUserAgentのアクセスを許可する<br />
+  クローラの一覧はぜひ共有したいです
+ </li>
+ <li>Sessionの利用・端末IDの取得はキャリアのIP帯からしか許可しない<br />
+  キャリアのIP帯以外からの場合はSessionは「使わない・破棄する」
+ </li>
+</ul>
+このように対応すると、ログイン後に見れるページ以外は検索エンジンに登録してもらえるようになります。
+</p>
+
+<h3>・検索ワードの把握</h3>
+<p>
+Referrerを送ってくれるauとSoftBankでは検索ワードが取得することができます。<br />
+webalizerの場合は、webalizer.confにこんな感じで追加するとSearch Stringの取得ができます。
+</p>
+<pre class="code">
+SearchEngine    google.co.jp    q=
+SearchEngine    yahoo.co.jp     p=
+SearchEngine    ezweb.ne.jp     query=
+SearchEngine    livedoor.com    q=
+</pre>
+
+<p>
+まだまだ、勉強不足な分野ですので、ツッコミや追加の情報などがあれば是非、教えていただければと思います。
+</p>
+{% endraw %}

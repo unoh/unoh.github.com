@@ -1,0 +1,71 @@
+---
+layout: post
+title: "JavaでPowerPointファイルを読み込む"
+---
+{% raw %}
+<p>こんにちは。中村です。</p>
+<p>JavaからMicrosoft Officeのファイルを読み書きするのには、100%Javaで実装されている<a href="http://poi.apache.org/">Apache POI</a>を利用することができます。</p>
+<p>昔はPowerPointファイルを読み書きするAPI群である<a href="http://poi.apache.org/hslf/index.html">HSLF</a>はなかったので、POIで検索するとEXCELファイルを読み書きする<a href="http://poi.apache.org/hssf/index.html">HSSF</a>が中心に紹介されているようです。</p>
+<p>今回はHSLFを使ってPowerPointファイルの中にある文字列を出力する簡単なサンプルを書いてみました。</p>
+<pre class="code"><code>package net.unoh.ppt2text;
+
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+import org.apache.poi.hslf.HSLFSlideShow;
+import org.apache.poi.hslf.model.Shape;
+import org.apache.poi.hslf.model.Slide;
+import org.apache.poi.hslf.model.TextBox;
+import org.apache.poi.hslf.usermodel.SlideShow;
+
+public class PPT2Text {
+
+    public static void main(String[] args) {
+
+        if (args.length != 1) {
+            printUsage();
+            System.exit(1);
+        }
+
+        try {
+
+            SlideShow slideShow = new SlideShow(new HSLFSlideShow(args[0]));
+            Slide[] slides = slideShow.getSlides();
+
+            for (int i = 0; i &lt; slides.length; i++) {
+
+                Shape[] shapes = slides[i].getShapes();
+
+                for (int j = 0; j &lt; shapes.length; j++) {
+
+                    if (shapes[j] instanceof TextBox) {
+                        TextBox shape = (TextBox)shapes[j];
+                        String text = shape.getText();
+                        if (text != null) {
+                            System.out.println(text);
+                        }
+                    }
+
+                }
+            
+            }
+
+        } catch (FileNotFoundException e) {
+            System.err.println("File not found");
+        } catch (IOException e) {
+            System.err.println("IO error");
+        }
+
+    }
+    
+    public static void printUsage() {
+        System.out.println("Usage: ppt2text filename");
+    }
+
+}</code></pre>
+<p>POIのクラスファイルを<a href="http://www.apache.org/dyn/closer.cgi/poi/">ダウンロードページ</a>から取得してビルドしています。</p>
+<p>これで例えばLinuxのコンソール上からPowerPointファイルを読むというニッチなことも、以下のようにjarファイルを実行するだけで可能です。</p>
+<a href="http://photozou.jp/photo/show/784/8045948"><img src="http://art7.photozou.jp/pub/784/784/photo/8045948.png" alt="ppt2text" width="401" height="181" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/8045948">ppt2text</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a>
+<p><a href="http://poi.apache.org/hslf/how-to-shapes.html">Busy Developers' Guide to HSLF drawing layer</a>にサンプルコードがまとまっていて参考になります。</p>
+<p>Microsoft Officeのファイルを扱う実装はJava以外にもありますが、POIも良い選択肢の一つになるのではないでしょうか。</p>
+{% endraw %}

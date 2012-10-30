@@ -1,0 +1,105 @@
+---
+layout: post
+title: "ImageMagickでGIFアニメをリサイズ"
+---
+{% raw %}
+<div style="margin:0;padding:.5em;border:2px solid #ccc">
+ウノウでは特に最近、積極的にエンジニアを採用しています。<br />
+<a href="http://www.unoh.net/recruit.html">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください！！
+</div>
+
+<p>こんにちは、いそがわです。</p>
+
+<p>PHPでアニメーションGIFを操作しようとすると、GDはアニメーションGIFをサポートしていないのでImageMagickを利用することになるかと思いますが、いかんせんImageMagickはメソッドの数がベラボーで分かりづらく、Imagickに至ってはまだまだドキュメントがスッカスカで、間違ってたりもするためなのか、意外とアニメーションGIFのリサイズ処理に混乱が見受けられるようなので、ご存知のかたには今更な話題ですが、あらためて。</p>
+
+<p>ImageMagickでアニメーションGIFを&ldquo;お手軽に&rdquo;リサイズする基本的な手順は以下のような感じです。</p>
+
+<ol>
+  <li>シーケンスのイメージの&ldquo;結合&rdquo;（coalesce）</li>
+  <li>各イメージを順次リサイズ</li>
+  <li>最適化（必要なら）</li>
+</ol>
+
+<p>このうち重要かつ忘れられがちだと思われるのがcoalesce処理です。アニメーションシーケンスの各イメージはすべてが同じサイズとは限りません。各イメージはそれぞれサイズや表示オフセットが異なっているかもしれませんし、また次のイメージを表示する際に現在のイメージをどう処理するかというdisposal methodとかあったりします。高度に最適化されたアニメーションシーケンスほどその構成は複雑で、こうした点を考慮しないと、期待した結果が得られないかもしれません。coalesceはこうしたアニメーションシーケンスを、手軽に扱えるようにする処理です。</p>
+
+<p>MagickWand C APIの<a href="http://www.imagemagick.org/api/magick-image.php#MagickCoalesceImages">MagickCoalesceImages</a>の説明が簡潔なので引用します。</p>
+
+<blockquote style="margin:0;padding:.5em;border:2px solid #ccc;" cite="http://www.imagemagick.org/api/magick-image.php#MagickCoalesceImages">MagickCoalesceImages() composites a set of images while respecting any page offsets and disposal methods. GIF, MIFF, and MNG animation sequences typically start with an image background and each subsequent image varies in size and offset. MagickCoalesceImages() returns a new sequence where each image in the sequence is the same size as the first and composited with the next image in the sequence.</blockquote>
+
+<p>訳すとこんな感じでしょうか。</p>
+
+<p style="margin:0;padding:.5em;border:2px solid #ccc;">MagickCoalesceImages()はページオフセットやdisposal methodを考慮しながらイメージセットを合成します。GIF、MIFF、及びMNGアニメーションシーケンスは、一般的に背景画像で始まり、以降の各イメージのサイズやオフセットはさまざまに異なります。MagickCoalesceImages()はシーケンスの各イメージが、最初のイメージと同じサイズで、かつシーケンスの次のイメージと合成された新しいシーケンスを返します。</p>
+
+<p>下図は、Gakkunさん作の<a href="http://hp.vector.co.jp/authors/VA033743/natm.html">natm</a>というアニメーションGIF作成ツールで、<a href="http://www.creepygif.com/image.php?i=578">http://www.creepygif.com/image.php?i=578</a>に掲載されているアニメーションGIFファイルを開いた画面です。ここではこのアニメーションシーケンスの2フレーム目を選択していますが、左側のウィンドウに表示されているこのフレームのイメージは、前後のフレームのイメージと比較して変化のある箇所だけのものになっています。アニメーション全体の縦横サイズは225×344ピクセルですが、この2フレーム目のイメージの縦横サイズは69×211ピクセルで、その表示オフセットは横55ピクセル、縦8ピクセルとなっています。</p>
+
+<div><a href="http://photozou.jp/photo/show/784/15919880"><img src="http://art7.photozou.jp/pub/784/784/photo/15919880.png" width="450" height="235" alt="オリジナル" /></a></div>
+
+<p>下図は同じファイルをcoalecse処理したものです。同じ2フレーム目を選択していますが、オリジナルでは変化のある箇所だけが描画されていたイメージは完全なものに合成され、縦横サイズもアニメーション全体と同じになっています。</p>
+
+<div><a href="http://photozou.jp/photo/show/784/15919878"><img src="http://art2.photozou.jp/pub/784/784/photo/15919878.png" width="450" height="235" alt="coalesce処理" /></a></div>
+
+<p>coalesce処理されたアニメーションシーケンスは手軽に扱える一方で、その処理内容を鑑みれば必然ですが、元のアニメーションシーケンスが高度に最適化されていればいるほど、相対的なデータサイズが大きくなってしまいます。</p>
+
+<p>アニメーションシーケンスは最適化処理を施すことでデータサイズを縮小できる場合があります。coalesce処理されたアニメーションシーケンスに対する最もお手軽な最適化処理として伝統的に用いられてきたのがdeconstructです。deconstructは、coalesceによって同じサイズになっているシーケンスの各イメージを、その次のイメージと比較して変化のある領域の四辺より広い範囲を切り捨てます（結果のシーケンスは、各イメージのサイズとオフセットがバラバラになります）。</p>
+
+<p>下図は上述のファイルをcoalecse→deconstruct処理したものです。deconstruct処理によって、イメージは前後のフレームのイメージとの差分だけになっているため、coalecse処理だけを施したものではすべて同じになっていた各フレームの縦横サイズとオフセットは、ここではバラバラになっています。一方イメージの差分は、オリジナルではピクセル単位であったものが、変化のある領域の最大四辺となっており、まだ最適化の余地があるということがわかります。</p>
+
+<div><a href="http://photozou.jp/photo/show/784/15919876"><img src="http://art4.photozou.jp/pub/784/784/photo/15919876.png" width="450" height="235" alt="coalesce→deconstruct処理" /></a></div>
+
+<p>なおdeconstructは、coalesce処理されていないアニメーションシーケンスに対しては期待通りの結果が得られない場合があり、またそもそもこれの利用は、今では非推奨とされているようです。Imagickではアニメーションシーケンスの最適化処理に<a href="http://www.php.net/imagick-optimizeimagelayers">optimizeImageLayers</a>を利用することができます。</p>
+
+<h3>コード例</h3>
+
+<p>以下はアニメーションGIFファイル「source.gif」を縦横50%縮小したファイル「dest.gif」を書き出す例です。ここではすべて共通で、最適化処理としてdeconstructを行っています。</p>
+
+<h4>Imagickでのコード（エラー処理とか省略）</h4>
+
+<pre class="code">$source = 'source.gif';
+$dest   = 'dest.gif';
+$scale  = 0.5;
+
+$images = new <a href="http://www.php.net/imagick-construct">Imagick</a>($source);
+$images = $images-&gt;<a href="http://www.php.net/imagick-coalesceimages">coalesceImages</a>();
+$width  = round($images-&gt;<a href="http://www.php.net/imagick-getimagewidth">getImageWidth</a>()  * $scale);
+$height = round($images-&gt;<a href="http://www.php.net/imagick-getimageheight">getImageHeight</a>() * $scale);
+do {
+    $images-&gt;<a href="http://www.php.net/imagick-scaleimage">scaleImage</a>($width, $height);
+} while ($images-&gt;<a href="http://www.php.net/imagick-nextimage">nextImage</a>());
+$images = $images-&gt;<a href="http://www.php.net/imagick-deconstructimages">deconstructImages</a>();
+$images-&gt;<a href="http://www.php.net/imagick-writeimages">writeImages</a>($dest, true);</pre>
+
+<h4>MagickWand For PHPで上のコードを写経</h4>
+
+<pre class="code">$source = 'source.gif';
+$dest   = 'dest.gif';
+$scale  = 0.5;
+
+$images = <a href="http://www.magickwand.org/NewMagickWand.html">NewMagickWand</a>();
+<a href="http://www.magickwand.org/MagickReadImage.html">MagickReadImage</a>($images, $source);
+$images = <a href="http://www.magickwand.org/MagickCoalesceImages.html">MagickCoalesceImages</a>($images);
+$width  = round(<a href="http://www.magickwand.org/MagickGetImageWidth.html">MagickGetImageWidth</a>($images)  * $scale);
+$height = round(<a href="http://www.magickwand.org/MagickGetImageHeight.html">MagickGetImageHeight</a>($images) * $scale);
+do {
+    <a href="http://www.magickwand.org/MagickScaleImage.html">MagickScaleImage</a>($images, $width, $height);
+} while (<a href="http://www.magickwand.org/MagickNextImage.html">MagickNextImage</a>($images));
+$images  = <a href="http://www.magickwand.org/MagickDeconstructImages.html">MagickDeconstructImages</a>($images);
+<a href="http://www.magickwand.org/MagickWriteImages.html">MagickWriteImages</a>($images, $dest, true);</pre>
+
+<h4>ちなみにconvertコマンド</h4>
+
+<pre class="code">$ convert source.gif -coalesce -scale 50% -deconstruct dest.gif</pre>
+
+<p>上のコードを見れば一目瞭然かと思いますが、アニメーションGIFのリサイズは、シーケンスの各イメージを個別に順次リサイズすることになり、必然的にイメージ数が多ければそれだけ処理に時間がかかります。JPEGなどのリサイズと比べて時間がかかることがあるのはそのためです。例えば、数十～数百ものイメージからなるアニメーションGIFのリサイズには数分～数十分もかかるかもしれませんから、ユーザからのアップロードを、キューなどを用いずにリクエスト内で処理しようとするとタイムアウトになる可能性があり、注意が必要です。</p>
+
+<h3>おかしいなと思ったときは</h3>
+
+<p>GIFを扱うツールはさまざまありますが、中にはシーケンスのさまざまな情報を細かく確認できるものもあります。処理結果が期待通りではない場合は、こうしたツールを利用すると状況が確認できるかもしれません。</p>
+
+<p>上にも登場いただいた<a href="http://hp.vector.co.jp/authors/VA033743/natm.html">natm</a>もそうしたツールのひとつですが、ちなみにこれに付属のドキュメントは、アニメーションGIFについての非常にわかりやすい説明にもなっていて、例えばdisposal methodって具体的にはなんなの？といった疑問が一読で氷解されると思われ、アニメーションGIFの仕組みをちょっと詳しく知りたいというかたにはお勧めです。</p>
+
+<p>ではでは</p>
+
+<hr />
+
+<p>2008-12-12改定: 文章だけだとわかりづらい気がしたので図版を追加しました。</p>
+{% endraw %}

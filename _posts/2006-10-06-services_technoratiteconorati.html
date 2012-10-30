@@ -1,0 +1,343 @@
+---
+layout: post
+title: "Services_TechnoratiでTechonoratiを使い倒そう"
+---
+{% raw %}
+<p>
+はじめまして．新入社員のjokagiです．ウノウ株式会社に入社して丁度1週間のまだ右も左も分からない新入社員です．よろしくお願いいたします．
+</p>
+<p>
+さてみなさまよくご存じ(?)当番制のウノウラボですが，今日が私が当番だということに夕方気づいたので!!さっきネタを作りました．
+というか当番とかいうわりに日付が変わってしまいましたがみなさま気にせず興味のある方だけ生ぬるく読んでください．
+</p>
+
+<h4>お題</h4>
+<p>
+今回はServices_Photozouの公開をしようかと思ったのですが，見て楽しいものを用意できませんでした．そこで気を取り直して自分が欲しかった<a href="http://pear.php.net/package/Services_Technorati/">PEAR::<em>Services_Technorati</em></a>(以後Services_Technorati)を用いてキーワード「unoh」を検索し，その結果をSmartyでさくっとRSSとHTMLにするサンプルを作ってみました．
+</p>
+<div>
+サンプルイメージ:<br />
+<div class="photozou-photo">
+<a href="http://photozou.jp/photo/show/137/1489370"><img src="http://photozou.jp/pub/137/137/photo/1489370.png?m=1160154030" alt="sample_html" width="240" height="183" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/137/1489370">sample_html</a> posted from <a href="http://photozou.jp/">フォト蔵</a>
+</div>
+<p>
+<a href="http://www.technorati.com" target="_blank">Technorati</a>(テクノラティ)はブログに特化した検索などが行えるサイトです(日本サイトとして<a href="http://www.technorati.com" target="_blank">Technorati JAPAN</a>があります)．より詳細な情報については<a href="http://www.technorati.jp/about/">Technorati: About Us</a>が参考になると思います．
+</p>
+
+<h4>TechnoratiのAPI Keyの取得</h4>
+<p>
+今回のネタを自分のところで実験するにはAPI Keyを取得する必要があります．
+API Keyの取得は残念ながらTechnorati Japanにはないようなので，本家で英語を読みながら頑張ります．
+といってもTechnorati Japanでアカウントを作成していれば，<a href="http://www.technorati.com/developers/apikey.html">http://www.technorati.com/developers/apikey.html</a>にアクセスし，ログインすれば(ログイン後は<a href="http://www.technorati.com/developers/apikey.html">さっきのURL</a>に再度アクセスしましょう)API Keyを取得できます．
+<del>文章らしい文章は読まなくていいので簡単です．</del>
+</p>
+<p>
+API Keyの規約は<a href="http://www.technorati.com/developers/apikey.html">http://www.technorati.com/developers/apikey.html</a>にAPI Keyと合わせて記述されていますので、そちらを読むようにしてください．<br />
+※規約についてのご指摘をいただきました<br />
+</p>
+<p>
+とりあえず画面推移をキャプチャーしてみました．
+参考にしてみてください．
+</p>
+
+<div class="photozou-photo">
+<a href="http://photozou.jp/photo/show/137/1489356"><img src="http://photozou.jp/pub/137/137/photo/1489356.png?m=1160147064" alt="Developer Center" width="450" height="344" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/137/1489356">Developer Center</a> posted from <a href="http://photozou.jp/">フォト蔵</a><br />
+</div>
+Developer Centerにアクセス．<br />
+
+<div class="photozou-photo">
+<a href="http://photozou.jp/photo/show/137/1489358"><img src="http://photozou.jp/pub/137/137/photo/1489358.png?m=1160147070" alt="Sign Up" width="450" height="344" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/137/1489358">Sign In</a> posted from <a href="http://photozou.jp/">フォト蔵</a><br />
+</div>
+右上のSign Inをクリックしてログイン．<br />
+
+<div class="photozou-photo">
+<a href="http://photozou.jp/photo/show/137/1489360"><img src="http://photozou.jp/pub/137/137/photo/1489360.png?m=1160147076" alt="Your Account" width="450" height="344" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/137/1489360">Your Account</a> posted from <a href="http://photozou.jp/">フォト蔵</a><br />
+</div>
+ログイン直後の画面<br />
+
+<div class="photozou-photo">
+<a href="http://photozou.jp/photo/show/137/1489362"><img src="http://photozou.jp/pub/137/137/photo/1489362.png?m=1160147082" alt="API Key" width="450" height="344" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/137/1489362">API Key</a> posted from <a href="http://photozou.jp/">フォト蔵</a><br />
+<a href="http://www.technorati.com/developers/apikey.html">http://www.technorati.com/developers/apikey.html</a>にアクセスし直した<br />
+</div>
+
+<h4>パッケージの準備</h4>
+<p>
+今回検索結果のキャッシングにPEAR::Cache_Lite(以後Cache_Lite)を使用します．
+PEARの数あるウェブサービス系パッケージでは定番の組み合わせです．
+PEARがコマンドラインで管理できる環境なら
+</p>
+
+<div class="source-code">
+<pre>
+pear install --alldeps Cache_Lite Services_Technorati
+</pre>
+</div>
+
+でインストールすることができます．
+
+<h4>Services_Technoratiの使い方</h4>
+<p>
+取り立てて難しいことはありません．staticメソッドのfactoryでインスタンスオブジェクトを生成し，それを用いて検索など情報取得をします．
+下記は「unoh」で検索し，<a href="http://php.net/print_r">print_r</a>()で出力をする例です．
+</p>
+
+<div class="source-code">
+<pre>
+$ php -r '
+  require_once "Services/Technorati.php";
+  $client = &new Services_Technorati( "&lt;あなたのAPI Key&gt;", $cache);
+  print_r( $client->search("unoh"));'
+Array
+(
+    [version] =&gt; 1.0
+    [document] =&gt; Array
+        (
+            [result] =&gt; Array
+                (
+                    [query] =&gt; unoh
+                    [querycount] =&gt; 556
+                    [rankingstart] =&gt; 0
+                )
+
+            [item] =&gt; Array
+                (
+                    [0] =&gt; Array
+                        (
+                            [weblog] =&gt; Array
+                                (
+                                    [name] =&gt; Twisted Mind
+                                    [url] =&gt; http://d.hatena.ne.jp/Voluntas
+                                    [rssurl] =&gt; http://d.hatena.ne.jp/Voluntas/rss
+                                    [atomurl] =&gt; 
+                                    [inboundblogs] =&gt; 11
+                                    [inboundlinks] =&gt; 23
+                                    [lastupdate] =&gt; 2006-10-05 16:47:17 GMT
+                                )
+
+                            [title] =&gt; [dojo]
+                            [excerpt] =&gt; ■[dojo] 20:13  ウノウラボ Unoh Labs: DoJoで簡単にクロスドメインAjaxを実現  http://labs.unoh.net/2006/10/dojoioscriptsrcioajax...  とてもわかりやすい説明:-)  画像が出てくるのがカッコイイ。
+                            [created] =&gt; 2006-10-06 11:13:44 GMT
+                            [permalink] =&gt; http://d.hatena.ne.jp/Voluntas/20061006#1160133224
+                        )
+
+                    [1] =&gt; Array
+                        (
+                            [weblog] =&gt; Array
+                                (
+                                    [name] =&gt; devworks
+                                    [url] =&gt; http://d.hatena.ne.jp/devworks
+                                    [rssurl] =&gt; http://d.hatena.ne.jp/devworks/rss
+                                    [atomurl] =&gt; 
+                                    [inboundblogs] =&gt; 6
+                                    [inboundlinks] =&gt; 11
+                                    [lastupdate] =&gt; 2006-10-06 12:08:18 GMT
+                                )
+
+                            [title] =&gt; [Ajax]DoJoで簡単にクロスドメインAjaxを実現
+                            [excerpt] =&gt; ■[Ajax]DoJoで簡単にクロスドメインAjaxを実現  ウノウラボ Unoh Labs: DoJoで簡単にクロスドメインAjaxを実現   XMLHttpRequestはセキュリティ上の問題から、他のドメインに対してリクエストを送ることがで...  [Dojo] JavaScriptのみでクロスドメインXMLHttpRequest Kawa.net Blog（ゆうすけブログ）/ウェブリブログ   内部でiframeを使用しているようです。  技術的には非常に興味があるのですが、今は「どう業務に使おう? 」と考え中です。
+                            [created] =&gt; 2006-10-06 01:11:58 GMT
+                            [permalink] =&gt; http://d.hatena.ne.jp/devworks/20061006/1160097118
+                        )
+(略)
+</pre>
+</div>
+
+<p>
+はい配列が取得できました．
+ってことでこの配列を再構成し，Smartyに渡せば自由な形式で出力できますね．
+その辺りを含めて実装してみます．
+</p>
+
+<h4>Smartyを絡めて出力する</h4>
+<p>
+今回はRSS 2.0とHTMLを出力するようにしてみました．CLIで実行ではなくHTTPアクセスを前提にしたのでGETで引数(?type=&lt;type&gt;)を付加することで出力形式を切り替えます(type=xmlでRSSを，type=htmlでHTMLを出力します)．
+ついでにCache_Liteで4時間検索結果のキャッシングを行います．
+これ以上ちょっとずつ実装していくとエントリが長くなるので一気にやっちゃいます．
+実装はちょっとイマイチ感もありますが，ざっとこんな感じにしてみました．
+</p>
+
+<h5>index.php</h5>
+<div class="source-code">
+<pre>
+&lt;?php
+
+require_once 'Services/Technorati.php';
+require_once 'Smarty.class.php';
+require_once "Cache/Lite.php";
+$cache_lifetime = 4 * 60 * 60; //  4時間
+     
+$type = isset($_GET['type'])? $_GET['type']: 'html';
+$type = in_array($type, array('xml', 'html'))? $type: 'html';
+
+header("Content-Type: text/$type; charset=UTF-8");
+
+$options = array(
+    'cacheDir' =&gt; dirname(__FILE__).'/tmp/services_technorati/',
+    'lifeTime' =&gt; $cache_lifetime,
+    'pearErrorMode' =&gt; CACHE_LITE_ERROR_DIE
+);
+$cache = &new Cache_Lite( $options);
+
+$client = &new Services_Technorati('&lt;あなたのAPI Key&gt;', $cache);
+$search_result = $client-&gt;search('unoh');
+
+$feed_items = array();
+foreach ($search_result['document']['item'] as $index=&gt;$item) {
+    $feed_item = array();
+    $feed_item['title'] = sprintf( '%s - %s', $item['title'], $item['weblog']['name']);
+    $feed_item['link'] = $item['permalink'];
+    $feed_item['permlink'] = sprintf('%d-%s', $index, md5($item['permalink']));
+    $feed_item['author'] = $item['weblog']['name'];
+    $feed_item['body'] = $item['excerpt'];
+    $feed_item['datetime'] = date( 'r', strtotime( $item['created']));
+
+    $feed_items[] = $feed_item;
+}
+
+$feed = array(
+  'encoding'=&gt;'UTF-8',
+  'generator'=&gt;'elf.no-ip.org',
+  'datetime'=&gt;date('r'));
+
+$site = array();
+$site['feed'] = $feed;
+$site['title'] = 'Topic of unoh';
+$site['link'] = sprintf('http://%s%s', $_SERVER['HTTP_HOST'], $_SERVER['PHP_SELF']);
+$site['description'] = 'Topics about unoh searched with technorati.';
+$site['language'] = 'ja';
+$site['items'] = $feed_items;
+
+$smarty = &new Smarty;
+$smarty-&gt;template_dir = dirname( __FILE__);
+$smarty-&gt;compile_dir = dirname( __FILE__).'/tmp/smarty/templates_c';
+$smarty-&gt;assign('site', $site);
+
+$smarty-&gt;display("feed_{$type}.tpl");
+?&gt;
+</pre>
+</div>
+
+<p>
+次にRSS用Smartyテンプレートです．
+</p>
+
+<h5>feed_xml.tpl</h5>
+<div class="source-code">
+<pre>
+&lt;?xml version="1.0" encoding="{$site.feed.encoding|escape:"html":"UTF-8"}" ?&gt;
+
+&lt;rss version="2.0"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:admin="http://webns.net/mvcb/"
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:content="http://purl.org/rss/1.0/modules/content/"
+   &gt;
+    &lt;channel&gt;
+        &lt;title&gt;{$site.title|escape:"html":"UTF-8"}&lt;/title&gt;
+        &lt;link&gt;{$site.link|escape:"html":"UTF-8"}&lt;/link&gt;
+        &lt;description&gt;{$site.description|escape:"html":"UTF-8"}&lt;/description&gt;
+        &lt;dc:language&gt;{$site.language|escape:"html":"UTF-8"}&lt;/dc:language&gt;
+        &lt;generator&gt;{$site.feed.generator|escape:"html":"UTF-8"}&lt;/generator&gt;
+        &lt;lastBuildDate&gt;{$site.feed.datetime|escape:"html":"UTF-8"}&lt;/lastBuildDate&gt;
+
+{foreach item=item from=$site.items}
+        &lt;item&gt;
+            &lt;title&gt;{$item.title|escape:"html":"UTF-8"}&lt;/title&gt;
+            &lt;link&gt;{$item.link|escape:"html":"UTF-8"}&lt;/link&gt;
+            &lt;content:encoded&gt;{$item.body|escape:"html":"UTF-8"}&lt;/content:encoded&gt;
+            &lt;pubDate&gt;{$item.datetime|escape:"html":"UTF-8"}&lt;/pubDate&gt;
+            &lt;guid isPermaLink="false"&gt;{$item.permlink|escape:"html":"UTF-8"}&lt;/guid&gt;
+        &lt;/item&gt;
+{/foreach}
+    &lt;/channel&gt;
+&lt;/rss&gt;
+</pre>
+</div>
+
+<p>
+escapeとか入りまくりで見づらいかもしれませんが気にしないでください(ちゃんと読みたい方はエディタにでもコピペしてください)．
+</p>
+<p>
+実は恥ずかしながらRSSには精通していないのでRSS Validatorでエラーが出ない程度の内容になっています．
+おかしなところはコメントをいただければと思います．
+</p>
+<p>
+ちなみにこれを書いていて気づいたのですが，いつのまにかSmartyのescape修飾で文字コードの指定ができるようになってたのですね．
+すばらしい．
+</p>
+
+<p>
+最後はHTML用Smartyテンプレートです．
+</p>
+
+<h5>feed_html.tpl</h5>
+<div class="source-code">
+<pre>
+&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"&gt;&lt;?xml version="1.0" encoding="{$site.feed.encoding|escape:"html":"UTF-8"}" ?&gt;
+&lt;html lang="{$site.language|escape:"html":"UTF-8"}"&gt;
+&lt;head&gt;
+  &lt;meta http-equiv="Content-Type" content="text/html; charset={$site.feed.generator|escape:"html":"UTF-8"}" /&gt;
+  &lt;meta generator="{$site.feed.generator|escape:"html":"UTF-8"}" /&gt;
+  &lt;title&gt;{$site.title|escape:"html":"UTF-8"}&lt;/title&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;{$site.link|escape:"html":"UTF-8"}&lt;/h1&gt;
+  &lt;div id="description"&gt;{$site.description|escape:"html":"UTF-8"}&lt;/div&gt;
+  &lt;div id="lastBuildDate"&gt;Build date:{$site.feed.datetime|escape:"html":"UTF-8"}&lt;/div&gt;
+  &lt;hr /&gt;
+  &lt;div id="items"&gt;
+    &lt;ul&gt;
+{foreach item=item from=$site.items}
+      &lt;li&gt;&lt;div class="item"&gt;
+        &lt;div class="title"&gt;
+          &lt;a href="{$item.link|escape:"html":"UTF-8"}"&gt;{$item.title|escape:"html":"UTF-8"}&lt;/a&gt;
+          ({$item.datetime|escape:"html":"UTF-8"})
+        &lt;/div&gt;
+      &lt;/div&gt;
+      &lt;div class="body"&gt;{$item.body|escape:"html":"UTF-8"}&lt;/div&gt;
+      &lt;/li&gt;
+{foreachelse}
+      &lt;li&gt;no item.&lt;/li&gt;
+{/foreach}
+    &lt;/ul&gt;
+  &lt;/div&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+</div>
+
+<h4>実行してみる</h4>
+<p>
+まずindex.php，feed_xml.tpl，feed_html.tplを同一ディレクトリに保存します．
+次に一時ファイルを保存するためのディレクトリを作成し，パーミッションの調整をします．
+</p>
+
+<div class="command">
+<pre>
+$ mkdir -p tmp/{smarty/templates_c,services_technorati}
+$ chmod o+w tmp/{smarty/templates_c,services_technorati}
+</pre>
+</div>
+
+<p>
+さくらインターネットの共有サーバーなどのようにPHP CGIなどでsuexecされた環境ではパーミッションの設定は必要ないかもしれません．
+また，パーミッションの追加は場合によっては「o+w」ではなく「a+w」などを求める環境もあるかもしれません(滅多にないと思いますが)．
+<del>上記ファイル群を使用した実行サンプルはとりあえず<a href="http://elf.no-ip.org/php/dev/services_technorati/" target="_blank">http://elf.no-ip.org/php/dev/services_technorati/</a>にとりあえず置いておきます．</del>
+</p>
+
+<h4>Services_Technoratiは他に何ができるのか?</h4>
+<p>
+後から気づいたのですがServices_Technoratiは簡易的ではありますが，有志が作成した<a href="http://pear.php.net/manual/ja/package.webservices.services_technorati.intro.php">日本語マニュアル</a>があります(いつもながらありがとうございます)．
+これと<a href="http://www.technorati.com/developers/api/">http://www.technorati.com/developers/api/</a>をあわせて参照するとある程度何をどうすればいいか理解できるかもしれません．
+</p>
+
+<h4>終わり</h4>
+<p>
+次回までにはServices_Photozouで何か面白いことができたらいいなぁ～～～と思いますが，どうなるかわかりません．
+期待せずに待っていてください．
+</p>
+<p>
+最後に今更ではありますが，もしタグではなく検索結果をRSSで取得する方法をご存じの方がいらっしゃったら恥ずかしいのでこっそり教えてください．
+それではあでゅー．
+</p>
+{% endraw %}

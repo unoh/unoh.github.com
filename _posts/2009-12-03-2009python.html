@@ -1,0 +1,207 @@
+---
+layout: post
+title: "2009年版Python開発環境を整えよう"
+---
+{% raw %}
+<p>なでしこの作者じゃない方のsakatokuです。</p>
+
+			<p>以前書いた<a href="http://labs.unoh.net/2007/04/python.html">「Python開発環境を整えよう」</a>という記事からだいぶ時間が経ってしまったので、内容を更新したいなぁと思っていたのですが、ようやくその機会が来ました。</p>
+			<h3> virtualenvで開発環境をつくる</h3>
+			<p>開発環境をつくるにあたって次のような問題が生じると思います。</p>
+
+			<ul>
+				<li> root権限がないためにインストールしたいライブラリが使えない</li>
+				<li> 新しいライブラリをインストールしたり、既存のライブラリをアップグレードすることで、既に動いているアプリケーションを壊したくない</li>
+				<li> 複数のバージョンのPythonを使って開発、テストを行いたい</li>
+				<li> 自作したPythonパッケージのインストールのテストを行いたい</li>
+
+			</ul>
+			<p>以前の記事ではvirtual-pythonという解決策を紹介しましたが、現在では<a href="http://pypi.python.org/pypi/virtualenv/">virtualenv</a>というツールが広く使われるようになってきています。</p>
+			<p>virtualenvをインストールするには、もしroot権限があるならば、CentOS/Fedoraの場合、</p>
+<pre class="code"><code>$ sudo yum install python-setuptools
+</code></pre>
+
+			<p>でsetuptoolsというPythonパッケージ配布ライブラリを入れて、setuptoolsに含まれているeasy_installコマンドを使い、</p>
+
+<pre class="code"><code>$ sudo easy_install virtualenv
+$ which virtualenv
+/usr/bin/virtualenv
+</code></pre>
+
+			<p>で入れるのが楽です。</p>
+			<p>一般ユーザの権限でvirtualenvを利用するには、適当なディレクトリに最新版のvirtualenv(1.4.3以降)の配布物をダウンロードし、その配布物に含まれるvirtualenv.pyを叩くのが簡単です。最新版の1.4.3以降を薦める理由はpipというツールが同梱されるようになったことにありますが、これに関しては後述します。</p>
+
+<pre class="code"><code>$ wget http://pypi.python.org/packages/source/v/virtualenv/virtualenv-1.4.3.tar.gz
+$ tar xzf virtualenv-1.4.3.tar.gz
+$ cd virtualenv
+$ python virtualenv.py --python=/usr/bin/python2.4 ~/mypython
+</code></pre>
+
+			<p>上の例では、最後の行で~/mypythonというディレクトリにPython2.4の仮想開発環境を作成しています。--pythonオプションで利用するPythonのバイナリを指定します。"~/mypython"は、virtualenvで作る仮想的なPython環境のパスですが、これは好みに合わせて何にしても構いません。</p>
+
+			<p>もし、/usr/local/bin/python2.5にPython2.5がインストールされている環境で、そのPython2.5を使った仮想環境を~/mypythonというパスに作りたいならば、以下のようにします。</p>
+<pre class="code"><code>$ python virtualenv.py --python=/usr/local/bin/python2.5 ~/mypython
+</code></pre>
+
+			<p>実際にこれらの開発環境に切り替えるには、仮想環境ディレクトリにbin/activateというシェルスクリプトがあるのでそれを使います。</p>
+
+<pre class="code"><code>$ source ~/mypython/bin/activate
+$ which python
+~/mypython/bin/python
+$ python
+Python 2.5.4 (r254:67916, Nov 28 2009, 20:37:01)
+&#91;GCC 4.1.2 20080704 (Red Hat 4.1.2-46)] on linux2
+Type &quot;help&quot;, &quot;copyright&quot;, &quot;credits&quot; or &quot;license&quot; for more information.
+</code></pre>
+
+			<p>この環境をカスタマイズした場合には、仮想環境ディレクトリにlib/python2.4/site-packages/sitecustomize.pyというファイルを作り、そこで固有の設定を行います。よく行われるのは、デフォルトのエンコーディングの指定です。</p>
+<pre class="code"><code>cat &lt;&lt; END &gt; ~/mypython/lib/python2.5/site-packages/sitecustomize.py
+heredoc&gt; import sys
+heredoc&gt; sys.setdefaultencoding(&quot;utf-8&quot;)
+heredoc&gt; END
+</code></pre>
+
+			<h3> pipを使ってパッケージを管理する</h3>
+			<p>仮想環境を作ると、仮想環境以下のbinディレクトリにpipというコマンドもインストールされます。</p>
+<pre class="code"><code>$ source ~/mypython/bin/activate
+$ which pip
+~/mypython/bin/pip
+</code></pre>
+
+			<p>このpipは、Pythonで長らく主流となってきたsetuptools/easy_installに替わって最近使われるようになってきたパッケージ管理ツールで、PHPで言えばpear、Rubyで言えばgem、Perlで言えばcpanコマンドに相当します。</p>
+			<p>pipを使ってPythonパッケージをインストールするには、次のように"pip install &lt;パッケージ名&gt;"と入力します。インストールするパッケージが依存している別のパッケージがあれば、それもインストールしてくれます。</p>
+
+<pre class="code"><code>$ pip install Django
+</code></pre>
+
+			<p>pipはデフォルトでは、<a href="http://pypi.python.org/pypi">Python Package Index</a>(通称PyPI)に登録されているパッケージをインストールしますが、URLを指定して直接インストールすることもできます。次の例は、Pythonの標準的な画像処理ライブラリであるPILを、tar.gzからインストールする例です。</p>
+<pre class="code"><code>$ pip install http://effbot.org/downloads/Imaging-1.1.6.tar.gz
+</code></pre>
+
+			<p>インストール済みのパッケージを確認するには、freezeコマンドが利用できます。</p>
+
+<pre class="code"><code>$ pip freeze
+IPy==0.70
+PIL==1.1.6
+uamobile==0.2.8
+virtualenv==1.4.3
+wsgiref==0.1.2
+</code></pre>
+
+			<p>最新版のpipではuninstallコマンドを使ってパッケージのアンインストールもできるようになりました。</p>
+<pre class="code"><code>$ pip uninstall IPy
+</code></pre>
+
+			<p>pipのコマンドを確認するには、helpコマンドを使います。helpの後にコマンド名を続けると詳細な内容を確認できます。</p>
+<pre class="code"><code>$ pip help
+$ pip help install
+</code></pre>
+
+			<h3> virtualenvwrapperを使って開発環境を切り替える</h3>
+			<p>virtualenvとpipを使えば、プロジェクト毎に仮想環境を作っておけば、別のバージョンのライブラリを利用することができます。</p>
+<pre class="code"><code># project1という環境を作る
+$ python virtualenv.py --python=/usr/bin/python2.5 ~/project1
+# 切り替え
+$ source ~/project1/bin/activate
+# 必要なライブラリをインストール
+$ pip install &quot;Django==1.0.4&quot;
+</code></pre>
+
+<pre class="code"><code># project2という環境を作る
+$ python virtualenv.py --python=/usr/bin/python2.5 ~/project2
+# 切り替え
+$ source ~/project2/bin/activate
+# 別のバージョンのライブラリをインストール
+$ pip install &quot;Django==1.1.1&quot;
+
+</code></pre>
+
+			<p>相互の開発環境の切り替えはactivateを使うことになりますが、同時にたくさんの環境を使っていると、いちいち"source ~/project1/bin/activate"を打つのが面倒になってきます。</p>
+			<p>そんな状況で便利なのが<a href="http://pypi.python.org/pypi/virtualenvwrapper/">virtualenvwrapper</a>です。</p>
+<pre class="code"><code>$ wget http://www.doughellmann.com/downloads/virtualenvwrapper-1.21.tar.gz
+$ tar xzf virtualenvwrapper-1.21.tar.gz
+$ cd virtualenvwrapper-1.21
+</code></pre>
+
+			<p>virtualenvwrapperは普通のPythonパッケージのように配布されていますが、実態はvirtualenvwrapper_bashrcというシェルスクリプトです。このvirtualenvwrapper_bashrcを.bashrcや.zshrcで読み込むことにより、virtualenvを使った開発を便利にするいくつかのコマンドが使えるようになります。virtualenvwrapper_bashrcという名前になっていますが、zshでも使えます。僕の場合は、</p>
+
+<pre class="code"><code>$ cp virtualenvwrapper_bashrc ~/.virtualenvwrapperrc
+</code></pre>
+
+			<p>のように、ドットつきでファイル名を改名してホームディレクトリ直下に置き、.zshrcで、</p>
+<pre class="code"><code># Import virtualenvwrapper
+if &#91; -f ~/.virtualenvwrapperrc ]; then
+  source ~/.virtualenvwrapperrc
+fi
+</code></pre>
+
+			<p>のように読み込むようにしています。さらに、$HOME/.virtualenvsという仮想環境を置くディレクトリが必要なのであらかじめ作成しておきます。</p>
+
+<pre class="code"><code>$ mkdir ~/.virtualenvs
+</code></pre>
+
+			<p>もしこのディレクトリを変更したい場合は、WORKON_HOMEという環境変数を定義することで変更できます。</p>
+			<p>virtualenvwarrperを読み込むと、ターミナル上で、</p>
+
+<pre class="code"><code>$ mkvirtualenv --python=/usr/bin/python2.5 temp
+</code></pre>
+
+			<p>のようにして、仮想環境を作り</p>
+<pre class="code"><code>$ workon temp
+</code></pre>
+
+			<p>のように"workon (仮想環境名)"と打つと、その開発環境に切り替えてくれるので便利です。その仮想環境を無効にするには、</p>
+<pre class="code"><code>$ deactivate
+</code></pre>
+
+			<p>のようにdeactivateを使います。</p>
+			
+
+			<p>もし、ある仮想環境が必要なくなったならば、deactivateを使って一度その環境を離れた上で、rmvirtualenvコマンドを使って削除することができます。</p>
+
+<pre class="code"><code>$ deactivate
+$ rmvirtualenv temp
+</code></pre>
+
+<p>普段の開発では、</p>
+
+<pre class="code"><code>$ workon project1
+</code></pre>
+
+<p>のようにしてproject1の開発に切り替え、いつも通りコードを書いたり、テストを行って、もし別のproject2のタスクをする必要が出た場合には、</p>
+
+<pre class="code"><code>$ workon project2
+</code></pre>
+
+<p>のようにしてproject2の開発に切り替え...のようにして作業を進めています。</p>
+
+<p>virtualenvwrapperは非常に便利なのですが、PATHが通った場所にvirtualenvがないとmkvirtuanenvコマンドはエラーになり実行できません。もし、いつもPATHが通っている場所にvirtualenvコマンドをインストールできるならば、その解決方法がいいような気がしますが、$WORKON_HOMEに手動で「仮想環境を作るための仮想環境」を作れば一応は解決できます。</p>
+<pre class="code"><code>$ mkdir ~/.virtualenvs
+$ python virtualenv.py --python=/usr/bin/python2.4 ~/.virtualenvs/bootstrap
+$ source ~/.virtualenvs/bootstrap/bin/activate
+$ pip install virtualenv
+$ mkvirtualenv mypython
+</code></pre>
+
+			<h3> 書き残していること</h3>
+			<p>以上駆け足で、Python開発環境を整えるための三種の神器、virtualenv、pip、virtualenvwrapperを紹介しましたが、ぱっと考え付くだけでも、まだ言及していないことがたくさんあります。</p>
+
+			<ul>
+				<li> virtualenvの--no-site-packagesオプション</li>
+				<li> virtualenvの--relocatableオプション</li>
+				<li> virtualenvの--distributeオプション(Pythonの新しいパッケージ管理ライブラリ<a href="http://pypi.python.org/pypi/distribute/">Distribute</a>について)</li>
+				<li> virtualenvと同様によく使われる<a href="http://www.buildout.org/">zc.buildout</a>について</li>
+
+				<li> pipを使って複数のモジュールをまとめる(pip bundle)</li>
+				<li> pipを使ってSubversion/git/Mercurialレポジトリから直接モジュールをインストールする</li>
+				<li> virtualenvを使った実際のアプリケーションのデプロイ方法</li>
+			</ul>
+			<p>こうした点についても、今後この場をかりて紹介していければと思っています。</p>
+
+			<div style="margin:0;padding:.5em;border:2px
+solid#ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br /><a
+href="http://www.unoh.net/recruit.html">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください！！<br
+/><a href="http://www.find-job.net/fj/showjob.cgi?id=50212">Find
+Job!</a>でも募集開始してます！</div>
+
+{% endraw %}

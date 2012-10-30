@@ -1,0 +1,108 @@
+---
+layout: post
+title: "symfonyでモバイルサイトを作るときにやったこと"
+---
+{% raw %}
+<p>こんにちは。中村です。</p>
+
+<p>symfonyを使ってモバイルサイトを作るときにやったことを思い出しながら少し紹介しようと思います。symfonyといってもバージョンは1.0系です。最新のsymfonyでは勝手が違うかもしれませんのでご了承ください。</p>
+
+<h3>docomoの場合はURLにセッションIDを埋め込む</h3>
+
+<p>iモードブラウザ2.0ではないdocomo端末はCookieに対応していないため、セッションを利用する場合にはセッションIDをURLに埋め込む必要があります。これについては解決方法がいろいろありそうですが、私の場合、sfMySQLSessionStorageを利用しようとしたところ親クラスのsfSessionStorageがsession.use_cookiesの値でCookieを使うかどうかを決定していたため、initializeメソッドを継承して分岐を入れることにしました。iniの設定をUser-Agentで変更することに気が引けたためですが、iniの設定を切り替えた方が簡潔だったかもしれません。</p>
+
+<p>URLには次のようなrouting.ymlに記載して、常にパスの最初にくるようにしています。</p>
+
+<pre class="code">default_session:
+  url: /:session_id/:module/:action/*
+  param:
+    module: module
+    action: action
+  requirements:
+    session_id: ^[a-zA-Z0-9]{32}$</pre>
+
+<p>あとは、link_toヘルパー内で自動的にセッションIDをURLに入れる（iモードブラウザ2.0ではないdocomo端末のみ）ようにすることで、開発する際に意識せずに済むようにしています。</p>
+
+<h3>絵文字に対応</h3>
+
+<p>変換は<a href="http://labs.unoh.net/2007/02/post_65.html">絵文字の相互変換リスト</a>に基づいてFilterで行っています。絵文字に関しては世の中的に出尽くしている感があるので割愛します。</p>
+
+<h3>携帯特有のタグに対応したヘルパー関数を作る</h3>
+
+<p>携帯特有のタグはまず間違いなくキャリアごとにバラバラです。当たり前なのですが、ヘルパー関数を作っておくと便利です。inputタグのistyle、位置情報取得時のタグ、各キャリアで同じ水平線にするのが大変難しいhrタグなど、ヘルパー関数を作成しています。</p>
+
+<h3>アスキーアートの文字化け対策</h3>
+
+<p>ユーザーが入力したアスキーアートが文字化けする、という現象があったのですが、これはsymfonyがエスケープにhtmlentitiesを利用しているためで、携帯で解釈できない文字参照がそのまま文字として表示されてしまうためでした。<a href="http://blog.symfony.jp/2009/03/05/178">escaping_methodのESC_ENTITIESには注意が必要</a>が参考になります。symfony側のコードを書き換えるのは極力避けたいところですが、この部分に関してはhtmlspecialcharsに変更して対応しています。</p>
+
+<h3>メンテナンス時に確認端末を通す</h3>
+
+<p>メンテナンス時に一般ユーザーにはメンテナンス画面を表示しておいて、登録した携帯のみはアクセスできるようにしておくと、メンテナンス後、公開するまでに動作確認を行えます。次のようなFilterを書いて携帯の端末IDを比較しています。app.ymlに記載がない場合は/top/maintenanceに飛ばしています。</p>
+
+<pre class="code">&lt;?php
+class myMaintenanceFilter extends sfFilter
+{
+
+    public function execute($filterChain)
+    {   
+        $maintenance = sfConfig::get('app_maintenance_enabled');
+        if ($maintenance !== true) {
+            $filterChain-&gt;execute();
+        } else {
+            $context = $this-&gt;getContext();
+            if ($context-&gt;getModuleName() == 'top' &amp;&amp; ($context-&gt;getActionName() == 'maintenance')) {
+                $filterChain-&gt;execute();
+            } else {
+                $mobiles = sfConfig::get('app_maintenance_mobiles', null);
+                if (is_array($mobiles) &amp;&amp; in_array($context-&gt;getUser()-&gt;getMobileId(), $mobiles)) {
+                    $filterChain-&gt;execute();
+                } else {
+                    $this-&gt;getContext()-&gt;getController()-&gt;redirect('/top/maintenance');
+                }
+            }
+        }
+    }   
+
+}</pre>
+
+<p>app.ymlは次のように記述しています。</p>
+
+<pre class="code">all:
+  maintenance:
+    enabled: true
+    mobiles:
+      - xxxxxxxx
+      - xxxxxxxx
+      - xxxxxxxx</pre>
+
+
+<h3>文字コードの変換</h3>
+
+<p>表示はShift-JIS、内部は全てUTF-8に統一という構成だと、Shift-JISとUTF-8の変換を行わなければならないのですが、入力は自前でFilterを書いてmb_convert_encodingしています。</p>
+
+<p>出力は</p>
+
+<pre class="code">mb_http_output('SJIS-win');</pre>
+
+<p>と設定してうまくいくかと思ったのですが、Content-Typeがapplication/xhtml+xml（docomoでCSSを使うために必要）にするとmb_http_outputは変換を行いません。仕方がないので、これまた自前で次のようなFilterを書いて対応しています。</p>
+
+<pre class="code">&lt;?php
+class myXhtmlFilter extends sfFilter
+{
+
+    public function execute($filterChain)
+    {   
+        $filterChain-&gt;execute();
+        if ($this-&gt;getContext()-&gt;getUser()-&gt;isDoCoMo()) {
+            $response = $this-&gt;getContext()-&gt;getResponse();
+            $response-&gt;setHttpHeader('Content-Type', 'application/xhtml+xml; charset=Shift_JIS');
+            $response-&gt;setContent(mb_convert_encoding($response-&gt;getContent(), 'SJIS-win', 'UTF-8'));
+        }
+    }   
+
+}</pre>
+
+<h3>最後に</h3>
+
+<p>ばらばらとしたTipsになってしまいましたが、それほどトリッキーなことをしなくても、ポイントだけ対処できればモバイルサイト対応ができるので、symfonyによるモバイルサイト構築は1つの選択肢になると思います。</p>
+{% endraw %}

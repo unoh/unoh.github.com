@@ -1,0 +1,103 @@
+---
+layout: post
+title: "PHPでJSONを扱う"
+---
+{% raw %}
+<p>
+yamaokaです。
+</p>
+
+<p>
+Ajaxの普及に伴い、JavaScriptで扱いやすい<a href="http://www.json.org/">JSON</a>形式で
+サーバーからのレスポンスを返すことが増えてきているように思います。
+PHPでJSONを扱う方法についていくつか紹介します。
+</p>
+
+<h3>JSON関数</h3>
+
+<p>
+もともとPECLの拡張モジュールとして<a href="http://pecl.php.net/package/json">提供されていました</a>が、
+PHP 5.2.0以降、デフォルトで<a href="http://jp.php.net/manual/ja/ref.json.php">PHPに組み込まれる</a>ようになっています。
+そのため、最も利用しやすい形式なのではないかと思います。
+</p>
+
+<p>
+利用方法は以下のとおりです。json_decodeの戻り値はオブジェクトになります（第2引数にtrueを指定すると連想配列になります）。
+<pre class="code"><code>$values = array('company' => 'ウノウ', 'name' => 'yamaoka');
+
+$json = json_encode($values);
+// string '{"company":"\u30a6\u30ce\u30a6","name":"yamaoka"}' (length=49)
+
+$values = json_decode($json);
+// object(stdClass)[1]
+//   public 'company' => string 'ウノウ' (length=9)
+//   public 'name' => string 'yamaoka' (length=7)
+</code></pre>
+</p>
+
+<h3>Jsphon</h3>
+<a href="http://www.hawklab.jp/jsonencoder/">Jsphon</a>は
+<a href="http://www.hawklab.jp/">Hawkさん</a>の開発によるJSONライブラリです。
+PHPで記述されており、PEARコマンドを利用して簡単にインストール、利用することができます。
+Unicode Escape Sequenceをきちんと扱うことができるのが特徴です。日本語を扱う場合、心強いですね。
+<p>
+
+<p>
+利用方法は以下のとおりです。Jsphon::decodeの戻り値は連想配列になっています。
+<pre class="code"><code>require_once 'Jsphon.php';
+$values = array('company' => 'ウノウ', 'name' => 'yamaoka');
+
+$json = Jsphon::encode($values);
+// string '{"company":"\u30a6\u30ce\u30a6","name":"yamaoka"}' (length=49)
+
+$valeus = Jsphon::decode($json);
+// array
+//   'company' => string 'ウノウ' (length=9)
+//   'name' => string 'yamaoka' (length=7)
+
+</code></pre>
+</p>
+
+<p>
+PHP4とPHP5、また、PEAR環境の有無によってもエラーハンドリングが異なるので注意が必要です。
+詳しくは<a href="http://www.hawklab.jp/jsonencoder/#error-handling">Jsphonのページのエラー処理に関する記述</a>を参照してください。
+</p>
+
+<h3>Zend_Json</h3>
+
+<p>
+Zend_Jsonは<a href="http://framework.zend.com/">Zend Framework</a>に含まれるJSONを扱うためのコンポーネントです。
+詳細は<a href="http://framework.zend.com/manual/ja/zend.json.html">Zend Frameworkのドキュメント</a>を参照してください。
+</p>
+
+<p>
+利用方法は以下のとおりです。Zend_Json::decodeの戻り値は連想配列になっています。
+<pre class="code"><code>require_once 'path/to/Zend/Json.php';
+$values = array('company' => 'ウノウ', 'name' => 'yamaoka');
+
+$json = Zend_Json::encode($values);
+// string '{"company":"\u30a6\u30ce\u30a6","name":"yamaoka"}' (length=49)
+
+$valeus = Zend_Json::decode($json);
+// array
+//   'company' => string 'ウノウ' (length=9)
+//   'name' => string 'yamaoka' (length=7)
+</code></pre>
+</p>
+
+<p>
+ちなみに、Zend_Json::useBuiltinEncoderDecoderの値をtrueにすると、
+JSON関数が利用できる場合はそちらを使うように挙動が変更されます。
+</p>
+
+<h3>まとめ</h3>
+
+<p>
+Zend_Jsonのように、フレームワークに
+JSONを扱う機能が備わっている場合はそれを使うのが一番手軽だと思います。
+そうでない場合、JSON関数かJsphonを利用することになるでしょう。
+ただ、日本語を扱う場合はUnicode Escape Sequenceをきちんと扱うことができる
+Jsphonの方が安心かもしれませんね。
+</p>
+
+{% endraw %}

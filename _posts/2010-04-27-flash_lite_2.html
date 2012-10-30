@@ -1,0 +1,94 @@
+---
+layout: post
+title: "Flash Liteコンテンツを動的に合成してみる"
+---
+{% raw %}
+おはようございます。うちだです。
+
+<p>
+本日、mixiアプリモバイルにて「<a href="http://mixi.jp/view_appli.pl?id=18953">バンドやろうよ！</a>」をリリース致しました。是非遊んでみてください。
+</p>
+<p>
+<img alt="qr.jpg" src="http://labs.unoh.net/qr.jpg" width="150" height="120" />
+</p>
+<p>
+今回は「<a href="http://mixi.jp/view_appli.pl?id=18953">バンドやろうよ！</a>」でも使った、Flash Liteコンテンツの合成を軽めに紹介します。
+</p>
+
+<h2>Ming</h2>
+<p>
+Flash Liteの合成には<a href="http://sourceforge.net/projects/ming/">Ming</a>を使います。<br/>
+Mingを用いるとswfの合成や変数書き換えが非常に簡単にできます。<br/>
+但し、一部機能にバグがあるので要注意ですが、合成や変数書き換えだけに利用するのであれば今のところ問題は見つかっていません。</p>
+
+<h2>さっそく合成</h2>
+
+<p>
+「<a href="http://mixi.jp/view_appli.pl?id=18953">バンドやろうよ！</a>」では自キャラクターのギターを持ち替えすることでき、その部分に利用しています。
+</p>
+
+<p>合成するパーツ毎にswfを用意します</p>
+<span class="mt-enclosure mt-enclosure-file" style="display: inline;"><a href="http://labs.unoh.net/1.swf/1.swf">1.swf</a></span>
+<span class="mt-enclosure mt-enclosure-file" style="display: inline;"><a href="http://labs.unoh.net/2.swf/2.swf">2.swf</a></span>
+<span class="mt-enclosure mt-enclosure-file" style="display: inline;"><a href="http://labs.unoh.net/3.swf/3.swf">3.swf</a></span>
+<span class="mt-enclosure mt-enclosure-file" style="display: inline;"><a href="http://labs.unoh.net/guitar.swf">guitar.swf</a></span>
+
+<pre class="code">
+ming_useswfversion(4);
+$swf = new SWFMovie();
+$swf->setDimension(150, 200);
+$swf->setbackground(0xff, 0xff, 0xff);
+$swf->setRate(8);
+
+// 同じインスタンスをaddすると参照になります
+// 体
+$clip1 = new SWFPrebuiltClip("./1.swf");
+$obj = $swf->add($clip1);
+$obj->moveTo(0, 0);
+
+// ギター
+$guitar = new SWFPrebuiltClip("./guitar.swf");
+$obj = $swf->add($guitar);
+$obj->moveTo(0, 75);
+
+// 右手
+$clip2 = new SWFPrebuiltClip("./2.swf");
+$obj = $swf->add($clip2);
+$obj->moveTo(14.15, 111.50);
+
+// 左手
+$clip3 = new SWFPrebuiltClip("./3.swf");
+$obj = $swf->add($clip3);
+$obj->moveTo(74.6, 107.2);
+
+// 変数を書き換える
+// 今回は使う必要ないですが、参考までに
+// $swf->add(new SWFAction("/:hoge = true;"));
+
+// ファイルとして保存するとき
+$swf->save("test.swf");
+
+// 動的に出力するとき
+// $swf->output();
+</pre>
+
+<p>
+上のコードを実行すると合成されます
+</p>
+<object data="http://labs.unoh.net/test.swf" type="application/x-shockwave-flash" width="300" height="300">
+<param name="loop" value="on">
+<param name="quality" value="high">
+</object>
+
+<h2>さいごに</h2>
+<p>
+Mingを使うと静的なswfをつくったり、動的にもだせたりで便利ですよ。
+</p>
+おわり
+
+<div style="margin:1em 0;padding:0.5em;border:2px solid #ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br />
+<a href="http://www.unoh.net/recruit.html">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください。<br/>
+<a href="http://www.find-job.net/fj/showjob.cgi?id=76769">Find Job!</a>でも<a href="http://www.find-job.net/fj/showjob.cgi?id=50212">募集してます！</a></div>
+
+<span class="mt-enclosure mt-enclosure-file" style="display: inline;"><a href="http://labs.unoh.net/bandqr.jpg/qr">qr</a></span>
+{% endraw %}

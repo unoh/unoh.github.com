@@ -1,0 +1,271 @@
+---
+layout: post
+title: "Q4Mを触ってみる"
+---
+{% raw %}
+<p>yukiです。そろそろクリスマスですね。みんな浮かれていればいいと思います！最近急に目が悪くなって、ツリーの赤色電球と居酒屋の赤提灯の色が判別出来なくなってきました。嘘です。</p>
+
+<p>今回は、みんな大好きメッセージキュー、Q4Mを触ってみた感想を今更ながらレポートします。</p>
+
+<div style="margin:0;padding:.5em;border:2px
+solid#ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br /><a
+href="http://www.unoh.net/recruit.html">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください！！<br
+/><a href="http://www.find-job.net/fj/showjob.cgi?id=50212">Find
+Job!</a>でも募集開始してます！</div>
+
+<h3>Q4M</h3>
+<p>公式ページはこちら<a href="http://q4m.31tools.com/">http://q4m.31tools.com/</a></p>
+<p><a href="http://q4m.31tools.com/">Q4M</a>はサイボウズラボの<a href="http://developer.cybozu.co.jp/kazuho/">奥 一穂氏</a>が開発されており、MySQLの5.1以上でストレージエンジンとして利用できるメッセージキューで、MySQLプラグインとしてGPLライセンスで配布されております。</p>
+
+<h4>特長</h4>
+<p>MySQLのストレージエンジンとして利用できるので、テーブル作成時にストレージエンジンを指定するだけで利用できます。</p>
+<pre class="code"><code>CREATE TABLE hoge (
+     ...
+ ) ENGINE = QUEUE</code></pre>
+<p>キューの作成(enqueue)は通常のレコード操作と同様にINSERTで行い、キューの取り出し(dequeue)も同様にSELECTで行えるので、シンプルに扱う事が出来ます。</p>
+
+<h4>導入事例</h4>
+<p>公式ページには導入事例として以下の2つが載っています。</p>
+<ul>
+<li><a href="http://pathtraq.com/">pathtraq</a></li>
+<li><a href="http://mixi.jp/recent_echo.pl">mixiボイス</a></li>
+</ul>
+
+<h3>インストール</h3>
+<p>最新版は0.8.9となっています。<a href="http://q4m.31tools.com/install.php">こちら</a>からバイナリ・ソース版と用意されているので、適切なものを選んでインストールします。</p>
+<p>GCCのバージョンによってはコンパイルに失敗するエラーがありましたが、現バージョンでは解消されて手軽にインストールできるようになりました。</p>
+<p>インストールが終わると、MySQLにプラグインとして認識されているのがわかります。</p>
+<pre class="code"><code>mysql> show plugins;
++------------+----------+----------------+--------------------+---------+
+| Name       | Status   | Type           | Library            | License |
++------------+----------+----------------+--------------------+---------+
+| binlog     | ACTIVE   | STORAGE ENGINE | NULL               | GPL     |
+| partition  | ACTIVE   | STORAGE ENGINE | NULL               | GPL     |
+| ARCHIVE    | ACTIVE   | STORAGE ENGINE | NULL               | GPL     |
+| BLACKHOLE  | ACTIVE   | STORAGE ENGINE | NULL               | GPL     |
+| CSV        | ACTIVE   | STORAGE ENGINE | NULL               | GPL     |
+| FEDERATED  | DISABLED | STORAGE ENGINE | NULL               | GPL     |
+| MEMORY     | ACTIVE   | STORAGE ENGINE | NULL               | GPL     |
+| InnoDB     | ACTIVE   | STORAGE ENGINE | NULL               | GPL     |
+| MyISAM     | ACTIVE   | STORAGE ENGINE | NULL               | GPL     |
+| MRG_MYISAM | ACTIVE   | STORAGE ENGINE | NULL               | GPL     |
+| QUEUE      | ACTIVE   | STORAGE ENGINE | libqueue_engine.so | GPL     |
++------------+----------+----------------+--------------------+---------+</code></pre>
+
+<h3>実際に動かしてみる</h3>
+<p>まずはテーブルを作成します。</p>
+<pre class="code"><code>mysql> CREATE TABLE queue_table (
+  message TEXT NOT NULL,
+  priority TINYINT UNSIGNED NOT NULL DEFAULT 10
+)
+ENGINE = QUEUE</code></pre>
+<p>次に、実際に処理するキューを作るため、キューをINSERTします。</p>
+<pre class="code"><code>mysql> INSERT INTO queue_table (message) VALUES ('ms1'), ('ms2') ,('ms3');</code></pre>
+<p>dequeueしてみます。dequeueにはqueue_waitというfunctionを利用します。</p>
+<pre class="code"><code>mysql> SELECT queue_wait('queue_table');
++---------------------------+
+| queue_wait('queue_table') |
++---------------------------+
+|                         1 |
++---------------------------+
+1 row in set (0.00 sec)</code></pre>
+<p>成功すると、結果として1が返って来ます。<br />
+キューを取り出しているこの状態をオーナーモードと呼び、この状態だと、該当のテーブルからは1レコードだけ引けるようになります。</p>
+<pre class="code"><code>mysql> SELECT * FROM queue_table;
++---------+----------+
+| message | priority |
++---------+----------+
+| ms1     |       10 |
++---------+----------+
+1 row in set (0.00 sec)</code></pre>
+<p>取り出して処理が完了した場合、queue_endを呼ぶと、取り出したキューが削除されます。同時にオーナーモードが解除され、非オーナーモードに戻ります。</p>
+<pre class="code"><code>mysql> SELECT queue_end();
++-------------+
+| queue_end() |
++-------------+
+|           1 |
++-------------+
+1 row in set (0.00 sec)</code></pre>
+
+<p>非オーナーモードに戻ったので、通常のSELECTを行うと、残りの全キューを引くことができます。<br />ただし、別のコネクションでオーナーモードになっている場合、そのコネクションで得たキューは表示されません。(後述。)</p>
+<pre class="code"><code>mysql> SELECT * FROM queue_table;
+ +---------+----------+
+ | message | priority |
+ +---------+----------+
+ | ms2     |       10 |
+ | ms3     |       10 |
+ +---------+----------+
+ 2 rows in set (0.00 sec)</code></pre>
+
+<p>またこのとき、処理中に例外エラーなどでキューを戻したい場合は、queue_abort()を利用すると直前に取り出したキューを戻します。queue_wait()→queue_abort()した際の流れです。</p>
+<pre class="code"><code>mysql> SELECT queue_wait('queue_table');
++---------------------------+
+| queue_wait('queue_table') |
++---------------------------+
+|                         1 |
++---------------------------+
+1 row in set (0.00 sec)
+
+mysql> SELECT * FROM queue_table;
++---------+----------+
+| message | priority |
++---------+----------+
+| ms2     |       10 |
++---------+----------+
+1 row in set (0.00 sec)
+
+mysql> SELECT queue_abort();
++---------------+
+| queue_abort() |
++---------------+
+|             1 |
++---------------+
+1 row in set (0.00 sec)
+
+mysql> SELECT * FROM queue_table;
++---------+----------+
+| message | priority |
++---------+----------+
+| ms2     |       10 |
+| ms3     |       10 |
++---------+----------+
+2 rows in set (0.00 sec)</code></pre>
+
+<h3>オーナーモードと非オーナーモード</h3>
+<p>queue_wait()を呼ぶとオーナーモードに入り、先述したように、そのコネクション内では1行のみ取得できるようになります。<br />また、別のコネクションでは、他コネクションでオーナーモードで取得した行以外を取得できるようになります。</code></pre>
+<p>コネクション1</p>
+<pre class="code"><code>% mysql -u test test
+mysql> SELECT * FROM queue_table;
++---------+----------+
+| message | priority |
++---------+----------+
+| ms2     |       10 |
+| ms3     |       10 |
++---------+----------+
+2 rows in set (0.01 sec)</code></pre>
+
+<p>コネクション2</p>
+<pre class="code"><code>% mysql -u test test
+mysql> SELECT * FROM queue_table;
++---------+----------+
+| message | priority |
++---------+----------+
+| ms2     |       10 |
+| ms3     |       10 |
++---------+----------+
+2 rows in set (0.01 sec)</code></pre>
+
+<p>コネクション1でオーナーモードに入る</p>
+<pre class="code"><code>mysql> SELECT queue_wait('queue_table');
++---------------------------+
+| queue_wait('queue_table') |
++---------------------------+
+|                         1 |
++---------------------------+
+1 row in set (0.00 sec)
+
+mysql> SELECT * FROM queue_table;
++---------+----------+
+| message | priority |
++---------+----------+
+| ms2     |       10 |
++---------+----------+
+1 row in set (0.00 sec)</code></pre>
+
+コネクション2でキューを全件表示すると、コネクション1で引いたキューは表示されない。
+<pre class="code"><code>mysql> SELECT * FROM queue_table;
++---------+----------+
+| message | priority |
++---------+----------+
+| ms3     |       10 |
++---------+----------+
+1 row in set (0.00 sec)</code></pre>
+
+<h3>優先度別キュー取出</h3>
+<p>優先度低めのキューテーブルを作り、優先して取得したい順にqueue_waitの引数に加えます。</p>
+<pre class="code"><code>mysql> CREATE TABLE low_priority_queue (
+   message TEXT NOT NULL,
+   priority TINYINT UNSIGNED NOT NULL DEFAULT 10
+ )
+ ENGINE = QUEUE;
+
+mysql> INSERT INTO low_priority_queue (message) VALUES ('lm1'), ('lm2'), ('lm3');
+
+mysql> SELECT queue_wait('queue_table', 'low_priority_queue');
++-------------------------------------------------+
+| queue_wait('queue_table', 'low_priority_queue') |
++-------------------------------------------------+
+|                                               1 |
++-------------------------------------------------+
+1 row in set, 1 warning (0.00 sec)</code></pre>
+<p>成功すると、取得できるテーブルの順の番号が返って来ます。(上記は1なのでqueue_table、2であればlow_priority_queueになります)あとは通常通り取得します。</p>
+<pre class="code"><code>mysql> SELECT * FROM queue_table;
++---------+----------+
+| message | priority |
++---------+----------+
+| ms2     |       10 |
++---------+----------+
+1 row in set (0.00 sec)</code></pre>
+
+<p><strike>ここの挙動がよくわかりにくく、どなたか分かる方がいたら教えて頂ければ大変嬉しいのですが、優先度が高いテーブル(queue_table)の中身が空の時、タイムアウトを指定しないでqueue_waitすると「ゼロ」(データ無し)と返って来ます。</strike></p>
+<p>2009/12/21追記: 複数指定する場合は、必ずタイムアウト引数を付けなくてはいけないので、この用法は間違いでした。お詫びいたします。</p>
+<pre class="code"><code>mysql> TRUNCATE queue_table;
+Query OK, 0 rows affected (0.01 sec)
+
+mysql> SELECT queue_wait('queue_table', 'low_priority_queue');
++-------------------------------------------------+
+| queue_wait('queue_table', 'low_priority_queue') |
++-------------------------------------------------+
+|                                               0 |
++-------------------------------------------------+
+1 row in set, 1 warning (0.00 sec)</code></pre>
+
+<p>タイムアウトを与えてやると、正しく取得できます。下記の場合はqueue_tableにレコードがないので、low_priority_queueから取得するため2番が返り、期待通りの動作となります。</p>
+<pre class="code"><code>mysql> SELECT queue_wait('queue_table', 'low_priority_queue', 10);
++-----------------------------------------------------+
+| queue_wait('queue_table', 'low_priority_queue', 10) |
++-----------------------------------------------------+
+|                                                   2 |
++-----------------------------------------------------+
+1 row in set (0.00 sec)
+
+mysql> SELECT * FROM low_priority_queue;
++---------+----------+
+| message | priority |
++---------+----------+
+| lm1     |       10 |
++---------+----------+
+1 row in set (0.00 sec)</code></pre>
+
+<h3>条件付き取り出し</h3>
+<p>簡易なWHERE句のようにして取得することが可能です。queue_waitのテーブルを指定する引数に、条件を付加して取得します。<br />下記の例は優先度2で新たなキューを発行し、優先度3以下で取得するようにしてみます。</p>
+<pre class="code"><code>mysql> INSERT INTO queue_table(message, priority) values ('blocker', 2);
+Query OK, 1 row affected (0.00 sec)
+mysql> SELECT * FROM queue_table;
++---------+----------+
+| message | priority |
++---------+----------+
+| ms1     |       10 |
+| ms2     |       10 |
+| ms3     |       10 |
+| blocker |        2 |
++---------+----------+
+4 rows in set (0.00 sec)
+
+mysql> SELECT queue_wait('queue_table:priority<3');
+
+mysql> SELECT * FROM queue_table;
++---------+----------+
+| message | priority |
++---------+----------+
+| blocker |        2 |
++---------+----------+
+1 row in set (0.00 sec)</code></pre>
+
+<h3>リレー</h3>
+<p>別のサーバにキューをリレーする事が出来ます。同梱されているq4m-forwardというperlスクリプトを起動すると、無限ループでキューを待ち、別のサーバへ転送するような処理になっています。<br />同様の処理であれば、自作のスクリプトで同様の処理が可能です。<br /><a href="2008/07/daemontools.html">daemontools</a>などを使えば、割とお手軽に転送させることが出来るかと思います。</p>
+
+<h3>まとめ</h3>
+<p>いかがでしたでしょうか。メッセージキューイングというと<a href="http://activemq.apache.org/">ActiveMQ</a>やTheSchwartzなど、いろいろなソリューションがあると思いますが、キューイング方法などかなり手軽に扱えるので、1度試してみてはいかがでしょうか。</p>
+<p>試している最中、queue_wait()してオーナーモード中にtruncateしてしまい、drop databaseすら効かなくなってrm -r /var/lib/mysql/testしたりしましたが、ご愛敬ということで。</p>
+{% endraw %}

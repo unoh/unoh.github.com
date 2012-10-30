@@ -1,0 +1,133 @@
+---
+layout: post
+title: "Varnish上でESIの機能を利用する"
+---
+{% raw %}
+<p>Keita です。</p>
+
+<p>
+サンフランシスコで開かれたSymfony Liveで、Fabien Potencier氏によるHTTP Cacheという発表がありその中でESI(Edge Side Includes)の紹介がありました。
+</p>
+<p>
+下の画像はちょっとみずらいですが、たとえばこのラボブログのレイアウトだと大枠の部分は常によりユーザに使いフロントの所（つまりCDNやキャッシュサーバ）側でキャッシュされていてAの部分とBの部分それぞれのコンテンツを別々にインクルードする形でキャッシュ制御することができます。
+</p>
+
+<img alt="esi.png" src="http://labs.unoh.net/esi.png" width="500" height="330" class="mt-image-none" style="" />
+
+<p>
+Symfony2のサイトsymfony-reloaded.orgでも、<a href="http://docs.symfony-reloaded.org/guides/cache/http.html">マニュアル</a>がありますので、詳細はそちらを参考にしていただくとして、その中に、Varnishでもその機能が利用できることが紹介されていますので試してみたいと思います。
+</p>
+
+<p>
+Varnishのインストールについては省略してとりあえず設定部分から。<a href="http://www.varnish-cache.org/trac/wiki/ESIfeatures">VarnishサイトにあるESIの説明</a>あたりを参考にして下記のような環境を構築してみました。
+</p>
+
+<h3>Apache側(port: 10080でアクセス可能）</h3>
+
+himote.html
+<pre class="code">
+&lt;html&gt;
+&lt;head&gt;
+himote:
+&lt;/head&gt;
+&lt;body&gt;
+&lt;esi:include src="/time.php" /&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+time.php
+<pre class="code">
+&lt;?php
+echo date('Y/m/d h:i:s');
+</pre>
+
+
+<h3>varnish側(port: 6081でアクセス可能)</h3>
+
+default.vcl
+<pre class="code">
+backend default {
+  .host = "127.0.0.1";
+  .port = "10080"; // Apache
+}
+
+sub vcl_fetch {
+    if (req.url == "/himote.html") {
+            esi; // enable ESI
+    }
+}
+</pre>
+
+wget で確認
+<pre class="code">
+wget http://localhost:6081/himote.html -O -
+
+&lt;html&gt;
+&lt;head&gt;
+himote:
+&lt;/head&gt;
+&lt;body&gt;
+2011/02/22 11:07:37
+&lt;/body&gt;
+&lt;/html&gt;
+
+# 二回目
+wget http://localhost:6081/himote.html -O -
+
+&lt;html&gt;
+&lt;head&gt;
+himote:
+&lt;/head&gt;
+&lt;body&gt;
+2011/02/22 11:07:37
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<p>
+2回目も時間がかわってないことから、正常にキャッシュしているようです。<br />
+ただ、キャッシュの有効期限を設定していないので今度はExpireヘッダを出力してみます。
+</p>
+
+<pre class="code">
+&lt;?php
+$expire = 10; //10秒後
+header('Expires: '.gmdate('D, d M Y H:i:s \G\M\T', time() + $expire));
+echo date('Y/m/d h:i:s');
+</pre>
+
+動作確認
+<pre class="code">
+wget http://localhost:6081/himote.html -O -
+
+&lt;html&gt;
+&lt;head&gt;
+himote:
+&lt;/head&gt;
+&lt;body&gt;
+2011/02/22 11:13:47
+&lt;/body&gt;
+&lt;/html&gt;
+
+wget http://localhost:6081/himote.html -O -
+&lt;html&gt;
+&lt;head&gt;
+himote:
+&lt;/head&gt;
+&lt;body&gt;
+2011/02/22 11:13:57
+&lt;/body&gt;
+&lt;/html&gt;
+</pre>
+
+<p>
+何回かアクセスするとちょうど10秒目くらいに時間が変更されているので正常に動作しているようです。
+</p>
+
+<p>
+本家のマニュアルを写経した程度になってしまいましたが、どのようなものかイメージをつかんでいただけたのではないでしょうか。実際にプロダクトレベルで利用するにはベンチマークやログなどの詳細な検証は必要になると思いますのでご注意ください。
+</p>
+<p>
+本記事がご参考になれば幸いです。
+{% endraw %}

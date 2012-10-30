@@ -1,0 +1,121 @@
+---
+layout: post
+title: "ext3の dir_indexを試す"
+---
+{% raw %}
+<p>こんにちは、佐藤です。kernel 2.6系のext3からdir_indexというものがサポートされたようなのでどのような状況でパフォーマンスが向上するか実験してみました。</p>
+
+<p>環境は以下です。</p>
+
+<pre class="code">
+uname -a; cat /etc/issue.net
+Linux 2.6.18-8.1.3.el5 #1 SMP Mon Apr 30 19:55:44 EDT 2007 i686 i686 i386 GNU/Linux
+CentOS release 5 (Final)
+</pre>
+
+<p>まず/dev/sdb1にext3領域をを作ってみます。</p>
+
+<pre class="code">
+sudo mkfs.ext3 -j /dev/sdb1
+sudo tune2fs -l /dev/sdb1  # 詳細表示
+....
+Filesystem features:      has_journal resize_inode dir_index filetype needs_recovery sparse_super large_file
+....
+</pre>
+
+<p>dir_indexという項目があるので、このバージョンでのmkfs.ext3はデフォルトでdir_indexが適応されるようです。</p>
+<p>比較のためにdir_indexが無い領域も作成します。</p>
+
+<pre class="code">
+sudo mkfs.ext3 -j -O none /dev/sdb2
+sudo tune2fs -l /dev/sdb2
+...
+Filesystem features:      has_journal needs_recovery
+...
+</pre>
+<p>適当な場所にマウントします</p>
+<pre class="code">
+ sudo mount /dev/sda /home/unoh/sdb1
+ sudo mount /dev/sda /home/unoh/sdb2
+</pre>
+
+
+<p>テストのため計測プログラムを書きました。</p>
+
+<pre class="code">
+g++ -o disktest <a href="http://labs.unoh.net/download/disktest.cpp">disktest.cpp</a>
+./disktest 
+-c N: create files
+-a N: random access files
+-d N: delete files
+オプション -c で N個のファイルを作成します
+オプション -a でN個のファイルの中からランダムに 2000個アクセスします
+オプション -d でN個のファイルを削除します
+操作はすべてカレントディレクトリに対して行います。
+</pre>
+
+<p>結果に影響ができないようにテストの度に以下のコマンドで ページ,dentry,i-nodeキャッシュを解放します。</p>
+<pre class="code">
+sudo sysctl -w vm.drop_caches=3; sudo sysctl -w vm.drop_caches=0;
+</pre>
+
+<p>結果</p>
+<p>ファイル作成</p>
+<table>
+ <tr>
+   <td>ファイル数</td>
+   <td>15000</td>
+   <td>30000</td>
+   <td>60000</td>
+    <td>120000</td>
+  <tr>
+   <tr>
+        <td>dir_index無し</td>
+      <td>19364 msec</td>
+      <td>43919 msec</td>
+      <td>120990 msec</td>
+        <td>337845 msec</td>
+    </tr>
+    <tr>
+        <td>dir_index有り</td>
+      <td>2443 msec</td>
+      <td>7006 msec</td>
+      <td>15320 msec</td>
+        <td> 31793 msec</td>
+     </td>
+</table>
+
+<p>ファイルアクセス</p>
+<table>
+ <tr>
+   <td>ファイル数</td>
+   <td>15000</td>
+   <td>30000</td>
+   <td>60000</td>
+    <td>120000</td>
+  <tr>
+   <tr>
+        <td>dir_index無し</td>
+      <td>1219 msec</td>
+      <td>4746 msec</td>
+      <td>18579 msec</td>
+        <td>27791 msec</td>
+    </tr>
+    <tr>
+        <td>dir_index有り</td>
+      <td>43 msec</td>
+      <td>77 msec</td>
+      <td>1683 msec</td>
+        <td> 5467 msec</td>
+     </td>
+</table>
+
+
+<p>ということで、ファイルの作成についてはdir_indexが無い場合ファイル数が増えるにつれて指数的にアクセスが遅くなっているのがわかります。</p>
+<p>dir_indexがある場合は、ファイル数が増えても時間は比例的に増えます。</p>
+<p>ファイルのアクセスについても同じような結果になっています。</p>
+
+<p>これを見る限り dir_indexは非常に有効そうです。</p>
+<p>ちなみに、bonnie++ というソフトウェアでも同じようなテストができるようです。</p>
+
+{% endraw %}

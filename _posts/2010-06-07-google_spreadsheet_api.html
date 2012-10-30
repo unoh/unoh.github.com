@@ -1,0 +1,134 @@
+---
+layout: post
+title: "Google Spreadsheet APIを使ってみた"
+---
+{% raw %}
+<p>おはようございます、chihiroです。</p>
+
+<p>弊社で開発している某ソーシャルゲームで、YAMLで書かれたゲームのマスターデータ(fixture)をExcelに出力するというタスクが生じました。</p>
+
+<p>Excelにするならば、YAMLからCSVに変換して取り込むとか、あるいはExcelファイルを直接扱えるライブラリを使うといった方法が考えられます。しかし、今後プログラマではない他の社員にデータを編集してもらい、かつ編集したデータとfixtureの同期をとれるようにしておきたいところです。</p>
+
+<p>そこで、以前どこかの勉強会で「管理ツールなんて自作する必要ない。Google Spreadsheet上で編集させて、必要に応じてAPIでアクセスすればいい」という話を聞いたことがあるのを思い出し、Google Spreadsheet APIを使ってGoogle Spreadsheetにデータを書き出すという方法を試してみました。Google Spreadsheetに書き出しておけばExcel形式でダウンロードできますし、ドキュメントの共有や権限管理も楽ですし、いいことずくめのように思えます。もちろん、会社の規約等でGoogleのサービスを使えないというケースはあるでしょうが・・・</p>
+
+<p>そんなわけで、とりあえず書いてみたスクリプトが以下のものです。</p>
+
+<pre class="code">
+# -*- coding: utf-8 -*-
+import sys
+import getpass
+import yaml
+
+# ドキュメントにはいろいろimportしろと書いてありますが、
+# 今回のスクリプトのように単純なものならば
+# gdata.spreadsheet.service.SpreadsheetsService をimportすれば事足ります
+from gdata.spreadsheet.service import SpreadsheetsService
+
+def main(email, password, document_name, sheet_name, data):
+    # 使い捨てのスクリプトなので ClientLogin を使う
+    gd_client = SpreadsheetsService()
+    gd_client.email = email
+    gd_client.password = password
+    gd_client.ProgrammaticLogin()
+
+    # 書き込み先のドキュメントを探す
+    # 見つからない場合は例外を排出して処理を終了
+    feed = gd_client.GetSpreadsheetsFeed()
+    for entry in feed.entry:
+        if entry.title.text == document_name:
+            # SpreadsheetのIDは、
+            # http://spreadsheets.google.com/feeds/spreadsheets/private/full/abcdefgh-ijklmnopqrstuv
+            # のようなURLになります。API経由でアクセスするにはこのうちの最後の
+            # "abcdefgh-ijklmnopqrstuv"をキーとして使います
+            current_key = entry.id.text.split('/')[-1]
+            break
+    else:
+        raise ValueError('document not found')
+
+    # 書き込み先のシートを探す
+    # 見つからない場合は例外を排出して処理を終了
+    feed = gd_client.GetWorksheetsFeed(current_key)
+    for entry in feed.entry:
+        if entry.title.text == sheet_name:
+            # sheetのIDは、
+            # http://spreadsheets.google.com/feeds/worksheets/abcdefgh-ijklmnopqrstuv/private/full/od6
+            # のようなURLになります。API経由でアクセスするには上のキーと共に
+            # このワークシートIDを保持しておく必要があります
+            current_worksheet_id = entry.id.text.split('/')[-1]
+            break
+    else:
+        raise ValueError('sheet not found')
+
+    # 1行目にカラム名をセットする
+    # あらかじめドキュメントの1行目を変更しておけばこの処理は
+    # 必要がありませんが、CellベースのAPIのサンプルとして
+    for idx, value in enumerate(('id', 'name', 'description')):
+        # Cellのrowとcolは(1, 1)からはじまります
+        gd_client.UpdateCell(row=1,
+                             col=(idx + 1),
+                             inputValue=value,
+                             key=current_key,
+                             wksht_id=current_worksheet_id)
+
+    # 列を追加
+    for params in data:
+        # 辞書のキーにしているid, name, descriptionは
+        # 上で1行目のCellにセットした列名です
+        # 指定した列名がないとListベースのAPIの呼び出しは失敗します
+        entry = gd_client.InsertRow({ 'id'         : unicode(params['id']),
+                                      'name'       : unicode(params['name']),
+                                      'description': unicode(params['description']),
+                                      },
+                                    current_key,
+                                    current_worksheet_id)
+
+
+if __name__ == '__main__':
+    if len(sys.argv) != 5:
+        print 'usage %s email document_name sheet_name filename' % sys.argv[0]
+        sys.exit(1)
+
+    email, document_name, sheet_name, filename = sys.argv[1:]
+    password = getpass.getpass('Password for %s: ' % email)
+
+    data = yaml.load(open(filename))
+    main(email, password, document_name, sheet_name, data)
+</code></pre>
+
+<p><a href="http://labs.unoh.net/2009/12/2009python.html">以前のエントリ</a>で紹介したようにpipをインストールした上で、</p>
+
+<pre class="code">
+$ pip install gdata PyYAML
+</pre>
+
+<p>のようにgdataとPyYAMLをインストールし、</p>
+
+<pre class="code">
+$ python gdata-insert.py user@example.com document-name sheet-name fixture.yml
+</pre>
+
+<p>のようにして使います。fixture.ymlは、</p>
+
+<pre class="code">
+- id: 1
+  name: アナキン
+  description: "アナキン・スカイウォーカー。後のダース・ベイダー。"
+- id: 2
+  name: ルーク
+  description: "オビ＝ワン・ケノービの弟子。"
+- id: 3
+  name: オビ＝ワン・ケノービ
+  description: "ルークの師匠。"
+</pre>
+
+<p>のようなYAMLになっています。</p>
+
+<p>エラー処理はまったくなしですが、使い捨てのスクリプトなので勘弁していただき、Google Spreadsheet APIを利用するサンプル程度にお考えください。Google Spreadsheet APIに関しては、以下のURLに公式のドキュメントがあります。</p>
+
+<ul>
+  <li><a href="http://code.google.com/intl/ja/apis/spreadsheets/overview/">http://code.google.com/intl/ja/apis/spreadsheets/overview/</a></li>
+  <li><a href="http://code.google.com/intl/ja/apis/spreadsheets/data/1.0/developers_guide_python.html">http://code.google.com/intl/ja/apis/spreadsheets/data/1.0/developers_guide_python.html</a></li>
+</ul>
+
+<div style="margin:1em 0;padding:.5em;border:2px solid#ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br /><a href="http://www.unoh.net/recruit.html" target="_blank">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください！！<br /><a href="http://www.find-job.net/fj/showjob.cgi?id=50212" target="_blank">Find Job!</a>でも募集開始してます！</div>
+{% endraw %}

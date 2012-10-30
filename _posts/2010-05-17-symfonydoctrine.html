@@ -1,0 +1,325 @@
+---
+layout: post
+title: "symfony/Doctrineのキャッシュ機能"
+---
+{% raw %}
+<p>こんばんは、五十川です。</p>
+
+<p>symfony 1.3/1.4で、それまでのPropelに代わってデフォルトのORMとなったDoctrineには、組み込みのキャッシュ機能があり、クエリーの実行結果データを手軽にキャッシュすることができます（これは「結果キャッシュ」と呼ばれます）。また、実行結果だけではなく、DQLに基づいて生成されるSQLをキャッシュする仕組みもあり、これを利用することで、DQL解析のオーバーヘッドを回避して処理の高速化を図ることも可能です（こちらは「 クエリーキャッシュ」という紛らわしい名前で呼ばれます）。</p>
+
+<p>Propelの場合はそれ自体にはキャッシュ機能がなく、必要な場合は自力で頑張る必要がありました（Propel 1.5で、<a href="http://www.propelorm.org/wiki/Documentation/1.5/Behaviors/query_cache">query_cacheビヘイビア</a>が提供されるようになりました）。Doctrineの場合には当初から用意されていたキャッシュ機能が、特にsymfony 1.3/1.4で採用されたDoctrine 1.2において様々な改良が施され、十分採用検討に値するものになっています。</p>
+
+<p>Doctrine 1.2のキャッシュ機能に関する公式のドキュメントは以下にあります。</p>
+
+<ul>
+  <li><a href="http://www.doctrine-project.org/projects/orm/1.2/docs/manual/caching/ja">Doctrine - Doctrine ORM for PHP - Caching</a></li>
+  <li><a href="http://www.symfony-project.org/more-with-symfony/1_4/ja/08-Advanced-Doctrine-Usage">The More with symfony book | Doctrine の高度な使用方法 | symfony | Web PHP Framework</a></li>
+</ul>
+
+<h3>利用可能なキャッシュドライバ</h3>
+
+<p>Doctrine 1.2には以下のキャッシュドライバが用意されています。</p>
+
+<ul>
+  <li>memcached（Doctrine_Cache_Memcache）</li>
+  <li>APC（Doctrine_Cache_Apc）</li>
+  <li>XCache（Doctrine_Cache_Xcache）</li>
+  <li>データベース（Doctrine_Cache_Db）</li>
+</ul>
+
+<p>なお、この他にDoctrine_Cache_Arrayというドライバもあります。このドライバでは、キャッシュはドライバのプロパティに&ldquo;保存&rdquo;され、従ってリクエスト毎に破棄されてしまいますが、機能拡張やキャッシュストレージの準備が必要がないので、テスト用途などで気軽に利用できます。</p>
+
+<h3>キャッシュドライバの設定</h3>
+
+<p>Doctrineのキャッシュ機能を利用するには、Doctrine_ManagerやDoctine_ConnectionのsetAttribute()メソッドで、適切な属性値を設定します。Doctrine_Managerでの設定はすべてのコネクションでのデフォルトになります。Doctine_Connectionでの設定によってコネクション毎の設定を変更できます。</p>
+
+<p>キャッシュ機能に関する属性には以下のものがあります。</p>
+
+<table>
+  <thead>
+    <tr>
+      <th>属性キー</th>
+      <th>属性値</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>Doctrine_Core::ATTR_RESULT_CACHE</td>
+      <td>結果キャッシュ用のキャッシュドライバオブジェクト</td>
+    </tr>
+    <tr>
+      <td>Doctrine_Core::ATTR_RESULT_CACHE_LIFESPAN</td>
+      <td>結果キャッシュのデフォルトの存続秒数</td>
+    </tr>
+    <tr>
+      <td>Doctrine_Core::ATTR_QUERY_CACHE</td>
+      <td>クエリーキャッシュ用のキャッシュドライバオブジェクト</td>
+    </tr>
+    <tr>
+      <td>Doctrine_Core::ATTR_QUERY_CACHE_LIFESPAN</td>
+      <td>クエリーキャッシュのデフォルトの存続秒数</td>
+    </tr>
+  </tbody>
+</table>
+
+<p>symfonyプロジェクト全体で共通で利用される設定は、ProjectConfigurationクラス（config/ProjectConfiguration.phpファイル）のconfigureDoctrine()メソッド内で行うとよいでしょう。</p>
+
+<p>以下の例では、クエリーキャッシュと結果キャッシュの両方にmemcachedドライバを設定しています。また、それぞれのデフォルトの存続時間を1時間に設定しています。</p>
+
+<pre class="code">class ProjectConfiguration extends sfProjectConfiguration
+{
+  public function setup()
+  {
+    $this-&gt;enablePlugins('sfDoctrinePlugin');
+  }
+
+  public function configureDoctrine(Doctrine_Manager $manager)
+  {
+    // 設定の配列を追加して、利用するmemcachedサーバを追加できます
+    $servers = array(
+        array(
+          'host' =&gt; 'localhost',
+          'port' =&gt; 11211,
+          'persistent' =&gt; true),
+        ); 
+    $cacheDriver = new Doctrine_Cache_Memcache(array(
+          'servers' =&gt; $servers,
+          'compression' =&gt; false));
+    $manager-&gt;setAttribute(Doctrine_Core::ATTR_QUERY_CACHE, $cacheDriver);
+    $manager-&gt;setAttribute(Doctrine_Core::ATTR_QUERY_CACHE_LIFESPAN, 3600);
+    $manager-&gt;setAttribute(Doctrine_Core::ATTR_RESULT_CACHE, $cacheDriver);
+    $manager-&gt;setAttribute(Doctrine_Core::ATTR_RESULT_CACHE_LIFESPAN, 3600);
+  }
+}</pre>
+
+<p>クエリーキャッシュはキャッシュドライバが設定されていれば利用され、プログラマーがそれ以上留意しなければならない点はありません。一方結果キャッシュの場合は、プログラムにその利用を明示するコードを追加しない限り利用はされません。</p>
+
+<h3>結果キャッシュを利用する</h3>
+
+<p>結果キャッシュを利用するには、Doctrine_Query::useResultCache()メソッドを使用します。</p>
+
+<pre class="code">$q = Doctrine_Query::create()
+  -&gt;from('User u')
+  -&gt;where('u.username = ?')
+  -&gt;useResultCache(true);
+$user = $q-&gt;fetchOne('jonwage');</pre>
+
+<p>Doctrine_Query::useResultCache()メソッドには3ヶのパラメータがあります。</p>
+
+<ol>
+  <li>
+    キャッシュドライバ
+    <ul>
+      <li>TRUE: 既定のキャッシュドライバを使う</li>
+      <li>キャッシュドライバオブジェクト: そのキャッシュドライバを使う</li>
+      <li>NULL: キャッシュを利用しない</li>
+    </ul>
+  </li>
+  <li>キャッシュの存続秒数: 省略時はドライバの既定の秒数</li>
+  <li>キャッシュのキー: 省略時は自動生成されるMD5ハッシュ値</li>
+</ol>
+
+<p>なお、上の例のような単純なクエリーはDoctrine_Tableのファインダーメソッドで置き換え可能で、例えば上のクエリーの実行結果と同じデータは「<code>UserTable::getInstance()->findByUsername('jonwage')</code>」でも得られますが、メソッドをオーバーライドしたりイベントなどを利用する場合を除いて、今のことろファインダーメソッドで直接結果キャッシュを利用する方法は用意されていません。</p>
+
+<h3>結果キャッシュを削除する</h3>
+
+<p>キャッシュはキャッシュドライバのdelete()メソッドで、キャッシュキーを指定して削除できます。キーが既知の場合、つまりDoctrine_Query::useResultCache()メソッドの3番目のパラメータでキーを指定している場合には、この方法でキャッシュを削除できます。</p>
+
+<pre class="code">$q = Doctrine_Query::create()
+  -&gt;from('User u')
+  -&gt;where('u.username = ?')
+  -&gt;useResultCache(true, null, 'user:jonwage');
+$user = $q-&gt;fetchOne('jonwage');
+
+// キーを指定してキャッシュを削除する
+$cacheDriver = UserTable::getInstance()-&gt;getAttribute(Doctrine_Core::ATTR_RESULT_CACHE);
+$cacheDriver-&gt;delete('user:jonwage');</pre>
+
+<p>キャッシュドライバには単一のキャッシュを削除するdelete()メソッドの他に、複数のキャッシュをまとめて削除する、deleteByPrefix()メソッドとdeleteByRegex()メソッドがあります。deleteByPrefix()メソッドでは指定の文字列に前方一致するキーのキャッシュが削除されます。deleteByRegex()メソッドでは指定の正規表現に合致するキーのキャッシュが削除されます。</p>
+
+<p>Doctrine_Query::useResultCache()メソッドでキャッシュキーの指定が省略された場合は、DQLの内容に基づくMD5ハッシュ値がキーとなります。キャッシュキーはDoctrine_Query::getResultCacheHash()メソッドで取得できるので、キーの指定を省略した場合でも、キャッシュの生成時と同じDQLが再現できる場合は、以下のようなコードでキャッシュを削除できます。</p>
+
+<pre class="code">$q = Doctrine_Query::create()
+  -&gt;from('User u')
+  -&gt;where('u.username = ?')
+  -&gt;useResultCache(true);
+$user = $q-&gt;fetchOne('jonwage');
+
+// DQLのキャッシュを削除する
+$q = Doctrine_Query::create()
+  -&gt;from('User u')
+  -&gt;where('u.username = ?');
+$q-&gt;getResultCacheDriver()-&gt;delete(
+    $q->getResultCacheHash('jonwage'));</pre>
+
+<p>なお、Doctrine_Queryにはこれを簡便に行うclearResultCache()メソッドも用意されていますが、このメソッドはgetResultCacheHash()メソッドと異なり、今のところメソッドのパラメータでプレースホルダーの値を指定できません。従って、例えば、以下でclearResultCache()メソッドを実行している2つのコードの前者には、プレースホルダーの値（u.username = 'jonwage'）がどこにも指定されていないため、正しいキャッシュを削除できません。後者ではWHERE句でプレースホルダーの値を指定しているので、正しいキャッシュが削除されます。</p>
+
+<pre class="code">$q = Doctrine_Query::create()
+  -&gt;from('User u')
+  -&gt;where('u.username = ?')
+  -&gt;useResultCache(true);
+$user = $q-&gt;fetchOne('jonwage');
+
+// 正しいキャッシュを削除できません
+$q = Doctrine_Query::create()
+  -&gt;from('User u')
+  -&gt;where('u.username = ?');
+$q-&gt;clearResultCache();
+
+// 正しいキャッシュが削除されます
+$q = Doctrine_Query::create()
+  -&gt;from('User u')
+  -&gt;where('u.username = ?', 'jonwage');
+$q-&gt;clearResultCache();</pre>
+
+<p>また、Doctrineではクエリー結果をハイドレートする方法が指定できますが、同じクエリーでもハイドレーションモードによってキャッシュキーは異なる点に注意してください。</p>
+
+<pre class="code">// 以下の2つのクエリーのキャッシュキーは異なります
+
+// オブジェクトにハイドレート
+$q = Doctrine_Query::create()
+  -&gt;from('User u')
+  -&gt;where('u.username = ?')
+  -&gt;useResultCache(true);
+$user = $q-&gt;fetchOne('jonwage');
+
+// 配列にハイドレート
+$q = Doctrine_Query::create()
+  -&gt;from('User u')
+  -&gt;where('u.username = ?')
+  -&gt;useResultCache(true);
+$user = $q-&gt;fetchOne('jonwage', Doctrine_Core::HYDRATE_ARRAY);</pre>
+
+<h3>イベントフックを利用する</h3>
+
+<p>Doctrineのイベントフックを利用すると、レコードの更新時にキャッシュを自動的に削除することができます。</p>
+
+<p>以下の例は、userテーブルのクエリーの実行結果データが、「user:」で始まるキャッシュキーでキャッシュされているという想定で、このテーブルのレコードが更新/削除される際にキャッシュをまとめて削除します。</p>
+
+<pre class="code">class User extends BaseUser
+{   
+  public function postSave(Doctrine_Event $event)
+  {
+    $this->clearResultCaches();
+  }
+
+  public function postDelete(Doctrine_Event $event)
+  {
+    $this->clearResultCaches();
+  }
+
+  protected function clearResultCaches()
+  {
+    $cacheDriver = $this->getTable()-&gt;getAttribute(Doctrine_Core::ATTR_RESULT_CACHE);
+    if ($cacheDriver instanceOf Doctrine_Cache_Interface) {
+      $cacheDriver-&gt;deleteByPrefix('user:');
+    }
+  }
+}</pre>
+
+<p>以下の例は、userテーブルに関するすべてのクエリーの実行結果をキャッシュします。</p>
+
+<pre class="code">class User extends BaseUser
+{
+  public function preDqlSelect(Doctrine_Event $event)
+  {
+    $cacheDriver = $this-&gt;getTable()-&gt;getAttribute(Doctrine_Core::ATTR_RESULT_CACHE);
+    if ($cacheDriver instanceOf Doctrine_Cache_Interface) {
+      $event->getQuery()-&gt;useResultCache(true);
+    }
+  }
+}</pre>
+
+<p>ただし、このコードには注意すべき点があります。このコードでは、クエリー対象にこのテーブルが含まれるすべてのクエリーの実行結果がもれなくキャッシュされます。JOINなどによってこのテーブル以外にもクエリーの対象テーブルが存在するクエリーでは、結果キャッシュを利用したくないテーブルがその中に含まれないように配慮する必要があります。</p>
+
+<p>なお、このコードではpreDqlSelect()フックを利用していますが、preDql*()フック（DQLコールバック）はDoctrine::ATTR_USE_DQL_CALLBACKS属性がTRUEの場合にのみ有効です。この属性値はデフォルトではFALSEで、TRUEに変更することで実行時に多少のオーバーヘッドが生じる点にも注意してください。</p>
+
+<pre class="code">// ProjectConfiguration::configureDoctrine()メソッド内などで
+$manager-&gt;setAttribute(Doctrine::ATTR_USE_DQL_CALLBACKS, true);</pre>
+
+<h3>イベントリスナーを利用する</h3>
+
+<p>複数のテーブルのクラスに、共通のイベントフックコードをコピーペーストしてまわるのはDRYではありません。Doctrineではイベントリスナーやビヘイビアを利用することで、複数のテーブルクラスに共通の動作を一箇所で定義できます。</p>
+
+<p>以下は、上で例に挙げた、あるテーブルに関するすべてのクエリーの実行結果をキャッシュするイベントフックをリスナーに仕立てたものです。</p>
+
+<pre class="code">class myAlwaysUseResultCacheListener extends Doctrine_Record_Listener
+{
+  public function preDqlSelect(Doctrine_Event $event)
+  {
+    $cacheDriver = $event-&gt;getInvoker()-&gt;getTable()-&gt;getAttribute(Doctrine_Core::ATTR_RESULT_CACHE);
+    if ($cacheDriver instanceOf Doctrine_Cache_Interface) {
+      $event->getQuery()-&gt;useResultCache(true);
+    }
+  }
+}</pre>
+
+<p>テーブルのクラスにイベントリスナーを設定するには、schema.ymlでlistenersにリスナーのクラス名を指定します。</p>
+
+<pre class="code">User:
+  listeners:
+    myAlwaysUseResultCacheListener:
+  actAs:
+    Timestampable:
+  columns:
+    username: { type: string(20),  notnull: true, unique: true, regexp: "/^[0-9a-z]{3,20}$/" }
+    password: { type: string(50),  notnull: true, minlength: 6 }
+    email:    { type: string(255), notnull: true, unique: true, email: true }</pre>
+
+<h3>Doctrine_Queryをオーバーライドする</h3>
+
+<p>これまでに見てきたように、Doctrineのキャッシュ機能の中核はDoctrine_Queryクラスに実装されています。Doctineには、Doctrine_Queryをその継承クラスに容易に切り替える手段が用意されており、必要であればその動作を変更することが可能です。</p>
+
+<p>Doctrine_Queryを独自のクラスに切り替えるには、Doctrine_Core::ATTR_QUERY_CLASS属性にクラス名を設定します。Doctrine_Query::create()メソッドは、Doctrine_Core::ATTR_QUERY_CLASS属性に設定されたクラス名があれば、Doctrine_Queryではなく、設定されているクラスのオブジェクトを返します。</p>
+
+<pre class="code">// ProjectConfiguration::configureDoctrine()メソッド内などで
+$manager->setAttribute(Doctrine_Core::ATTR_QUERY_CLASS, 'myDoctrineQuery');</pre>
+
+<p>以下の例では、Doctrine_Query::getResultCacheHash()メソッドをオーバーライドして、キャッシュキーの先頭にクエリー対象のテーブル名を自動的に追加しています。なお、このコードでは、クエリー対象のテーブルが複数ある場合でも、キーに追加されるのはFROM句で指定されるテーブル名のみとなる点に注意してください。</p>
+
+<pre class="code">class myDoctrineQuery extends Doctrine_Query
+{
+  public function getResultCacheHash($params = array())
+  {
+    $hash = parent::getResultCacheHash($params);
+    if ( ! empty($this-&gt;_dqlParts['from'])) {
+      $fromPart = $this-&gt;_dqlParts['from'];
+    } elseif ( ! empty($this-&gt;_sqlParts['from'])) {
+      $fromPart = $this-&gt;_sqlParts['from'];
+    } else {
+      return $hash;
+    }   
+    list($componentName) = explode(' ', trim($fromPart[0]), 2);
+    $tableName = Doctrine_Inflector::tableize($componentName);
+    return "$tableName:$hash";
+  }
+}</pre>
+
+<p>以下の例では、前者のキャッシュキーは「user:32bd63cf2cdef179ab2857bc357aeca7」のように、通常のMD5ハッシュ値の前に「user:」が付加されたものになります。後者の例では、useResultCache()メソッドのパラメータで「jonwage」というキャッシュキーを指定していますが、実際のキャッシュキーは「user:jonwage」となります。</p>
+
+<pre class="code">// キャッシュキーが指定されていない場合
+$q = Doctrine_Query::create()
+  -&gt;from('User u')
+  -&gt;leftJoin('u.Profile p')
+  -&gt;where('u.username = ?')
+  -&gt;useResultCache(true);
+echo $q->getResultCacheHash('jonwage'); // user:32bd63cf2cdef179ab2857bc357aeca7
+
+// キャッシュキーが指定されている場合
+$q = Doctrine_Query::create()
+  -&gt;from('User u')
+  -&gt;leftJoin('u.Profile p')
+  -&gt;where('u.username = ?')
+  -&gt;useResultCache(true, null, 'jonwage');
+echo $q->getResultCacheHash('jonwage'); // user:jonwage</pre>
+
+<p>イベントフックの項でuserテーブルのレコードが更新/削除される際に、キャッシュキーが「user:」で始まるキャッシュをまとめて削除する例を挙げましたが、このmyDoctrineQueryを利用することで、userテーブルのクエリーの実行結果データはもれなく「user:」で始まるキャッシュキーでキャッシュされるようになります。</p>
+
+<h3>ということで</h3>
+
+<p>ここに挙げたコードはいずれも、例としてわかりやすい簡単なものであることを優先しているため、実のところあまり実用的ではありません。例えば、キャッシュキーの設計は、キャッシュをきちんと制御する上で慎重に検討しなければならない重要な課題ですが、ここで例に選んでいるキーは安易に過ぎます。あるいは例えば、キャッシュドライバのdeleteBy*()メソッドは便利なものではあるのですが、その実装の都合上、膨大な数のキャッシュが存在し得るシステムでは、実用に耐えるパフォーマンスが発揮できるかは疑問です。実際のプログラミングで必要になるコードは、ここで挙げたものよりも多少なりとも複雑にならざるを得ないでしょうが、それでも、組み込みのキャッシュ機能と、イベントフックやビヘイビアなど、Doctrineが提供する多彩な機能を組み合わせることで、より効率的なキャッシュ処理が、より簡単に実現できる可能性があります。御用とお急ぎでない方は是非ご利用になってみてください。</p>
+
+<div class="amazlet-box" style="margin-bottom:0px;"><div class="amazlet-image" style="float:left;"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4396764863/unoh-22/ref=nosim/" name="amazletlink" target="_blank"><img src="http://ecx.images-amazon.com/images/I/517mkmDXo5L._SL160_.jpg" alt="ペコセトラ (Feelコミックス)" style="border: none;" /></a></div><div class="amazlet-info" style="float:left;margin-left:15px;line-height:120%"><div class="amazlet-name" style="margin-bottom:10px;line-height:120%"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4396764863/unoh-22/ref=nosim/" name="amazletlink" target="_blank">ペコセトラ (Feelコミックス)</a><div class="amazlet-powered-date" style="font-size:7pt;margin-top:5px;font-family:verdana;line-height:120%">posted with <a href="http://www.amazlet.com/browse/ASIN/4396764863/unoh-22/ref=nosim/" title="ペコセトラ (Feelコミックス)" target="_blank">amazlet</a> at 10.05.16</div></div><div class="amazlet-detail">渡辺 ペコ <br />祥伝社 <br /></div><div class="amazlet-link" style="margin-top: 5px"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4396764863/unoh-22/ref=nosim/" name="amazletlink" target="_blank">Amazon.co.jp で詳細を見る</a></div></div><div class="amazlet-footer" style="clear: left"></div></div>
+
+<div style="margin:1em 0;padding:.5em;border:2px solid#ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br /><a href="http://www.unoh.net/recruit.html" target="_blank">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください！！<br /><a href="http://www.find-job.net/fj/showjob.cgi?id=50212" target="_blank">Find Job!</a>でも募集開始してます！</div>
+{% endraw %}

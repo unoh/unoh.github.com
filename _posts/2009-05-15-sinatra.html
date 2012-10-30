@@ -1,0 +1,357 @@
+---
+layout: post
+title: "Sinatra気に入った"
+---
+{% raw %}
+<p>先日、<a href="http://mt9.jp/">まちつく！</a>が<a href="http://www.unoh.net/news/2009/05/post_83.html">正式リリース</a>になりました。よろしければ是非携帯でアクセスして遊んでみてください。</p>
+
+おはようございます。内田です。
+
+今までRailsを使うほどでも無いアプリはオレオレフレームワークで作ってたのですが、最近巷で流行ってるsinatraのコードを読んでみたら必要十分な機能があり、センスも良く、とても気に入りました。
+
+今回は公式ドキュメントの流れで、使いそうな機能をまとめてみました
+
+<h2>一番簡単な例</h2>
+<pre class="code">
+sudo gem install sinatra
+</pre>
+
+<pre class="code">
+# app.rb
+require 'rubygems'
+require 'sinatra'
+
+get '/' do
+  'Hello, world'
+end
+</pre>
+
+<pre class="code">
+ruby app.rb
+curl http://localhost:4567/
+</pre>
+
+<h2>Routes</h2>
+HTTPメソッドにURLとブロックを渡します
+<pre class="code">
+get '/' do
+end
+post '/' do
+end
+put '/' do
+end
+delete '/' do
+end
+</pre>
+
+パラメータを含めたURLも可能
+<pre class="code">
+get '/hello/:name' do
+  "Hello #{params[:name]}"
+end
+</pre>
+
+上記パラメータはブロック引数でも取れる
+<pre class="code">
+get '/hello/:name' do |n|
+  "Hello #{n}"
+end
+</pre>
+
+ワイルドカードもつかえます
+<pre class="code">
+get '/say/*/to/*' do
+  # /say/hello/to/worldにアクセス
+  params["splat"] # => ["hello", "world]
+end
+</pre>
+
+?つきのパラメータやPOST等のパラメータはparams[:xxx]で取得できるよ
+
+アプリケーションファイルは複数に分けることが可能。
+読み込みにはrequireを使わずにloadを使うとdevelopmentモードの時に便利
+<pre class="code">
+require 'rubygems'
+require 'sinatra'
+get '/' do
+  "Hello world"
+end
+load 'more_routes.rb'
+</pre>
+
+<pre class="code">
+# more_routes.rb
+get '/foo' do
+  "Foo"
+end
+</pre>
+
+<h2>Handlers</h2>
+
+Redirect
+<pre class="code">
+redirect '/'
+redirect 'http://www.google.co.jp'
+redirect '/', 303
+redirect '/', 307
+</pre>
+
+
+Session
+クッキーベースのセッション
+有効にするにはTOPレベルか、configureブロックに書く
+<pre class="code">
+enable :sessions
+get '/' do
+  session["count"] ||= 0
+  session["count"] += 1
+  "count: #{session['count']}"
+end
+</pre>
+
+Status
+通常では200番のステータスコードになるがstatusメソッドをつかうと変更できる
+<pre class="code">
+get '/' do
+  status 404
+  "Not found"
+end
+</pre>
+
+<h2>Filters</h2>
+イベントの前に実行される
+<pre class="code">
+before do
+end
+</pre>
+
+<pre class="code">
+before do
+  new_params = {}
+  params.each_pair do |full_key, value|
+    this_param = new_params
+    split_keys = full_key.split(/\]\[|\]|\[/)
+    split_keys.each_index do |index|
+      break if split_keys.length == index + 1
+      this_param[split_keys[index]] ||= {}
+      this_param = this_param[split_keys[index]]
+   end
+   this_param[split_keys.last] = value
+  end
+  request.params.replace new_params
+end
+</pre>
+
+<pre class="code">
+<form>
+  <input ... name="post[title]" />
+  <input ... name="post[body]" />
+  <input ... name="post[author]" />
+</form>
+</pre>
+
+<pre class="code">
+{"post"=>{ "title"=>"", "body"=>"", "author"=>"" }}
+</pre>
+
+
+<h2>views</h2>
+Template Languages
+viewファイルはroot/viewsに置きましょう
+Haml,Sass,Erb,Builderがつかえる
+<pre class="code">
+# app.rb
+get '/' do
+  erb :index     # views/index.erb
+  sass :styles   # views/styles.sass
+  haml :index    # views/index.haml
+  builder :index # views/index.builder
+end
+</pre>
+
+builderはブロックを使ってRSSを出力できたりする
+サンプルプログラムが公式にあります。
+
+Layouts
+root/views/layout.{erb|haml|builder}
+<pre class="code">
+<html>
+<body>
+<%= yield %>
+</body>
+</html>
+</pre>
+
+使いたくないときは
+<pre class="code">
+get '/' do
+  erb :index, layout => false
+end
+</pre>
+
+アプリケーションと同じファイルにviewが書ける
+が、個人的には使わない。公式参照
+
+
+<h2>Models</h2>
+sinatraはmodelを提供してないので、好きなのを使うとよろし
+Sequelを使ってみる。
+<pre class="code">
+# app.rb
+require 'rubygems'
+require 'sinatra'
+require 'sequel'
+Sequel::Model.plugin(:schema)
+sequel.connect('sqlite://test.db')
+class Items < Sequel::Model
+  unless table_exista?
+    set_schema do
+      primary_key :id
+      string :name
+      timestamp :created_at
+    end
+    create_table
+  end
+end
+get '/' do
+  @items = Items.all
+  erb :index
+end
+</pre>
+
+<pre class="code">
+# views/index.erb
+<% for item in @items %>
+  <div><%= item.name %></div>
+<% end %>
+</pre>
+
+DatamapperやActiveRecordを使いたい場合は公式参照
+
+
+API的なJSONでも出力してみる
+<pre class="code">
+require 'json'
+get '/api/items.json' do
+  content_type :json
+  JSON.unparse(Items.all.map{|e|e.values})
+end
+</pre>
+
+
+<h2>Helpers</h2>
+helpersブロックでメソッドを定義するとイベント内やテンプレートで使えます
+<pre class="code">
+helpers do
+  def bar(name)
+    "#{name}bar"
+  end
+end
+get '/:name' do
+  bar(params[:name])
+end
+</pre>
+
+Rails的なpartialを定義
+<pre class="code">
+helpers do
+  def partial(page, options={})
+    erb page, options.merge!(:layout => false)
+  end
+end
+</pre>
+
+escape_html等のaliasを定義しとくと便利
+<pre class="code">
+helpers do
+  include Rack::Urils
+  alias_method :h, :escape_html
+  alias_method :u, :escape
+end
+</pre>
+
+<h2>Rack Middleware</h2>
+useメソッドで指定しなさい
+<pre class="code">
+use Rack::Lint
+get '/' do
+  "hello"
+end
+</pre>
+
+Sinatra自体がいくつか読み込んでるので、重複するかもしれません。
+Loggerとか。1リクエストでログが複数件でてビックリしました。
+
+
+<h2>Error Handling</h2>
+not_found
+定義されてないURLにアクセスがあった場合に動作
+<pre class="code">
+not_found do
+  "Not found"
+end
+</pre>
+
+しかし、デフォルトのメッセージがセンス良すぎなので、production時にのみ定義したい。
+
+error
+例外が投げられたら動作
+<pre class="code">
+error do
+  'error - ' + request.env['sinatra.error'].name
+end
+error MyCustomError do
+  'So what happened was...' + request.env['sinatra.error'].message
+end
+</pre>
+
+これもセンス良すぎなので次の方法でproduction時のみ動作にしましょう
+configureメソッドをつかいます
+<pre class="code">
+configure :production do
+  not_found do
+    "Not found"
+  end
+  error do
+    "Error"
+  end
+end
+</pre>
+
+
+<h2>Configuration</h2>
+configureブロックの中で変数を使う場合はsetをつかいましょう
+<pre class="code">
+configure :development do
+  set :dbname, 'devdb'
+end
+configure :production do
+  set :dbname, 'productiondb'
+end
+get '/whatdb' do
+  'We are using the database named ' + options.dbname
+end
+</pre>
+
+
+<h2>Deploy</h2>
+個人的にはpassengerが良い
+アプリケーションのrootディレクトリにtmp,publicディレクトリを作りconfig.ruを書く
+<pre class="code">
+#config.ru
+require 'app'
+run Sinatra::Application
+</pre>
+
+最新バージョンのrack(1.0)やpassennger(2.0.3)を使ったときのバグが公式に書いてありますので参照下さい。
+
+
+<h2>参考</h2>
+http://www.sinatrarb.com/
+http://www.sinatrarb.com/book.html
+http://www.sinatrarb.com/faq.html
+http://www.sinatrarb.com/testing.html
+http://www.sinatrarb.com/extensions.html
+
+おしまい
+{% endraw %}

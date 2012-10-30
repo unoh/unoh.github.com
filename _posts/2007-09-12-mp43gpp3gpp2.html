@@ -1,0 +1,204 @@
+---
+layout: post
+title: "MP4/3GPP/3GPP2ファイルフォーマットの基礎知識"
+---
+{% raw %}
+<p>isogawaです。</p>
+
+<p>MP4や、その派生である携帯電話向けの3GPP、3GPP2などのファイルフォーマットはボックス（あるいはその基になったQuickTimeでの用語のAtom）と呼ばれるデータブロックで構成されます。ボックスによってはその内部にさらにボックスが入れ子になるツリー構造になっています。</p>
+
+<p>以下はNTTドコモの「MP4対応iモーション」ファイル（3GPP）の冒頭部分です（16進コードと文字が混在してて気持ち悪いあたりは気にしない）。</p>
+
+<style>
+table.mp4box th, table.mp4box td {
+    font-family:Monospace;
+    text-align:center;
+}
+table.mp4box td.mp4box-size {
+    color:inherit;
+    background-color:#354;
+}
+table.mp4box td.mp4box-type {
+    color:inherit;
+    background-color:#522;
+}
+</style>
+<table class="mp4box" summary="3GPPファイルの例">
+  <thead>
+    <tr><th>ADDR</th><th>+0</th><th>+1</th><th>+2</th><th>+3</th><th>+4</th><th>+5</th><th>+6</th><th>+7</th><th>+8</th><th>+9</th><th>+A</th><th>+B</th><th>+C</th><th>+D</th><th>+E</th><th>+F</th></tr>
+  </thead>
+  <tbody>
+    <tr><th>0000</th><td class="mp4box-size">00</td><td class="mp4box-size">00</td><td class="mp4box-size">00</td><td class="mp4box-size">1C</td><td class="mp4box-type">f</td><td class="mp4box-type">t</td><td class="mp4box-type">y</td><td class="mp4box-type">p</td><td>m</td><td>m</td><td>p</td><td>4</td><td>00</td><td>00</td><td>00</td><td>01</td></tr>
+    <tr><th>0010</th><td>m</td><td>m</td><td>p</td><td>4</td><td>3</td><td>g</td><td>p</td><td>5</td><td>3</td><td>g</td><td>p</td><td>4</td><td class="mp4box-size">00</td><td class="mp4box-size">00</td><td class="mp4box-size">05</td><td class="mp4box-size">88</td></tr>
+    <tr><th>0020</th><td class="mp4box-type">m</td><td class="mp4box-type">o</td><td class="mp4box-type">o</td><td class="mp4box-type">v</td><td class="mp4box-size">00</td><td class="mp4box-size">00</td><td class="mp4box-size">00</td><td class="mp4box-size">6C</td><td class="mp4box-type">m</td><td class="mp4box-type">v</td><td class="mp4box-type">h</td><td class="mp4box-type">d</td><td>00</td><td>00</td><td>00</td><td>00</td></tr>
+  </tbody>
+</table>
+
+<p>各ボックスはその先頭8バイト（オクテット）がボックスを識別するためのヘッダで、最初の4バイト（オクテット）がボックスのサイズ、続く4バイトがそのタイプです。</p>
+
+<p>上の例では先頭の4バイトが0x1Cなので、最初のボックスは0x00～0x1Bまで、続く4バイトの「ftyp」がそのタイプです。ftypボックスの中身は具体的なデータですが、続くmoovボックスは、さらにmvhdボックスを含む構成になっています（そして実際にはこの後さらに複数のボックスが入れ子になっています）。</p>
+
+<pre style="float:right;margin-left:1em;padding:1em;border:1px solid #eee;color:#eee;background-color:#000;line-height:1.1em">+--ftyp
++--moov
+| +--mvhd
+| +--drm
+| | +--dcmd
+| +--trak
+| | +--tkhd
+| | +--mdia
+| |   +--(以下省略)
+| +--trak
+| | +--tkhd
+| | +--mdia
+| |   +--(以下省略)
+| +--udta
+|   +--titl
++--mdat</pre>
+
+<p>このMP4対応iモーションファイルのボックス構造をツリー形式で表すとこんな感じですが、MP4ファイルフォーマットではある程度自由に任意のボックスを組み合わせることができるため、ファイルによってその構造はまちまちです。</p>
+
+<p>The MP4 Registration Authorityに登録されているボックスの一覧は以下で参照できますが、これ以外のボックスが存在している場合もあります。</p>
+
+<ul>
+  <li>
+    <p><a href="http://www.mp4ra.org/atoms.html">MP4REG: 登録済みボックスの一覧</a></p>
+  </li>
+</ul>
+
+<p>主要なボックスには、、ファイル種別を示すftyp、動画や音声の実際のデータを格納したmdat、各種メタデータを格納したさまざまなボックスのコンテナ（入れ子の親）であるmoovなどがあります。</p>
+
+<h4>ftyp</h4>
+
+<p>ftypボックスには、そのファイルが準拠している規格を表す4文字の「ブランド」が列挙されます。タイプ名の「ftyp」の直後に続く4文字は「(The major or &lsquo;best use&rsquo;) Brand」で、そこから4バイト空けて、以降ボックスの最後までの文字列を4文字ごとに区切ったそれぞれが「Compatible Brand」です。</p>
+
+<p>上のMP4対応iモーションの例ではこれは以下のようになります。</p>
+
+<ul>
+  <li>Major Brand: mmp4</li>
+  <li>Compatible Brand #1: mmp4</li>
+  <li>Compatible Brand #2: 3gp5</li>
+  <li>Compatible Brand #3: 3gp4</li>
+</ul>
+
+<p>プレイヤーによってはこの内容で再生の可否を判断しており、この内容を書き換えることで、本来は再生対象ではないファイルを再生する手法はあちこちで見かけます。</p>
+
+<ul>
+  <li>
+    <p><a href="http://www.mp4ra.org/filetype.html">MP4REG: 登録済みブランドの一覧</a></p>
+  </li>
+  <li>
+    <p><a href="http://www.ftyps.com/">Complete List of all known MP4/QT 'ftyp' designations</a></p>
+    <p>著名なコーデック判別ツール<a href="http://gspot.headbands.com/">GSpot</a>の作者Steve Greenberg氏による、（氏にとって）既知のブランドの一覧。</p>
+  </li>
+</ul>
+
+<p>ハードウェアベンダーはこれらのブランドに独自の値を採用しているケースが多々あり、そのようなケースではブランドだけで、それがどの機器用のファイルであるか判別できます。例えば、NTTドコモのMP4対応iモーションは「mmp4」、auのEZムービーは「kddi」、ソニーのPSPは「MSNV」といった値をそれぞれMajor Brandに採用しています（ソフトバンクモバイルの場合、Compatible Brandに「vfj1」という値が含まれるようです）。</p>
+
+<h4>moof</h4>
+
+<p>3GPPと比較した3GPP2の特徴のひとつに「ムービーフラグメント」があります。これはHTTPストリーミングを想定したもので、文字通りデータを分割し小分けに受信することで、全データのダウンロードを完了しなくても再生が開始できるというものですが、これはファイルフォーマット的には、以下の図にみられるように、moofボックスによって実現されています。</p>
+
+<ul>
+  <li>
+    <div><a href="http://k-tai.impress.co.jp/cda/parts/image_for_link/61374-16997-6-2.html">3GPP2におけるMovie Fragment技術の概要</a></div>
+  </li>
+</ul>
+
+<p>ちなみにauのEZムービーでは最大15秒ごとに分割されますが、ムービーフラグメントに対応していないプレイヤーでは最初の15秒しか再生されなかったりします。</p>
+
+<h3>ボックス構造を表示するツール（for Linux）</h3>
+
+<h4><a href="http://gpac.sourceforge.net/packager.php">MP4Box</a></h4>
+
+<p>オープンソースのマルチメディアフレームワーク<a href="http://gpac.sourceforge.net/">GPAC</a>に付属するコマンドラインアプリケーションです。ボックス構造の表示は以下のような感じ。</p>
+
+<pre class="code"><code>$ mp4box -std -diso hoge.3gp
+
+&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;!--MP4Box dump trace--&gt;
+&lt;IsoMediaFile Name=&quot;hoge.3gp&quot;&gt;
+&lt;FileTypeBox MajorBrand=&quot;mmp4&quot; MinorVersion=&quot;1&quot;&gt;
+&lt;BoxInfo Size=&quot;28&quot; Type=&quot;ftyp&quot;/&gt;
+&lt;BrandEntry AlternateBrand=&quot;mmp4&quot;/&gt;
+&lt;BrandEntry AlternateBrand=&quot;3gp5&quot;/&gt;
+&lt;BrandEntry AlternateBrand=&quot;3gp4&quot;/&gt;
+&lt;/FileTypeBox&gt;
+&lt;MovieBox&gt;
+&lt;BoxInfo Size=&quot;1416&quot; Type=&quot;moov&quot;/&gt;
+&lt;MovieHeaderBox CreationTime=&quot;-1023342072&quot; ModificationTime=&quot;-1023342067&quot; TimeScale=&quot;60000&quot; Duration=&quot;282000&quot; NextTrackID=&quot;3&quot;&gt;
+&lt;BoxInfo Size=&quot;108&quot; Type=&quot;mvhd&quot;/&gt;
+&lt;FullBoxInfo Version=&quot;0&quot; Flags=&quot;0&quot;/&gt;
+&lt;/MovieHeaderBox&gt;&lt;TrackBox&gt;
+(以下省略)</code></pre>
+
+<h4><a href="http://mpeg4ip.sourceforge.net/documentation/encoding.htm">mp4dump</a></h4>
+
+<p>オープンソースのストリーミングサービス構築パッケージ<a href="http://mpeg4ip.sourceforge.net/">MPEG4IP</a>に付属するコマンドラインアプリケーションです。ボックス構造の表示は以下のような感じ。</p>
+
+<pre class="code"><code>$ mp4dump hoge.3gp
+
+Dumping hoge.3gp meta-information...
+ type ftyp
+  majorBrand = mmp4
+  minorVersion = 1 (0x00000001)
+  &lt;table entries suppressed&gt;
+ type moov
+  type mvhd
+   version = 0 (0x00)
+   flags = 0 (0x000000)
+   creationTime = 3271625224 (0xc3010a08)
+   modificationTime = 3271625229 (0xc3010a0d)
+   timeScale = 60000 (0x0000ea60)
+   duration = 282000 (0x00044d90)
+   rate = 1.000000
+   volume = 1.000000
+(以下省略)</code></pre>
+
+<h4><a href="http://www.getid3.org/">getID3()</a></h4>
+
+<p>MPEG-4に限らずさまざまなメディアファイルのメタデータを気合いで抽出するPHP用クラスライブラリです。<a href="http://www.getid3.org/demo/">デモページ</a>で動作イメージを確認できます。</p>
+
+<h3>uuidボックスの解析</h3>
+
+<p>ボックスによっては、その中身の仕様が一般には公開されていないものがありますが、特にベンダーが独自の拡張を施すために用意されたuuidボックスの中身は、当然ベンダーごとに異なります。こうしたボックスはこれまでにもさまざまな解析が試みられてきました。以下はauのEZムービーやPSP動画のuuidを解析した先達の例です。</p>
+
+<ul>
+  <li>
+    <p><a href="http://www.nurs.or.jp/~calcium/wiki/index.php?3GPP2%20File%20Format">3GPP2 File Format - MobileHackerz Knowledgebase Wiki</a></p>
+  </li>
+  <li>
+    <p><a href="http://www.utilz.jp/wiki/Mp4Gps">Utilz: 動画の位置情報</a></p>
+  </li>
+  <li>
+    <p><a href="http://blog.goo.ne.jp/hatikazuki_1948/e/45eb6c8cb9aa760d67d63b1258705308">忘備録: 着うたフル奮闘記（＃6）</a></p>
+  </li>
+  <li>
+    <p><a href="http://okayama.cool.ne.jp/dvd2cd/atom/psp_uuid.html">DVD2CD!!: PSP用MP4動画フォーマットの解析</a></p>
+  </li>
+</ul>
+
+<p>しかし、特にEZムービーについては某巨大掲示板のスレにもっとも情報が集約されているかもしれません…。</p>
+
+<h3>基礎資料</h3>
+
+<ul>
+  <li>
+    <p><a href="http://www.mpeg.co.jp/libraries/mpeg_labo/winPC_26.html">MPEGラボ: 第26回　携帯ゲーム機PSPの動画ファイル「MP4」とは何か</a></p>
+  </li>
+  <li>
+    <p><a href="http://agehatype0.blog50.fc2.com/blog-entry-198.html">ageha: MP4 faq</a></p>
+  </li>
+  <li>
+    <p><a href="http://standards.iso.org/ittf/PubliclyAvailableStandards/c041828_ISO_IEC_14496-12_2005%28E%29.zip">ISO/IEC 14496-12:2005（ZIP）</a></p>
+  </li>
+  <li>
+    <p><a href="http://developer.apple.com/documentation/QuickTime/QTFF/">Apple Developer Connection: QuickTime File Format Specification</a></p>
+  </li>
+</ul>
+
+<h3>関連記事</h3>
+
+<ul>
+  <li><a href="http://labs.unoh.net/2007/11/ffmpeg3gppntti_for_linux.html">FFmpegで変換した3GPP動画をNTTドコモiモーションのストリーミング再生に対応させる (for Linux)</a></li>
+</ul>
+{% endraw %}

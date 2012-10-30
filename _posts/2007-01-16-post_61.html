@@ -1,0 +1,236 @@
+---
+layout: post
+title: "サービスの開発と運営をする上での問題の切り分け(ドメイン・DNS編)"
+---
+{% raw %}
+<div style="float:right;">
+<a href="http://photozou.jp/photo/show/137/2166130"><img src="http://photozou.jp/pub/137/137/photo/2166130.jpg" alt="マイ開発環境" width="240" height="179" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp"><img src="http://photozou.jp/img/photozou_icon.gif" style="border: 0;"></a> <a href="http://photozou.jp/photo/show/137/2166130">マイ開発環境</a> posted by <a href="http://photozou.jp/mypage/top/137">(C) ELF 上鍵</a>
+</div>
+<p>
+普段バランスボールに座って仕事をしているのにWBSの撮影は普段ボールで仕事をしていない人が軒並みボールに座るので自分の分がなくなって撮影中のテンションが下がってしまったアンケートに英語キーボードの人+1できなかったjokagiです．上鍵のタイプの英語キーボードってかなり少なくて困ってます．
+そういえばなんとか正式採用になって<a href="http://www.unoh.net/infoc.html#12" target="_blank">プロフィール</a>に掲載されました．
+あらためてよろしくお願いいたします．
+</p>
+
+<p>
+さて今回はウェブ開発というかインターネット向けサーバー&amp;クライアントな開発をする上で「問題の切り分けちゃんとできるようになりましょう」という話です．
+
+<h3>問題の切り分けちゃんとできてますか?</h3>
+<p>
+あるサービス，わかりやすいのはウェブサービスを開発していると，普通さまざまな問題がでてきます．
+スクリプトなどロジックの問題の場合は解決できる人は多くいらっしゃるのですが，
+「サーバーにつながらない」という現象に対してちゃんと解決のできない人も意外とたくさんいらっしゃいます．
+今回はそういう方に問題の切り分けの仕方を紹介します．
+</p>
+
+<h3>問題はどれ位に切り分けられるのか</h3>
+<p>
+ウェブサービス(あるいはそれ以外でも)の開発中，あるいは運営中に発生する問題多くの場合，サーバーサイドに関しては大雑把には下記のような問題の切り分けができると思います．
+</p>
+
+<ol>
+  <li>ログに何か異常をあらわす記録がされていませんか?</li>
+  <li>DNSの正引き・逆引きはちゃんとできているか? ドメインの設定は大丈夫?</li>
+  <li>アクセス先ポートにちゃんとアクセスできますか?</li>
+  <li>サービスプロトコルをtelnetで直接入力したときの結果に問題ありませんか?</li>
+</ol>
+
+<p>
+今回はこのうちのDNSやドメインについてのお話をさせていただきます．
+</p>
+
+<h3>DNSの正引き・逆引きはちゃんとできているか? ドメインの設定は大丈夫?</h3>
+
+<h4>サーバーにアクセスできるかどうかをpingなどで確認しない</h4>
+<p>
+まず一般的にある時点でサービスにはドメインなりが用意され，IPアドレスでのアクセスをしなくなります．
+そのときにドメインにうまくアクセスできなかったりすることがえてして発生しがちです．
+そのときによくpingで相手が見えるか確認したり，ブラウザーで確認する人がいますが，それは多くの場合で大間違いです．
+その理由は「あなたはDNSが正しく設定できていることを保証できますか?」ということです．
+</p>
+<p>
+DNSがちゃんと設定されていないのに該当ドメインにアクセスしようとしても相手のサーバーにそもそも届きません．
+甘い恋のくどき文句も相手に届かなければただのドンキホーテの独り上手ですね．
+告白の電話も電話番号を間違えていては届くはずもありません．
+同じようにDNSがちゃんと設定されていなければ，あるいは正しく設定されていてもpingのパケットが期待するサーバーに届いていない可能性があります．
+</p>
+<p>
+ということでDNSへ問い合わせをするわけです．
+DNSへの問い合わせはhostやdigコマンドで確認します．
+www.linux.or.jpに翻訳されたマニュアルがあるので詳細はそちらを参考にしてください(<a href="http://www.linux.or.jp/JM/html/bind/man1/dig.1.html" target="_blank">dig</a>，<a href="http://www.linux.or.jp/JM/html/bind/man1/host.1.html" target="_blank">host</a>)．
+</p>
+<p>
+今回はdigに絞った説明をしようと思います．また，jokagiは最初からdigとhostから入ったのでnslookupは使う理由もなく覚えていないので今回は完全にパスします．
+</p>
+
+<h4>基本的な操作</h4>
+
+<p>
+下記はdigの簡単な使い方です．
+&lt;DOMAIN&gt;に問い合わせしたいドメイン名やFQDNを、必要なら問合せ先DNSサーバーを「@&lt;DNS-SERVER&gt;」と明示的に指定します．
+また，問い合わせ内容の指定が必要ならさらにもうひとつ後に追加します．
+</p>
+
+<div class="command">
+<pre>
+$ dig &lt;DOMAIN&gt;
+$ dig @&lt;DNS-SERVER&gt; &lt;DOMAIN&gt;
+$ dig @&lt;DNS-SERVER&gt; &lt;DOMAIN&gt; &lt;QUERY-TYPE&gt;
+</pre>
+</div>
+
+<p>
+「@&lt;DNS-SERVER&gt;」を指定しなかった場合，OSや環境で設定されているDNSサーバーが使用されます．
+Linuxだと/etc/resolv.confで指定され，Windowsだとコマンドプロンプトで「ipconfig /all」コマンドを実行した結果の「DNS Servers」で表示されるIPアドレスに問い合わせます．</p>
+
+<p>
+下記はdigコマンドでDNSに問い合わせをする引数の例です．
+</p>
+
+<div class="command">
+<pre>
+$ dig example.com
+$ dig @ns.example.com example.com
+$ dig @ns.example.com example.com mx
+</pre>
+</div>
+
+<p>
+ひとつめはexample.comのAレコードをOSで指定されたDNSサーバーに問い合わせ，ふたつめは同じくexample.comのAレコードをns.example.comに問い合わせ，みっつめはexample.comを受け取るMTAをns.example.comに問い合わせます．
+</p>
+
+<p>
+ここで重要なことは明示的に「@&lt;DNS-SERVER&gt;」を指定し，自分が問い合わせたいドメインを管理するプライマリDNSサーバーに問い合わせることです．
+これを指定せずに問い合わせると，ほとんどの場合いくつかの経路を通るのでどこかでキャッシュされてしまい，DNSが正しいかどうかがわかりません．
+</p>
+
+<h4>DNSはとにかくキャッシュに気をつけろ!!</h4>
+
+<p>
+DNSがドメインを管理するDNSサーバーで確実に問い合わせができるようになっていても注意が必要です．
+というのは，あくまで上記確認はDNSサーバーに直接問い合わせを行った結果の取得をしているだけです．
+一般的にDNSは自分が契約しているISPを含め，なんらかのDNSサーバーを経由し，最終的にはあるドメインを管理するDNSまで問い合わせに行きます．
+そしてその結果は途中を経由したDNSサーバー上でほとんどの場合キャッシュが行われます．
+また，場合によっては問い合わせをしたクライアント自身でもキャッシュされる場合があります．
+</p>
+
+<p>
+通常ドメイン内の各レコードはTTLというものでキャッシュ時間が制御されると思っていいでしょう．
+また，TTLは一般的には86,400秒，つまり1日を指定される場合が多く，もし1回問い合わせに失敗，あるいは間違った値を返してしまうと1日キャッシュされ，自分が管理できないDNSサーバーを経由した場合(ほとんどの場合経由するでしょう)1日正しい値を取得することができません(当然直接ドメインを管理するDNSサーバーに問い合わせるた場合はほとんどの場合設定どおりの値が返るでしょう)
+</p>
+<p>
+そうなった場合は仕方がありません．さっさと勤怠の処理をし，仕事上のいやなことは忘れてのみに行くといいでしょう(嘘)
+その場合は1日限りでhostsなどで対処するといったやり方もあります(後々消し忘れないようにしてください)．
+</p>
+
+<p>
+話が前後しますが，上記のようなことが起こらないようにするために，設定完了するまではゾーンファイル内のTTLは短めに(360とか600とか)しておくといいと思います．
+</p>
+
+<h4>DNSってどうやって問い合わせが行われるの?</h4>
+<p>
+DNSは世界中に分散するDNSサーバーに順次問い合わせをし，最終的にドメインを管理するサーバーにたどり着き，希望するドメインに対しての情報を取得します．
+これってどうにか目で追うことはできないのか? そうです．われらがdigコマンドにオプション+traceを付加することででDNSサーバーをバケツリレーで問い合わせてる様子を知ることができます．
+下記は<a href="http://labs.unoh.net/" target="_blank">labs.unoh.net</a>と<a href="http://oss.poyo.jp/" target="_blank">oss.poyo.jp</a>を問い合わせていくさまを表示した例です．
+</p>
+
+<div class="command">
+<pre>
+$ dig +trace labs.unoh.net
+
+; &lt;&lt;&gt;&gt; DiG 9.3.2 &lt;&lt;&gt;&gt; +trace labs.unoh.net
+;; global options:  printcmd
+.			209888	IN	NS	K.ROOT-SERVERS.NET.
+.			209888	IN	NS	L.ROOT-SERVERS.NET.
+.			209888	IN	NS	M.ROOT-SERVERS.NET.
+.			209888	IN	NS	A.ROOT-SERVERS.NET.
+.			209888	IN	NS	B.ROOT-SERVERS.NET.
+.			209888	IN	NS	C.ROOT-SERVERS.NET.
+.			209888	IN	NS	D.ROOT-SERVERS.NET.
+.			209888	IN	NS	E.ROOT-SERVERS.NET.
+.			209888	IN	NS	F.ROOT-SERVERS.NET.
+.			209888	IN	NS	G.ROOT-SERVERS.NET.
+.			209888	IN	NS	H.ROOT-SERVERS.NET.
+.			209888	IN	NS	I.ROOT-SERVERS.NET.
+.			209888	IN	NS	J.ROOT-SERVERS.NET.
+;; Received 388 bytes from 127.0.0.1#53(127.0.0.1) in 1 ms
+
+net.			172800	IN	NS	A.GTLD-SERVERS.net.
+net.			172800	IN	NS	G.GTLD-SERVERS.net.
+net.			172800	IN	NS	H.GTLD-SERVERS.net.
+net.			172800	IN	NS	C.GTLD-SERVERS.net.
+net.			172800	IN	NS	I.GTLD-SERVERS.net.
+net.			172800	IN	NS	B.GTLD-SERVERS.net.
+net.			172800	IN	NS	D.GTLD-SERVERS.net.
+net.			172800	IN	NS	L.GTLD-SERVERS.net.
+net.			172800	IN	NS	F.GTLD-SERVERS.net.
+net.			172800	IN	NS	J.GTLD-SERVERS.net.
+net.			172800	IN	NS	K.GTLD-SERVERS.net.
+net.			172800	IN	NS	E.GTLD-SERVERS.net.
+net.			172800	IN	NS	M.GTLD-SERVERS.net.
+;; Received 500 bytes from 198.32.64.12#53(L.ROOT-SERVERS.NET) in 255 ms
+
+unoh.net.		172800	IN	NS	bikkle.pls.jp.
+unoh.net.		172800	IN	NS	qoo.pls.jp.
+;; Received 76 bytes from 192.5.6.30#53(A.GTLD-SERVERS.net) in 595 ms
+
+labs.unoh.net.		86400	IN	CNAME	bikkle.pls.jp.
+bikkle.pls.jp.		86400	IN	A	210.224.161.61
+pls.jp.			86400	IN	NS	bikkle.pls.jp.
+pls.jp.			86400	IN	NS	qoo.pls.jp.
+;; Received 122 bytes from 210.224.161.61#53(bikkle.pls.jp) in 23 ms
+
+</pre>
+</div>
+
+<div class="command">
+<pre>
+$ dig +trace oss.poyo.jp
+
+; &lt;&lt;&gt;&gt; DiG 9.3.2 &lt;&lt;&gt;&gt; +trace oss.poyo.jp
+;; global options:  printcmd
+.			209874	IN	NS	J.ROOT-SERVERS.NET.
+.			209874	IN	NS	K.ROOT-SERVERS.NET.
+.			209874	IN	NS	L.ROOT-SERVERS.NET.
+.			209874	IN	NS	M.ROOT-SERVERS.NET.
+.			209874	IN	NS	A.ROOT-SERVERS.NET.
+.			209874	IN	NS	B.ROOT-SERVERS.NET.
+.			209874	IN	NS	C.ROOT-SERVERS.NET.
+.			209874	IN	NS	D.ROOT-SERVERS.NET.
+.			209874	IN	NS	E.ROOT-SERVERS.NET.
+.			209874	IN	NS	F.ROOT-SERVERS.NET.
+.			209874	IN	NS	G.ROOT-SERVERS.NET.
+.			209874	IN	NS	H.ROOT-SERVERS.NET.
+.			209874	IN	NS	I.ROOT-SERVERS.NET.
+;; Received 404 bytes from 127.0.0.1#53(127.0.0.1) in 118 ms
+
+jp.			172800	IN	NS	F.DNS.jp.
+jp.			172800	IN	NS	D.DNS.jp.
+jp.			172800	IN	NS	E.DNS.jp.
+jp.			172800	IN	NS	A.DNS.jp.
+jp.			172800	IN	NS	B.DNS.jp.
+;; Received 305 bytes from 192.58.128.30#53(J.ROOT-SERVERS.NET) in 123 ms
+
+poyo.jp.		86400	IN	NS	ns1.xname.org.
+poyo.jp.		86400	IN	NS	ns0.xname.org.
+;; Received 74 bytes from 150.100.2.3#53(F.DNS.jp) in 20 ms
+
+oss.poyo.jp.		600	IN	A	61.192.220.150
+oss.poyo.jp.		600	IN	NS	ns1.xname.org.
+oss.poyo.jp.		600	IN	NS	ns0.xname.org.
+;; Received 122 bytes from 80.82.17.242#53(ns1.xname.org) in 286 ms
+
+</pre>
+</div>
+
+<p>
+このようにdigコマンドを使うとどこを経由した問い合わせが行われるかを確認することができます．
+</p>
+
+<h3>終わり</h3>
+<p>
+いかがでしょうか?
+DNSは概念や設定が非常に難しい感じがしますが，問い合わせだけに絞ると人間がシンプルに考えられればシンプルな仕組みであり，複数のDNSサーバーの動作もdigコマンドで複雑なことをせずとも必要十分な情報を簡単に調べることができます．
+DNSがわからない人もぜひdigコマンドを(ついでにhostコマンドも)使いこなしてpingがなくてもおおよその調査ができるようになってください．あでゅー．
+</p>
+{% endraw %}

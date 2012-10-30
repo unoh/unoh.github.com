@@ -1,0 +1,117 @@
+---
+layout: post
+title: "symfonyのsfBrowserを使ってコンソールツールを作成してみました"
+---
+{% raw %}
+<p>はじめまして、4月に入社しました、はなだと申します。<br />
+以後よろしくお願いいたします。</p>
+<br/>
+<p>私自身は、これまでにJava/C#/C++/Perlなどを使った開発を行って来ましたが、現在は（はじめての！）PHPを使ったソーシャルアプリの開発を行っています。<br/>
+これまでは、新しい言語を学習する際に、サンプルやチュートリアルを終えたあとで、ちょっとした作業を簡略化するためのツールをチョコチョコとつくっていました。今回は、はじめてのPHPということで、<a href="http://www.symfony-project.org/">symfony</a>の<a href="http://www.symfony-project.org/api/1_4/sfBrowser">sfBrowser</a>を使った、コンソールツールを作ってみました。
+</p>
+<p>このツール開発を通じてやりたいことは次のような内容です。
+<ul>
+<li>開発しているsymfonyのURLを指定して、コンソールベースのツールでリンクを遷移させたい</li>
+<li>できればUser-Agentとして携帯電話に対応させたい</li>
+</ul>
+<p>さらに　</p>
+<ul>
+<li>symfonyの内部構造を理解したい</li>
+<li>PHPの言語仕様やライブラリに慣れたい</li>
+</ul>
+というものがありました。
+</p>
+<p>ところで、携帯電話対応のWebアプリに対する動作確認を行う場合には、<a href="http://firemobilesimulator.org/">FireMobileSimulator</a>を使うのが一般的だと思いますが、2台以上の携帯電話で相互に影響を及ぼす機能を確認する際には、いちいち端末を切り替えるよりも、コンソールからお手軽にリンクをクリックさせたいと思ったのが作成動機です。</p>
+<p>コードは以下のようになります。</p>
+
+<pre class="code">
+&lt;?php
+// ツールの初期化関数
+function initialize()
+{
+    // symfonyプロジェクトの設定情報を読み込む
+    require_once dirname(__FILE__).'/config/ProjectConfiguration.class.php';
+    // アプリ名と環境を指定して設定情報を取得
+    $configuration = ProjectConfiguration::getApplicationConfiguration('アプリ名', 'test', true);
+    // コンテキストを作成
+    sfContext::createInstance($configuration);
+    // remove all cache
+    sfToolkit::clearDirectory(sfConfig::get('sf_app_cache_dir'));
+
+    // sfBrowserインスタンスを作成
+    $browser = new sfBrowser();
+    // 必要であれば携帯電話のUser-Agentと固有IDを設定
+    $browser
+        -&gt;setHttpHeader('User-Agent', 'DoCoMo/2.0 N02A(c100;TB;W24H16)')
+        -&gt;setHttpHeader('X-DCMGUID', '携帯電話の固有ID');
+    return $browser;
+}
+
+// sfBrowserインスタンスとURLを指定して、anchorのリストを表示
+function process($browser, $url)
+{
+    echo "Url: [$url] \n";
+    // セレクタ取得
+    $selector = $browser-&gt;get($url)-&gt;getResponseDomCssSelector();
+    echo 'Title: ' . $browser-&gt;getResponse()-&gt;getTitle() . "\n";
+    // aタグノードの一覧を取得
+    $anchors = $selector-&gt;matchAll('a')-&gt;nodes;
+    foreach($anchors as $key=&gt;$anchor) {
+        echo "$key: " . $anchor-&gt;nodeValue . "\n";
+    }
+    echo "q:quit, 0-:click link\n&gt; ";
+    return $anchors;
+}
+
+function main($url)
+{
+    $browser = initialize();
+    // 標準入力をopen
+    $fp = fopen('php://stdin', 'r');
+    if (!$fp) {
+        exit("Failed to open STDIN\n");
+    }
+
+    // ループを回す
+    while(!feof($fp)) {
+        $anchors = process($browser, $url);
+        $command = fgets($fp, 256);
+        $command = trim($command);
+        if ($command === 'q') {
+            // コマンドが'q'の場合には終了
+            break;
+        } else if (is_numeric($command)) {
+            // コマンドが数字の場合にはanchorの配列から取得
+            $index = intval($command);
+            if ($index &lt; count($anchors)) {
+                // href属性からURLを取得
+                $url = $anchors[$index]-&gt;getAttribute('href');
+            } else {
+                echo "Out of range. [$index]\n";
+            }
+        } else {
+            echo "Unknown command. [$command]\n";
+        }
+    }
+    fclose($fp);
+    echo("\nQuit.\n");
+}
+
+if ($argc &lt; 2) {
+    exit("Usage:&gt;php $argv[0] [url]\n");
+}
+main($argv[1]);
+?&gt;</pre>
+
+<p>例えばこれをsymfonyのプロジェクトルートディレクトリ直下にConsoleBrowser.phpという名前で保存します。<br/>
+ルートパス（/）をオープンするには、次のようなコマンドを実行します。
+</p>
+<pre class="code">$ cd myprj
+$ php ConsoleBrowser.php /
+</pre>
+
+<p><strong>"q"</strong>コマンドでツールを終了できます。読み込んだコンテンツにaタグ（anchor）がある場合には、数字付きリストで表示されるので、その番号を入力すれば、リンク先に遷移します。</p>
+
+<p>基本的な実装しかしておりませんので、formタグに対応させる、内容を表示させる、postで送信する、パラメータの入力を行う、などの拡張は皆様の手で是非とも追加してみてください。</p>
+
+{% endraw %}

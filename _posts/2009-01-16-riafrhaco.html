@@ -1,0 +1,101 @@
+---
+layout: post
+title: "[第一回ゲストブロガー:riaf]　rhaco知ってますか！？"
+---
+{% raw %}
+<div style="margin:0;padding:.5em;border:2px solid #ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。
+<a href="http://www.unoh.net/recruit.html">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください！！</div>
+
+<!-- ここいちさん -->
+Keitaです。<br />
+今回は少々趣向を変えて、外部のエンジニアの方にブログ記事を書いていただきました。
+ウノウでは今後も、チャンスがあれば外部のゲストブロガーを迎えて記事を寄稿していただこうと思います。
+（ウノウに遊びに来たついでに強引に書いてもらったという説もありますが・・・）<br />
+<br />
+<!-- あとでかく：じこしょうかい -->
+みなさんはじめまして、<a href="http://riaf.jp">riaf</a> です！<br />
+ウノウラボブログ、おそらく初めての部外者(笑)の登場です。<br />
+今回は、<a href="http://labs.unoh.net/cgi-bin/mt-search.cgi?tag=Keita&blog_id=2">ここいちさん</a>に声をかけて貰い、こうしてブログを書かせてもらえることになりました。よろしくお願いします。<br />
+<br />
+<h3>rhaco知ってますか！？</h3>
+最近は、名前だけは知っているという方がそれなりに増えてきたように思いますが、rhacoについてもう一度簡単に説明します。<br />
+rhacoとは、PHPで開発されているライブラリ集／セットアップフレームワークです。<br />
+「セットアップフレームワーク」という聞き慣れない言葉については後述します。<br />
+ライブラリ集でありながら、フレームワークに非常に近い性質を持っていて、CakePHPなどと同様に、既存のライブラリに依存すること無く開発が可能です。しかし、最近流行のafter railsなフレームワークとはひと味違う構成になっています。<br />
+現在はバージョン2が開発中ですが、今回は最新安定板の1.6系についておはなしします。<br />
+
+<h3>セットアップフレームワーク</h3>
+フレームワークでを利用したアプリケーションをサーバーに設置するとき、DBなど、環境に依存する設定項目というものはどんなアプリケーションでも必要になる処理ですよね。さらに、アプリケーション内で環境ごとに変更したい設定項目なんかもよくあります。<br />
+rhacoならば、アプリケーションのファイルをサーバーに設置したあと、rhaco付属のセットアップアプリケーションによって、ブラウザ経由でアプリケーションの設定を行うことができます。どのアプリケーションも、同じインタフェースで管理することが出来、設定ミスなどを最小限にできます。<br />
+また、セットアップアプリケーションには、簡易DB管理機能が付属し、rhacoのテーブルモデルと連携したDB操作、SQLクエリの実行等が簡単に行えます。便利ですね！<br />
+
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="setup.png" src="http://labs.unoh.net/setup.png" width="725" height="487" class="mt-image-none" style="" /></span>
+
+<h3>O/Rマッパ</h3>
+rhacoのアプリケーション定義はすべてXMLで行います。<br />
+XMLファイルをもとに、前述のセットアップアプリケーションを用いてテーブルモデルのクラスを自動で生成します。<br />
+リレーションの機構を持たないDBエンジンでも、rhacoでは親子関係を処理することができます。
+rhacoが対応するDBは MySQL/PostgreSQL/SQLite/Oracleです。<br />
+簡単なサンプルですが、定義XML(project.xml)は次のように記述します。<br />
+<pre class="code"><code>
+&lt;project rhacover="1.6.1" version="0.0.1" name="sample" xmlns="http://rhaco.org" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://rhaco.org http://m.rhaco.org/xsd/project_1_6_1.xsd"&gt;
+	&lt;!-- セットアップアプリケーションで設定できる値 --&gt;
+	&lt;input name="SITE_NAME"&gt;
+		&lt;title&gt;ウェブサイトの名称&lt;/title&gt;
+		&lt;data&gt;ウノウラボ&lt;/data&gt;
+	&lt;/input&gt;
+	
+	&lt;!-- データベースの定義 --&gt;
+	&lt;database name="sample"&gt;
+		&lt;table name="article"&gt;
+			&lt;column name="id" /&gt;
+			&lt;column name="subject" require="true" /&gt;
+			&lt;column name="description" type="text" max="10000" require="true" /&gt;
+			&lt;column name="created" type="timestamp" default="sysdate" /&gt;
+		&lt;/table&gt;
+	&lt;/database&gt;
+&lt;/project&gt;
+</code></pre>
+<br />
+<h3>ViewsでCRUDを簡単に！</h3>
+after railsなフレームワークにありがちな、scaffolding機能はrhacoにはありません。<br />
+そのかわり、汎用ビューという機構がCRUDを強力にサポートします。<br />
+例えば、articleテーブルに対しての確認画面付きのデータ入力画面は次のようなコードで実現出来ます。<br />
+<pre class="code"><code>
+&lt;?php
+require_once dirname(__FILE__). '/__init__.php';
+Rhaco::import('generic.Views');
+Rhaco::import('model.Article');
+
+$views = new Views(Article::connection());
+$parser = $views->confirmedCreate(new Article());
+$parser->write();
+</code></pre>
+
+<h3>まだまだある便利機能</h3>
+rhacoの全ての機能を全て紹介すると、本になってしまう勢いなので今回は簡単な紹介になりましたが、rhacoには他にもPHPでの開発をもっと便利にするたくさんの機能があります。<br />
+URLマッパーや、ウェブサイトのスクレイピングにも使える強力なXML/HTMLパーサー、HTTP通信、メール送信、国際化処理、RSSフィードパーサー、Array/Objectなどの操作ユーティリティ etc... <br />
+これらについては、<a href="http://rhaco-users.jp/">rhaco-users.jp</a>で紹介しているドキュメントなどを参考にしてみてください。<br />
+さらに、rhacoでは基本的に特定の環境に依存するようなコードは採用されないので、特定のPHP拡張に依存するライブラリ・各種ウェブサービスAPIなどのライブラリは <a href="http://code.google.com/p/rhaco/source/browse/arbo/trunk/">arbo</a> というプロジェクトで開発されています。rhacoだけでは物足りない方はぜひお試しください。<br />
+また、「ココがわからない！」とか「こういうドキュメントほしいよ！」などといった質問／意見／要望もお待ちしています。気軽に <a href="http://www.lingr.com/room/rhaco-ja">Lingr</a> や <a href="http://groups.google.co.jp/group/rhaco-ja">Google Groups</a>などのコミュニティに参加してください。<br />
+
+<h4>あわせてよみたい</h4>
+ここまで書いておいてあれですが、スパム親分によるとてもわかりやすい動画の紹介です！
+<a href="http://www.nicovideo.jp/watch/sm4033584">いよいよPHPの人にrhacoを紹介しちゃいますよ - 露木誠‐ニコニコ動画(ββ)</a><br />
+<br />
+<h3>さらにEclipseプラグインまで</h3>
+もちろん通常のテキストエディタでも開発できますが、普段PDTをつかってphpコードを書いている方には、<a href="http://rhaco-users.jp">rhaco専用のEclipse plugin</a>も用意されています。<br />
+通常の補完機能ではカバーしきれないrhaco独自の記法などがサポートされ，rhaco2の対応も行われています。<br />
+PDTで開発したい人はぜひ試してみてください。<br />
+
+<h3>PEARサイトなのにrhacoで構築？</h3>
+宣伝ばかりになってしまってますが、昨年の11月に<a href="http://nequal.jp/">nequal</a>というグループで <a href="http://openpear.org/">openpear</a> というサービスをリリースしました。<a href="http://labs.unoh.net/2008/11/php_net_tokyotyrant.html">ウノウラボブログでも紹介してもらっています！</a>ありがとうございます。<br />
+気軽にPEARライブラリを共有しよう！というコンセプトで、Subversionリポジトリの提供・リポジトリからのパッケージ自動作成・PEARチャネルへのリリースがウェブ上で簡単に行うことができます。<br />
+実は、このopenpearのウェブシステムもrhacoで作成されています。<br />
+これからいろいろと機能の追加をしていく予定です。openpear もぜひよろしくお願いします！<br />
+
+<h3>ありがとうございます！</h3>
+このような滅多にない機会を与えて頂き、ありがとうございます＞＜！ウノウさんに大感謝です。<br />
+ウノウ最高です！ウノウでは今、エンジニアを絶賛募集中ということです！僕は社員じゃないですがぜひ！！
+<!-- そして、僕も絶賛就職活動中です。 -->
+{% endraw %}

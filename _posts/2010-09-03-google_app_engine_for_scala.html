@@ -1,0 +1,84 @@
+---
+layout: post
+title: "Google App Engine for Scala"
+---
+{% raw %}
+おはようございます。うちだです。
+
+最近Scalaが世界中の一部の人達の間で盛り上がってるようですね。
+私も以前のエントリーに書いたように、次にくる言語はScalaだと信じています。
+
+"5分くらいで知るScala":http://labs.unoh.net/2008/10/5scala.html
+
+最近のプライベートな時間はGAE(Python)漬けでScalaの波に乗れていなかったのですが、
+ふとGAEでScalaを使えばいいのではないかと気付き、試してみました。
+
+h2. Eclipseをダウンロード
+
+どれをDLすればいいのか迷いながらClassicを選択
+
+h2. GAEのプラグインをインストール
+
+<pre class="code">
+http://code.google.com/intl/en/appengine/docs/java/gettingstarted/installing.html
+</pre>
+
+SDKも一緒に入れましょう
+
+h2. Scalaのプラグインをインストール
+
+<pre class="code">
+http://download.scala-ide.org/update-current
+</pre>
+
+h2. GAEのプロジェクトをつくろう
+
+Javaと一緒の手順ですね
+
+h2. Scalaを使えるように
+
+プロジェクト名を右クリしてConfigure→Add Scala Natureを選ぶ!
+
+h2. サーブレットを用意しよう
+
+src以下に作りましょう
+右クリ→Other→Scala..→class
+
+エラーがでた
+
+どうやらScala Editorがバグってるようです。(20100903)
+悲しいですがText Editorで開きます
+
+<pre class="code">
+package net.unoh.labs
+
+import java.io.IOException
+import javax.servlet.http._
+
+class TestServlet extends HttpServlet {
+  override def doGet(req: HttpServletRequest, 
+                     resp: HttpServletResponse) {
+    resp.setContentType("text/plain;charset=UTF-8")
+    resp.getWriter().println("ウノウラボ!")       
+  }
+}
+</pre>
+
+h2. 起動
+
+<pre class="code">
+http://localhost:8888/test
+</pre>
+
+動いた!
+
+h2. 次にやること
+
+* Slim3 Datastoreを使ってみる
+* デプロイしてみる
+
+h2. 所感
+
+これからの時代はGAE+Scalaですね!
+私は使わないことにしますが。
+{% endraw %}

@@ -1,0 +1,133 @@
+---
+layout: post
+title: "Symfony2勉強会に参加してみた"
+---
+{% raw %}
+<p>こんにちは、小俣です。Symfony1.4にはだいぶ慣れてきた今日この頃、近々登場するらしいSymfony2が速いとかすごいとか噂されているので、乗り遅れないよう情報を仕入れておかねば！ということで、先日ちょうど弊社オフィスを会場に開催されたSymfony2勉強会に参加してみました。そのとき仕入れた情報をご紹介しようと思います。</P>
+<br />
+
+<h2>はじめに：Symfony2は1.x系と内部構造が異なるので戸惑う</h2>
+<p>Symfony1.xに慣れている方にとっては、初めのうちはディレクトリ構造が違いすぎて何処に何があるのか混乱しがちです。私も何度も迷子になりました。少しずつ慣れていくしかありませんが。。。下記にSymfony2の特徴をいくつか紹介してみます。</p>
+
+<h3>Symfony2はすべてBundleで構成されている</h3>
+<p>Symfony2では、新しい概念がいくつか導入されていて、まずはBundle（直訳：束）の理解が必要です。Bundleとはそれ自体が1つのfeature（機能）を成していて、HogeBundleディレクトリにはHogeBundle.phpとController（/HogeController.php）とResources（/configと/views）とTestsがあります。configではroutingの設定ができ、viewsにはテンプレートを置きます。このようにBundleごとにソースがまとまっているため、機能を追加したり削除するときにBundleごと追加したり削除すればよいので、どの機能があるのかないのか視覚的に分かりやすく、また友達とBundleをshareするのも簡単！とのことです。</p>
+
+<h3>routingやlayoutをBundleごとにカスタマイズできる</h3>
+<p>app/views/layout.phpをBundle内のlayout.phpで継承しているので、Bundleごとにlayoutに違いを出したりするときに便利のようです。また、routingもBundleごとに設定できるようになっています。</p>
+
+<h3>DIコンテナを理解せずしてSymfony2の内部構造は理解できない</h3>
+<p>Symfony2では、DIコンテナ（Dependency Injection Container）が非常に重要な役割を果たしていて、シンプルなYAMLやXMLで設定できるコンフィグレーションシステムの裏には、すごい内部構造が隠されているようです。典型的なプロジェクトにおいては、DIコンテナには触ることはないでしょうとドキュメントに書いてありますが、知っておいた方がExtensionを扱うときにスムーズのようです。</p>
+
+<p>それ以外のSynfony1.xからの変更点や違いについては、勉強会でLTもされていた<a href="http://blog.asial.co.jp/669">アシアル小川さんの記事</a>をご参照ください。</p>
+<br />
+
+<h2>Symfony2を動かしてみよう</h2>
+<p>まず、Symfony2を動かすには、PHP5.3.2以上が必要です。その準備ができたら<a href="https://github.com/symfony/symfony-sandbox">https://github.com/symfony/symfony-sandbox</a>からSymfony2のsandboxをゲットし、cacheとlogsの権限を777に変えて、ブラウザからアクセスできるようにします（Apacheで公開するなど）。そこまでできたらsandbox/web/check.phpで動作環境のチェックもしておきましょう。</p>
+
+<p>※ちなみに以下のレッスンの内容は、ワークショップで行われた内容を元に、自分でいろいろ内容を変えてしまっていますので参考程度にしてください。</p>
+
+<h3>レッスン1：HelloBundleのHelloControllerにtestActionを追加してみよう</h3>
+<p>まず、あらかじめ用意されているHelloBundleがどこかというと
+<pre class="code"><code>sandbox/src/Application/HelloBundle
+</code></pre>
+その中に
+<pre class="code"><code>HelloBundle/
+└ Controller/
+　└ HelloController.php
+└ HelloBundle.php
+└ Resources/
+　└ config/
+　　└ routing.yml（設定により.xml .phpも可）
+　└ views/
+　　└ layout.php（設定により.twigも可）
+　　└ Hello/
+　　　└ index.php（設定により.twigも可）
+└ Tests/
+　└ Controller/
+　　└ HelloControllerTest.php
+</code></pre>
+</p>
+があります。
+これをこのまま動かすと、app.php/hello/hogeだと「Hello hoge!」と表示されます。
+<br />
+ではまず、HelloController.phpを下記にように変更します（testAction追加と同時に、indexActionから$nameを取り除いています）。
+<pre class="code"><code># HelloController.php
+public function indexAction()
+{
+　return $this->render('HelloBundle:Hello:index.php');
+}
+public function testAction()
+{
+　return $this->render('HelloBundle:Hello:test.php', array('time' => date('H:i:s')));
+}
+</code></pre>
+続いて下記のようにテンプレートを追加します。
+<pre class="code"><code># views/Hello/test.php
+ただいまの時刻：&lt;?php echo $time ?&gt;
+</code></pre>
+そして最後にrouting追加。
+<pre class="code"><code># config/routing.yml
+test:
+　pattern:  /hello/test
+　defaults: { _controller: HelloBundle:Hello:test }
+hello:
+　pattern:  /hello ← /:nameを外しました
+　defaults: { _controller: HelloBundle:Hello:index }
+</code></pre>
+
+app_dev.php/Hello/test（dev）
+app.php/Hello/test（prod）
+で表示の確認をしてみてください。
+「ただいまの時刻：H:i:s」と表示される単純なものです。
+<br />
+devで見てみると、デバッグツールバーが表示されています。その説明はしないのですが、いろいろいじってみてください。
+<br />
+ちなみにドキュメントによると、単純なテンプレートでは$this->render()よりも$this->createResponse();を使うことで数ミリ秒の時間をセーブできるとのこと。</p>
+
+<h3>レッスン2：共通メニューを作って、layoutに入れてみよう</h3>
+<p>ダミーの共通メニューを作って、layoutに入れてみます。
+<pre class="code"><code># views/menu.php
+メニュー1&lt;br /&gt;
+メニュー2&lt;br /&gt;
+メニュー3&lt;br /&gt;
+</code></pre>
+を作って、layout.phpで
+<pre class="code"><code># views/layout.php
+&lt;?php echo $view->render('HelloBundle::menu.php') ?&gt;
+</code></pre>
+を追記します。
+これでメニューが表示されるようになります。
+</p>
+
+<h3>レッスン3：テンプレート側から指定アクションの結果を引いて表示してみよう</h3>
+<p>テンプレートで、別アクションの結果を表示することができるんです！これは便利じゃないでしょうか。
+<pre class="code"><code># views/Hello/index.php
+&lt;?php $name ?&gt; ← $nameを使ってないので削除
+&lt;?php echo $view['actions']->render('HelloBundle:Hello:test') ?&gt;　追記
+</code></pre>
+これで、Hello/testの結果がHello/indexでも表示されます。</p>
+
+<h3>レッスン4：Edge Side Includes を試してみよう</h3>
+<p>ESI（Edge Side Includes）は、簡単に言うとWEBページをパーツごとにキャッシュして、更新が必要な箇所だけキャッシュの更新ができる技術です。これによりWebコンテンツ配信の高速化が可能になるとのことで、Symfony2もそれに対応しています。</p>
+<p>これを使うと、レイアウト部分のキャッシュは30分毎に更新、コンテンツ部分のキャッシュは3秒毎に更新、という風にキャッシュの更新頻度を分けられる！とのことで、ワクワクしながら私も試してみたのですが、残念なことに私の環境ではうまくいかなかったので、皆さん頑張ってみてください！<br />
+ちなみに、$this->render()の結果をすぐにreturnせずに、キャッシュ制御してから返すようにします。
+<pre class="code"><code># HelloController.php
+    $response = $this->render('HelloBundle:Hello:index.php');
+    $response->setSharedMaxAge(30);    ←ここでキャッシュ制御
+    return $response;
+</code></pre>
+また、AppKernelをAppCacheでラップしたり、テンプレートでの書き方も変えたりする必要があるのですが、その辺の細かい
+設定方法などの詳細は<a href="http://www.slideshare.net/hidenorigoto/symfony2-workshop2-5850136">スライド</a>と<a href="http://docs.symfony-reloaded.org/master/guides/cache/http.html#using-edge-side-includes">ドキュメント</a>をご参照ください。</p>
+<br />
+
+<h2>最後に</h2>
+<p>最後に余談となりますが、勉強会に行くのが初めてでドキドキの私でしたが、隣に座っていた<a href="http://twitter.com/uechoco">@uechoco</a>さんがいろいろ優しく教えてくれたので、安心して参加できました。その節はありがとうございました。<br />ちなみに、この勉強会に参加されてた<a href="http://twitter.com/chobi_e">@chobi_e</a>さんが今、同じチームの仲間となって働いているんです！これをご覧になっている方で、ソーシャルアプリにご興味ある方は、ぜひ一緒に働きましょ〜。</p>
+
+<div>
+<参考資料><br />
+<a href="http://www.symfony.gr.jp/blog/20111121-symfony2-workshop-1">第1回 Symfony2 勉強会レポート</a>
+</div>
+<br />
+<div style="margin:0;padding:.5em;border:2px solid #ccc">Zynga Japanでは特に最近、積極的にエンジニアを採用しています。<br />
+<a href="http://www.zynga.co.jp/recruit/recruit.php?siteid=unohlabs">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください。<br/></div>
+{% endraw %}

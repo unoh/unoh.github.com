@@ -1,0 +1,91 @@
+---
+layout: post
+title: "IEでlabelの子要素に画像を含める"
+---
+{% raw %}
+<p>yamaokaです。</p>
+
+<p>
+HTMLのフォームでチェックボックスやラジオボタンを扱う場合、
+対応したlabel要素を用意することが多いと思います。
+<pre class="code"><code>&lt;input type="checkbox" id="foo" name="foo">
+&lt;label for="foo">
+  キャプション
+&lt;/label>
+</code></pre>
+わざわざ小さなチェックボックスやラジオボタンを狙ってクリックする必要がなくなり、
+labelタグで囲まれたキャプションの部分をクリックすればよいようになります。
+</p>
+
+<p>
+しかし、次のような場合どうでしょう。
+<pre class="code"><code>&lt;input type="checkbox" id="foo" name="foo">
+&lt;label for="foo">
+  &lt;img src="bar.gif">
+  キャプション
+&lt;/label>
+</code></pre>
+label要素の中にimg要素（画像）が含まれているような場合を考えてみます。
+</p>
+
+<p>
+もっと具体的にいうと、ユーザーを選択する画面でそれぞれのユーザーのアイコンと名前を表示させるような場合です。<br>
+<a href="http://photozou.jp/photo/show/784/19855636"><img src="http://art4.photozou.jp/pub/784/784/photo/19855636.png" alt="ユーザー選択画面例" width="413" height="310" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/19855636">ユーザー選択画面例</a> posted by <a href="http://photozou.jp/user/top/784">(C)フォト蔵</a>
+</p>
+
+<p>
+動作は先程と変わらないはず......なのですが、IEの場合（IE6、IE7、IE8ともに）、
+画像をクリックしてもチェックボックスの値が切り替わりません。
+そこでブラウザーシェアの一番大きなIEで使い勝手が落ちてしまうのを防ぐべく、
+次のようなJavaScriptを書きました。
+</p>
+
+<p>
+<pre class="code"><code>&lt;input type="checkbox" id="foo" name="foo">
+&lt;label for="foo" onclick="return clickFormLabel(this)">
+  &lt;img src="bar.gif">
+  キャプション
+&lt;/label>
+
+&lt;script type="text/javascript">
+var clickFormLabel = function(label) {
+  var e = null;
+  try {
+    e = document.getElementById(label.htmlFor);
+  } catch (exception) {}
+  if (e != null) {
+    if (e.tagName == "INPUT") {
+      switch (e.type) {
+      case "checkbox":
+        e.checked = !e.checked;
+        break;
+      case "radio":
+        e.checked = true;
+        break;
+      default:
+        e.focus();
+        break;
+      }
+    } else {
+      e.focus();
+    }
+  }
+  return false;
+};
+&lt;/script>
+</code></pre>
+</p>
+
+<p>
+何をしているのかというと、label要素がクリックされた場合にfor属性で指定されたidの要素が
+チェックボックスだったら値のON/OFFを切り替え、ラジオボタンだったら選択状態に。
+それ以外の場合は要素にフォーカスを当てているだけです。
+これでIEでも他のブラウザと同じような使い勝手を実現できます。
+</p>
+
+<p>
+少しのJavaScriptでサイト訪問者の使い勝手が向上するケースは結構あるように思います。
+そういう場合は積極的にJavaScriptを使っていきたいところですね。
+</p>
+
+{% endraw %}

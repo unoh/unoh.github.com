@@ -1,0 +1,31 @@
+---
+layout: post
+title: "Google Analyticsで特定のリンクのクリック数を調べる"
+---
+{% raw %}
+<p>yamaokaです。</p>
+
+<p>
+Webサイトを運営していると、同じページに複数の箇所からリンクが貼られている場合に、特定のリンクからのアクセスがどれぐらいあるかを調べたいことがあります。
+</p>
+
+<p>
+もちろん、異なるURLで訪問者にアクセスしてもらえばトラッキングできるので、適当なクエリーストリングをリンクのURLに付加すれば調べることができるようになります。
+<pre class="code"><code>&lt;a href=&quot;/foo?bar&quot;&gt;baz&lt;/a&gt;</code></pre>
+ただし、その場合permalink（固定されたURL）ではなくなってしまいますね。
+</p>
+
+<p>
+<a href="http://photozou.jp/">写真でつながる共有サイト「フォト蔵」</a>では、アクセス解析に<a href="http://www.google.co.jp/analytics/ja-JP/">Google Analytics</a>を利用しています。Google Analyticsを利用している場合、次のようにして特定のリンクからのアクセスを違う名前で扱うことができるようになります。
+<pre class="code"><code>&lt;a href=&quot;/foo&quot; onclick=&quot;pageTracker._trackPageview('/foo?bar')&quot;&gt;baz&lt;/a&gt;</code></pre>
+詳細な情報については、Googleによる<a href="http://www.google.com/support/googleanalytics/bin/answer.py?hl=jp&answer=55597">「_trackPageviewとは何ですか。どのような場合に使用しますか。」</a>を参照してください。この方法なら、URLは元の状態のままpermalinkを保つことができます。
+</p>
+
+<p>
+このリンクからのアクセス数をGoogle Analyticsで調べるには、「/foo?bar」というURLにどれだけアクセスされているかを検索すればOKです。簡単ですね。単純なページ遷移なら「ナビゲーションサマリー」で確認することができますが、特定のリンクをターゲットに調査したい場合にはこの方法が便利です。
+</p>
+
+<p>
+Google Analyticsは本格的に使おうとするとかなり高機能なので、<a href="http://www.google.com/support/googleanalytics/">ヘルプ</a>を見たりあちこちのページを開いたりして、いろいろ試してみるといいと思います。「セッション」「コンバージョン」など、Google Analyticsで用いられている用語の定義も一度確認しておくことをオススメします。
+</p>
+{% endraw %}

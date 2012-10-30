@@ -1,0 +1,53 @@
+---
+layout: post
+title: "auは絵文字を自動変換していたわけではなかった"
+---
+{% raw %}
+<p>こんばんは。harukです。</p>
+<p>前回、<a href="http://labs.unoh.net/2007/02/post_65.html">絵文字の相互変換リスト</a>というエントリを書きましたが、</p>
+<p>説明に正しく理解できていなかった箇所がありましたので訂正しておきます。</p>
+<br />
+<p>今回のリストを作っていた時や、前々から気にはなっていたんですが、</p>
+<blockquote>auのケータイではwebで表示されているDoCoMoの絵文字は<br />
+auの絵文字に自動で変換して表示していた。</blockquote>というふうに理解していました。
+<p>携帯サイトを作り始めの頃に見た、↓↓のような技術資料によって記憶に刷り込まれたのかもしれません。</p>
+<p><a href="http://www.au.kddi.com/ezfactory/tec/spec/html_con004.html">http://www.au.kddi.com/ezfactory/tec/spec/html_con004.html</a></p>
+<p><a href="http://www.au.kddi.com/ezfactory/tec/spec/html_con.html">http://www.au.kddi.com/ezfactory/tec/spec/html_con.html</a></p>
+<p><a href="http://www.au.kddi.com/ezfactory/tec/spec/i_mode.html">http://www.au.kddi.com/ezfactory/tec/spec/i_mode.html</a></p>
+<p>実際は、auの端末がformでの絵文字の入力・送信ができるようになった時には、もう違っていたようです。</p>
+<br />
+<p>まず、auがShift_JISのページのformで入力した場合の絵文字は以下の範囲です。</p>
+<ul>
+ <li>F340～F3FC</li>
+ <li>F440～F48D</li>
+ <li>F640～F6FC</li>
+ <li>F740～F7FC</li>
+</ul>
+<br />
+<p>一方、DoCoMoの絵文字の範囲は以下です。</p>
+<ul>
+ <li>F89F～F8FC</li>
+ <li>F940～F9FC</li>
+</ul>
+<p>このDoCoMoの絵文字をauの端末で見た場合に表示されるのは、</p>
+<p>それぞれのDoCoMoの絵文字に対応するauの絵文字です。</p>
+<br />
+<p>この文字をコピペしてフォームから送信すると・・・</p>
+<p>そのまま(F8xx～F9xxの範囲)送られてきます。</p>
+<br />
+<p>auはサーバで変換しているのではなくて、</p>
+<p>ただ、その範囲に絵文字を割り当てているだけのようです。</p>
+<p>（普通に考えたらわかりそうなものですが。。。）</p>
+<br />
+<p>SoftBankの端末ではHTMLをコピーできる端末を知っていますが、</p>
+<p>もし、auでそういう端末がある場合は、</p>
+<p>DoCoMoの絵文字でauでの絵文字の表示も兼ねているサイトではHTMLからコピーして、</p>
+<p>formでペーストして。。。とDoCoMoの絵文字が手軽に送られてくるのかもしれません。</p>
+<br />
+<p>厳密に行うには、</p>
+<p>au(DoCoMoの絵文字) → au(本来のauの絵文字)</p>
+<p>への変換をしてあげないといけません。</p>
+<p>(そこまで面倒を見てあげる気にはなれませんが。。。)</p>
+<br />
+<p>もし同じ誤解をしている方がいましたら、気をつけてください。</p>
+{% endraw %}

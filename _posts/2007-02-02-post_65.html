@@ -1,0 +1,52 @@
+---
+layout: post
+title: "絵文字の相互変換リスト"
+---
+{% raw %}
+<p>こんばんは。harukです。</p>
+
+<p>2週間前から<a href="http://vpop.jp">ビデオポップ</a>担当になり、まず最初に、3キャリアの絵文字の変換から取り組みました。</p>
+<p>検索して探してみたものの、いいものが見つからなかったのですが、幸いにも、3キャリアそれぞれメールでは絵文字の自動変換があるので、それを利用して作ることができます。(昔は手入力で一つ一つやってました)</p>
+<p>Tab区切りのテキストファイル(TSV)を置いておきましたので使いたい方は使ってください。</p>
+<p>絵文字の番号の付け方はそれぞれ以下のようになっています。</p>
+<ul>
+<li>DoCoMo(i-mode)<br />
+    基本絵文字：%i(1～176)%<br />
+    拡張絵文字：%i(1001～1076)%<br />
+</li>
+<li>au(EZweb)<br />
+    絵文字番号＝%e(1～822)%
+</li>
+<li>SoftBank<br />
+    PAGE1(G)：%s(  1～ 90)%<br />
+    PAGE1(E)：%s(101～190)%<br />
+    PAGE1(F)：%s(201～290)%<br />
+    PAGE1(O)：%s(301～377)%<br />
+    PAGE1(P)：%s(401～476)%<br />
+    PAGE1(Q)：%s(501～562)%<br />
+</li>
+</ul>
+<p>ファイルは各キャリアごとになっています。</p>
+<ul>
+<li><a href="http://labs.unoh.net/emoji_i2es.txt">i-mode → EZweb, SoftBank</a><br />
+[ファイルの内容]<br />
+i-mode番号, Shift_JIS(hex), EZweb, SoftBank, EZweb(webでの自動変換)<br />
+<br />
+i-mode→EZwebはメールだけではなく、webで<del>の自動変換もあります。</del> 近似の絵文字を表示してくれます。<br />
+メールとwebでの変換を見比べてみると、36文字も違っていました。
+</li>
+<li><a href="http://labs.unoh.net/emoji_e2is.txt">EZweb → i-mode, SoftBank</a><br />
+[ファイルの内容]<br />
+EZweb番号, Shift_JIS(web/hex), i-mode, SoftBank<br />
+<br />
+文字になってしまうものが多いので、気に入らない人は変えたほうがいいです。<br />
+</li>
+<li><a href="http://labs.unoh.net/emoji_s2ie.txt">SoftBank → i-mode, EZweb</a><br />
+[ファイルの内容]<br />
+SoftBank番号, Webコードの一部, i-mode, EZweb<br />
+<br />
+SoftBankからの場合は〓(ゲタ)になるものが多いです。<br />
+</li>
+</ul>
+このデータが少しでもお役に立つのであれば幸いです。
+{% endraw %}

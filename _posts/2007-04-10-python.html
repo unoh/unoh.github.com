@@ -1,0 +1,109 @@
+---
+layout: post
+title: "Python開発環境を整えよう"
+---
+{% raw %}
+<p>こんにちは！4月から入社したYet Another Sakatoku、酒徳千尋です。今まで同じクラス、同じ職場に別の「酒徳さん」がいるのを経験したことがないので不思議な気分です。</p>
+
+<p>ウノウでは新規サービスの開発を担当することになったのですが、言語やフレームワークの選択は開発者に任されているということなので、PythonとDjangoの組み合わせで開発を始めることにしました。</p>
+<p>PythonでのWeb開発は、日本ではまだメジャーではないと思うので、このウノウラボでtipsや、ライブラリ・フレームワークの使い方を紹介できればと思います。</p>
+<p>今回は、僕が入社してから最初に行ったPython開発環境のセットアップについて書いてみたいと思います。</p>
+
+<h3> virtual-pythonで開発環境をつくる</h3>
+<p>開発にあたって様々なライブラリをインストールする必要が出てきますが、通常のPythonのホームディレクトリ、例えば、/usr/lib/python2.4/site-packages/にライブラリを追加するには管理者権限が必要になります。また、ライブラリの追加、アップデートによって、他の開発者の環境に影響をあたえる恐れもあります。</p>
+<p>こうした懸念を避けるには、virtual-pythonを使って、自分のホームディレクトリに自分専用のPython環境を作ってしまうのがもっとも手軽です。</p>
+
+<p>virtual-python<br />
+<a href="http://peak.telecommunity.com/dist/virtual-python.py" target="_blank">http://peak.telecommunity.com/dist/virtual-python.py</a></p>
+
+<pre class="code"><code>$ curl -O http://peak.telecommunity.com/dist/virtual-python.py
+$ python2.4 virtual-python.py
+</code></pre>
+
+<p>python2.3, python2.4, python2.5のように複数のバージョンのPythonがインストールされている環境では、使用するバージョンを指定して、virtual-pythonスクリプトを実行します。</p>
+
+<p>実行後は、ホームディレクトリに、~/bin/python, ~/include/python2.4/, ~/lib/python2.4/が作られ、追加ライブラリは~/lib/python2.4/site-packages/にインストールされるようになります。</p>
+<p>また、これ以降は、~/bin/pythonを使うようにしましょう。~/binにパスが通っていない場合は、.bashrcなり、.zshrcなりに適宜PATHを設定します。</p>
+
+<h3> sitecustomize.pyを設定する</h3>
+<p>まっさらなPython環境ができたので、つぎのこの環境全体の設定を行います。~/lib/python2.4/site-packagesにsitecustomize.pyというファイルを作成しておくと、Pyhonインタプリタ起動時に自動的に読み込まれ、Python全体の設定を行うことができます。</p>
+<p>よくある設定には、デフォルト・エンコーディングの設定があります。</p>
+
+<pre class="code"><code>import sys
+sys.setdefaultencoding(&#39;utf-8&#39;)
+</code></pre>
+
+<p>デフォルト・エンコーディングは好みと必要性に応じて設定してください。</p>
+
+<h3> easy_installをインストール</h3>
+<p>Pythonのライブラリのインストールには、easy_installというツールを使います。これはPHPでいうところのpear, Rubyでいうところのgemに相当します。</p>
+<p>まず、このeasy_install自体をインストールする必要があるので、ブートストラップモジュールであるez_setup.pyを以下のURLからダウンロードし、実行します。</p>
+
+<p>ez_setup.py<br>
+<a href="http://peak.telecommunity.com/dist/ez_setup.py" target="_blank">http://peak.telecommunity.com/dist/ez_setup.py</a></p>
+
+<pre class="code"><code>$ curl -O http://peak.telecommunity.com/dist/ez_setup.py
+$ python ez_setup.py
+</code></pre>
+
+<p>あとは、~/bin/easy_installを使って、パッケージの追加を行います。</p>
+
+<h3> easy_installの使い方</h3>
+<p>easy_installの基本的な使い方は、次のようになります。</p>
+<pre class="code"><code>$ easy_install (パッケージ名)
+</code></pre>
+
+<p>上記のコマンドを実行すると<a href="http://www.python.org/pypi/" target="_blank">Python Packge Index</a>, 通称Cheese shopにアクセスして、適切なパッケージを探し、見つかった場合はダウンロード、インストールが始まります。</p>
+<p>例えば、noseというパッケージをインストールする場合は次のようになります。</p>
+<pre class="code"><code>$ easy_install nose
+</code></pre>
+<p>パッケージによっては、zip_safeというフラグを設定してあるため、インストールすると、zip形式でアーカイブされた拡張子eggのファイル、"Python Egg"としてインストールされるものもあります。これを抑止するには-Zオプションを使います。</p>
+<pre class="code"><code>$ easy_install -Z SQLAlchemy
+</code></pre>
+<p>パッケージ内のソースコードを参照したい場合などには、このオプションを使用してみてください。</p>
+
+<p>ネットワークから直接インストールを行わない場合は、あらかじめtar.gz形式やegg形式でアーカイブされたパッケージをダウンロードしておいて、インストールすることもできます。</p>
+<pre class="code"><code>$ easy_install migrate-0.2.2.tar.gz
+</code></pre>
+
+<h3> パッケージ管理・応用編</h3>
+<h4> Subversionレポジトリからのインストール</h4>
+<p>Subversionをインストールしていると、Subversionレポジトリから直接ソースコードをチェックアウトしてパッケージをインストールすることができます。これは、開発版のライブラリを試してみたい時に便利です。</p>
+<pre class="code"><code>$ eazy_install http://pythonhatenatext.googlecode.com/svn/trunk/
+</code></pre>
+
+<h4> pthを使ってインポート元を指定</h4>
+<p>　あるライブラリの最新のリビジョンに追随していきた場合もあると思います。その場合は、Subversionやsvkで通常通りチェックアウトを行い、site-package内に、pthファイルを作って、インポートするディレクトリを指定します。</p>
+<p>　例えば、常に最新の開発版Djangoを使いたい場合は、次のように行います。</p>
+<pre class="code"><code>$ svn co http://code.djangoproject.com/svn/django/trunk/ django
+$ cd django
+$ pwd
+/home/chihiro_sakatoku/src/django
+$ pwd &gt; ~/lib/python2.4/site-packages/django.pth
+</code></pre>
+
+<p>　pthファイル内には、Pythonのインクルードパスに含めたいディレクトリを記述します。一つのpthファイルに何行もパスを追加しても構いませんが、通常は、django.pthにはDjangoのパスだけを、pylons.pthにはPylonsのパスだけを、と書くのが分かり易いと思います。</p>
+
+<h3> おすすめのライブラリ</h3>
+<p>　最後にeasy_install経由でインストールできて、かつ「これは入れておけ！」というPythonライブラリを紹介します。</p>
+
+<dl>
+<dt><a href="http://www.python.org/pypi/cElementTree">cElementTree</a></dt>
+<dd>Python2.4以前ならば入れておきましょう。PythonでXMLを扱う場合は、これが標準です。Python2.5ではxml.etreeとして標準ライブラリに組み込まれているので、インストールする必要はありません。</dd>
+<dt><a href="http://www.python.org/pypi/Paste">Paste</a></dt>
+<dd>自分でパッケージを作るときに何かと役に立つユーティリティライブラリです。別の機会に使い方を紹介したいと思います。</dd>
+<dt><a href="http://www.python.org/pypi/nose">nose</a></dt>
+<dd>テストツールです。Pythonには標準ライブラリとしてdoctest, unittestというテストライブラリがありますが、noseはそれらと併用ができて、かつ、非常にテストも書きやすく、実行しやすいと感じています。</dd>
+<dt><a href="http://www.python.org/pypi/SQLAlchemy">SQLAlchemy</a></dt>
+<dd>非常に優秀なオブジェクトリレーショナルマッパーです。アプリケーション内で実際に使わないとしても、入れておくと何かと便利です。</dd>
+<dt><a href="http://www.python.org/pypi/migrate">Migrate</a></dt>
+<dd>Ruby on Railsのマイグレーション機能を模範にしたスキーマ管理ツールです。上記のSQLAlcheymyを使用しています。</dd>
+</dl>
+
+<p>  また、easy_installには他にも様々なオプションがあるので、是非マニュアルも参照してみてください。</p>
+
+<p>EasyInstallのマニュアル(英語)<br />
+<a href="http://peak.telecommunity.com/DevCenter/EasyInstall" target="_blank">http://peak.telecommunity.com/DevCenter/EasyInstall</a>
+</p>
+
+{% endraw %}

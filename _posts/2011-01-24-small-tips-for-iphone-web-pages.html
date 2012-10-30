@@ -1,0 +1,44 @@
+---
+layout: post
+title: "iPhone向けのサイトを作るときのちょっとした気配り"
+---
+{% raw %}
+<p>yamaokaです。</p>
+
+<p>だいぶiPhoneやAndroidといったスマートフォン向けのwebページを作ることが増えてきたのではないでしょうか。ちょっとした気配りで使いやすくなるケースもあるかなと思うので、いくつか使えそうな工夫について書いてみたいと思います。</p>
+
+<p>ただし、今回はiPhone向けです。</p>
+
+
+<h3>タップされた場所をハイライトする</h3>
+
+<p>iPhoneのSafariでは「-webkit-tap-highlight-color」という拡張された属性があり、タップされた箇所に色を付けることができます。CSS3ではRGBaによる色指定ができるので、半透明の色を指定すればタップされた箇所をわかりやすく示すことができます。例えば、<pre class="code"><code>-webkit-tap-highlight-color:rgba(255,0,0,0.40);</code></pre>と指定すると薄い赤色を付けることができます。「outline:none;」と併せてリンク文字列に指定するといいかもしれませんね。</p>
+
+<h3>数字を電話番号のリンクにしない</h3>
+
+<p>iPhoneのSafariはHTMLに含まれる数字を電話番号として検出、自動的に電話番号のリンクにしてしまいます。タップすると電話がかけられるので便利な場面もあるのですが、「123.45」のような小数点を含む数字や「100-0001」のような郵便番号、「2001-2011」のようなcopyrightの年号表記までリンクになってしまうのです。</p>
+
+<p>この挙動を無効にするには<pre class="code"><code>&lt;meta name=&quot;format-detection&quot; content=&quot;telephone=no&quot;&gt;</code></pre>とmeta要素を使って記述します。どうしても電話番号を表示したい場合は明示的にtelto:で指定してあげればいいので自動検出は無効にしてしまうのがオススメです。</p>
+
+<h3>文字のサイズをコントロールする</h3>
+
+<p>PC向けに作成されたサイトをiPhoneで見た場合、フォントの大きさがPCで表示した場合と違った比率で表示されることがあります。iPhoneのSafariは文字の大きさを自動で調整してくれるのですが、自分でコントロールしたい場合もあるのではないでしょうか。</p>
+
+<p>自動調整を無効にしたい場合、CSSで<pre class="code"><code>-webkit-text-size-adjust:none;</code></pre>を指定します。先程の「-webkit-tap-highlight-color」と同様、iPhoneのSafariで拡張されているCSSの属性です。ただし自動調整がされなくなってしまうので、Media Queryなどを使ってスクリーンの大きさにあったfont-sizeを指定してあげる必要があります。</p>
+
+<p>自動調整を無効にした場合でも、画面の向きが変わってローテートされた場合の表示の調整は行われます（iPhoneの場合）。</p>
+
+<p>また、あえて自動調整にまかせるという選択肢もあると思うので、この属性を使用する場合はきちんとサイト全体の方針を決めてから使うのがいいのではないかと思います。</p>
+
+<h3>終わりに</h3>
+
+<p>iPhone向けの小さなtipsを3つ紹介しました。小さな画面で操作することが多い分、ちょっとした気配りで操作性が上がることも多いのではないでしょうか。少しでも気の届いたページを作っていけたらいいなと思います。</p>
+
+<p>SafariのHTMLとCSSについてはAppleのリファレンスを見れば載っているので、参考にどうぞ。</p>
+<ul>
+<li><a href="http://developer.apple.com/library/safari/#documentation/AppleApplications/Reference/SafariHTMLRef/Introduction.html">Safari HTML Reference: Introduction</a></li>
+<li><a href="http://developer.apple.com/library/safari/#documentation/AppleApplications/Reference/SafariCSSRef/Introduction.html">Safari CSS Reference: Introduction to Safari CSS Reference</a></li>
+</ul>
+
+
+{% endraw %}

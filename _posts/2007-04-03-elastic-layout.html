@@ -1,0 +1,162 @@
+---
+layout: post
+title: "エラスティック・レイアウトのご紹介"
+---
+{% raw %}
+<p>
+yamaokaです。
+</p>
+
+<p>
+エラスティック・レイアウトというwebサイトのレイアウト手法をご存知でしょうか？　
+「エラスティック（elastic）」とは、ゴムのように弾力性がある状態のことです。
+言い換えると「伸び縮みするレイアウト」になるでしょうか。
+</p>
+
+<p>
+webサイトの代表的なレイアウト手法として、次の2つが挙げられるかと思います。
+</p>
+
+<ul>
+<li>固定幅レイアウト</li>
+<li>リキッド・レイアウト</li>
+</ul>
+
+<h3>固定幅レイアウト</h3>
+
+<p>
+固定幅レイアウトでは、
+コンテンツを格納するボックスの幅を以下のように絶対値で指定します。
+<pre class="code"><code>div#container {
+  width: 800px;
+}
+</code></pre>
+固定幅レイアウトの場合、ウィンドウや文字のサイズが変更されてもレイアウトの枠は変わりません。
+したがって、ウィンドウを大きくすると表示されるエリアが小さくなってしまったり、
+文字のサイズを変更すると外枠が変わらないので読みづらくなってしまったりします。
+</p>
+
+<h3>リキッド・レイアウト</h3>
+
+<p>
+リキッド・レイアウトでは、
+コンテンツを格納するボックスの幅を以下のように相対値で指定します。
+<pre class="code"><code>div#container {
+  width: 80%;
+}
+</code></pre>
+リキッド・レイアウトの場合、ウィンドウのサイズが変更されるとそれに応じてレイアウトも変化します。
+ユーザーの環境に最適化した表示をさせることが可能です。
+しかしウィンドウの幅が大きくなった場合に、レイアウトの横幅が伸びてしまい、
+1行あたりの文字数が増えてしまった結果、やはり読みづらくなってしまう場合が多いです。
+</p>
+
+<h3>エラスティック・レイアウト</h3>
+
+<p>
+では、エラスティック・レイアウトとはどのようなレイアウト手法なのでしょうか。
+CSSを使用したサンプルの宝庫、<a href="http://www.csszengarden.com/">CSS Zen Garden</a>に
+<a href="http://www.csszengarden.com/?cssfile=/063/063.css&page=0">エラスティック・レイアウトの実際例がある</a>ので見てみましょう。
+</p>
+
+<p>
+以下がそのサンプルを文字サイズを変更しつつ閲覧した場合のスクリーンショットです。
+上から順に、文字のサイズを小、中、大と変更しています。<br />
+<br />
+<a href="http://photozou.jp/photo/show/784/2845791"><img src="http://photozou.jp/pub/784/784/photo/2845791.png" alt="エラスティック・レイアウト例（小）" width="240" height="179"></a><br><a href="http://photozou.jp/photo/show/784/2845791">レイアウト例（小）</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br />
+<br />
+<a href="http://photozou.jp/photo/show/784/2845790"><img src="http://photozou.jp/pub/784/784/photo/2845790.png" alt="エラスティック・レイアウト例（中）" width="240" height="179"></a><br><a href="http://photozou.jp/photo/show/784/2845790">レイアウト例（中）</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br />
+<br />
+<a href="http://photozou.jp/photo/show/784/2845788"><img src="http://photozou.jp/pub/784/784/photo/2845788.png" alt="エラスティック・レイアウト例（大）" width="240" height="179"></a><br><a href="http://photozou.jp/photo/show/784/2845788">レイアウト例（大）</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br />
+</p>
+
+<p>
+一見して気づくのは、それぞれが相似形のようになっている点です。
+全体のレイアウトを保ったまま、文字のサイズが変更されているのがわかります。
+ちょうどゴムを伸ばしたような感じですね。
+どのようにしてこのレイアウトは実現されているのでしょうか。
+</p>
+
+<p>
+エラスティック・レイアウトの場合、以下のように文字サイズ単位で最大幅を指定します。
+<pre class="code"><code>div#container {
+  max-width: 70em;
+}
+</code></pre>
+このようにすることで、レイアウトの最大幅が文字のサイズと同期するようになります。
+したがって、レイアウトがウィンドウの幅に左右されることなく、
+幅が広がって1行あたりの文字数が増え、読みづらくなることを防ぐことができます。
+</p>
+
+<p>
+また、以下のように最小幅も同時に指定することでより細密なレイアウトを定義することもできます。
+<pre class="code"><code>div#container {
+  max-width: 70em;
+  min-width: 60em;
+}
+</code></pre>
+</p>
+
+<h3>IE6以前への対応</h3>
+
+<p>
+CSSのmax-width属性、min-width属性はほとんどのモダンブラウザでサポートされていますが、
+残念なことにInternet Explorer 6（以下IE6）以前ではサポートされていません。
+そのため、IE6にも対応するためには別の方法をとる必要があります。
+</p>
+
+<p>
+IE6でもmax-width属性、min-width属性を動作させるためのJavaScriptライブラリ、
+<a href="http://doxdesk.com/software/js/minmax.html">minmax.js</a>を利用するか、
+下記のようにInternet Explorerでだけ動作するexpression属性を使うと
+エラスティックなレイアウトのようにすることができます。
+<pre class="code"><code>* html div#container {
+  width: expression(document.body.clientWidth < 600 ? "600px" :
+    document.body.clientWidth > 800 ? "800px" : "auto");
+}
+</code></pre>
+</p>
+
+<h3>アクセシビリティの問題</h3>
+
+<p>
+エラスティック・レイアウトはいいことづくめのように聞こえますが、もちろん欠点もあります。
+レイアウトが文字のサイズに応じて決定されるため、文字のサイズを非常に大きな値にすると、
+水平方向のスクロールバーが表示されるようになってしまいます。
+そのままでは、弱視の方などにとってのアクセシビリティを欠くことになります。
+</p>
+
+<h3>画像の問題</h3>
+
+<p>
+また、文字のサイズを変更した場合に画像のサイズが変更されないという問題もあります。
+<a href="http://www.swfir.com/">swfIR</a>などのJavaScriptのライブラリを利用すればいいのですが、
+画像を拡大した場合には解像度が低下してしまうので注意が必要です。
+この問題に関しては、できるだけ影響しない範囲で画像を使うようにするしかありません。
+</p>
+
+<h3>まとめ</h3>
+
+<p>
+エラスティック・レイアウトはリキッド・レイアウトの一形態として捉えることができます。
+しかし同時に、最大幅を文字のサイズに応じて決定することで、固定幅レイアウトの長所を取り入れているともいえます。
+上記のような問題もありますが、新しいレイアウトの試みとして面白いのではないでしょうか。
+</p>
+
+<h3>参考</h3>
+
+<p>
+最後に、記事を書く上で参考にしたページを挙げておきます。
+</p>
+
+<ul>
+<li><a href="http://2xup.org/log/2006/12/20-0212">一行あたりの文字数を制限する elastic layout （エラステックレイアウト） - 2xup.org</a></li>
+<li><a href="http://d.hatena.ne.jp/aratako0/20061228/p1">TRANS - 2xupで実装されているエラステックレイアウトを調べてみた。</a></li>
+<li><a href="http://www.lllcolor.com/archives/200703/elastic_layouts.html">エラステックレイアウト(Elastic layouts)のメモ | Emotional Web</a></li>
+<li><a href="http://www.lllcolor.com/archives/200703/2.html">エラステックレイアウトのメモ(その2) | Emotional Web</a></li>
+<li><a href="http://www.u-ziq.com/blog/2007/02/post_5.html">WEBデザイン&AJAX: エラスティックレイアウト</a></li>
+<li><a href="http://www.u-ziq.com/blog/2007/02/post_7.html">WEBデザイン&AJAX: エラスティックレイアウトでイメージを自動で拡大する方法</a></li>
+<li><a href="http://www.lucky-bag.com/archives/2007/03/samples-of-elastic-layouts.html">Lucky bag::blog: 固定幅ベースの elastic レイアウトサンプル</a></li>
+</ul>
+
+{% endraw %}

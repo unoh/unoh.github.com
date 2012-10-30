@@ -1,0 +1,7 @@
+---
+layout: post
+title: "phpからバックグランドプロセスを呼ぶ"
+---
+{% raw %}
+こんにちは satoです<br /><br />webのphpスクリプトから 処理時間のかかるコマンドを呼ぶ際にバックグラウンドで行うため<br /><br />　system("スクリプト名 > /dev/null &");<br /><br />などとやるのですが、これだと <br /><br />apache reload などの際に hupシグナルでバックグラウンドで走っているスクリプトのプロセスも<br />死んでしまいます。<br />こんなときは<br /><br />　system("nohup スクリプト名 > /dev/null &");<br /><br />とやると hupシグナルを無視してスクリプトは実行し続けます。<br /><br />apache restartがかかったときも　プロセスが死なない niceな方法を募集中です！
+{% endraw %}

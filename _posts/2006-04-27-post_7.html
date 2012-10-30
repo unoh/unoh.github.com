@@ -1,0 +1,7 @@
+---
+layout: post
+title: "少しでもプログラムの実行スピードを上げたい"
+---
+{% raw %}
+こんばんは、ドウです。<br /><br />プログラマとして、プログラムを実行スピードを重視しなければならないと思います。それについて、細かいことなんですけど、PHPプログラムのいくつかの例を挙げます。<br />1.str_replaceとereg_replaceが両方使える場合は、str_replaceを使ったほうが、速い。<br />2.echoとprintとが、ほとんど同じ機能をしているが、print関数は、$res=print("hello!")という結果をリターンする機能がありまして、実行スピードが、echoより若干遅い。<br />3.HTMLとPHPとが混ざって書くときに、&lt;? echo "&lt;b&gt;hello&lt;/b&gt;"?&gt;より、単なるHTMLコードの"&lt;b&gt;hello&lt;/b&gt;"のほうは実行スピードが多少速い。
+{% endraw %}

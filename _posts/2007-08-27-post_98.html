@@ -1,0 +1,166 @@
+---
+layout: post
+title: "角丸画像を簡単に作る"
+---
+{% raw %}
+Keitaです。最近、モテるためにがんばっていますが、周りの女性は誰一人として振り向いてくれません。<br />
+さて、そんなわけで、世間では、いろいろな角を丸めると、モテるといううわさを聞いてとりあえず角を丸めることにしてみました。<br />
+<br />
+でも、CSSの角を丸める方法は、わりと論争の的でこれがいいよ！と人に勧める知識もないので、とりあえず、画像を丸めてみることにしました。<br />
+<br />
+今回も、<a href="http://itpro.nikkeibp.co.jp/members/SI/oss/20030926/2/">Webアプリケーションに関する面倒な問題を簡単に解決するツール</a>、PHPを利用します。<br />
+<br />
+画像を加工するのに何使うは、結構、選択肢があるのですが、そのものずばりの関数がある<a href="http://pecl.php.net/package/imagick/2.0.0RC1">imagick 2.0</a>を使いたいと思います。<br />
+<br />
+コードはこんな感じです。<br />
+
+<pre class="code">
+&lt;?php
+     $image =& new Imagick();
+     $image->readImage('test2.jpg');  // ファイルを読み込む
+     $image->roundCorners(20, 20);    // 角の半径を指定する
+     $image->setImageFormat('png');   // 画像形式をpngに
+     $image->writeImage('test2r.png'); //ファイルに保存
+</pre>
+<br />
+これで、完了です。<br />
+なんて簡単！<br />
+それでは、よい角丸ライフを！！
+<br />
+<br />
+<br />
+っと、まだリリースもしてない拡張をトピックに出すだけだと気が引けるので、MagickWand用のコードも載せておきたいと思います。<br />
+<br />
+先のimagick 2.0.0を参考に、さくっとつくったもので、わりと検証してなかったり変数名なんだよとかいう感じですが、気にしないでください<br />
+
+<pre class="code">
+//MagickWand 1.0.4+ 6.3.3.1にて動作確認
+function MagickRoundcorners($hwnd, $xRounding, $yRounding,$strokeWidth  = 10, $displace = 5, $correction = -6)
+{
+    $imageWidth = MagickGetImageWidth($hwnd);
+    $imageHeight = MagickGetImageHeight($hwnd);
+
+    if ($imageWidth === false || $imageHeight === false){
+        return false;
+    }
+
+    $status = MagickSetImageType($hwnd, MW_TrueColorMatteType);
+
+    
+    $color = NewPixelWand();
+    $draw = NewDrawingWand();
+    $maskImage = NewMagickWand();
+
+    $status = PixelSetColor($color, "transparent");
+
+    if ($status === false) {
+        MyMagickDestoryWand($maskImage, $color, $draw);
+        return false;
+    }
+
+    $status = MagickNewImage( $maskImage, $imageWidth, $imageHeight, $color );
+    
+    if ($status === false) {
+        MyMagickDestoryWand($maskImage, $color, $draw);
+        return false;
+    }
+
+    MagickSetImageBackgroundColor($maskImage, $color);
+    $status = PixelSetColor($color, "white");
+    
+    if ($status === false) {
+        MyMagickDestoryWand($maskImage, $color, $draw);
+        return false;
+    }
+
+    DrawSetFillColor($draw, $color);
+    $status = PixelSetColor($color, "black");
+            
+    if ($status === false) {
+        MyMagickDestoryWand($maskImage, $color, $draw);
+        return false;
+    }
+    
+    DrawSetStrokeColor($draw, $color);
+    DrawSetStrokeWidth($draw, $strokeWidth);
+
+    DrawRoundRectangle($draw, $displace, $displace, $imageWidth + $correction, $imageHeight + $correction, $xRounding, $yRounding );
+    $status = MagickDrawImage($maskImage, $draw);
+
+    if ($status === false) {
+        MyMagickDestoryWand($maskImage, $color, $draw);
+        return false;
+    }
+
+
+    $status = MagickCompositeImage($hwnd, $maskImage, MW_DstInCompositeOp, 0, 0);
+    if ($status === false) {
+        MyMagickDestoryWand($maskImage, $color, $draw);
+        return false;
+    }
+
+    $draw = NewDrawingWand();
+    $maskImage = NewMagickWand();
+    $color = NewPixelWand();
+
+    $status = PixelSetColor($color, "transparent");
+
+    if ($status === false) {
+        MyMagickDestoryWand($maskImage, $color, $draw);
+        return false;
+    }
+
+    MagickNewImage($maskImage, $imageWidth, $imageHeight, $color );
+
+
+    DrawSetFillColor($draw, $color);
+    DrawSetStrokeColor($draw, $color);
+    DrawSetStrokeWidth($draw, 2);
+
+
+    DrawRoundRectangle($draw, 0, 0, $imageWidth, $imageHeight, $xRounding, $yRounding);
+    MagickSetImageBackgroundColor($maskImage,$color);
+    $status = MagickDrawImage($maskImage,$draw);
+
+    if ($status === false) {
+        MyMagickDestoryWand($maskImage, $color, $draw);
+        return false;
+    }
+
+    
+    $status = MagickCompositeImage($hwnd, $maskImage, MW_OverCompositeOp, 0, 0);
+    
+    if ($status === false) {
+        MyMagickDestoryWand($maskImage, $color, $draw);
+        return false;
+    }
+
+    MyMagickDestoryWand($maskImage, $color, $draw);
+    
+    return true;
+}
+
+function MyMagickDestoryWand($mwand, $pwand, $dwand)
+{
+    DestroyMagickWand($mwand);
+    DestroyPixelWand($pwand);
+    DestroyDrawingWand($dwand);
+}
+</pre>
+
+使い方
+<pre class="code">
+$image =  NewMagickWand();
+MagickReadImage($image, 'file.jpg');
+MagickRoundcorners($image, 20, 20);
+MagickSetFormat($image, 'png');
+MagickWriteImage($image, 'file.png');
+</pre>
+
+最後に、コードなんて書きたくないよ！というものぐさなあなたのために、<a href="http://kadomaru.himote.jp/">角を丸くしてモテる</a>ページを用意してみました。<br />
+といってもお昼休みにちゃちゃっとつくったものなので、なんか、致命的なバグがあるかもしれませんので、あんまりいじめないでください。(今、一部うごかないらしいです。）<br />
+<br />
+それでは、よいモテライフを！<br />
+<br />
+PS.ほれたでしょうか？<br />
+{% endraw %}

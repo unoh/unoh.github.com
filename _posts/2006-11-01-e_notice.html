@@ -1,0 +1,337 @@
+---
+layout: post
+title: "配列操作でE_NOTICE対策を簡単に行う方法"
+---
+{% raw %}
+<p>
+こんにちはjokagiです．
+もう日が変わりそうではありますが，本日は<a href="http://photozou.jp/" target="_new">フォト蔵</a>の<a href="http://photozou.jp/basic/campaign/renewal" target="_new">リニューアルお試し</a>が始まりました!!
+アカウントを持っている人も持っていない人も新しく掲載する写真を用意してぜひぜひお試しください．
+</p>
+
+<div class="photozou-photo">
+<a href="http://photozou.jp/photo/show/137/1683055"><img src="http://photozou.jp/pub/137/137/photo/1683055.png?m=1162390890" alt="リニューアルトップ" width="240" height="190" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/137/1683055">リニューアルトップ</a> posted from <a href="http://photozou.jp/">フォト蔵</a><br />
+<a href="http://photozou.jp/photo/show/137/1683056"><img src="http://photozou.jp/pub/137/137/photo/1683056.png?m=1162390918" alt="ログイン後画面" width="240" height="199" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/137/1683056">ログイン後画面</a> posted from <a href="http://photozou.jp/">フォト蔵</a>
+</div>
+
+<p>
+ってことで前フリとは関係ないのですが，今回はjokagiが以前常用していた関数を紹介します．
+</p>
+
+<h3>配列の要素を扱うときどうしていますか?</h3>
+<p>
+フォームを受け取るときによくあるパターンに下記のようなコードがあります．
+</p>
+
+<div class="source-code">
+<pre>
+if ($_GET['id'] && $_GET['passwd']) {
+    login($_GET['id'], $_GET['passwd']);
+} else {
+    error_function();
+}
+</pre>
+</div>
+
+<p>
+しかしこのコードは問題があり，PHPの警告をきっちり出力するようにしていると，下記のような警告が出てくる場合があります．
+</p>
+
+<div class="display">
+<pre>
+<b>Notice</b>:  Undefined index:  id in <b>/home/.../index.php</b> on line <b>3</b><br
+<b>Notice</b>:  Undefined index:  passwd in <b>/home/.../index.php</b> on line <b>3</b><br
+</pre>
+</div>
+
+<p>
+これは未定義な配列要素を使用しているということで，URLにパラメーターidやpasswdを付加しなかった場合に出力されます．
+一般的にこのような警告がでるPHPスクリプトのできはよくないということで，回避するために下記のようなコードを書く場合が多いです．
+</p>
+
+<div class="source-code">
+<pre>
+if (isset($_GET['id']) && $_GET['id'] &&
+  isset($_GET['passwd']) && $_GET['passwd']) {
+    do_login($_GET['id'], $_GET['passwd']);
+} else {
+    error_function();
+}
+</pre>
+</div>
+
+<p>
+これは<a href="http://php.net/isset">isset</a>()を用い，配列要素があるかどうか調べつつ処理を行うといった感じです．
+しかしこれでは2つの配列要素を扱うだけなのに可読性が下がってしまいます．
+ってことでまずこういう関数を用意します．
+</p>
+
+<div class="source-code">
+<pre>
+/**
+ *  配列から値を取り出す
+ *
+ *  配列から値を取り出します。もし連想キーが存在しない場合、
+ *  第3引数の値を返します。
+ *
+ *  @param array $array 値を取得したい配列
+ *  @param mixed $key 配列から値を取得したい連想キー
+ *  @return mixed 配列から取り出した値、$keyが存在しなければ
+ *                $defaultを返す
+ */
+function array_get_value($array, $key, $default = NULL)
+{
+    return isset($array[$key]) ? $array[$key]: $default;
+}
+</pre>
+</div>
+
+<p>
+array_get_value()は見てすぐわかる感じですが，配列に指定要素があればそれを，なければ
+第3引数の$default(省略時はNULL)を返す関数です．
+個人的にはこんな使い方をよくやっていた気がします．
+</p>
+
+<div class="source-code">
+<pre>
+$first_name = array_get_value($user_info, 'first_name', 'ごんべ');
+$last_name = array_get_value($user_info, 'last_name', 'ななし');
+</pre>
+</div>
+
+<p>
+この関数を用意すると下記のように書き直すことができます．関数名は好みに応じて短くしたりしてもいいかもしれません．
+</p>
+
+<div class="source-code">
+<pre>
+if (array_get_value($_GET['id']) && array_get_value($_GET['passwd'])) {
+    do_login($_GET['id'], $_GET['passwd']);
+}
+
+//  関数名を短くした雰囲気
+if (avg($_GET['id']) && avg($_GET['passwd'])) {
+    do_login($_GET['id'], $_GET['passwd']);
+} else {
+    error_function();
+}
+</pre>
+</div>
+
+<p>
+実際はid=0などこのままでは値があると認識してくれないのでもう少し修正する必要がありますね．
+最近の流行のようにちゃんと===や!==でチェックしよう!!ってことでもうちょっとアレンジして第3引数の型に応じて取得した配列値の型変換を行うようにしてみました．
+</p>
+
+<div class="source-code">
+<pre>
+/**
+ *  配列から値を取り出す
+ *
+ *  配列から値を取り出します。もし連想キーが存在しない場合、
+ *  第3引数の値を返します。array_get_value()と異なるのは
+ *  取得した値を第3引数の型に変換します。
+ *
+ *  @param array $array 値を取得したい配列
+ *  @param mixed $key 配列から値を取得したい連想キー
+ *  @return mixed 配列から取り出した値、$keyが存在しなければ
+ *                $defaultを返す
+ */
+function array_get_value2($array, $key, $default = NULL)
+{
+    if (isset($array[$key])) {
+        $result = $array[$key];
+
+        $type = gettype($default);
+        switch ($type) {
+        case 'double':
+            //  一応マニュアル推奨の値に変換しておく
+            $type = 'float';
+        case 'boolean':
+        case 'integer':
+        case 'string':
+        case 'array':
+            settype($result, $type);
+            break;
+
+        default:
+            //  objectなどその他の型は変換しない
+        }
+    } else {
+        $result = $default;
+    }
+    return $result;
+}
+</pre>
+</div>
+
+<p>
+array_get_value2()を使えば，例えば配列の値が「"0"(文字列型の0)」でも第3引数に「0(数値型の0)」を指定することで0が取得できるようになります．
+これで安心して===などで比較ができます．
+文章で読んでもよく分からない方はarray_get_value()とarray_get_value2()の簡単な実行例を下記に出しておきますので参考にしてください．
+</p>
+
+<div class="source-code">
+<pre>
+<span style="color: #0000BB">&lt;?php
+
+</span><span style="color: #FF8000">/**
+&nbsp;*&nbsp;&nbsp;配列から値を取り出す
+&nbsp;*
+&nbsp;*&nbsp;&nbsp;配列から値を取り出します。もし連想キーが存在しない場合、
+&nbsp;*&nbsp;&nbsp;第3引数の値を返します。
+&nbsp;*
+&nbsp;*&nbsp;&nbsp;@param&nbsp;array&nbsp;$array&nbsp;値を取得したい配列
+&nbsp;*&nbsp;&nbsp;@param&nbsp;mixed&nbsp;$key&nbsp;配列から値を取得したい連想キー
+&nbsp;*&nbsp;&nbsp;@return&nbsp;mixed&nbsp;配列から取り出した値、$keyが存在しなければ
+&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$defaultを返す
+&nbsp;*/
+</span><span style="color: #007700">function&nbsp;</span><span style="color: #0000BB">array_get_value</span><span style="color: #007700">(</span><span style="color: #0000BB">$array</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">$key</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">$default&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">NULL</span><span style="color: #007700">)
+{
+&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;isset(</span><span style="color: #0000BB">$array</span><span style="color: #007700">[</span><span style="color: #0000BB">$key</span><span style="color: #007700">])&nbsp;?&nbsp;</span><span style="color: #0000BB">$array</span><span style="color: #007700">[</span><span style="color: #0000BB">$key</span><span style="color: #007700">]:&nbsp;</span><span style="color: #0000BB">$default</span><span style="color: #007700">;
+}
+
+</span><span style="color: #FF8000">/**
+&nbsp;*&nbsp;&nbsp;配列から値を取り出す
+&nbsp;*
+&nbsp;*&nbsp;&nbsp;配列から値を取り出します。もし連想キーが存在しない場合、
+&nbsp;*&nbsp;&nbsp;第3引数の値を返します。array_get_value()と異なるのは
+&nbsp;*&nbsp;&nbsp;取得した値を第3引数の型に変換します。
+&nbsp;*
+&nbsp;*&nbsp;&nbsp;@param&nbsp;array&nbsp;$array&nbsp;値を取得したい配列
+&nbsp;*&nbsp;&nbsp;@param&nbsp;mixed&nbsp;$key&nbsp;配列から値を取得したい連想キー
+&nbsp;*&nbsp;&nbsp;@return&nbsp;mixed&nbsp;配列から取り出した値、$keyが存在しなければ
+&nbsp;*&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;$defaultを返す
+&nbsp;*/
+</span><span style="color: #007700">function&nbsp;</span><span style="color: #0000BB">array_get_value2</span><span style="color: #007700">(</span><span style="color: #0000BB">$array</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">$key</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">$default&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">NULL</span><span style="color: #007700">)
+{
+&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(isset(</span><span style="color: #0000BB">$array</span><span style="color: #007700">[</span><span style="color: #0000BB">$key</span><span style="color: #007700">]))&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$result&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">$array</span><span style="color: #007700">[</span><span style="color: #0000BB">$key</span><span style="color: #007700">];
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$type&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">gettype</span><span style="color: #007700">(</span><span style="color: #0000BB">$default</span><span style="color: #007700">);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;switch&nbsp;(</span><span style="color: #0000BB">$type</span><span style="color: #007700">)&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;</span><span style="color: #DD0000">'double'</span><span style="color: #007700">:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$type&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #DD0000">'float'</span><span style="color: #007700">;
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;</span><span style="color: #DD0000">'boolean'</span><span style="color: #007700">:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;</span><span style="color: #DD0000">'integer'</span><span style="color: #007700">:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;</span><span style="color: #DD0000">'string'</span><span style="color: #007700">:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;case&nbsp;</span><span style="color: #DD0000">'array'</span><span style="color: #007700">:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">settype</span><span style="color: #007700">(</span><span style="color: #0000BB">$result</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">$type</span><span style="color: #007700">);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;break;
+
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;default:
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;}&nbsp;else&nbsp;{
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span><span style="color: #0000BB">$result&nbsp;</span><span style="color: #007700">=&nbsp;</span><span style="color: #0000BB">$default</span><span style="color: #007700">;
+&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;return&nbsp;</span><span style="color: #0000BB">$result</span><span style="color: #007700">;
+}
+
+</span><span style="color: #0000BB">ini_set</span><span style="color: #007700">(</span><span style="color: #DD0000">'display_errors'</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'on'</span><span style="color: #007700">);
+</span><span style="color: #0000BB">error_reporting</span><span style="color: #007700">(</span><span style="color: #0000BB">E_ALL</span><span style="color: #007700">);
+
+</span><span style="color: #0000BB">$array&nbsp;</span><span style="color: #007700">=&nbsp;array(</span><span style="color: #DD0000">'foo'</span><span style="color: #007700">=&gt;</span><span style="color: #DD0000">'foo'</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">100</span><span style="color: #007700">=&gt;</span><span style="color: #0000BB">100</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'20.2'</span><span style="color: #007700">=&gt;</span><span style="color: #DD0000">'20.2'</span><span style="color: #007700">);
+
+echo&nbsp;</span><span style="color: #DD0000">'&lt;pre&gt;'</span><span style="color: #007700">;
+echo&nbsp;</span><span style="color: #DD0000">"&lt;strong&gt;\$array&lt;/strong&gt;\n"</span><span style="color: #007700">;
+</span><span style="color: #0000BB">var_dump</span><span style="color: #007700">(</span><span style="color: #0000BB">$array</span><span style="color: #007700">);
+echo&nbsp;</span><span style="color: #DD0000">'&lt;/pre&gt;&lt;hr&nbsp;/&gt;&lt;pre&gt;'</span><span style="color: #007700">;
+
+echo&nbsp;</span><span style="color: #DD0000">"&lt;strong&gt;\$array['foo']&lt;/strong&gt;\n"</span><span style="color: #007700">;
+</span><span style="color: #0000BB">var_dump</span><span style="color: #007700">(</span><span style="color: #0000BB">$array</span><span style="color: #007700">[</span><span style="color: #DD0000">'foo'</span><span style="color: #007700">]);
+echo&nbsp;</span><span style="color: #DD0000">"&lt;strong&gt;\$array['bar']&lt;/strong&gt;\n"</span><span style="color: #007700">;
+</span><span style="color: #0000BB">var_dump</span><span style="color: #007700">(</span><span style="color: #0000BB">$array</span><span style="color: #007700">[</span><span style="color: #DD0000">'bar'</span><span style="color: #007700">]);
+echo&nbsp;</span><span style="color: #DD0000">'&lt;/pre&gt;&lt;hr&nbsp;/&gt;&lt;pre&gt;'</span><span style="color: #007700">;
+
+echo&nbsp;</span><span style="color: #DD0000">"&lt;strong&gt;array_get_value(\$array,&nbsp;'foo');&lt;/strong&gt;\n"</span><span style="color: #007700">;
+</span><span style="color: #0000BB">var_dump</span><span style="color: #007700">(</span><span style="color: #0000BB">array_get_value</span><span style="color: #007700">(</span><span style="color: #0000BB">$array</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'foo'</span><span style="color: #007700">));
+echo&nbsp;</span><span style="color: #DD0000">"&lt;strong&gt;array_get_value(\$array,&nbsp;'bar');&lt;/strong&gt;\n"</span><span style="color: #007700">;
+</span><span style="color: #0000BB">var_dump</span><span style="color: #007700">(</span><span style="color: #0000BB">array_get_value</span><span style="color: #007700">(</span><span style="color: #0000BB">$array</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'bar'</span><span style="color: #007700">));
+echo&nbsp;</span><span style="color: #DD0000">'&lt;/pre&gt;&lt;hr&nbsp;/&gt;&lt;pre&gt;'</span><span style="color: #007700">;
+
+echo&nbsp;</span><span style="color: #DD0000">"&lt;strong&gt;array_get_value2(\$array,&nbsp;'foo');&lt;/strong&gt;\n"</span><span style="color: #007700">;
+</span><span style="color: #0000BB">var_dump</span><span style="color: #007700">(</span><span style="color: #0000BB">array_get_value2</span><span style="color: #007700">(</span><span style="color: #0000BB">$array</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'foo'</span><span style="color: #007700">));
+echo&nbsp;</span><span style="color: #DD0000">"&lt;strong&gt;array_get_value2(\$array,&nbsp;'bar');&lt;/strong&gt;\n"</span><span style="color: #007700">;
+</span><span style="color: #0000BB">var_dump</span><span style="color: #007700">(</span><span style="color: #0000BB">array_get_value2</span><span style="color: #007700">(</span><span style="color: #0000BB">$array</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'bar'</span><span style="color: #007700">));
+echo&nbsp;</span><span style="color: #DD0000">"&lt;strong&gt;array_get_value2(\$array,&nbsp;'100');&lt;/strong&gt;\n"</span><span style="color: #007700">;
+</span><span style="color: #0000BB">var_dump</span><span style="color: #007700">(</span><span style="color: #0000BB">array_get_value2</span><span style="color: #007700">(</span><span style="color: #0000BB">$array</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'100'</span><span style="color: #007700">));
+echo&nbsp;</span><span style="color: #DD0000">"&lt;strong&gt;array_get_value2(\$array,&nbsp;'20.2');&lt;/strong&gt;\n"</span><span style="color: #007700">;
+</span><span style="color: #0000BB">var_dump</span><span style="color: #007700">(</span><span style="color: #0000BB">array_get_value2</span><span style="color: #007700">(</span><span style="color: #0000BB">$array</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'20.2'</span><span style="color: #007700">));
+echo&nbsp;</span><span style="color: #DD0000">"&lt;strong&gt;array_get_value2(\$array,&nbsp;'20.2',&nbsp;'');&lt;/strong&gt;\n"</span><span style="color: #007700">;
+</span><span style="color: #0000BB">var_dump</span><span style="color: #007700">(</span><span style="color: #0000BB">array_get_value2</span><span style="color: #007700">(</span><span style="color: #0000BB">$array</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'20.2'</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">''</span><span style="color: #007700">));
+echo&nbsp;</span><span style="color: #DD0000">"&lt;strong&gt;array_get_value2(\$array,&nbsp;'20.2',&nbsp;0);&lt;/strong&gt;\n"</span><span style="color: #007700">;
+</span><span style="color: #0000BB">var_dump</span><span style="color: #007700">(</span><span style="color: #0000BB">array_get_value2</span><span style="color: #007700">(</span><span style="color: #0000BB">$array</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'20.2'</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">0</span><span style="color: #007700">));
+echo&nbsp;</span><span style="color: #DD0000">"&lt;strong&gt;array_get_value2(\$array,&nbsp;'20.2',&nbsp;0.0);&lt;/strong&gt;\n"</span><span style="color: #007700">;
+</span><span style="color: #0000BB">var_dump</span><span style="color: #007700">(</span><span style="color: #0000BB">array_get_value2</span><span style="color: #007700">(</span><span style="color: #0000BB">$array</span><span style="color: #007700">,&nbsp;</span><span style="color: #DD0000">'20.2'</span><span style="color: #007700">,&nbsp;</span><span style="color: #0000BB">0.0</span><span style="color: #007700">));
+
+echo&nbsp;</span><span style="color: #DD0000">"&lt;/pre&gt;&lt;hr&nbsp;/&gt;\n"</span><span style="color: #007700">;</span>
+</span><span style="color: #0000BB">?&gt;
+</span>
+</pre>
+</div>
+
+<div class="display">
+<pre>
+<pre><strong>$array</strong>
+array(3) {
+  ["foo"]=>
+  string(3) "foo"
+  [100]=>
+  int(100)
+  ["20.2"]=>
+  string(4) "20.2"
+}
+</pre><hr /><pre><strong>$array['foo']</strong>
+string(3) "foo"
+<strong>$array['bar']</strong>
+<br />
+<b>Notice</b>:  Undefined index:  bar in <b>/home/.../index.php</b> on line <b>3</b><br />
+NULL
+</pre><hr /><pre><strong>array_get_value($array, 'foo');</strong>
+string(3) "foo"
+<strong>array_get_value($array, 'bar');</strong>
+NULL
+</pre><hr /><pre><strong>array_get_value2($array, 'foo');</strong>
+string(3) "foo"
+<strong>array_get_value2($array, 'bar');</strong>
+NULL
+<strong>array_get_value2($array, '100');</strong>
+int(100)
+<strong>array_get_value2($array, '20.2');</strong>
+string(4) "20.2"
+<strong>array_get_value2($array, '20.2', '');</strong>
+string(4) "20.2"
+<strong>array_get_value2($array, '20.2', 0);</strong>
+int(20)
+<strong>array_get_value2($array, '20.2', 0.0);</strong>
+float(20.2)
+</pre><hr />
+</pre>
+</div>
+
+<p>
+大体雰囲気はつかめたでしょうか?
+結果的に第3引数を使用してarray_get_value2()を用いるとこういう風に記述することができます．
+</p>
+<div class="source-code">
+<pre>
+$id = array_get_value2($_GET, 'id', 0);
+$passwd = array_get_value2($_GET,'passwd', '');
+if ($id !== 0 && $passwd !== '') {
+    do_login($id, $passwd);
+} else {
+    error_function();
+}
+</pre>
+</div>
+
+<p>
+array_get_value()はisset()し，かつ値をチェックするという手間を1回ですませる実装ができるようになります．
+しかし欠点もあります．
+それは，最初のコードではtypoなどが存在した場合，配列から値が取れなかったときにPHPのE_NOTICEが発生し，ミスを発見することができますが，array_get_value()を用いるとE_NOTICEが発生しなくなるため，この問題に気づきづらくなるという諸刃の剣の状態になることがあります．
+</p>
+<p>
+最後に実はarray_get_value()はかなりの頻度で使用しましたが，array_get_value2()相当までの実装はまだ実運用で使用したことはありません(苦笑)
+もしご興味がある方はガツガツ使って不都合などあれば教えていただければと思います．
+</p>
+{% endraw %}

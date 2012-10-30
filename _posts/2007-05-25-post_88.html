@@ -1,0 +1,161 @@
+---
+layout: post
+title: "ベンチャー流のスパムメール対策術（後編）"
+---
+{% raw %}
+<p>今日もあいにくの雨で、最近めっきり自転車通勤が減っている naoya です。</p>
+
+<p>今日は、前回の続き「 ベンチャー流のスパムメール対策術」と題した後編のエントリです。<a href="http://labs.unoh.net/2007/04/post_83.html">前編</a>では、オープンソースで提供されているスパムフィルターの設定方法を紹介しました。</p>
+
+<p><a href="http://labs.unoh.net/2007/04/post_83.html">前編</a>の設定を行った後、約２週間ほど僕宛に届く全てのメールでスパムの学習をさせるため、受信したメールをスパムフィルターに通して、スパムメールは spam ディレクトリに、スパムではないメールは Inbox のディレクトリに残しておきました。</p>
+
+<p>この手作業の後、さっそくスパムフィルターの選定をするため、それぞれのスパムフィルターがどの程度効果があるのか測定することにしました。</p>
+
+<p>測定する方法は、僕宛のメールに対して３種類のスパムフィルターをかけて、それぞれのスパムフィルターでスパムと判定されたメールを、どのスパムフィルターにかかったのか分かるようにそれぞれ別のディレクトリに自動的に振り分けるようにしました。</p>
+
+<p>自動的に振り分けるツールは、procmail を使いました。まず、メール受信の時点で procmail を実行するため、$HOME/.forward を作成して、次の内容を記述しておきました。naoya となっているところは、ユーザ名に該当するので環境に応じて置き換えてください。</p>
+
+<pre class="code">
+"|IFS=' ' && exec /usr/bin/procmail -f- || exit 75 #naoya"
+</pre>
+
+<p>procmail を実行されるようになったところで、procmail の振り分けルールを $HOME/.procmail.rc に次のように記述します。</p>
+
+<pre class="code">
+#
+# .procmail.rc 振り分けルール
+#
+
+PATH=/bin:/usr/bin
+MAILDIR=$HOME/Maildir
+DEFAULT=$MAILDIR/
+LOGFILE=$MAILDIR/.procmail.log
+
+SPAMDIR=$MAILDIR/.spam/cur
+SA_SPAMDIR=$MAILDIR/.spam.spamassassin/cur
+BS_SPAMDIR=$MAILDIR/.spam.bsfilter/cur
+BG_SPAMDIR=$MAILDIR/.spam.bogofilter/cur
+TRASHDIR=$MAILDIR/.Trash/cur
+
+# 受信メールに対して
+# SpamAssassin をかける
+:0fw
+| /usr/bin/spamc
+
+# 受信メールに対して、
+# bsfilter をかける
+:0fw
+| /opt/bsfilter/bsfilter/bsfilter
+     --pipe --insert-flag --insert-probability
+
+# 受信メールに対して、
+# bogofilter をかける
+:0fw
+| /usr/bin/bogofilter -u -e -p -l
+:0e
+{ EXITCODE=75 HOST }
+
+# SpamAssassin でスパムと判定されたメールを 
+# .spam.spamassassin ディレクトリにコピーする
+:0c:
+* ^X-Spam-Status: Yes
+$SA_SPAMDIR
+
+# bsfilter でスパムと判定されたメールを
+# .spam.bsfilter ディレクトリにコピーする
+:0c:
+* ^X-Spam-Flag: Yes
+$BS_SPAMDIR
+
+# bogofilter でスパムと判定されたメールを
+# .spam.bogofilter ディレクトリにコピーする
+:0c:
+* ^X-Bogosity: Spam, tests=bogofilter
+$BG_SPAMDIR
+
+#
+# 以下は、それぞれのスパムフィルターで
+# スパムと判定されたメールを削除する
+#
+:0
+* ^X-Spam-Flag: Yes
+/dev/null
+
+:0
+* ^X-Spam-Status: Yes
+/dev/null
+
+:0
+* ^X-Bogosity: Spam, tests=bogofilter
+/dev/null
+</pre>
+
+<p>上の procmail の振り分けルールにより、それぞれのディレクトリにスパムが蓄積されていきます。この状態で約２週間ほど、それぞれのスパムフィルターにかかるメールの数を調査しました。また、このときはスパムメールは手作業で spam ディレクトリに、誤ってスパムメールと判定されてしまったメールは Inbox ディレクトリに移動するようにして、随時スパム学習をさせていました。スパム学習は、<a href="http://labs.unoh.net/2007/04/post_83.html">前編</a>で紹介したシェルスクリプトで自動実行しています。</p>
+
+<p>さて、この期間の間にスパムフィルターでスパムとして判定したメール数は、次の通りでした。</p>
+
+<table>
+  <tr><th>スパムフィルター</th><th>スパムと判定したメールの数</th></tr>
+  <tr><td>SpamAssassin</td><td>857通</td></tr>
+  <tr><td>bsfilter</td><td>866通</td></tr>
+  <tr><td>bogofilter</td><td>44通</td></tr>
+</table>
+
+<p>SpamAssassin と bsfilter が非常に優秀でした。bogofilter はおそらく日本語周りの設定不備で判定率が低いと思います。
+約二週間で、こんなに多くのスパムメールを社員全員が受信していたかと思うとぞっとしますね。</p>
+
+<p>ということで、SpamAssassin か bsfilter で迷ったのですが、世間の使用状況も考慮して SpamAssassin を採用することにしました。</p>
+
+
+<p>次に、SpamAssassin を mailman でメール配送される手前でフィルターするように設定しました。mailman での設定方法ですが、<a href="http://www.python.org/cgi-bin/faqw-mm.py?req=show&file=faq04.023.htp">Mailman FAQ Entry</a> に３つの方法が書かれています。
+この中で、特定のスパムフィルターに依存しない３番目の方法で設定しました。設定手順は、次の通りです。</p>
+
+<p>1. /etc/aliases に定義されている mailman の alias を次のように変更します。次は、test というメーリングリストが設定されている例です。</p>
+
+<pre class="code">
+test: "|/usr/bin/procmail -m /etc/postfix/ml_procmailrc"
+</pre>
+
+<p>2. /etc/postfix/ml_procmailrc を、次の内容で作成します。</p>
+<pre class="code">
+SPAM_TO=[スパムを送るモデレータの宛先]
+
+#
+# SpamAssassin を実行する
+#
+:0fw
+| /usr/bin/spamc
+
+#
+# SpamAssassin でスパムと判定された
+# メールをモデレータに送る
+#
+:0
+* ^X-Spam-Status: Yes
+! $SPAM_TO
+
+
+#
+# 宛先が test のときは、
+# mailman で通常配送する
+#
+:0
+* ^.*test
+| /etc/smrsh/mailman post test
+</pre>
+
+<p>3. 最後に、次のコマンドを実行します。</p>
+<pre class="code">
+# newaliases
+# /etc/init.d/mailman restart
+</pre>
+
+<p>この振り分けルールでは、test 以外の宛先のメールが配送先不明になってしまうので、十分注意して設定してください。運用中の環境に設定するときには、まずテスト用のメーリングリストを作成して確認することをお薦めします。</p>
+
+<p>ウノウのメールサーバは SpamAssassin + mailman でメールの配送を行っています。あわせて、定期的にスパム用のモデレータのメールを確認して、誤判定がある場合にはメールを再送するようにしていますが、今のところ誤判定はほとんどありません。</p>
+
+
+<p>というわけで、二回に分けて「ベンチャー流のスパムメール対策術」と題してスパムメールのメールサーバ側で対策する方法を紹介しました。
+サーバ側で対策するのは敷居が高いという方には、<a href="http://www.quickpopfile.jp/">クイックPOPFile</a>がお薦めです。</p>
+
+{% endraw %}

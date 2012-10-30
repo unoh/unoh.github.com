@@ -1,0 +1,38 @@
+---
+layout: post
+title: "JavaScriptからMP3ファイルを再生する方法"
+---
+{% raw %}
+<STYLE>
+<!--
+div.src {
+    border: 1px gray solid;
+    background: #F0F0F0;
+    margin: 10px 30px;
+    padding: 4px 8px;
+    overflow: auto;
+    max-height: 400px;
+    color: black;
+}
+-->
+</STYLE>
+<p>酒徳です。このごろは、食べ物が美味しい季節です。おかげで、ダイエット宣言しているのに、さっぱり体重が落ちません。困ったものです。</p>
+<p>さて、今回は、JavaScriptから任意のタイミングでMP3を再生する方法について書いてみようと思います。</p>
+<p>Webを見ていると、マウスで画像をクリックするとピコッ音が鳴るサイトがあります。「どうやって実現しているのだろうか？」と思ってソースを見てみると、Flashだったりします。そして、「そうか、Flashなら簡単に鳴らせて当然だよなぁ」と思います。</P>
+<p>しかし、Flashは、JavaScriptほど手軽ではありません。Flash開発のための環境を整えて、コンパイルして・・・と意外と労力がかかります。たかだか、「ピコッ」と効果音を鳴らしたいだけのために、そんな苦労をするのは、割に合いません。</P>
+そこで、先日私が作ったのが、soundapi.js です。このライブラリを使うと、以下のような感じで手軽にMP3ファイルを再生できます。
+<DIV class="src"><code>&lt;!-- soundapi.setup --&gt;<BR>
+&lt;script type=&quot;text/javascript&quot; src=&quot;swfobject.js&quot;&gt;&lt;/script&gt;<BR>
+&lt;script type=&quot;text/javascript&quot; src=&quot;soundapi.js&quot;&gt;&lt;/script&gt;<BR>
+&lt;!-- sample --&gt;<BR>
+&lt;a href=&quot;javascript:soundapi.playFile('pi.mp3')&quot;&gt;play&lt;/a&gt;</code></DIV>
+<P>上の数行が、ライブラリをインクルードしている部分です。そして、最後の一行がJavaScriptでMP3ファイルを再生しています。</P>
+<p>soundapi.playFile(ファイル名)だけでMP3が再生できるので簡単です！</p>
+<P>ライブラリの仕組みは極めて単純で、まず、soundapi.jsを取り込むと、音声再生用の1pxのサイズのFlashファイルを画面の端に表示します。そして、<code>soundapi.playFile(ファイル名)</code>で、JavaScriptからFlashの関数を呼びだします。（JavaScriptからFlashの関数を呼ぶのには、Flash8で導入された、External
+APIと機能を利用しました。）</P>
+<P>以下に soundapi.js を置いておきますので、興味のある方は使ってみてください！</P>
+<P><A href="http://labs.unoh.net/2006/11/02/soundapi.zip/soundapi.zip">→soundapi.zipをダウンロード</A>
+</P>
+<P>※利用上の注意ですが、Flashのセキュリティの関係で、ローカル環境では音が再生されない場合があります。そんな時は、Flash
+Playerの設定を変更するか、Webにアップして試してみてください。</P>
+{% endraw %}

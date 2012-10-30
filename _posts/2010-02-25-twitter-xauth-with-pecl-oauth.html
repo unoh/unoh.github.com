@@ -1,0 +1,130 @@
+---
+layout: post
+title: "PECL::oauthでxAuth"
+---
+{% raw %}
+<p>yamaokaです。</p>
+
+<p>
+<a href="http://twitter.com/">Twitter</a>のBasic認証によるユーザー認証が<a href="http://techcrunch.com/2009/12/09/twitter-le-web-2009/">6月に廃止される</a>ようですね。
+認証はOAuthで行ってください、とのことなのですが
+OAuthの認証画面を表示するためにブラウザを起動するのがふさわしくないケースや、
+そもそも貧弱なブラウザでうまく利用できないケースもあります。
+</p>
+
+<p>
+そうした場合の解決方法として、xAuthという仕組みがTwitterに実装されています。
+詳しくは次に紹介するweb上の記事を参照してください。
+</p>
+
+<ul>
+<li><a href="http://s-take.blogspot.com/2010/02/twitteroauth-xauth.html">s-take Blog.: Twitterによる簡易版OAuth: "xAuth"</a></li>
+<li><a href="http://d.hatena.ne.jp/lyokato/20100212/1265961914">OAuthでデスクトップアプリがブラウザを経由させたくないときのxAuth - Codin' In The Free World</a></li>
+<li><a href="http://the.hackerconundrum.com/2010/02/sneak-peek-at-twitters-browserless.html">the.hackerConundrum: Sneak peek at Twitter's browserless OAuth credentials exchange method</a></li>
+<li><a href="http://mattn.kaoriya.net/software/lang/python/20100217004716.htm">Big Sky :: デスクトップアプリケーションでも認証可能なOAuth「xAuth」をpythonから試してみた。</a></li>
+<li><a href="http://blog.livedoor.jp/maraigue/archives/1109122.html">Maraigue風。:[Ruby][Twitter] OAuthのアクセストークンを、ブラウザなしで、Twitterのユーザ名およびパスワードのみを用いて取得する(通称：xAuth)ためのRubyのコード</a></li>
+</ul>
+
+<p>
+認証にはユーザーの名前とパスワードを使いますが、
+それを元にaccess_tokenとaccess_token_secretを取得できるので以後の認証にはパスワードが不要になるというものです。
+これならBasic認証の代わりに使うことができそうですね。
+勿論、OAuthを利用できるシーンではOAuthを用いた認証が望ましいのですが、
+必ずしも当てはまらないケースもあるということで。
+</p>
+
+<p>
+PythonやRubyを使った実装サンプルは見つかったので、
+PHPのものはないかなと探してみるとありました。
+ただし<del datetime="2010-02-25T14:55:00+09:00">ベトナム語</del><ins datetime="2010-02-25T14:55:00+09:00" style="text-decoration:none;">タイ語</ins>なのでPHPのコードしか読めないということと、
+実装コードがPHPの関数ベースなので少し使いづらそうです。
+</p>
+
+<ul>
+<li><a href="http://www.nuuneoi.com/blog/blog.php?read_id=278">NuuNeoI - แจกซอร์ส PHP Twitter xauth</a></li>
+</ul>
+
+<p>
+そこで普段OAuthを利用する際に使っている<a href="http://jp.php.net/manual/ja/book.oauth.php">PECL::oauth</a>で実装できないか試してみました。
+ちなみに通常のOAuth認証を利用する場合のサンプルは<a href="http://cvs.php.net/viewvc.cgi/pecl/oauth/examples/">リポジトリにコミットされているので参照する</a>ことができます。
+</p>
+
+<p>
+<pre class="code"><code>&lt;?php
+$consumerKey         = 'YOUR-CONSUMER-KEY';
+$consumerSecret      = 'YOUR-CONSUMER-SECRET';
+$userName            = 'YOUR-USER-NAME';
+$password            = 'YOUR-PASSWORD';
+$xAuthAccessTokenUrl = 'https://api.twitter.com/oauth/access_token';
+
+$response = '';
+$parameters = array(
+    'x_auth_mode'     =&gt; 'client_auth',
+    'x_auth_username' =&gt; $userName,
+    'x_auth_password' =&gt; $password,
+);
+
+try {
+    $oauth = new OAuth($consumerKey, $consumerSecret,
+        OAUTH_SIG_METHOD_HMACSHA1, OAUTH_AUTH_TYPE_URI);
+    $oauth->fetch($xAuthAccessTokenUrl, $parameters, OAUTH_HTTP_METHOD_POST);
+    $response = $oauth->getLastResponse();
+} catch (OAuthException $e) {
+    echo &quot;Error\n&quot;;
+    exit;
+}
+
+// oauth_token=xxx&oauth_token_secret=xxx&
+// user_id=xxx&screen_name=xxx&x_auth_expires=0
+parse_str($response, $accessTokenInfo);
+
+// oauth_token, oauth_token_secret, user_id, screen_name,
+// x_auth_expires
+var_dump($accessTokenInfo);
+</code></pre>
+</p>
+
+<p>
+$accessTokenInfoの要素として「oauth_token」と「oauth_token_secret」が入っているので、
+それをDBなどに保存しておくようにすれば通常のOAuth認証を用いてツイートの投稿などを行うことができるようになります。
+そのまま利用して投稿するとすると、次のような感じになります。
+</p>
+
+<p>
+<pre class="code"><code>$oAuthStatusesUpdateUrl = 'http://twitter.com/statuses/update.xml';
+
+$response = '';
+$parameters = array(
+    'status' =&gt; 'YOUR-STATUS-MESSAGE',
+);
+
+$oauthToken       = $accessTokenInfo['oauth_token'];
+$oauthTokenSecret = $accessTokenInfo['oauth_token_secret'];
+
+try {
+    $oauth->setToken($oauthToken, $oauthTokenSecret);
+    $oauth->fetch($oAuthStatusesUpdateUrl, $parameters, OAUTH_HTTP_METHOD_POST);
+    $response = $oauth->getLastResponse();
+} catch (OAuthException $e) {
+    echo &quot;Error\n&quot;;
+    exit;
+}
+
+var_dump($response);
+</code></pre>
+</p>
+
+<p>
+仕組みとしては非常に単純なものなので、
+現在Twitterの認証にBasic認証を仕方なく使っているケースでも
+比較的簡単に置換ができるのではと思います。
+当然、OAuthが利用できるのであれば
+そちらを使うのが望ましいのは言うまでもありませんが。
+</p>
+
+<div style="margin:0;padding:.5em;border:2px solid 
+#ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br /><a
+href="http://www.unoh.net/recruit.html"> 採用ページ</a>をご覧になり興味のある方、ぜひご応募ください。<br/><a
+href="http://www.find-job.net/fj/showjob.cgi?id=50212">Find Job!</a>でも募集してます！</div>
+
+{% endraw %}

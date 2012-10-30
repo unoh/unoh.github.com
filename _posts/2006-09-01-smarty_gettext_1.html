@@ -1,0 +1,218 @@
+---
+layout: post
+title: "Smarty で gettext を使って国際化"
+---
+{% raw %}
+<p>尾藤正人です。</p>
+
+<p>ウノウでは海外公開を前提に事業を展開しているので、ほぼ例外なくプログラムは国際化されています。先日公開した <a href="http://melovie.unoh.net/">Melovie</a> もちゃんと国際化されていて、ブラウザの言語の設定を変えると英語で表示されます。</p>
+
+<p>最近テンプレートエンジンで Smarty を使い始めたのですが、そのままでは gettext とうまく組み合わせることができないので、ウノウでは独自の仕組みを入れています。日本語だと Smarty で gettext やってる情報が全然ないので、ウノウでやっている方法を紹介したいと思います。</p>
+
+<p>Smarty で gettext を使うときの一番の問題点はメッセージの抽出です。Smarty は PHP とは文法が異なるので、そのままでは xgettext を使ってメッセージを抽出することができません。PHP 側で全てのメッセージを変数に代入するというのも一つの方法ですが、やはりテンプレートの中に埋め込みたい。</p>
+
+<p><a href="http://smarty.incutio.com/?page=SmartyGettext">Smarty Gettext</a>というのがあるのですが、strarg() という独自の仕組みで文字列の置換を行っていたので採用は見送りました。普通は sprintf() を使うので。仕組みはそれほど複雑でないので、自分で作りました。</p>
+
+<h2>smarty plugin</h2>
+
+<p>Smarty の plugin を作って、その中に gettext のメッセージを埋め込みます。</p>
+
+<pre class="source_code">
+{t}_('Hello'){/t}
+</pre>
+
+<p>置換文字列がある場合はこんな感じに書きます</p>
+
+<pre class="source_code">
+{t name=$name}_('Hello %1$s'){/t}
+</pre>
+
+<p>plugin は非常に簡単です。次のソースコードを block.t.php という名前で smarty_plugins に保存してください。</p>
+
+<strong>block.t.php</strong>
+<pre class="source_code">
+function smarty_block_t($params, $content, &$smarty)
+{
+    if (is_null($content)) {
+        return;
+    }
+
+    eval('$text = '.$content.';');
+    if ($params) {
+        $text = vsprintf($text, $params);
+    }
+    return $text;
+}
+</pre>
+
+<h2>メッセージ抽出(poファイルの作成)</h2>
+
+<p>テンプレートの中に _('Hello') という形で書いてあるので、xgettext でそのまま抽出できますが、xgettext に PHP のプログラムだと誤認させるためにテンプレートの先頭に</p>
+
+<pre class="source_code">
+{* &lt;?php *}
+</pre>
+
+<p>という1行を入れて無理やり処理させています。このおまじないの1行の挿入はメッセージ抽出スクリプトで自動で行います。</p>
+
+<p>これでうまく行くかなと思って、最初の方はうまくいってたのですが、しばらく使ってみるとうまく抽出されないメッセージが出てきました。まあ、元々無理があった仕組みなんですが。</p>
+
+<p>しょうがないので、テンプレートのファイル名の最後に ',' をつけたファイルに PHP の形式でメッセージ部分だけ取り出したファイルを出力してメッセージの抽出を行うようにしました。これだと xgettext が出力する元のファイル名がほとんど変わらないので、メッセージから元ファイルを探すことが可能になります。</p>
+
+<p>最終的には次のようなスクリプトを実行してメッセージを抽出してます。</p>
+
+<pre class="source_code">
+create_locale.sh -l ja_JP.UTF-8
+</pre>
+
+<p><strong>create_locale.sh</strong>
+<pre class="source_code">
+#!/bin/sh
+# vim: set expandtab tabstop=4 shiftwidth=4:
+source `dirname $0`/sh_functions
+
+function usage()
+{
+    echo "Usage: $PROGRAM_NAME -l lang" >&2
+    exit $1
+}
+
+# init variables
+BIN_DIR=$(absdirname $0)
+PROJECT_DIR=$(dirname $(dirname $BIN_DIR))
+WEBAPP_DIR=$PROJECT_DIR/webapp
+PROJECT=`basename $PROJECT_DIR`
+lang=
+
+# getopt
+opts=`getopt -q -o l: -- "$@"`
+if [ $? != 0 ]; then
+    usage 1
+fi
+eval set -- "$opts"
+while true; do
+    case "$1" in
+    -l)
+        lang="$2"
+        shift 2
+        ;;
+    --)
+        shift
+        break
+        ;;
+    *)
+        usage 1
+        ;;
+    esac
+done
+
+# check lang
+if [ "x$lang" = "x" ]; then
+    usage 1
+fi
+
+(
+    cd $WEBAPP_DIR
+    # insert '{* <?php *}' line
+    for template_file in `find -type f -name '*.tpl'`; do
+        temporary_file=$template_file,
+        rm -f $temporary_file
+        $BIN_DIR/smarty2php.php $template_file > $temporary_file
+    done
+
+    # create/update po file
+    locale_dir="$WEBAPP_DIR/locale/$lang/LC_MESSAGES"
+    po_file=$locale_dir/$PROJECT.po
+    pot_file=${po_file}t
+    mkdir -p $locale_dir
+    rm -f $pot_file
+    touch $pot_file
+    find ! -path '*/\.svn*' ! -path '*.tpl' -type f|xargs xgettext -k_ -kN_ -j -L PHP -o $pot_file
+    if [ -f $po_file ]; then
+        msgmerge $po_file $pot_file -o $po_file
+    else
+        mv $pot_file $po_file
+    fi
+    find ! -path '*/\.svn*' -path '*.tpl,' -type f -exec rm {} \;
+)
+</pre></p>
+
+<p><strong>smarty2php.php</strong>
+<pre class="source_code">
+&lt;?php
+function do_file($file)
+{
+    $content = @file_get_contents($file);
+
+    echo '&lt;?php';
+    foreach(explode("\n", $content) as $line) {
+        preg_match_all('/{\s*t\s*}([^{]*){\s*\\/t\s*}/', $line, $m,
+            PREG_PATTERN_ORDER);
+        foreach($m[1] as $str) {
+            echo $str . ';';
+        }
+        echo "\n";
+    }
+}
+
+do_file($_SERVER['argv'][1]);
+</pre></p>
+
+<h2>メッセージファイル(moファイル)の作成</h2>
+
+<p>locale/ja_JP.UTF-8/LC_MESSAGES/project.po ができているので、メッセージを変更します。変更したら次のスクリプトを実行してバイナリ形式のメッセージファイル(moファイル)を作成します。再帰的に po ファイルを検索して msgfmt を実行しているだけです。</p>
+
+<pre class="source_code">
+update_locale.sh
+</pre>
+
+<p><strong>update_locale.sh</strong>
+<pre class="source_code">
+#!/bin/sh
+source `dirname $0`/sh_functions
+
+# init variables
+PROJECT_DIR=$(dirname $(dirname $(absdirname $0)))
+WEBAPP_DIR=$PROJECT_DIR/webapp
+PROJECT=`basename $PROJECT_DIR`
+
+for pofile in `find $WEBAPP_DIR -name '*.po'`; do
+    mofile=${pofile%.po}.mo
+    msgfmt -o $mofile $pofile
+done
+</pre></p>
+
+<h2>PHP側でのロケールの切り替え</h2>
+
+<p>PHPでのロケールの切り替えは Accept-Language を見て行います。次のようなコードをプログラムの先頭に仕込んでおけば、自動的に切り替わるようになります。</p>
+
+<pre class="source_code">
+$accept_language = '';
+if (isset($_SERVER['HTTP_ACCEPT_LANGUAGE'])) {
+    $accept_language = array_shift(split(',', $_SERVER['HTTP_ACCEPT_LANGUAGE']));
+}
+switch ($accept_language) {
+case 'ja':
+    $language = 'ja_JP.'.mb_get_info('http_output');
+    break;
+default:
+    $language = 'C';
+    break;
+}
+putenv("LANG=$language");
+setlocale(LC_ALL, $language);
+
+bindtextdomain(PROJECT_NAME, LOCALE_DIR);
+textdomain(PROJECT_NAME);
+</pre>
+
+<h2>まとめ</h2>
+
+<p>Smarty で gettext を使うのは思ったより大変です。一度やってしまえば、後は簡単に国際化できるようになるので、みなさんも Smarty で gettext 使ってみてはいかがでしょうか。</p>
+
+<p>関連リンク:<br>
+<a href="http://labs.unoh.net/2006/06/5_php_web.html">5分でわかる PHP で書かれた Web サービスの国際化</a><br>
+<a href="http://labs.unoh.net/2006/06/5_php_web_2.html">5分でわかる PHP で書かれた Web サービスの国際化(その2)</a><br>
+<a href="http://labs.unoh.net/2006/06/5_php_web_3_1.html">5分でわかる PHP で書かれた Web サービスの国際化(その3)</a><br>
+<a href="http://labs.unoh.net/2006/07/5_php_web_4.html">5分でわかる PHP で書かれた Web サービスの国際化(その4)</a></p>
+{% endraw %}

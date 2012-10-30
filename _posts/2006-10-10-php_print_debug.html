@@ -1,0 +1,105 @@
+---
+layout: post
+title: "php で 簡単にデバッグする方法"
+---
+{% raw %}
+<p>尾藤正人です。</p>
+
+<p><a href="http://d.hatena.ne.jp/secondlife/20061010/1160453355">Ruby で debug する7つの方法</a></p>
+
+<blockquote>
+Perl での print debug の方法の紹介がブーム(?)だったので、自分がよく行ってる Ruby での debug 方法7つについて書いてみます。
+</blockquote>
+
+<p>ということなので、僕が PHP でやってること書いてみたいと思います。</p>
+
+<h3>preprint_r()</h3>
+
+<p>print_r() とか var_dump() だと HTML の中に出してブラウザで見るときにすごく見にくくなります。
+そこで preprint_r() という関数を定義して、&lt;pre&gt;&lt;/pre&gt; で囲んで見やすいように出力しています。</p>
+
+<pre class="source_code">
+function preprint_r(&$var, $title = '')
+{
+    echo _preprint_r($var, $title);
+}
+
+function &_preprint_r(&$var, $title = '')
+{
+    if (!defined('UNOH_DEV') && UNOH_DEV) {
+        return '';
+    }
+
+    $html = '&lt;table&gt;';
+    if ($title) {
+        $html .= "&lt;tr&gt;&lt;th align=\"left\"&gt;$title:&lt;/th&gt;&lt;/tr&gt;";
+    }
+    $html .= '&lt;tr&gt;&lt;td&gt;&lt;pre&gt;';
+    $html .= htmlspecialchars(print_r($var, true));
+    $html .= "&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;\n";
+
+    return $html;
+}
+</pre>
+
+<p>preprint_r() では UNOH_DEV が定義されているかどうかチェックしています。
+開発版の場合は UNOH_DEV が必ず定義されているので、もし仮にデバッグで入れた preprint_r() がプログラムに残った状態でコミットされても、本番環境で表示されないようにしています。</p>
+
+<p>実はこの preprint_r() という関数は前職の <a href="http://www.hde.co.jp/">HDE</a> にいた頃に覚えました。
+大変便利なので、僕はいつもこの関数を定義して使うようにしています。</p>
+
+<h3>preprint_r smarty plugin</h3>
+
+<p>smarty の中でも使いたいということで preprint_r smarty plugin も作っています。</p>
+
+<pre class="source_code">
+function smarty_function_preprint_r($params, &$smarty)
+{
+    if (empty($params['var'])) {
+        $smarty->trigger_error("preprint_r: missing 'var' parameter");
+        return;
+    }
+
+    $title = isset($params['title']) ? $params['title'] : '';
+    return _preprint_r($params['var'], $title);
+}
+</pre>
+
+smartyテンプレートの中で
+<pre class="source_code">
+{preprint_r var=$hoge}
+</pre>
+
+<p>という風に書くと変数がダンプされて表示されます。</p>
+
+<h3>set_error_handler() でエラーが起きた時にメールを送信する</h3>
+
+<p>PHP ではエラーが起きた時にどういう処理を行うかを set_error_handler() を使って変更することができます。
+フォト蔵ではエラーが起きた時にメールで送信するようになっていて、エラータイプ、エラーメッセージ、エラーが起きたファイル、行数、URI、$_SERVER, $_COOKIE とかの変数のダンプ、バックトレース等、デバッグに必要な情報を送信しています。</p>
+
+<p>ウノウでは開発者毎にバーチャルドメインをきって開発環境が独立しているので、個人の開発環境で起こったエラーは個人に送るようにしていて、本番環境で起こったエラーに関してはみんなに送信するようにしています。</p>
+
+<h3>xdebug を使う</h3>
+
+<p>xdebug にはいろいろ機能がありそうですが、プロファイラーにしか使ってません。</p>
+
+<p>プログラムの最後に</p>
+
+<pre class="source_code">
+preprint_r(xdebug_get_profiler_filename(), 'profile');
+</pre>
+
+という風に書いておくと
+
+<pre class="source_code">
+/home/masato/photo/var/xdebug/cachegrind.out.573339192
+</pre>
+
+<p>こんな感じでプロファイルの情報が入っているファイル名が表示されます。これをプロファイラで表示してやれば、どの処理にどれくらい時間がかかってるのかがすぐ分かるようになります。</p>
+
+<p>僕は <a href="http://sourceforge.net/projects/wincachegrind/">WinCacheGrind</a>というソフトウェアを使ってます。ホームディレクトリを samba で共有しているので、Windows からそのままファイルを開くだけで大丈夫です。</p>
+
+<h3>他に</h3>
+
+こんな方法使ってるよっていうのがありましたら、ぜひ教えてください!!
+{% endraw %}

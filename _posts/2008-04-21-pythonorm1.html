@@ -1,0 +1,34 @@
+---
+layout: post
+title: "PythonのORMを研究してみる(1)"
+---
+{% raw %}
+			<p>Pythonで利用できるORMをざっと列挙してみると、次のようなものがあげられます。</p>
+			<ul>
+				<li> <a href="http://www.sqlalchemy.org/">SQLAlchemy</a></li>
+
+				<li> <a href="http://www.sqlobject.org/">SQLObject</a></li>
+				<li> <a href="http://www.djangoproject.com/">Django</a></li>
+				<li> <a href="https://storm.canonical.com/FrontPage">Storm</a></li>
+				<li> <a href="http://www.dbmother.org/">Mother</a></li>
+				<li> <a href="http://www.aminus.net/dejavu">Dejavu</a></li>
+
+				<li> <a href="http://www.aminus.net/geniusql">GeniuSQL</a></li>
+			</ul>
+			<p>実際に利用するとなると、ドキュメントの充実度とユーザ数でSQLAlchemyに一日の長があり、すでにPythonのORMの標準になったという感があります。</p>
+			<p>また、Djangoアプリケーションという点に限れば、Djangoに含まれるORM(django.db)を使うということになるでしょう。</p>
+			<p>しかしながら、必要とする機能や実行速度、生成するSQL、APIの好みといった点で、SQLAlchemyとDjango以外のライブラリを選択することもありうるでしょう。</p>
+			<p>実行速度という観点からみると、少し古い記事になりますが、下記のURLの記事が参考になります。</p>
+
+			<ul>
+				<li> <a href="http://www.aminus.org/blogs/index.php/2007/08/18/storm_sqlalchemy_and_geniusql?blog=2">Storm,SQLAlchemy,GeniuSQLの実行速度の比較</a>
+				<ul>
+					<li> <a href="http://techspot.zzzeek.org/?p=15">それに対するSQLAlchemyの作者からの反論</a></li>
+				</ul>
+				</li>
+			</ul>
+
+			<p>各ORMの特徴や実装、またそのORMを採用する理由というのは非常に興味深いものがあるので、今後何回かに分けて、上記のORMを紹介していきたいと思います。</p>
+			<p>というわけで、次回は<a href="http://pypi.python.org/pypi/mailman/">Mailmanの次期バージョン</a>で採用されるらしい、Stormを紹介する予定です。</p>
+
+{% endraw %}

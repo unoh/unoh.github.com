@@ -1,0 +1,178 @@
+---
+layout: post
+title: "Migrateのご紹介"
+---
+{% raw %}
+<p>こんにちは、chihiroです。今回はデータベース・スキーマのバージョン管理ツールであるMigrateを紹介します。</p>
+<p>Migrate<br />
+<a href="http://erosson.com/migrate/docs/index.html">http://erosson.com/migrate/docs/index.html</a></p>
+
+<h3> インストール</h3>
+<p>開発版の方を使いますので、レポジトリからコードをチェックアウトしてインストールします。</p>
+<pre class="code">$ svn co http://erosson.com/migrate/svn/migrate/branches/monkeypatch_removal migrate
+$ cd migrate
+$ python setup.py install
+</pre>
+
+<p>もしくは、easy_installで直接インストールします。</p>
+<pre class="code">$ easy_install http://erosson.com/migrate/svn/migrate/branches/monkeypatch_removal
+</pre>
+
+<p>また、Migrateは<a href="http://www.sqlalchemy.org/">Python製のORMであるSQLAlchemy</a>をベースにしているので、こちらもインストールしておきます。</p>
+<p>SQLAlchemyは近いうちにバージョン0.4系が正式版になると思われますが、今回は0.3.10でテストしました。</p>
+<pre class="code">$ easy_install SQLAlchemy==0.3.10
+</pre>
+
+<h3> レポジトリの初期化</h3>
+
+<p>インストールが完了すると、PythonのHomeディレクトリにbin/migrateというスクリプトがインストールされます。</p>
+<p>最初に、このmigrateを実行してデータベース・レポジトリを初期化します。</p>
+<p>初期化のコマンドは"create &lt;レポジトリ名&gt; &lt;プロジェクトの説明文&gt;"です。</p>
+<pre class="code">$ migrate create db_repository &quot;My blog project&quot;
+
+</pre>
+
+<p>これでカレントディレクトリにdb_repositoryというレポジトリが作成されます。ここからは、ここで作成されたdb_repository/manage.pyというスクリプトを使って管理を行います。</p>
+<p>まず、データベースにバージョン管理用のテーブルを作成します。</p>
+<p>コマンドは"version_control &lt;データベースのURL(DSN)&gt;"です。</p>
+<p>DSNについては<a href="http://www.sqlalchemy.org/docs/03/dbengine.html">SQLAlchemyのドキュメント</a>を参照してください。</p>
+
+<pre class="code">$ python db_repository/manage.py version_control mysql://username:password@localhost/dbname
+</pre>
+
+<p>毎回DSNを指定するのは手間がかかるので、db_respository/manage.pyを書き換えて、このプロジェクトで使うDSNを指定しておくと便利です。</p>
+<pre class="code">#!/usr/bin/env python
+# db_repository/manage.py
+from migrate.versioning.shell import main
+
+main(repository=&#39;db_repository&#39;,
+     url=&#39;mysql://username:password@localhost/dbname&#39;)
+</pre>
+
+<h3> スキーマのバージョンを確認する</h3>
+
+<p>Migrateレポジトリのバージョン番号を調べるには、"version"コマンドを使います。</p>
+<pre class="code">$ python db_repository/manage.py version
+0
+</pre>
+
+<p>一方、データベース側のバージョン番号を調べるには"db_version"コマンドを使います。</p>
+<pre class="code">
+python db_repository/manage.py db_version
+0
+</pre>
+
+<h3> スキーマ定義スクリプトを書く</h3>
+
+<p>まず"script"コマンドを使ってテーブル定義用のスクリプトを作成します。</p>
+<pre class="code">$ python db_repository/manage.py script script.py
+</pre>
+
+<p>"script.py"というのはレポジトリにコミットされない一時ファイルなので、実際にはどんな名前でも構いません。</p>
+<p>このscript.pyを編集し、SQLAlchemyの流儀でテーブルを定義します。</p>
+<pre class="code"># script.py
+from sqlalchemy import *
+from migrate import *
+
+def upgrade():
+    user = Table(&#39;user&#39;,
+                 Column(&#39;user_id&#39;, Integer, primary_key=True),
+                 Column(&#39;username&#39;, Unicode(50), nullable=False),
+                 Column(&#39;password&#39;, String(250), nullable=False),
+                 mysql_engine=&#39;InnoDB&#39;,
+                 )
+
+    post = Table(&#39;post&#39;,
+                 Column(&#39;post_id&#39;, Integer, primary_key=True),
+                 Column(&#39;user_id&#39;, Integer, ForeignKey(user.c.user_id), nullable=False),
+                 Column(&#39;title&#39;, Unicode(250), nullable=False),
+                 Column(&#39;content&#39;, Unicode, nullable=False),
+                 Column(&#39;created_at&#39;, DateTime, nullable=False),
+                 Column(&#39;updated_at&#39;, DateTime, nullable=True),
+                 mysql_engine=&#39;InnoDB&#39;,
+                 )
+
+    user.create(migrate_engine)
+    post.create(migrate_engine)
+
+def downgrade():
+    migrate_engine.execute(&quot;DROP TABLE post&quot;)
+    migrate_engine.execute(&quot;DROP TABLE user&quot;)
+</pre>
+
+<p>upgrade()関数にアップグレード時の操作を、downgrade()関数にダウングレード時の操作を書きます。</p>
+<p>すべてのスキーマ操作をSQLAlchemyを使ってPython風に書くのが理想なのでしょうが、僕の場合は、「CREATE TABLEだけはSQLAlchemyを使って書き、それ以外の操作をmigrate_engine.executeを使ってSQLを直接発行する」というような使い方をしています。</p>
+<p>スクリプトが完成したならば、テストを行います。</p>
+<pre class="code">$ python db_repository/manage.py test script.py
+Upgrading... done
+Downgrading... done
+Success
+</pre>
+
+<p>アップグレード、ダウングレード共に問題ないことを確認した上で、レポジトリにコミットします。</p>
+
+<pre class="code">$ python db_repository/manage.py commit script.py
+</pre>
+
+<p>コミットすると、db_repository/versionsディレクトリに"&lt;バージョン番号&gt;/&lt;バージョン番号&gt;.py"として先ほどのスクリプトがコピーされます。</p>
+<p>"version"コマンドでレポジトリのバージョン番号を確認してみましょう。</p>
+<pre class="code">$ python db_repository/manage.py version
+1
+</pre>
+
+<h3> アップグレード/ダウングレード</h3>
+<p>データベースのスキーマのバージョンを上げるには"upgrade"コマンドを使います。</p>
+<pre class="code">$ python db_repository/manage.py upgrade
+0 -&gt; 1...  done
+</pre>
+
+<p>"db_version"コマンドでデータベースのバージョン番号を確認してみます。</p>
+
+<pre class="code">$ python db_repository/manage.py db_version
+1
+</pre>
+
+<p>パラメータなしで"upgrade"コマンドを実行した場合、レポジトリの最新のバージョン番号まで自動的にアップグレードが行われます。もし、ある特定のバージョンまでアップグレードを行うときには、--versionパラメータを指定します。</p>
+<pre class="code">$ python db_repository/manage.py upgrade --version=1
+0 -&gt; 1...  done
+</pre>
+
+<p>ダウングレードする場合は、"downgrade"コマンドを使います。この時は、--versionパラメータでバージョン番号を明示的に指定しなくてはなりません。</p>
+<pre class="code">$ python db_repository/manage.py downgrade --version=0
+1 -&gt; 0...  done
+</pre>
+
+<h3> Migrateを使った開発サイクル</h3>
+<p>ここまでのところを簡潔にまとめると、Migrateを使った基本的な開発サイクルは次のようになるでしょう。</p>
+
+<pre class="code">$ python db_respository/manage.py script script.py
+$ python db_respository/manage.py test script.py
+$ python db_respository/manage.py commit script.py
+$ python db_respository/manage.py upgrade
+</pre>
+
+<p>余談ですが、この手のマイグレーションツールを初めて使い始めたとき、「ダウングレードってするの？」という疑問を抱くときがあります。個人的には、ダウングレードは結構使用しています。ただ、ほとんどが「アップグレードのスクリプトやスキーマ設計にミスがあった」という場合なので、開発スタイルや性格の問題なのかもしれませんが・・・</p>
+
+<h3> MigrateのTips</h3>
+
+<h4> 複数のURLを扱う</h4>
+
+<p>開発版データベースと本番データベースのように複数のデータベースを管理する必要がある場合、"manage"コマンドを使って、管理用スクリプトを複数作っておくと便利です。</p>
+<pre class="code">$ python db_repository/manage.py manage db_manage.py &#92;
+  --url=mysql://username:pass@localhost/db &#92;
+  --repository=db_repository
+$ python db_repository/manage.py manage db_manage_dev.py &#92;
+  --url=mysql://username:pass@localhost/db_dev &#92;
+  --repository=db_repository
+</pre>
+<p>以降は、db_manage_dev.pyを使用して開発を行い、本番環境ではdb_manage.pyを使用してスキーマの管理を行います。</p>
+
+<h4> カラムの追加</h4>
+<p>公式のドキュメントの説明では、<a href="http://erosson.com/migrate/docs/changeset.html">migrate.changeset</a>を使ってカラムの追加、変更、削除を行えるとされていますが、正しく動作している感じがしません。</p>
+<p>僕の場合は、migrate_engine.executeを使って直接ALTER文を発行しています。</p>
+
+<h3> まとめにかえて - Migrateの問題点</h3>
+<p>残念ながら、このツールは開発が止まってしまい、今後の動向は不透明です。また、エラーメッセージが非常に分かりにくいという問題点もあります。</p>
+<p>しかし、現在僕が開発しているアプリケーションもこのMigrateに依存しており、このまま死なせるにはあまりにも惜しいツールですので、僕自身がメンテナンスに名乗りを上げるかもしれません。そういった意味で、あえてこの場で紹介させていただきました。</p>
+
+{% endraw %}

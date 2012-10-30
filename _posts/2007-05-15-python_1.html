@@ -1,0 +1,151 @@
+---
+layout: post
+title: "Pythonのテンプレートエンジン"
+---
+{% raw %}
+<p>こんにちは、chihiroです。今回はPythonのテンプレートエンジンを紹介したいと思います。</p>
+
+<p>Pythonを使い始めた頃、PHPのSmartyや、JavaのVelocity/FreeMarkerに相当するテンプレートエンジンとして、Pythonにはどんなものがあるのか、どれを使えばよいのかよく分からなかった経験があるので、これからPythonを始める方の参考になれば幸いです。</p>
+
+<p>テンプレートエンジンを使う目的の一つに、Webサイト構築・運営の容易化ということがあると思いますが、今回はテンプレートエンジンの性格をざっと紹介したいと思いますので、HTMLの出力ではなく、次のような単純なテキストの出力を例にとって話を進めていきます。</p>
+
+<pre class="code"><code>* Hello unoh!!
+** Unoh services
+- photozou
+- eiga seikatu
+- video pop
+- sugu.cc
+</code></pre>
+
+<h3><a href="http://www.cheetahtemplate.org/">Cheetah</a></h3>
+<p>
+Pythonにおいては、もっとも実績のあるテンプレートエンジンです。テンプレートをPyhtonコードに変換するタイプのテンプレートエンジンで、一部はCで実装されているので、なかなか高速です。構文はVelocityに似ています。
+</p>
+
+<pre class="code"><code>from Cheetah.Template import Template
+
+tmpl = Template("""\
+#if $user
+* Hello $user
+#else
+* Hello guest!!
+#end if
+** Unoh services
+#for $service in $services
+- $service
+#end for""", searchList=[{'user'    : 'unoh',
+                        'services': ['photozou',
+                                     'eiga seikatu',
+                                     'video pop',
+                                     'sugu.cc']}])
+print tmpl.respond()
+</code></pre>
+
+<h3><a href="http://www.makotemplates.org/">Mako</a></h3>
+<p>
+実行速度が売りのテンプレートエンジンです。Cheetahと同じくテンプレートをPythonコードに変換するタイプのテンプレートエンジンですが、さらに機能は豊富で、使いやすく感じます。</p>
+<p>同じ作者による<a href="http://www.myghty.org/">Myghty</a>というテンプレートエンジンもあり、こちらもなかなか高速なのですが、Makoの方が開発が活発のようです。Pythonで書かれたWebフレームワーク<a href="http://pylonshq.com/">Pylons</a>を使うならば、このMakoテンプレートを使うことになるでしょう。
+</p>
+<p>
+Makoと他のテンプレートエンジンの実行速度の比較については、<a href="http://www.makotemplates.org/">Makoのサイトに掲載されているベンチマーク結果(ページ中ほどのFeaturesの項)</a>をご覧下さい。
+</p>
+
+<pre class="code"><code>from mako.template import Template
+
+tmpl = Template("""\
+%if user:
+* Hello ${user}
+%else:
+* Hello guest!!
+%endif
+** Unoh services
+%for service in services:
+- ${service}
+%endfor
+""")
+
+print tmpl.render(**{'user'    : 'unoh',
+                     'services': ['photozou',
+                                  'eiga seikatu',
+                                   'video pop',
+                                   'sugu.cc']})
+</code></pre>
+
+<h3><a href="http://wsgiarea.pocoo.org/jinja/">Jinja</a></h3>
+<p>
+後述のDjangoとほぼ同じ構文をもったテンプレートエンジンです。Djangoをインストールせずに、単体でDjango風のテンプレートエンジンを使いたい場合にはよい選択肢かもしれません。
+</p>
+
+<pre class="code"><code>from jinja import Environment
+
+env = Environment()
+tmpl = env.from_string("""\
+{% if user %}* Hello {{ user }}!!{% else %}* Hello guest!!{% endif %}
+** Unoh services
+{% for service in services %}\
+- {{ service }}
+{% endfor %}""")
+
+print tmpl.render(**{'user'    : 'unoh',
+                     'services': ['photozou',
+                                  'eiga seikatu',
+                                  'video pop',
+                                  'sugu.cc'] })
+</code></pre>
+
+<h3><a href="http://www.djangoproject.com/">Django</a></h3>
+<p>
+WebフレームワークDjangoに組み込まれているテンプレートエンジンで、単体で使うこともできます。テンプレート内にロジックを書くのが難しいのですが、逆にこれが利点となって、読みやすいテンプレートになります。
+</p>
+
+<pre class="code"><code>import os
+os.environ['DJANGO_SETTINGS_MODULE'] = '__main__'
+
+from django.template import Template, Context
+
+tmpl = Template("""\
+{% if user %}* Hello {{ user }}!!{% else %}* Hello guest!!{% endif %}
+** Unoh services
+{% for service in services %}\
+- {{ service }}
+{% endfor %}""")
+
+print tmpl.render(Context({'user'    : 'unoh',
+                           'services': ['photozou',
+                                        'eiga seikatu',
+                                        'video pop',
+                                        'sugu.cc'] }))
+</code></pre>
+
+<p>
+Djangoのテンプレートエンジンを単体で使う場合には、DJANGO_SETTINGS_MODULEという環境変数を設定しなくてはならないので、それがやっかいかも知れません。ただ、DjangoでWeb開発を行う分には、この制限は気になりません。Djangoに興味のある方は、日本の有志による<a href="http://ymasuda.jp/python/django/docs/index.html">「Django オンラインドキュメント和訳」</a>をご覧になることをお勧めします。
+</p>
+
+<h3><a href="http://kid-templating.org/">Kid</a></h3>
+<p>
+<a href="http://turbogears.org/">WebフレームワークTurboGears</a>で採用されているテンプレートエンジンで、XMLでテンプレートを記述することに特徴があります。テンプレートの継承機能など、Webページの作成に役に立つ機能を持っています。
+</p>
+<p>
+KidはXML/(X)HTMLの出力には便利なのですが、上と同じ例で比較することは難しいことから、割愛させていただきます。Kidに興味をもたれた方は、柴田淳氏による<a href="http://www.amazon.co.jp/o/ASIN/4774130567/">『TurboGears×Python』</a>をご覧になることをお勧めいたします。
+</p>
+
+<h3><a href="http://genshi.edgewall.org/">Genshi</a></h3>
+<p>
+Kidに触発されて開発されたXMLベースのテンプレートエンジンです。<a href="http://trac.edgewall.org/">Trac</a>で有名な<a href="http://edgewall.org/">Edgewall</a>がオープンソースで開発を行っています。xpathの多用により、KidよりもさらにXML/XSLTっぽいテンプレート構文を使用します。最初はとっつきにくいテンプレートエンジンだとは思うのですが、Kidより構文エラーが把握しやすいことや、高速であることから、注目を集めています。次期TurboGears, 次期Tracでの採用が表明されています。
+</p>
+<p>
+GenshiとKidの速度の比較に関しては、<a href="http://genshi.edgewall.org/wiki/GenshiPerformance">Genshiのサイトに掲載されているベンチマーク結果(英語)</a>が参考になります。
+</p>
+<p>
+GenshiもKidと同じくXML/(X)HTMLの出力を主たる目的としたテンプレートエンジンですが、テキストベースのテンプレートを扱うこともできます。ただ、Genshiの特徴がよく現れないと思いますので、やはり割愛させていただきます。
+</p>
+
+
+<h3>そのほか</h3>
+<p>個人的にあまり使ったことがないので紹介できないのですが、他にも次のようなテンプレートエンジンがあります。</p>
+<ul>
+<li><a href="http://www.clearsilver.net/">Clearsilver</a></li>
+<li><a href="http://www.divmod.org/trac/wiki/DivmodNevow">Nevow</a></li>
+<li><a href="http://www.owlfish.com/software/simpleTAL/">SimpleTAL</a></li>
+</ul>
+{% endraw %}

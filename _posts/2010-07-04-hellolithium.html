@@ -1,0 +1,208 @@
+---
+layout: post
+title: "Hello,Lithium!"
+---
+{% raw %}
+<p>
+こんにちは。４月に入社したyuzoです。<br />
+今回は元CakePHPのDevelopperが新たに立ち上げた新しいフレームワーク「<a href="http://lithify.me/" target="_blank">Lithium</a>」を試してみました。</p>
+
+<h2 style="color:#FF9933;">準備する</h2>
+<p>この記事を書いている現在のバージョンは0.9.5です。以下からダウンロードできます。<br />
+<a href="http://rad-dev.org/lithium/versions" target="_blank">http://rad-dev.org/lithium/versions</a><br />
+ひとまず、draftsのブログチュートリアルを動かすまで、を目標とします。<br />
+<a href="http://rad-dev.org/lithium/wiki/drafts/blog-tutorial" target="_blank">http://rad-dev.org/lithium/wiki/drafts/blog-tutorial</a><br />
+</p>
+<br />
+<p>
+Lithiumの動作環境は<br />
+<strong>・HTTP Server (Apache + mod_rewrite recommended)<br />
+・PHP 5.3.0 or higher<br />
+・CouchDb, MongoDb, MySQL 5 or SQLite 3 for applications utilizing a database<br />
+</strong>となっております。<br />
+今回は以下の環境を準備しました。<br />
+<strong>・CentOS 5.5 (64bit)<br />
+・Apache 2.2.3(+mod_rewrite)<br />
+・PHP 5.3.2<br />
+・MongoDB 1.4.4<br /></strong>
+</p>
+
+<p>PHP5.3やApacheのインストールについては、ここでは割愛させていただきます。<br />
+MongoDBのインストールについては、以下を参考にしてyumでインストールするのがラクです。<br />
+<a href="http://www.mongodb.org/display/DOCS/CentOS+and+Fedora+Packages" target="_blank">http://www.mongodb.org/display/DOCS/CentOS+and+Fedora+Packages</a><br />
+PHP MongoDB DriverはPECLでサクッとインストールしてみました。<br />
+<a href="http://pecl.php.net/package/mongo" target="_blank">http://pecl.php.net/package/mongo</a><br />
+</p>
+
+<h2 style="color:#FF9933;">Apacheを設定する</h2>
+<p>さて、事前にダウンロードしておいたLithiumを適当な場所に展開・配置します。<br />
+ここでは以下のディレクトリに配置した前提でお話します。<br />
+<p class="code">
+/var/www/lithium-0.9.5/<br />
+↓ディレクトリ名変更<br />
+/var/www/lithium/<br />
+</p>
+
+<p>resourceディレクトリをapache実行ユーザから書き込み可能にしておきます。</p>
+<p class="code">
+chmod -R 0777 /var/www/lithium/app/resources
+</p>
+
+<p>
+DocumentRootをlithiumのwebrootディレクトリに指定すれば終了です。<br />
+私の環境では以下のような指定にしております。
+</p>
+<pre class="code">
+&lt;VirtualHost *:80&gt;
+    ServerName   lithium.devserver
+    DocumentRoot /var/www/lithium/app/webroot
+    ErrorLog     logs/lithium.error_log
+    CustomLog    logs/lithium.access_log combined
+    &lt;Directory "/var/www/lithium/app/webroot"&gt;
+        DirectoryIndex index.php
+        AllowOverride All
+        Order deny,allow
+        Allow from all
+    &lt;/Directory&gt;
+&lt;/VirtualHost&gt;
+</pre>
+
+<p>
+さて、それではapacheとMongoDBを再起動して、アクセスしてみましょう。<br />
+・http://lithium.devserver<br />
+</p>
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><a href="http://labs.unoh.net/assets_c/2010/07/hellolithium1-105.html" onclick="window.open('http://labs.unoh.net/assets_c/2010/07/hellolithium1-105.html','popup','width=603,height=485,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false"><img src="http://labs.unoh.net/assets_c/2010/07/hellolithium1-thumb-200x160-105.png" width="200" height="160" alt="hellolithium1.png" class="mt-image-none" style="" /></a></span>
+<p>bakerの方々には心当たりのあるこんなページが表示されるはずです。</p>
+
+<h2 style="color:#FF9933;">bootstrap設定</h2>
+<p>database connectionを有効にするため、以下の箇所を有効にします。</p>
+・app/config/bootstrap.php
+<pre class="code">require __DIR__ . '/connections.php';    // コメントをはずす！
+</pre>
+
+<h2 style="color:#FF9933;">databaseを設定する</h2>
+<p>先ほど準備したMongoDBを指定します。</p>
+・app/config/connections.php
+
+<pre class="code"> array(
+    'type' =&gt; 'MongoDb',
+    'host' =&gt; 'localhost',
+    'port' =&gt; '27017',
+    'database' =&gt; 'myDB'
+));
+</pre>
+
+<h2 style="color:#FF9933;">Modelをつくる</h2>
+<p>ブログの記事となるPostモデルを作成します。</p>
+・app/models/Post.php
+<pre class="code">
+&lt;?php
+namespace app\models;
+class Post extends \lithium\data\Model {
+}
+</pre>
+
+<h2 style="color:#FF9933;">Controllerをつくる</h2>
+<p>Postを操作するコントローラーを作成します。<br />
+チュートリアルページには段階を踏んで説明されていますが、
+ここでは一気に全て記述します。</p>
+・app/controllers/PostsController.php
+<pre class="code">
+&lt;?php
+namespace app\controllers;
+use app\models\Post;
+class PostsController extends \lithium\action\Controller {
+    // index action
+    public function index() {
+        $posts = Post::all();
+        return compact('posts');
+    }
+    // add action
+    public function add() {
+        $success = false;
+        if ($this->request->data) {
+            $post = Post::create($this->request->data);
+            $success = $post->save();
+        }
+        return compact('success');
+    }
+}
+</pre>
+
+<h2 style="color:#FF9933;">Viewをつくる</h2>
+<p>最後にViewを作成します。<br />
+indexページとaddページの２種類をつくります。</p>
+・app/views/posts/index.html.php
+<pre class="code">
+&lt;?php foreach($posts as $post): ?&gt;
+  &lt;article&gt;
+    &lt;h1&gt;&lt;?=$post-&gt;title ?&gt;&lt;/h1&gt;
+    &lt;p&gt;&lt;?=$post-&gt;body ?&gt;&lt;/p&gt;
+  &lt;/article&gt;
+&lt;?php endforeach; ?&gt;
+&lt;?=$this-&gt;html-&gt;link('add','/posts/add'); ?&gt;
+</pre>
+・app/views/posts/index.html.php
+<pre class="code">
+&lt;?php if ($success): ?&gt;
+&lt;p&gt;Post Successfully Saved&lt;/p&gt;
+&lt;?php endif; ?&gt;
+&lt;?=$this-&gt;form-&gt;create(); ?&gt;
+  &lt;?=$this-&gt;form-&gt;field('title');?&gt;
+  &lt;?=$this-&gt;form-&gt;field('body', array('type' =&gt; 'textarea'));?&gt;
+  &lt;?=$this-&gt;form-&gt;submit('Add Post'); ?&gt;
+&lt;?=$this-&gt;form-&gt;end(); ?&gt;
+&lt;?=$this-&gt;html-&gt;link('index','/posts/index'); ?&gt;
+</pre>
+
+<h2 style="color:#FF9933;">動作を確認する</h2>
+<p>それではさっそく記事を登録してみましょう。<br />
+http://lithium.devserver/posts/add<br />
+にアクセスすると、以下のようなページが表示されるはずです。</p>
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><a href="http://labs.unoh.net/assets_c/2010/07/hellolithium2-108.html" onclick="window.open('http://labs.unoh.net/assets_c/2010/07/hellolithium2-108.html','popup','width=518,height=437,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false"><img src="http://labs.unoh.net/assets_c/2010/07/hellolithium2-thumb-200x168-108.png" width="200" height="168" alt="hellolithium2.png" class="mt-image-none" style="" /></a></span>
+<p>記事と内容を入力して「Add Post」ボタンを押すと投稿完了です。<br />
+記事一覧ページで確認してみましょう。<br />
+http://lithium.devserver/posts/index</p>
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><a href="http://labs.unoh.net/assets_c/2010/07/hellolithium3-111.html" onclick="window.open('http://labs.unoh.net/assets_c/2010/07/hellolithium3-111.html','popup','width=611,height=300,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false"><img src="http://labs.unoh.net/assets_c/2010/07/hellolithium3-thumb-200x98-111.png" width="200" height="98" alt="hellolithium3.png" class="mt-image-none" style="" /></a></span>
+<p>こんな感じで表示されれば成功です！</p>
+
+<h2 style="color:#FF9933;">データを確認してみる</h2>
+<p>たった今MongoDBに登録した内容を確認してみましょう。</p>
+<pre class="code">
+[yuzone@devserver ~]$ mongo　　# mongoコマンドをたたく
+MongoDB shell version: 1.4.4
+url: test
+connecting to: test
+type "help" for help
+&gt; use myDB　　　　　　　　　# myDBを選択する
+switched to db myDB
+&gt; show collections　　　　　　# collections(mysqlでいうtableみたいなもの)一覧表示
+posts
+system.indexes
+&gt; db.posts.find()　　　　　　　# posts collectionsの中身をみる
+{ "_id" : ObjectId("4c30b3369c3f95a30c000000"), "title" : "Hello,Lithium!", "body" : "こんにちは！こんにちは！" }
+&gt;                                                                                                                            
+</pre>
+<p>BSONという、JSONに似たバイナリ形式で保存されています。<br />
+<a href="http://www.mongodb.org/display/DOCS/BSON" target="_blank">http://www.mongodb.org/display/DOCS/BSON</a>
+</p>
+<br />
+<br />
+<div style="margin:0;padding:.5em;border:2px solid #ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br />
+<a href="http://www.unoh.net/recruit.html">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください。<br/>
+<a href="http://www.find-job.net/fj/showjob.cgi?id=50212">Find Job!</a>でも募集してます！</div>
+<br />
+<br />
+<p>以上、駆け足で試してみました。<br />
+はじまったばかりのLithiumプロジェクトですが、これからの展開が非常に楽しみですね。<br />
+もっともっと試してみたい方は、<br />
+・<a href="http://www.sanisoft.com/blog/2010/04/12/the-lithium-blog-tutorial-part-1/" target="_blank">The longer Lithium Blog tutorial using MySQL &#8211; Part 1 at SANIsoft &#8211; PHP for E Biz</a><br />
+こちらを参考に突き進んでみてください。
+</p>
+<p>
+また、Lithium情報をゲットするのにとてもお世話になっている、CakePHPコミュニティで有名なyandoさんのサイトをご紹介させて頂きます。<br />
+・<a href="http://blog.candycane.jp/" target="_blank">candycane development blog</a>
+</p>
+<br />
+<p>それでは、またいつかお会いしましょう。</p>
+{% endraw %}

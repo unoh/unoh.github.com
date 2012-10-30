@@ -1,0 +1,68 @@
+---
+layout: post
+title: "すぐに使いこなせるオススメvim plugin"
+---
+{% raw %}
+<p>こんにちは。vimをビムと発音する派のryosukeです。</p>
+
+<p>ウノウでエディタといえば、以前はvimかemacs、それもvim優勢(ユーザー数的に)だったのですが、最近は色んなエディタやIDEを使ってる人が増えています。</p>
+
+<p>私は以前はemacsを使っていたのですが、今ではemacsでヤンクの仕方を忘れてしまうぐらいにvimユーザーになってしまいました。とはいえ、vimを使いこなしてるとは到底言えず、 最速のキーリピートに頼る毎日です。</p>
+
+<p>そんな私ですが、いくつか愛用しているプラグインがあるので、今回紹介させていただこうと思います。どのプラグインも基本的に ~/.vim/plugin にコピーするだけで使えます。</p>
+
+<h3>yanktmp</h3>
+<p>ファイルを経由することで異なるプロセスのvim間でレジスタ(クリップボード)を共有する(かのようにコピペする)ことができます。screenでいくつも vim を開いたりする人にはオススメです。</p>
+
+<p>また、レジスタ履歴ツールがいまいちしっくりこない私にとっては、レジスタ、クリップボードに継ぐ第三の一時保存場所だったりもします。</p>
+
+<p>ファイルに保存してくれるというところが強力で、ヤンクの一時保存ファイルを編集して貼り付けるなど、いろいろと便利に使えます。</p>
+
+<p>ドキュメントのままですが、.vimrc に以下を追加します</p>
+
+<pre class="code">
+map &lt;silent&gt; sy :call YanktmpYank()&lt;cr&gt;
+map &lt;silent&gt; sp :call YanktmpPaste_p()&lt;cr&gt;
+map &lt;silent&gt; sP :call YanktmpPaste_P()&lt;cr&gt; 
+
+let g:yanktmp_file = '/home/user/tmp/yanktmp'
+</pre>
+
+
+<p>前述のようにヤンクの一時保存ファイルに気軽にアクセスしたいので、ヤンク文字列保存先ファイル(yanktmp_file)はhomeディレクトリ以下を指定しています。</p>
+
+<p><a href="http://www.vim.org/scripts/script.php?script_id=1598">http://www.vim.org/scripts/script.php?script_id=1598</a></p>
+
+<h3>eregex</h3>
+<p>perl互換正規表現でテキスト検索出来るプラグインです。<br />
+基本的に vim の正規表現をきちんと憶えてないので、だましだましあいまい検索をしていたのですが、このプラグインを入れてからは楽になりました。</p>
+
+<span>#vimとviを検索</span>
+<pre class="code">
+:M/vim?/
+</pre>
+
+<span>#hoge数字をfuga数字に置換</span>
+<pre class="code">
+:S/hoge([0-9])/fuga¥1/
+</pre>
+<span>例がひどくてすいません。</span>
+
+<p><a href="http://www.vector.co.jp/soft/unix/writing/se265654.html">http://www.vector.co.jp/soft/unix/writing/se265654.html</a></p>
+
+<h3>QuickBuf</h3>
+<p>バッファリストをワンキーでリスト表示&amp;操作できるプラグインです。<br />
+複数バッファも使わない人が意外と多い気がするのですが、これがあればキーひとつ覚えておけばなんとなくで操作できると思います。</p>
+
+<p>標準は F4 キーが割り当てられていて、jkで移動しエンターで決定、dでバッファ削除ぐらい覚えておけば十分です。覚えてなくても想像通りですね。</p>
+
+<p><a href="http://www.vim.org/scripts/script.php?script_id=1910">http://www.vim.org/scripts/script.php?script_id=1910</a></p>
+
+<p>以上、3つほど紹介させていただきました。<br />
+超便利な高機能プラグイン等は使いこなせてませんが、この3つは便利に使わせていただいてます。</p>
+
+<p>手軽で便利なオススメプラグインがあったらぜひ教えていただきたいです。</p>
+
+<div style="margin:0;padding:.5em;border:2px solid
+#ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br /><a href="http://www.unoh.net/recruit.html">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください。<br/><a href="http://www.find-job.net/fj/showjob.cgi?id=50212">Find Job!</a>でも募集してます！</div>
+{% endraw %}

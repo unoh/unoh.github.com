@@ -1,0 +1,123 @@
+---
+layout: post
+title: "procmailを使ったメール処理"
+---
+{% raw %}
+shimookaです。
+今回はメールの自動振り分けによく使われるprocmailについて書いてみました。
+
+<h3>procmailとは？</h3>
+　procmailは古くからあるメールフィルタソフトです。主にメールの振り分けを行うために利用されます。
+
+<ul>
+<li><a href="http://www.procmail.org/">procmail本家</a>（http://www.procmail.org/）</li>
+</ul>
+
+　procmailは2001/09/10にリリースされたver.3.22が最新版となっていて、最も広く普及しているMDAの一つです。多くのLinuxディストリビューションでもrpm・devパッケージが用意されています。また、Postfixのパッケージなどでは、あらかじめ設定が用意されていたりします。
+
+<h3>procmailの基本的な使い方</h3>
+　procmailを使ってメールを振り分ける場合、$HOMEディレクトリ直下に「.procmailrc」というファイルを作成し、振り分け条件や条件にマッチした場合の処理を記述します。
+
+　.procmailrcの書式は以下の通りで、procmailではレシピ（recipe）と呼んでいるようです。
+
+<pre class="code"><code>:0 [フラグ] [:[ローカルロックファイル名]]
+[条件]
+[条件]
+  ：
+[処理内容]</code></pre>
+
+　フラグには条件の対象の制限（メールヘッダ、ボディ）やレシピの実行可否などを指定します。条件にはマッチさせる正規表現を記述します。なお、条件は1行に１つ、行頭は「*」である必要があります。処理内容には、メール転送やパイプを使って外部コマンドにメール内容を引き渡すことも可能です。以下は、.procmailの簡単なサンプルです。
+
+<pre class="code"><code>SHELL=/bin/sh
+
+# サービス用サーバからのメール、かつ、Subjectの先頭が文字列"[ALERT]"
+# である場合、何はともあれ、携帯に転送する。。。 orz
+# （ただし、日本語メールは考慮していない）
+:0H:
+* ^From: user\@example\.com
+* ^Subject: \[ALERT\]
+!example@xxxxxx.ne.jp
+
+# デフォルトの転送先。
+# 書かなければ、$MAILDIRへ（通常はローカルのメールボックス）
+:0
+!myaddress@example.com
+</code></pre>
+
+　.procmailrcファイルの具体例ですが、一番知られている例はspamassassinとの組み合わせでしょうか。以下のような感じです。
+
+<pre class="code"><code>
+SHELL=/bin/sh
+LOGFILE=$HOME/.procmailrc.log
+SPAM=$HOME/imap/SPAM_Trash
+DOUBT=$HOME/imap/doubt
+
+:0fw: spamassassin.lock
+| spamassassin
+
+:0H:
+* ^X-Spam-Level: \*\*\*\*\*\*\*\*\*\*+
+* ^X-Spam-Flag: YES
+/dev/null
+
+:0H:
+* ^X-Spam-Flag: YES
+$SPAM
+
+:0H:
+* ^X-Spam-Level: \*\*\*\*\*\*\*\*
+$SPAM
+
+:0
+* ^Subject:.*\[SPAM\]
+$SPAM
+</code></pre>
+
+　なお、.procmailrcの詳しい書式については、procmailrc(5)もしくはJM Projectのページを参照してください。
+
+<ul>
+<li><a href="http://www.linux.or.jp/JM/html/procmail/man5/procmailrc.5.html">Manpage of PROCMAILRC</a></li>
+</ul>
+
+<h3>procmailでエラーメール処理を考えてみる</h3>
+　いきなり話が飛びますが、多くのサービスで「メールを使ってユーザーに通知する」ということを行っていると思います。メルマガもそうですね。しかし、メールアドレスが変わったとか登録時の入力ミスなど、様々な理由で配信できないメールの処理に頭を悩ませることになりがちです。
+
+　ここで、procmailを使ったエラーメール処理を考えてみると、エラーとなった送信先アドレスを抽出することはできそうです。ただし、メールヘッダだけエラーメールかどうかの判断が難しいので、メールBodyで判断することになります。
+
+<pre class="code"><code>
+SHELL=/bin/sh
+ADDRESSES_FILE=$HOME/error_addresses.log
+
+:0 Bi
+* ^.*The Postfix program
+* ^.* said: 5[0-5][0-9]
+* ^.*\.\.\. Unknown user
+* Final-Recipient: rfc822; \/.*
+| echo "$MATCH" >> $ADDRESSES_FILE
+
+:0 Bi
+* ^\/<[^>]+>:
+* ^User Not Found
+| echo "$MATCH" | sed -e "s/.*<\([^>]\{1,\}\)>.*/\\1/g" >> $ADDRESSES_FILE
+</code></pre>
+
+　かなりベタベタなレシピですが、これをエラーメール受信専用のアカウントの.procmailrcとして用意しておけば、送信先アドレスをうまく抽出することができます。その後は、出力したファイルをバッチでDBに登録するなどが可能になります。また、上の例はパイプでファイルに出力していますが、そのままDB登録用のコマンドに渡してしまうことも可能と思います。
+
+　ただし、送信先のMTAによってメッセージが変わったりしますので、残念ながら、実際には上記だけで全て対応できません。もし、もっとスマートな方法をご存じの方は、コメントやトラックバックなどで教えて下さい ;-)
+
+<h3>まとめ</h3>
+　自宅サーバなどでimapを使っている方は、メール振り分けなどですでにprocmailを使っているかも知れませんね。ただ、メールの振り分けだけではなく、パイプで外部コマンドに渡してやると様々な処理ができます。その組み合わせ次第で、もっと簡単に面白いことができるんじゃないかと思っています。
+
+　是非、一度お試しを:-)
+
+<h3>参考URL</h3>
+　以下のサイトを参考にさせていただきました。改めて感謝いたします。
+
+<ul>
+<li><a href="http://www.procmail.org/">procmail本家</a></li>
+<li><a href="http://www.linux.or.jp/JM/html/procmail/man1/procmail.1.html">Manpage of procmail(1)</a></li>
+<li><a href="http://www.linux.or.jp/JM/html/procmail/man5/procmailrc.5.html">Manpage of procmailrc(5)</a></li>
+<li><a href="http://www.linux.or.jp/JM/html/procmail/man5/procmailsc.5.html">Manpage of procmailsc(5)</a></li>
+<li><a href="http://www.jaist.ac.jp/~fjt/procmail.html">レシピ集</a>（実用的なレシピが多く、非常に役に立ちます:-)）</li>
+</ul>
+{% endraw %}

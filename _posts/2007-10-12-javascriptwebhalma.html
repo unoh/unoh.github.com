@@ -1,0 +1,66 @@
+---
+layout: post
+title: "JavaScriptだけでWebサイトが構築できるHelma"
+---
+{% raw %}
+<p>初めまして。今月、ウノウに入社しましたNAKAMURAです。今後ともよろしくお願いします。</p>
+<p>最近のWebサイトでは、DHTMLの操作やAjaxなど、JavaScriptが欠かせない存在となってきていますが、そんなJavaScriptでサーバーサイドも構築できるHelmaについて取り上げてみたいと思います。</p>
+<h3>Helmaとは？</h3>
+<ul>
+  <li><a href="http://dev.helma.org/">Helma本家サイト</a>(http://dev.helma.org/)</li>
+</ul>
+<p>Helmaは<a href="http://jetty.mortbay.org/">Jetty</a>上で動くJavaで実装されたフレームワークです。サイト構築にはJavaScriptを利用します。Apacheで例えるならmod_javascriptといったところでしょうか（Apacheモジュールとして動くJavaの実装には<a href="http://mod-gcj.sourceforge.net/">mod_gcj</a>というものもあります）。JavaScriptの実装には、Java6に組み込まれている<a href="http://www.mozilla-japan.org/rhino/">Rhino</a>が利用されています。</p>
+<p>サーバーサイドでJavaScriptを利用するという特徴以外にも、一般的に必要とされるようなテンプレートやマクロなどの機能も兼ね備えています。</p>
+<h3>インストール</h3>
+<p>さっそくインストールをして動かしてみます。HelmaはWindowsやMacOSXでも動作しますが、ここではOSにLinux（Fedora6）を利用しています。</p>
+<pre class="code"><code>$ cd ~/
+$ wget http://adele.helma.org/download/helma/1.6.0/helma-1.6.0.tar.gz
+$ tar zxvf ./helma-1.6.0.tar.gz
+</code></pre>
+<p>適当な場所にダウンロードをして解凍します。インストール作業自体はこれで終了となります（ただし、Javaの1.4以上がインストールされている必要があります）。</p>
+<p>それでは、Helmaを起動してみます。</p>
+<pre class="code"><code>$ cd ./helma-1.6.0
+$ ./start.sh
+</code></pre>
+<p>start.shの中でjarを実行しています。デフォルトではポートが8080になっていますので、これで「http://localhost:8080/」にブラウザでアクセスすることができます。</p>
+<a href="http://photozou.jp/photo/show/784/5424888"><img src="http://art6.photozou.jp/pub/784/784/photo/5424888.png" alt="Helma Welcome Page" width="450" height="293" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/5424888">Helma Welcome Page</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a>
+<p>アクセスすると、このようなWelcomeページが開きます。このWelcomeページ自体がサンプルアプリケーションのようになっていますので、構成を理解するには、apps/welcome配下を確認すると良さそうです。</p>
+<h3>Helma入門</h3>
+<p>ここでは、新規にページを作成して、スキンファイルの読み出しまでをやってみます。</p>
+<p>まず、apps.propertiesに以下のように記述します（manageやwelcomeの設定は先頭に#を付けてコメントアウトしています）。</p>
+<pre class="code"><code>hello
+hello.mountpoint = /
+hello.repository.0 = apps/hello/code/
+</code></pre>
+<p>次にルートディレクトリを作成します。</p>
+<pre class="code"><code>$ mkdir -p ./apps/hello/code/Root</code></pre>
+<p>呼び出されるコードを配置します。「./apps/hello/code/Root/sample.hac」というファイルを作成して、以下のように記述します。</p>
+<pre class="code"><code>res.write("Hello World");</code></pre>
+<p>これで、「http://localhost:8080/sample」にアクセスして「Hello World」と表示されれば成功です。.hacを取り除いた名前がURIと対応しています。</p>
+<p>.hacファイルはJavaScriptで記述します。JavaScriptからの出力ができたところで、テンプレートを呼び出してみます。</p>
+<p>「./apps/hello/code/Root/sample.hac」を以下のように変更します。</p>
+<pre class="code"><code>function plus(a, b) {
+  return a + b;
+}
+this.result = plus(10, 20);
+this.renderSkin("sample");
+</code></pre>
+<p>次に、スキン（テンプレート）ファイルを作成します。「./apps/hello/code/Root/sample.skin」というファイルを作成して、以下のように記述します。</p>
+<pre class="code"><code>&lt;html&gt;
+&lt;body&gt;
+  &lt;p&gt;Result: &lt;% this.result %&gt;&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+<p>「http://localhost:8080/sample」にアクセスして「Result: 30」と表示されれば成功です。このようにスキンファイルを利用することで、JavaScriptのロジックとHTMLの出力を分離することができます。また、ここでは触れていませんが、JavaScript側でリクエストやレスポンスのオブジェクトを参照することもできます。</p>
+<h3>まとめ</h3>
+<p>サーバーサイドにJavaScriptが利用できるフレームワーク、Halmaについて紹介しました。設定ファイルによるセッティングやマクロの定義など、一通りは実装されているようです。</p>
+<p>国内で採用された例は今のところ聞いたことがないのですが、ご興味の湧いた方は一度触ってみてはいかがでしょうか。</p>
+<p>開発に関するドキュメントについては、本家サイトにまとめられています。</p>
+<ul>
+  <li><a href="http://helma.org/docs/">Helma - Javascript Web Application Framework: Helma Documentation</a></li>
+</ul>
+<p>また、、日本語の情報としては、以下のエントリが良くまとまっていましたので、参考にさせて頂きました。感謝いたします。</p>
+<ul>
+  <li><a href="http://d.hatena.ne.jp/brazil/20060425/1145968216">Helma、リンク - 実用</a></li>
+</ul>
+{% endraw %}

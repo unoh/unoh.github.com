@@ -1,0 +1,248 @@
+---
+layout: post
+title: "JavaFXを使ってブラウザアプリを作る（MIDI楽器編）"
+---
+{% raw %}
+<div style="margin:0;padding:.5em;border:2px solid #ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br />
+ご興味のある方は<a href="http://www.unoh.net/recruit.html">求人ページ</a>から、ぜひご応募ください！！</div>
+
+
+
+<p>こんにちは。中村です。</p>
+
+<p>JavaFXを使って非常に簡単なMIDI楽器を作ってみました。JavaFXならでは、というよりはJavaアプレットのコードを書かずにブラウザでJavaを動かすことができるという動機で、またつまらぬものを作ってしまった感じです。マウスで鍵盤をクリックすると音が鳴ります（インストールされているJavaのバージョンによっては動作しない場合があります）。</p>
+
+<script src="http://labs.unoh.net/2009/03/04/dtfx.js"></script>
+<script>
+    javafx(
+        {
+              archive: "http://labs.unoh.net/2009/03/04/Piano.jar",
+              width: 300,
+              height: 182,
+              code: "net.unoh.javafx.piano.Main",
+              name: "Piano"
+        }
+    );
+</script>
+
+
+<h3>JavaFXとは？</h3>
+
+<p><a href="http://www.javafx.com/">JavaFX</a>はRich Internet Applications
+Developmentとページタイトルに書かれているとおりなのですが、特にインターネット環境に限らずJavaFX
+Scriptと呼ばれるスクリプト言語を使ってデスクトップアプリケーション、ブラウザ、そしてモバイル端末などの様々なプラットフォーム上で動作するアプリケーションを構築できることをひとつの特徴としています。Write once, run anywhereですね。</p>
+
+
+
+<h3>JavaFX Mobile</h3>
+
+<p>JavaFX Mobileはその名のごとくJavaFXのモバイルプラットフォームなのですが、つい最近リリースされたばかりのものです。<a
+href="http://jp.sun.com/company/Press/release/2009/0217.html">Sun Microsystemsのプレスリリース</a>に記載があります。調べた限りでは米国でもまだ対応端末があるわけではないようです。日本国内ですと今は<a href="http://code.google.com/intl/ja/android/">Android</a>の方が話題な気もしますが、今後の対応状況など展開が気になるところです。</p>
+
+
+
+<h3>開発環境</h3>
+
+<p>普段はEclipseを使うことが多いのですが、今回はJavaFX Mobile用の携帯エミュレータがついている<a
+href="http://www.javafx.com/downloads/">NetBeans IDE 6.5 for
+JavaFX 1.1</a>を利用しました。プロジェクトの新規作成でJavaFX Script
+Applicationを選択すると、特に意識せずに通常のJavaアプリケーションのようにJavaFXの開発を行うことができます。また、サンプルアプリケーションがいくつか用意されているので参考になります。</p>
+<p>Eclipseで開発するには、<a
+href="http://kenai.com/projects/eplugin/pages/Home ">Eclipse Plugin
+for JavaFX</a>というプラグインがあるようです。個人的には試せていませんが、<a
+href="http://www.javafx.com/downloads/">ダウンロードページ</a>にリンクがあります。
+</p>
+
+
+<h3>JavaFX Script</h3>
+
+<p>JavaFX Scriptは一見するとECMAScriptのような文法を持っているので、JavaScriptなどに慣れている人には扱いやすいのではないかと思います。また、今までのJavaで作るGUIに比べると非常に簡素な書き方ができます。次の例は単一のウインドウに線と円を描画しているだけですが、データ構造を記述するだけで非常に明快です。</p>
+
+<pre class="code"><code>package test;
+
+import javafx.stage.Stage;
+import javafx.scene.Scene;
+import javafx.scene.shape.Line;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Circle;
+
+Stage {
+   title: "Test"
+   resizable: true
+   scene: Scene {
+       width: 400
+       height: 400
+       content: [
+           Line {
+               startX: 30,
+               startY: 50
+               endX: 250,
+               endY: 300
+               strokeWidth: 6
+               stroke: Color.BLACK
+           }
+           Circle {
+               centerX: 250,
+               centerY: 100
+               radius: 30
+               fill: Color.RED
+           }
+       ]
+   }
+}</code></pre>
+
+
+<a href="http://photozou.jp/photo/show/784/18526479"><img src="http://art7.photozou.jp/pub/784/784/photo/18526479.png" alt="javafxtest" width="316" height="336" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/18526479">javafxtest</a> posted by <a href="http://photozou.jp/user/top/784">(C)フォト蔵</a>
+
+<p>Stageオブジェクトがウインドウの役割になります。Sceneは様々なNodeオブジェクトを保持する機能を持っており、ここではLineとCircleを含んでいます。その他、必要に応じてプロパティを設定しています。</p>
+
+
+<h3>MIDI楽器を作ってみる</h3>
+
+<p>JavaFX Scriptというスクリプト言語になったとはいえ、注目すべきはやはり強力なJava
+APIが利用できる点です。実際にMIDIに関するAPIはjavafxパッケージにあるものではなく、javaxパッケージであるものです。コードをみた方が早いかと思いますので、先に上記アプリケーションのソースコードを貼付けておきます。</p>
+
+
+
+<pre class="code"><code>package net.unoh.javafx.piano;
+
+import javafx.stage.Stage;
+import javafx.scene.Scene;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.input.MouseEvent;
+import javax.sound.midi.MidiSystem;
+import javax.sound.midi.ShortMessage;
+
+class Player {
+
+    var receiver = MidiSystem.getReceiver();
+
+    init {
+        var message = new ShortMessage();
+        message.setMessage(ShortMessage.PROGRAM_CHANGE, 1, 0);
+        receiver.send(message, -1);
+    }
+
+    function noteOn(note:Integer):Void {
+        var message = new ShortMessage();
+        message.setMessage(ShortMessage.NOTE_ON, note, 100);
+        receiver.send(message, -1);
+
+    }
+
+    function noteOff(note:Integer):Void {
+        var message = new ShortMessage();
+        message.setMessage(ShortMessage.NOTE_OFF, note, 100);
+        receiver.send(message, -1);
+    }
+
+    function close():Void {
+        if (receiver != null) {
+            receiver.close();
+        }
+    }
+
+}
+
+class Key extends Rectangle {
+
+    var note: Integer = 1;
+
+    function setPosition(x:Integer, y:Integer):Key {
+        this.x = x;
+        this.y = y;
+        return this;
+    }
+
+    function setNote(note:Integer):Key {
+        this.note = note;
+        return this;
+    }
+
+    override var onMousePressed = function(evt: MouseEvent):Void {
+        if (isNoteOn == false) {
+            isNoteOn = true;
+            player.noteOn(note);
+        }
+    }
+
+    override var onMouseReleased = function(evt: MouseEvent):Void {
+        isNoteOn = false;
+        player.noteOff(note);
+    }
+
+}
+
+class WhiteKey extends Key {
+    init {
+        fill = Color.WHITE;
+        width = 28;
+        height = 180;
+    }
+}
+
+class BlackKey extends Key {
+    init {
+        fill = Color.BLACK;
+        width = 20;
+        height = 110;
+    }
+}
+
+var player = new Player();
+var isNoteOn = false;
+
+var wk1 = new WhiteKey().setNote(60).setPosition(1, 1);    // C
+var wk2 = new WhiteKey().setNote(62).setPosition(31, 1);   // D
+var wk3 = new WhiteKey().setNote(64).setPosition(61, 1);   // E
+var wk4 = new WhiteKey().setNote(65).setPosition(91, 1);   // F
+var wk5 = new WhiteKey().setNote(67).setPosition(121, 1);  // G
+var wk6 = new WhiteKey().setNote(69).setPosition(151, 1);  // A
+var wk7 = new WhiteKey().setNote(71).setPosition(181, 1);  // B
+var wk8 = new WhiteKey().setNote(72).setPosition(211, 1);  // C
+var wk9 = new WhiteKey().setNote(74).setPosition(241, 1);  // D
+var wk10 = new WhiteKey().setNote(76).setPosition(271, 1); // E
+
+var bk1 = new BlackKey().setNote(61).setPosition(19, 1);   // C#
+var bk2 = new BlackKey().setNote(63).setPosition(49, 1);   // D#
+var bk3 = new BlackKey().setNote(66).setPosition(109, 1);  // F#
+var bk4 = new BlackKey().setNote(68).setPosition(139, 1);  // G#
+var bk5 = new BlackKey().setNote(70).setPosition(169, 1);  // A#
+var bk6 = new BlackKey().setNote(73).setPosition(229, 1);  // C#
+var bk7 = new BlackKey().setNote(75).setPosition(259, 1);  // D#
+
+Stage {
+    title: "Piano"
+    resizable: false
+    width: 300
+    height: 182
+    scene: Scene {
+        fill: Color.BLACK
+        content: [
+            wk1, wk2, wk3, wk4, wk5, wk6, wk7, wk8, wk9, wk10
+            bk1, bk2, bk3, bk4, bk5, bk6, bk7
+        ]
+    }
+    onClose: function() {
+        player.close();
+    }
+}</code></pre>
+
+
+
+<p>グローバル変数を使ってしまっているのでもう少しなんとかしたいところではありますが、主な動作としては、鍵盤の数だけRectangleを配置して、MIDIに対してonMousePressedイベントでノートオンの情報を送信、onMouseReleasedイベントでノートオフの情報を送信しています。JavaでMIDIを扱う方法はjavax.sound.midi.Receiver以外にもjavax.sound.midi.Sequencerを使う方法がありますが、今回は任意のタイミングでMIDIに情報を送信したかったのでReceiverを利用しています。</p>
+
+<p>このようにJavaFXではJVM上で動作することを強みにJavaのコードとして動くものを簡単にJavaFX Scriptに置き換えることができます。</p>
+
+
+<h3>javafxパッケージの機能</h3>
+
+<p>Java APIが使えることもメリットですが、javafxパッケージには今までJavaでは面倒だったことを簡単に振る舞ってくれるAPIも用意されています。例えば、javafx.animation.Timelineを使えばアニメーションの作成が非常に簡潔になりますし、javafx.scene.media.MediaPlayerを使えばwav、mp3、mp4などのメディアフォーマットを容易に再生することができます。</p>
+<p><a href="http://www.javafx.com/samples/">オフィシャルサイト</a>にソースコードが公開されているサンプルアプリケーションがあるので、これらの利用方法についても覗いてみることができます。</p>
+
+<h3>まとめ</h3>
+
+<p>MIDI楽器アプリケーションを題材にJavaFXについて紹介しました。今現在使うにはまだまだ時期尚早かもしれませんが、個人的にはかなり期待のプラットフォームのひとつです。特にJavaエンジニアの方にとっては魅力的な存在になるかもしれません。JavaFX
+Mobileも含めて期待したいところです。</p>
+{% endraw %}

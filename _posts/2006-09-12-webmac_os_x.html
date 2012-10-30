@@ -1,0 +1,72 @@
+---
+layout: post
+title: "Web系エンジニアの目から見たMac OS X"
+---
+{% raw %}
+hideです。<br />
+<br />
+僕がMac OS Xを使うようになって1ヶ月と少しが経ちました。最初は戸惑うこともあったのですが、だいぶ手に馴染むようになってきました。最近、オープンソース関係のイベントに行くとMacユーザがかなりの割合でいる理由が分かったような気がします。感想としては、<br />
+<ul>
+<li>UNIXの良い文化を取り入れている</li>
+<li>DockやDashbordの動きがいちいちカッコいい</li>
+<li>VMwareやcoLinuxを使わなくてもローカルに開発環境を作れる</li>
+</ul>
+<br />
+今更ながら、BSDベースにしてMicrosoft製のOSとの違いを出していくというAppleの戦略には関心してしまいました。Web系エンジニアの方は、Macを次に購入するPCの候補に入れてみてはいかがでしょうか。<br />
+<br />
+<br />
+というわけで、あなたがいつかMacユーザになった際に便利なように、最初にインストールするべき10のアプリケーションを紹介します。<br />
+<br />
+<b>1.<a href="http://www.mozilla-japan.org/products/firefox/">Firefox</a></b><br />
+<br />
+何はなくともまずこれ。Safariでも良いのですが、Windows環境でFirefoxを使っていたなら、今までの資産がそのまま使えます。<br />
+<br />
+<b>2.<a href="http://iterm.sourceforge.net/">iTerm</a></b><br />
+<br />
+標準のターミナルは、文字化けしたり使い勝手がいまいち良くないのでこちらを使います。タブ表示が可能なほか、UTF-8の他にShift_JIS,EUC-JP等いろいろな文字コードに対応しています。描画が若干遅いのが難点だけど、ウィンドウの透過表示ができるので半透明フェチにはたまらない。<br />
+<br />
+<b>3.<a href="http://virtuedesktops.info/">VirtueDesktops</a></b><br />
+<br />
+OS Xに仮想デスクトップ機能を追加します。開発用のデスクトップ、メールやメッセンジャー用のデスクトップというように分けて使っています。各デスクトップを切り替える際のエフェクトがカッコいいです。次期LeopardにはSpacesという機能が標準搭載されるようです。<br />
+<br />
+<b>4.<a href="http://quicksilver.blacktree.com/">Quicksilver</a></b><br />
+<br />
+ランチャー。Control+escに割り当てていて、アプリケーション名の数文字を入れると、インクリメンタルサーチしてくれて素早く起動することができます。アプリに限らず、Webページの名称でもOKなので、めちゃくちゃ便利。<br />
+<br />
+<b>5.<a href="http://homepage.mac.com/zenitani/emacs-j.html">Carbon Emacs</a></b><br />
+<br />
+メモやToDoは、howmで管理しているので必須。動作もけっこう軽いです。ウィンドウを半透明化できるので、しつこいけど半透明フェチにはたまらないです。.emacs.elに下記を記述しましょう。<br />
+<br />
+<pre class="source_code">(add-to-list 'default-frame-alist   '(active-alpha . 0.90))
+(add-to-list 'default-frame-alist '(inactive-alpha . 0.40))</pre>
+<br />
+<b>6.<a href="http://macromates.com/">TextMate</a></b><br />
+<br />
+RailsのDHHも使っているハッカー御用達のエディタ。PythonプログラムはこのTextMateを使って書いています。使い勝手はかなりいいのですが、一つ大きな問題があって、日本語が通らない！ 必然的にロケールデータを分けて国際化せざるを得なくなるので、逆に良かったり。<br />
+最初、バックスラッシュが入力できなくて困っていたのですが、[ことえり環境設定]-[入力文字]で“JISキーボードの￥で入力する文字”をバックスラッシュにしたらOKでした。<br />
+<br />
+<b>7.<a href="http://www.apple.com/jp/macosx/features/xcode/">Xcode</a></b><br />
+<br />
+これを入れないと始まりません。次に紹介するDarwin Portsのパッケージをコンパイルする際にも必要です。<br />
+<br />
+<b>8.<a href="http://darwinports.opendarwin.org/">Darwin Ports</a></b><br />
+<br />
+足りないUnix系のコマンド類は、このPortsを使ってインストールします。svnとかopensslとかsqliteとか。<br />
+<br />
+<b>9.<a href="http://www.obdev.at/products/sharity/index.html">Sharity</a></b><br />
+<br />
+MicrosoftネットワークとかSambaサーバに接続するのにあると便利です。<br />
+<br />
+<b>10.<a href="http://www.planamesa.com/neojava/ja/index.php">NeoOffice</a></b><br />
+<br />
+OpenOfficeよりもこちらのほうが、Macに最適化されていてお勧めです。Mac版のMicrosoft Officeよりも使いやすい気がするのは気のせいかな？<br />
+<br />
+<b>次点</b><br />
+<a href="http://x.nest.jp/mac/051227_0125.htm">Chmox日本語対応版</a> … Windowsのchmヘルプを表示するツール<br />
+<a href="http://macbricol.free.fr/coreduotemp/">CoreDuoTemp</a> … Intel MacのCPU温度をウィジェットに表示<br />
+<br />
+<br />
+<br />
+残念ながらウノウでは、マカーは3人くらいでなかなか情報交換ができません(メインマシンとして使っているのは自分だけ)。<br />
+他にも便利がツールがあれば、ぜひコメントやトラックバックで教えてください。特にターミナルやデュアルディスプレイでメニューバーを両画面に表示する方法があれば知りたいです。よろしくお願いします。<br />
+{% endraw %}
