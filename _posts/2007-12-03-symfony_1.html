@@ -2,7 +2,6 @@
 layout: post
 title: "symfonyでよくあるトラブル"
 ---
-{% raw %}
 <p>yukiです。</p>
 <p>今回はsymfony+MySQLを使って開発していた際に遭遇したトラブルとその対処を紹介したいと思います。</p>
 <h3>(1) ビルドしたPropelクラスで、DATETIME値が'0000-00-00 00:00:00'の時</h3>
@@ -20,4 +19,3 @@ symfony側でも<a title="trac" href="http://trac.symfony-project.com/ticket/134
 </p><pre class="code"><code>$this-&gt;redirect(array('module' =&gt; 'foo', 'action' =&gt; 'bar', 'hoge' =&gt; 'variable'));</code></pre>
 <p>これで正しくリダイレクトされ、引数も渡されます。</p>
 <p>この様に若干ドキュメントに書いていないトラブルはあるものの、逆に書いていない部分で便利な機能があったりしますので(特にヘルパー)、ぜひ一度ソースを読んでみてはいかがでしょうか。</p>
-{% endraw %}

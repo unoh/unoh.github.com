@@ -2,7 +2,6 @@
 layout: post
 title: "C/C++でFastCGIを作る"
 ---
-{% raw %}
 <p>こんにちは satoです。</p><br />
 <br />
 <p>現在 Ruby on Rails で書かれた アプリケーションの 一部のURIを高速化するために、lighttpd + FastCGI で 書き直しています。FastCGI は あらかじめ プロセスを常駐させておき、リクエストが来た際に、常駐しているプロセスに Unix domain socket あるいは TCP/IP で通信を行い プロセス起動時のオーバーヘッドを無くすことにより、処理を高速化します。今回は lighttpd + FastCGI で Hello word を作る 解説します。</p><br />
@@ -79,4 +78,3 @@ sudo spawn-fcgi -f ./test.fcgi -s /dev/shm/test.fcgi.socket.1 2>&1 > /dev/null<b
 <br />
 <p>これでアクセスできるはずです。何度もアクセスすると プロセスは終了しないので、プロセスIDは変わっていないのに、count は増えているかと思います。mysqlのconnectや設定ファイルの読み出しは ループの外で行いましょう。</p><br />
 <p>勉強会の時にも出た質問なんですが、Apache module で作らない理由は、Apache にしか使用できないということと、そのサーバを他用途で使用するときに mod_test が読まれていると 無駄に connectionを張ってしまったりするためです。</p>
-{% endraw %}

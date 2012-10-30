@@ -2,7 +2,6 @@
 layout: post
 title: "prototype.jsへの依存を無くす方法"
 ---
-{% raw %}
 komagataです。<br />
 <br />
 Javascriptで何か書こうと思ったときにどのライブラリをベースにして作るかで非常に悩みます。一端特定のライブラリに依存してしまうと途中で変更するのが難しそうですし、コアオブジェクトを汚染しているものは混ぜると動かなくなる組み合わせもあります。<br />
@@ -50,4 +49,3 @@ var src = {'foo':100};<br />
 var result = /** Object.extend */(function(d,s){for(var p in s)d[p]=s[p];return d})/**/(dst, src);</code></pre><br />
 <br />
 こういうセコい関数をたくさんストックしておいてコピペで使うと小さいプログラムを書くのが楽になりそうです。
-{% endraw %}

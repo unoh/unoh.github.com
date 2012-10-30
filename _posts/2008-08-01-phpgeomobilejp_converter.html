@@ -2,7 +2,6 @@
 layout: post
 title: "PHPで携帯位置情報を扱うライブラリ「Geomobilejp_Converter」を作りました"
 ---
-{% raw %}
 <p>中村です。</p>
 <p>PHPで携帯の位置情報を簡単に取り扱うことができるライブラリ「Geomobilejp_Converter」を作りました。もう半年近く前に作ったものですが、コードを少し整えたので公開することにしました。</p>
 <p>GPSに対応した携帯では、各キャリアで指定されている特定のHTMLを記述することで、携帯サイトに位置情報（緯度経度や測地系）を送信することができます。この位置情報を利用すると、「位置情報付きで掲示板に書き込む」などの機能を実装することができます。</p>
@@ -44,4 +43,3 @@ if ($mobile->hasParameter()) {
 <p>このライブラリを作るにあたって、Perlで書かれた<a href="http://search.cpan.org/~yappo/Geo-Coordinates-Converter-0.04/lib/Geo/Coordinates/Converter.pm">Geo::Coordinates::Converter</a>と<a href="http://search.cpan.org/~tokuhirom/Geo-Coordinates-Converter-iArea-0.08/lib/Geo/Coordinates/Converter/iArea.pm">Geo::Coordinates::Converter::iArea</a>、またperezvonさんのコードを大変参考にしました。ありがとうございます。</p>
 <p>また、私の個人ブログに<a href="http://d.hatena.ne.jp/cloned/20080424">簡単なGPSのまとめ</a>を書いていますので、ご興味があればどうぞ。</p>
 
-{% endraw %}

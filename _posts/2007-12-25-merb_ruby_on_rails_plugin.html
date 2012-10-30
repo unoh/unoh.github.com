@@ -2,7 +2,6 @@
 layout: post
 title: "Merbで Ruby on Rails の pluginを使用する"
 ---
-{% raw %}
 こんにちは satoです。<br />
 <br />
 <p>最近何かと話題な Rubyでできた新しいwebフレームワーク Merbですが、Merbから railsのプラグインを使用する際に、必要なことをまとめてみました。Merbの詳細な説明やインストールは以下を参考にしました。</p><br />
@@ -35,4 +34,3 @@ title: "Merbで Ruby on Rails の pluginを使用する"
 <p>　Merbには 初期状態で ActiveSupport や ActiveRecordを使用しないため、dependenciesなどで使用するよう設定しないと、そのままの状態では使えません。<p><br />
 <br />
 <p>まだありそうですが、手元で使用しているプラグインは以上で動くようになりました。テストで Merb は Rails の平均3倍程度のパフォーマンスが出るので(データベースへのアクセスが増えるに従って差がなくなっていく)、Web画面はRallsで作成し、アクセスが多いAPIなどは Merbで開発するなどの使用方法も考えられると思います。 </p>
-{% endraw %}

@@ -2,7 +2,6 @@
 layout: post
 title: "MemcacheとMySQLのデータ不整合をPropelPDOで解決してみる"
 ---
-{% raw %}
 <p>こんにちは市丸です。</p>
 
 <p>Zynga Japanでは単純なPrimaryKeyをキャッシュする際、symfonyのPeerをオーバーライドし自動的にキャッシュ＆クリアしています。</p>
@@ -112,4 +111,3 @@ class User extends BaseUser
 
 <p>まあ、忘れずにcommit後にキャッシュクリアすればいいんだけどね！(爆)</p>
 
-{% endraw %}

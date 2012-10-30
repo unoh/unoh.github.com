@@ -2,7 +2,6 @@
 layout: post
 title: "RackでWebアプリのWebサーバー依存を無くす"
 ---
-{% raw %}
 <a href="http://photozou.jp/photo/show/68425/3186952"><img src="http://art7.photozou.jp/pub/425/68425/photo/3186952.png" alt="rack-logo" width="400" height="200" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/68425/3186952">rack-logo</a> posted by <a href="http://photozou.jp/mypage/top/68425">(C)komagata</a><br />
 <br />
 komagataです。<br />
@@ -156,4 +155,3 @@ rackup hello-rackup.ru -s fastcgi</pre><br />
 これはかなりヘボいのでどなたか正しいやり方を教えていただければ幸いです・・・。<br />
 <br />
 このようにRackを使うことでRailsのようにWebサーバごとのエントリポイントやrackup用の設定ファイルを用意しておくだけで本体のアプリには手を入れずに様々な環境で動作するWebアプリケーションが書けます。オープンソースで配布するアプリケーションを作る場合などには役に立つのではないでしょうか。
-{% endraw %}

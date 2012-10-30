@@ -2,7 +2,6 @@
 layout: post
 title: "Dojoで簡単にクロスドメインAjaxを実現"
 ---
-{% raw %}
 こんにちわ、hideです。<br />
 <br />
 最近、JavaScriptライブラリの<a href="http://dojotoolkit.org/">Dojo</a>を使い初めて、その便利さに目覚めてしまいました。Ajaxで使用される通常のXMLHttpRequestではセキュリティ上の理由から、現在表示しているページ以外のドメインに対してリクエストを送ることができません。そこで考え出されたのが、JSONP(JSON with padding)という方法です。JavaScriptのインクルードは、同一ドメインでなくても読み込めるという性質を利用しています。<br />
@@ -94,4 +93,3 @@ title: "Dojoで簡単にクロスドメインAjaxを実現"
 このDojoですが、<a href="http://d.hatena.ne.jp/amachang/20061004/1159968041" target="_balnk">IT戦記さんのブログ</a>で紹介されているように<a href="http://mochikit.org/" target="_blank">MochiKit</a>を管理下に置けたりしてかなり面白いです。難点は日本語の情報がほとんどないことですが、本家のドキュメントが充実しているので使い方は理解できるんじゃないかと思います。<br />
 <br />
 今、僕はDojoとPythonで書かれた非同期フレームワークTwistedをバックエンドにおいたComet型チャットを作っているので、近いうちに公開したいと思います。<br />
-{% endraw %}

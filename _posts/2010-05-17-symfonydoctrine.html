@@ -2,7 +2,6 @@
 layout: post
 title: "symfony/Doctrineのキャッシュ機能"
 ---
-{% raw %}
 <p>こんばんは、五十川です。</p>
 
 <p>symfony 1.3/1.4で、それまでのPropelに代わってデフォルトのORMとなったDoctrineには、組み込みのキャッシュ機能があり、クエリーの実行結果データを手軽にキャッシュすることができます（これは「結果キャッシュ」と呼ばれます）。また、実行結果だけではなく、DQLに基づいて生成されるSQLをキャッシュする仕組みもあり、これを利用することで、DQL解析のオーバーヘッドを回避して処理の高速化を図ることも可能です（こちらは「 クエリーキャッシュ」という紛らわしい名前で呼ばれます）。</p>
@@ -322,4 +321,3 @@ echo $q->getResultCacheHash('jonwage'); // user:jonwage</pre>
 <div class="amazlet-box" style="margin-bottom:0px;"><div class="amazlet-image" style="float:left;"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4396764863/unoh-22/ref=nosim/" name="amazletlink" target="_blank"><img src="http://ecx.images-amazon.com/images/I/517mkmDXo5L._SL160_.jpg" alt="ペコセトラ (Feelコミックス)" style="border: none;" /></a></div><div class="amazlet-info" style="float:left;margin-left:15px;line-height:120%"><div class="amazlet-name" style="margin-bottom:10px;line-height:120%"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4396764863/unoh-22/ref=nosim/" name="amazletlink" target="_blank">ペコセトラ (Feelコミックス)</a><div class="amazlet-powered-date" style="font-size:7pt;margin-top:5px;font-family:verdana;line-height:120%">posted with <a href="http://www.amazlet.com/browse/ASIN/4396764863/unoh-22/ref=nosim/" title="ペコセトラ (Feelコミックス)" target="_blank">amazlet</a> at 10.05.16</div></div><div class="amazlet-detail">渡辺 ペコ <br />祥伝社 <br /></div><div class="amazlet-link" style="margin-top: 5px"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4396764863/unoh-22/ref=nosim/" name="amazletlink" target="_blank">Amazon.co.jp で詳細を見る</a></div></div><div class="amazlet-footer" style="clear: left"></div></div>
 
 <div style="margin:1em 0;padding:.5em;border:2px solid#ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br /><a href="http://www.unoh.net/recruit.html" target="_blank">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください！！<br /><a href="http://www.find-job.net/fj/showjob.cgi?id=50212" target="_blank">Find Job!</a>でも募集開始してます！</div>
-{% endraw %}

@@ -2,7 +2,6 @@
 layout: post
 title: "Tracに QA(testing) のステータスを追加する方法"
 ---
-{% raw %}
 2次元より3次元のほうが好きな hide です。<br />
 <br />
 昨日の<a href="http://labs.unoh.net/2006/08/post_38.html">masatoさんのエントリ</a>へのコメントで、Tracの話が盛り上がっていたので引き続きTracネタを続けます。今さらTracについての説明は必要ないと思いますが、どんなものかひと言で説明すると、BTSとWikiとSubversionリポジトリビュアーを合体したようなものです。この組み合わせ具合が絶妙で、Tracは様々なソフトウェア開発現場で使われています。有名なところでは、Ruby on Railsの開発にも使われています。<br />
@@ -56,4 +55,3 @@ $ python setup.py install</pre>
 以上で特別な設定は完了です。試しにチケットをfixedにしてみて、closedにならずに下のようにverifyのActionが表示されればOKです。同じようにTracにはtestingのステータスがないからなぁと思っていた方は、試してみてはいかがでしょうか。
 
 <img alt="trac-verify-status.png" src="http://labs.unoh.net/images/trac-verify-status.png" width="280" height="213" />
-{% endraw %}

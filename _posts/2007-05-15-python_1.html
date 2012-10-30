@@ -2,7 +2,6 @@
 layout: post
 title: "Pythonのテンプレートエンジン"
 ---
-{% raw %}
 <p>こんにちは、chihiroです。今回はPythonのテンプレートエンジンを紹介したいと思います。</p>
 
 <p>Pythonを使い始めた頃、PHPのSmartyや、JavaのVelocity/FreeMarkerに相当するテンプレートエンジンとして、Pythonにはどんなものがあるのか、どれを使えばよいのかよく分からなかった経験があるので、これからPythonを始める方の参考になれば幸いです。</p>
@@ -80,11 +79,11 @@ print tmpl.render(**{'user'    : 'unoh',
 
 env = Environment()
 tmpl = env.from_string("""\
-{% if user %}* Hello {{ user }}!!{% else %}* Hello guest!!{% endif %}
+&#123;% if user %&#125;* Hello &#123;&#123; user }}!!&#123;% else %&#125;* Hello guest!!&#123;% endif %&#125;
 ** Unoh services
-{% for service in services %}\
-- {{ service }}
-{% endfor %}""")
+&#123;% for service in services %&#125;\
+- &#123;&#123; service }}
+&#123;% endfor %&#125;""")
 
 print tmpl.render(**{'user'    : 'unoh',
                      'services': ['photozou',
@@ -104,11 +103,11 @@ os.environ['DJANGO_SETTINGS_MODULE'] = '__main__'
 from django.template import Template, Context
 
 tmpl = Template("""\
-{% if user %}* Hello {{ user }}!!{% else %}* Hello guest!!{% endif %}
+&#123;% if user %&#125;* Hello &#123;&#123; user }}!!&#123;% else %&#125;* Hello guest!!&#123;% endif %&#125;
 ** Unoh services
-{% for service in services %}\
-- {{ service }}
-{% endfor %}""")
+&#123;% for service in services %&#125;\
+- &#123;&#123; service }}
+&#123;% endfor %&#125;""")
 
 print tmpl.render(Context({'user'    : 'unoh',
                            'services': ['photozou',
@@ -148,4 +147,3 @@ GenshiもKidと同じくXML/(X)HTMLの出力を主たる目的としたテンプ
 <li><a href="http://www.divmod.org/trac/wiki/DivmodNevow">Nevow</a></li>
 <li><a href="http://www.owlfish.com/software/simpleTAL/">SimpleTAL</a></li>
 </ul>
-{% endraw %}

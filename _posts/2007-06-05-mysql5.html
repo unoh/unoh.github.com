@@ -2,7 +2,6 @@
 layout: post
 title: "MySQL5からのインデックス結合で１テーブル複数インデックスを使う"
 ---
-{% raw %}
 komagataです。<br />
 <br />
 Webアプリケーションのパフォーマンスの大半はデータベース、特にインデックスの使われ方にかかっている気がします。<br />
@@ -265,4 +264,3 @@ typeにindex_merge、ExtraにUsing sort_union(index_name,index_age)と出まし�
 <br />
 ※追記<br />
 「複合インデックスと名前が紛らわしい」、「例題が悪い」との指摘を受けました。確かにその通りだと思いました。それとPostgreSQLのEXPLAINで出てくる様なMerge自体のコストも気になるところです。追って調べていきたいと思います。
-{% endraw %}

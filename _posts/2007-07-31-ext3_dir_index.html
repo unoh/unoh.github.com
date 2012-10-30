@@ -2,7 +2,6 @@
 layout: post
 title: "ext3の dir_indexを試す"
 ---
-{% raw %}
 <p>こんにちは、佐藤です。kernel 2.6系のext3からdir_indexというものがサポートされたようなのでどのような状況でパフォーマンスが向上するか実験してみました。</p>
 
 <p>環境は以下です。</p>
@@ -118,4 +117,3 @@ sudo sysctl -w vm.drop_caches=3; sudo sysctl -w vm.drop_caches=0;
 <p>これを見る限り dir_indexは非常に有効そうです。</p>
 <p>ちなみに、bonnie++ というソフトウェアでも同じようなテストができるようです。</p>
 
-{% endraw %}

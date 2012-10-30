@@ -2,7 +2,6 @@
 layout: post
 title: "DjangoのURL逆引き機能"
 ---
-{% raw %}
 <p>Chihiroです。</p>
  <p>今回は、Django 0.96以降から改善が進んでいるDjangoのURL逆引き機能に関して紹介したいと思います。この機能を上手く使うと、<a href="http://www.djangoproject.com/">Django</a>を使ったWeb開発において、URLの設計と維持にかかる手間を大幅に削減できます。</p>
  <p><a href="http://michilu.com/django/doc-ja/index/">公式ドキュメントの日本語訳</a>にもこの機能の説明はありますが、説明が分散していて全体像が見えにくいと思いますので、この機能を使わない場合の問題点を指摘し、次に使った場合、ルーティング、モデル、ビュー、テンプレートがそれぞれどのように書けるかを説明したいと思います。</p>
@@ -39,16 +38,16 @@ class Entry(models.Model):
  <p>さらに、リソースを参照したり、リソースに対して何らかの操作を行ったりする場合、そのためのURLのフォーマットをテンプレート内に直接書く必要があります。</p>
 
  <p>例えば、あるブログのエントリの編集画面のURLを"/entries/{entry_id}/edit/"のように設計した場合、テンプレートの中に次のように書くことになるでしょう。</p>
-<pre class="code"><code>{% if entries %}
+<pre class="code"><code>&#123;% if entries %&#125;
 &lt;ul&gt;
-  {% for entry in entries %}
-  &lt;li&gt;{{ entry.title|escape }}&lt;a href=&quot;/entries/{{ entry.id }}/edit/&quot;&gt;{% trans &quot;Edit&quot; %}&lt;/a&gt;&lt;/li&gt;
+  &#123;% for entry in entries %&#125;
+  &lt;li&gt;&#123;&#123; entry.title|escape }}&lt;a href=&quot;/entries/&#123;&#123; entry.id }}/edit/&quot;&gt;&#123;% trans &quot;Edit&quot; %&#125;&lt;/a&gt;&lt;/li&gt;
 
-  {% endfor %}
+  &#123;% endfor %&#125;
 &lt;/ul&gt;
-{% endif %}
+&#123;% endif %&#125;
 </code></pre>
-<p>ここまでの例で分かるように、モデル、ルーティング、テンプレートにおいて、"^entries/(?P&lt;entry_id&gt;\d+)/"、"/entries/%s/"、 "/entries/{{ entry.id }}/edit/"のように、似たようなURLの定義を繰り返す必要がありました。</p>
+<p>ここまでの例で分かるように、モデル、ルーティング、テンプレートにおいて、"^entries/(?P&lt;entry_id&gt;\d+)/"、"/entries/%s/"、 "/entries/&#123;&#123; entry.id }}/edit/"のように、似たようなURLの定義を繰り返す必要がありました。</p>
 
 <h3> URL定義のDRY化</h3>
 <p>開発版Djangoでは、URLConfでのURL定義を元に、ビュー関数名からリソースのURLの解決を行えるようになりました。分かりやすく言うと、urls.pyにURL設計をまとめることができるようになったのです。</p>
@@ -157,37 +156,36 @@ def create_entry(request):
     return render_to_response(&#39;myapp/entry_form.html&#39;, {&#39;form&#39;: form})
 </code></pre>
 
- <p>テンプレート内からURLを解決する場合は、{% url %}タグを使います。(<a href="http://michilu.com/django/doc-ja/templates/#url">公式ドキュメントによる解説</a>)</p>
- <p>このタグは、{% url URLパターンの名前 パラメータ %}のように使います。</p>
+ <p>テンプレート内からURLを解決する場合は、&#123;% url %&#125;タグを使います。(<a href="http://michilu.com/django/doc-ja/templates/#url">公式ドキュメントによる解説</a>)</p>
+ <p>このタグは、&#123;% url URLパターンの名前 パラメータ %&#125;のように使います。</p>
 
-<pre class="code"><code>{% load i18n %}
-{% extends &quot;base.html&quot; %}
-{% block content %}
+<pre class="code"><code>&#123;% load i18n %&#125;
+&#123;% extends &quot;base.html&quot; %&#125;
+&#123;% block content %&#125;
 &lt;div&gt;
-  &lt;a href=&quot;{% url create_entry %}&quot;&gt;{% trans &quot;Post a new entry&quot; %}&lt;/a&gt;
+  &lt;a href=&quot;&#123;% url create_entry %&#125;&quot;&gt;&#123;% trans &quot;Post a new entry&quot; %&#125;&lt;/a&gt;
 &lt;/div&gt;
 
-{% if object_list %}
+&#123;% if object_list %&#125;
   &lt;ul&gt;
-  {% for entry in object_list %}
-    &lt;li&gt;{{ entry.title|escape }}
-        (&lt;a href=&quot;{% url edit_entry entry_id=entry.id %}&quot;&gt;{% trans &quot;Edit&quot; %}&lt;/a&gt; |
-         &lt;a href=&quot;{% url delete_entry entry_id=entry.id %}&quot;&gt;{% trans &quot;Delete&quot; %}&lt;/a&gt;)
+  &#123;% for entry in object_list %&#125;
+    &lt;li&gt;&#123;&#123; entry.title|escape }}
+        (&lt;a href=&quot;&#123;% url edit_entry entry_id=entry.id %&#125;&quot;&gt;&#123;% trans &quot;Edit&quot; %&#125;&lt;/a&gt; |
+         &lt;a href=&quot;&#123;% url delete_entry entry_id=entry.id %&#125;&quot;&gt;&#123;% trans &quot;Delete&quot; %&#125;&lt;/a&gt;)
     &lt;/li&gt;
-  {% endfor %}
+  &#123;% endfor %&#125;
   &lt;/li&gt;
-{% else %}
-  &lt;p&gt;{% trans &quot;No entries&quot; %}&lt;/p&gt;
-{% endif %}
-{% endblock %}
+&#123;% else %&#125;
+  &lt;p&gt;&#123;% trans &quot;No entries&quot; %&#125;&lt;/p&gt;
+&#123;% endif %&#125;
+&#123;% endblock %&#125;
 </code></pre>
 
 <h3> まとめ</h3>
 
-<p>permalink, reverse, {% url %}を使うと、URL設計を変更したい場合などに、変更にかかるコストを大幅に削減できます。またURL設計をURLConfに集約できるので、コードやテンプレートの可読性も高まります。</p>
-<p>例えば、「当初、"/entries/{entry_id}/"のようなURLをブログ・エントリのパーマリンクとしていたが、開発段階でパーマリンクを"{entry_id}/"に変更することになった」というケースを考えてみてください。この場合でも、permalink, reverse, {% url %}を使っていれば、URLConfを書き換えるだけで済みます。</p>
+<p>permalink, reverse, &#123;% url %&#125;を使うと、URL設計を変更したい場合などに、変更にかかるコストを大幅に削減できます。またURL設計をURLConfに集約できるので、コードやテンプレートの可読性も高まります。</p>
+<p>例えば、「当初、"/entries/{entry_id}/"のようなURLをブログ・エントリのパーマリンクとしていたが、開発段階でパーマリンクを"{entry_id}/"に変更することになった」というケースを考えてみてください。この場合でも、permalink, reverse, &#123;% url %&#125;を使っていれば、URLConfを書き換えるだけで済みます。</p>
 <p>今回のコード例は下記のリンクからダウンロードできますので、どうぞご利用ください。</p>
 <p><a href="http://labs.unoh.net/download/djagno071003.tgz">django071003.tgz</a></p>
 
 
-{% endraw %}

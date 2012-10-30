@@ -2,7 +2,6 @@
 layout: post
 title: "PHPテンプレートエンジンTwigをいじってみました"
 ---
-{% raw %}
 <p>今年のX'masは一人で高いシャンパンを買って飲もうとおもってるKeitaです。</p>
 
 <p>しばらく、情報収集をさぼっている間に、symfonyの開発元であるSensio Labsから、PHPのテンプレートエンジンTwigが出ていたので、1時間ほど試してみました。</p>
@@ -23,8 +22,8 @@ title: "PHPテンプレートエンジンTwigをいじってみました"
 &lt;title&gt;title&lt;/title&gt;
 &lt;/html&gt;
 &lt;body&gt;
-メリー {{ congratulation }}!!
-メリー {{ congratulation|safe }}!!
+メリー &#123;&#123; congratulation }}!!
+メリー &#123;&#123; congratulation|safe }}!!
 &lt;/body&gt;
 </pre>
 
@@ -68,27 +67,27 @@ echo $template->render(array('congratulation' => 'X\'ss'));
 <p>(1) の部分でファイルからの読み込みが指定されてますが配列や文字列そのももの指定できるようような指定ができます。また、Loader自体の拡張も、たとえばMySQLやKVS的なものからデータを読み込むような指定もできます。</p>
 
 <p>(2)の部分は、変数の出力時に何も指定しなければエスケープ処理を行うようにしてあります。
-エスケープしない場合は{{hoge|safe}}のような記述します。
-また上記設定しない場合は{{hoge|e}}とった感じの書き方でエスケープされます。</p>
+エスケープしない場合は&#123;&#123;hoge|safe}}のような記述します。
+また上記設定しない場合は&#123;&#123;hoge|e}}とった感じの書き方でエスケープされます。</p>
 
 <h2>テンプレート継承</h2>
 テンプレートを下記のように記述します。<br />
 base.html
 <pre class="code">
 &lt;html&gt;
-&lt;title&gt;{% block title %}テスト{% endblock %}&lt;/title&gt;
+&lt;title&gt;&#123;% block title %&#125;テスト&#123;% endblock %&#125;&lt;/title&gt;
 &lt;/html&gt;
 &lt;body&gt;
-{% block body %}
+&#123;% block body %&#125;
 本文だよ
-{% endblock %}
+&#123;% endblock %&#125;
 &lt;/body&gt;
 </pre>
 
 title.html
 <pre class="code">
-{% extends "base.html" %}
-{% block title%}継承テスト{% endblock %}
+&#123;% extends "base.html" %&#125;
+&#123;% block title%&#125;継承テスト&#123;% endblock %&#125;
 </pre>
 
 <p>title.htmlを実行すると下記のような出力が行われます。</p>
@@ -183,4 +182,3 @@ PHPのテンプレートエンジンといえば、PHPそのものはもちろ�
 
 何かのご参考になれば幸いです。
 
-{% endraw %}

@@ -2,7 +2,6 @@
 layout: post
 title: "Nagios のログの日付を変換しながら読むには"
 ---
-{% raw %}
 <p>こんにちは。kyagi です。</p>
 
 <p>ウノウではサービスの稼働状況を監視するために <a href="http://www.nagios.org/">Nagios</a> を使用しています。ログファイル「/var/log/nagios/nagios.log」には監視活動の履歴が出力されるのですが、最初のカラムの日付フォーマットがエポック秒になっているため、障害発生時の時間を知るためには変換処理を行わなければなりません。この目的を達成する簡単なスクリプト nagioslogview.rb を書いたので、以下に公開しておきます。同様に小さなストレスを抱えている方の解決策になれば幸いです。</p>
@@ -41,4 +40,3 @@ $ nagioslogview.rb
 [Wed May 19 00:02:45] Auto-save of retention data completed successfully.
 (... snip ...)
 </pre>
-{% endraw %}

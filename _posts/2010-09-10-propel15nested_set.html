@@ -2,7 +2,6 @@
 layout: post
 title: "Propel1.5で階層構造が扱えるnested_setビヘイビア"
 ---
-{% raw %}
 <p>yukiです。<br />
 今回は<a href="http://labs.unoh.net/2009/06/rdb.html">去年やりました階層構造</a>についてです。Propel1.5でビヘイビアとして実装されたので早速使ってみました。<br />
 以下の例ではPropel単体ではなく、symfonyの<a href="http://www.symfony-project.org/plugins/sfPropel15Plugin">sfPropel15Plugin</a>を利用しています。</p>
@@ -125,4 +124,3 @@ var_dump($george2nd->isLeaf());  ///bool(true)
 <p>このように、DoctrineのNestedSetビヘイビアに非常に近い操作感で扱えるので、階層構造を使う際にPropelを選択肢に入れることができるようになりました。<br />
 何かのお役に立てば幸いです。</p>
 
-{% endraw %}
