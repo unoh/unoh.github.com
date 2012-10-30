@@ -1,6 +1,10 @@
 ---
 layout: post
+permalink: /2009/09/30/android.textile
 title: "分かったつもりになるAndroid開発方法"
+date: 2009-09-30T18:16:10.00+09:00
+tags:
+  - "uchida"
 ---
 こんばんは。うちだです。
 

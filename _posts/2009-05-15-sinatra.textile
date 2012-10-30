@@ -1,6 +1,10 @@
 ---
 layout: post
+permalink: /2009/05/15/sinatra.textile
 title: "Sinatra気に入った"
+date: 2009-05-15T18:12:16.00+09:00
+tags:
+  - "uchida"
 ---
 <p>先日、<a href="http://mt9.jp/">まちつく！</a>が<a href="http://www.unoh.net/news/2009/05/post_83.html">正式リリース</a>になりました。よろしければ是非携帯でアクセスして遊んでみてください。</p>
 

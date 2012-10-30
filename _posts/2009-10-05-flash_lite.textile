@@ -1,6 +1,10 @@
 ---
 layout: post
+permalink: /2009/10/05/flash_lite.textile
 title: "Flash Lite ことはじめ。"
+date: 2009-10-05T00:18:18.00+09:00
+tags:
+  - "ishikawa"
 ---
 p. こんにちは。 コーヒー飲むならマンデリンな ryosuke です。ただ実際の所深いこだわりはありません。
 

@@ -1,6 +1,10 @@
 ---
 layout: post
+permalink: /2010/09/03/google_app_engine_for_scala.textile
 title: "Google App Engine for Scala"
+date: 2010-09-03T14:11:59.00+09:00
+tags:
+  - "uchida"
 ---
 おはようございます。うちだです。
 

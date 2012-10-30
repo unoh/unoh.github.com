@@ -1,6 +1,10 @@
 ---
 layout: post
+permalink: /2010/01/20/flash_lite_1.textile
 title: "Flash Lite初学者の為のまとめ"
+date: 2010-01-20T13:01:00.00+09:00
+tags:
+  - "uchida"
 ---
 おはようございます。内田です。
 最近はmixiアプリモバイルやモバゲー上のゲームのようなソーシャルゲームが流行ってるようですね。
