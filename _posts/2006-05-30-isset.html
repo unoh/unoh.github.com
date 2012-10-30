@@ -3,5 +3,16 @@ layout: post
 title: "isset()って"
 ---
 {% raw %}
-こんにちは，ttsuruoka です．<br /><br />(PHP の) isset() って引数を複数取れるんですね．最近知りました．<br /><br /> if (isset($a, $b, $c))<br /> // if (isset($a) && isset($b) && isset($c)) と同じ <br /><br />他の is 系や empty() は複数取れないようです．<br /><br />なんで isset() だけ複数取れるようになっているんですかねぇ．<br />あと，is_string() とか is_int() ってアンダーバーで区切られているのに，<br />なぜか isset() は is_set() ではないんですよね．
+こんにちは，ttsuruoka です．<br />
+<br />
+(PHP の) isset() って引数を複数取れるんですね．最近知りました．<br />
+<br />
+ if (isset($a, $b, $c))<br />
+ // if (isset($a) && isset($b) && isset($c)) と同じ <br />
+<br />
+他の is 系や empty() は複数取れないようです．<br />
+<br />
+なんで isset() だけ複数取れるようになっているんですかねぇ．<br />
+あと，is_string() とか is_int() ってアンダーバーで区切られているのに，<br />
+なぜか isset() は is_set() ではないんですよね．
 {% endraw %}

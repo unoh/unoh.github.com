@@ -3,5 +3,175 @@ layout: post
 title: "Tips for nginx"
 ---
 {% raw %}
-何を今更と思うかもしれませんが、最近、英語圏に住んでいようがいまいが<br />ソフトウェア開発で英語は必須だと改めて実感したbokkoです。<br /><br /><ul><br /><li>英語の技術書を読んでいる</li><br /><li>日本人の開発者が作ったソフトウェアに付属している仕様書を読んだら英語で書かれていた</li><br /><li>日本人の開発者宛に英語でバグレポートを書いていることに気付く(フォーラム全体が英語だった！)</li><br /></ul><br /><br />私も<a href="http://code.google.com/p/dtl-cpp/">自分の書いたライブラリ</a>のドキュメントを書き始めましたが、<br />全部英語だったりします。(少し前に海外の方からライセンスに関する質問を「英語」で受けました)<br />そして、今日紹介するnginxも開発元はロシアですが、英語のドキュメントが充実しています。<br /><br /><h3>nginxとは</h3><br /><br />nginxは高速軽量なWebサーバです。(えんじんえっくすと読みます)<br />基本的なHTTPとしての機能に加えてSSLやFastCGIのサポート、<br />リバースプロキシ、バーチャルホスト、メールプロキシといった<br />便利な機能も兼ね備えています。開発元はロシアですが、<br />ロシア語だけでなく、英語や日本語を含む複数の言語に翻訳されている<a href="http://wiki.nginx.org/Main">Wiki</a>があります。<br /><br /><h3>インストール</h3><br /><br />ソースコードからビルドします。(ここで使用しているバージョンは0.7.61です)<br /><br /><pre class="code"><br />$ ./configure<br />$ make<br />$ sudo make install<br /></pre><br /><br /><h3>nginxが使用する外部モジュール</h3><br /><br />nginxでURI書き換えやgzip圧縮、SSLといった機能を使用するには<br />外部のモジュールが必要になります。例えばCentOSではそれぞれ<br />以下のモジュールをyum等でインストールする必要があります。<br /><br /><table border="1"><br /><tr><br /><td>URI書き換え</td><br /><td>pcre-devel</td><br /></tr><br /><tr><br /><td>gzip圧縮</td><br /><td>zlib-devel</td><br /></tr><br /><tr><br /><td>SSL</td><br /><td>open-ssl-devel</td><br /></tr><br /></table><br /><br /><h3>cofigure時に指定するオプション</h3><br /><br />nginxはconfigure時にpcreはデフォルトで使用するようになっていますが、<br />URI書き換え機能を使わない場合は--without-pcreを指定することで、無効にできます。<br />また、SSLを使用する際は--with-http_ssl_moduleを指定するのがよいでしょう。<br />その他のconfigure時のオプションはWikiの以下のページが参考になります。<br /><br /><a href="http://wiki.nginx.org/NginxInstallOptions">Compile-time options</a><br /><br /><h3>nginxの設定</h3><br /><br />ここではnginxで設定する主要なパラメータについて解説します。<br /><br /><h3>worker_processesとworker_connections</h3><br /><br />worker_processesとworker_connectionsはApacheのMaxClientsに相当するパラメータです。<br />まず、worker_processesですが、これはnginxを起動した後に常駐し、<br />クライアントのアクセスを受け付けるワーカーの数です。<br />worker_connectionsは1つのワーカーが扱えるクライアントの最大数になります。<br />つまりものすごく単純化すると、nginxのmax_clientsは、<br /><br /><pre class="code"><br />max_clients = worker_processes * worker_connections<br /></pre><br /><br />ということになります。worker_connectionsはeventsディレクティブ内に以下のように記述します。<br /><br /><pre class="code"><br />events {<br />   worker_connections  1024;<br />   use epoll;<br />}<br /></pre><br /><br />useの部分にはnginxが使用するイベントモデルを指定します。<br />上記のepollのほかにおなじみのselectやkqueue等があります。<br />また、このあたりのより詳しい設定についてはWikiにある<a href="http://wiki.nginx.org/NginxHttpEventsModule">NginxHttpEventsModules</a>のページが参考になります。<br /><br /><h3>リバースプロキシとして使う</h3><br /><br />nginxをリバースプロキシとして動作させる場合の設定例は以下のようになります。<br />プロキシの後ろにWebサーバ2台(10.0.0.11と10.0.0.12)がぶら下がってるとすると、($nameと$domain_nameは任意)<br /><br /><pre class="code"><br />http {<br />   upstream $name {<br />       server 10.0.0.11:80 weight=3;<br />       server 10.0.0.12:80 weight=3;<br />   }<br />   server {<br />       listen 80;<br />       server_name $domain_name;<br />       location / {<br />           proxy_pass http://$name;<br />       }<br />   }<br />}<br /></pre><br /><br />という風になります。<br /><br /><h3>プロキシにアクセスしてきたクライアントのIPアドレスをWebサーバに引き継ぐ</h3><br /><br />通常、クライアントがプロキシサーバにアクセスし、<br />プロキシサーバがそのリクエストをWebサーバに渡す場合、<br />Webサーバに記録されるIPアドレスはプロキシサーバのものとなります。<br />携帯向けサービスでは特にキャリアの種類やPCか携帯からのアクセスか？等によって<br />処理を振り分ける必要があるので、Webサーバには元のIPアドレスを渡したい<br />ケースがあります。これを実現するには以下の設定を記述します。<br /><br /><pre class="code"><br />proxy_set_header        Host            $host;<br />proxy_set_header        X-Real-IP       $remote_addr;<br />proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;<br /></pre><br /><br />また、プロキシにぶら下がっているWebサーバがApacheの場合、<br />mod_extract_forwardedやmod_rpaf等を使うことによって<br />リバースプロキシ越しのIPアドレスを取得できます。<br />mod_extract_forwardedを使う場合、<br />Apacheの設定ファイルには以下のように記述します。<br /><br /><pre class="code"><br />MEForder refuse,accept<br />MEFrefuse all<br />MEFaccept x.x.x.x # プロキシのIPアドレス<br /></pre><br /><br /><h3>nginxでSSL</h3><br /><br />nginxでSSLを使うにはhttpディレクティブ内に以下のような記述をします($nameと$domain_nameは任意)。<br /><br /><pre class="code"><br />server {<br />   listen       443;<br />   server_name  $domain_name;<br />   ssl                  on;<br />   ssl_certificate      (サーバ証明書へのパス)<br />   ssl_certificate_key  (秘密鍵へのパス)<br />   ssl_session_timeout  5m;<br />   ssl_protocols  SSLv2 SSLv3 TLSv1;<br />   ssl_ciphers  ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP;<br />   ssl_prefer_server_ciphers   on;<br />   location / {<br />       root    /usr/share/nginx/html;<br />       index  index.html index.htm;<br />   }<br />}<br /></pre><br /><br /><h3>nginxで中間CA証明書を使用する</h3><br /><br />nginxには中間CA証明書を直接指定するための方法がありません。<br />そのため、ちょっと面倒ですが、サーバ証明書に追記する必要があります。<br />サーバ証明書と中間証明書が以下のような形式だとすると、<br /><br /><h3>サーバ証明書</h3><br /><br /><pre class="code">
+何を今更と思うかもしれませんが、最近、英語圏に住んでいようがいまいが<br />
+ソフトウェア開発で英語は必須だと改めて実感したbokkoです。<br />
+<br />
+<ul><br />
+<li>英語の技術書を読んでいる</li><br />
+<li>日本人の開発者が作ったソフトウェアに付属している仕様書を読んだら英語で書かれていた</li><br />
+<li>日本人の開発者宛に英語でバグレポートを書いていることに気付く(フォーラム全体が英語だった！)</li><br />
+</ul><br />
+<br />
+私も<a href="http://code.google.com/p/dtl-cpp/">自分の書いたライブラリ</a>のドキュメントを書き始めましたが、<br />
+全部英語だったりします。(少し前に海外の方からライセンスに関する質問を「英語」で受けました)<br />
+そして、今日紹介するnginxも開発元はロシアですが、英語のドキュメントが充実しています。<br />
+<br />
+<h3>nginxとは</h3><br />
+<br />
+nginxは高速軽量なWebサーバです。(えんじんえっくすと読みます)<br />
+基本的なHTTPとしての機能に加えてSSLやFastCGIのサポート、<br />
+リバースプロキシ、バーチャルホスト、メールプロキシといった<br />
+便利な機能も兼ね備えています。開発元はロシアですが、<br />
+ロシア語だけでなく、英語や日本語を含む複数の言語に翻訳されている<a href="http://wiki.nginx.org/Main">Wiki</a>があります。<br />
+<br />
+<h3>インストール</h3><br />
+<br />
+ソースコードからビルドします。(ここで使用しているバージョンは0.7.61です)<br />
+<br />
+<pre class="code"><br />
+$ ./configure<br />
+$ make<br />
+$ sudo make install<br />
+</pre><br />
+<br />
+<h3>nginxが使用する外部モジュール</h3><br />
+<br />
+nginxでURI書き換えやgzip圧縮、SSLといった機能を使用するには<br />
+外部のモジュールが必要になります。例えばCentOSではそれぞれ<br />
+以下のモジュールをyum等でインストールする必要があります。<br />
+<br />
+<table border="1"><br />
+<tr><br />
+<td>URI書き換え</td><br />
+<td>pcre-devel</td><br />
+</tr><br />
+<tr><br />
+<td>gzip圧縮</td><br />
+<td>zlib-devel</td><br />
+</tr><br />
+<tr><br />
+<td>SSL</td><br />
+<td>open-ssl-devel</td><br />
+</tr><br />
+</table><br />
+<br />
+<h3>cofigure時に指定するオプション</h3><br />
+<br />
+nginxはconfigure時にpcreはデフォルトで使用するようになっていますが、<br />
+URI書き換え機能を使わない場合は--without-pcreを指定することで、無効にできます。<br />
+また、SSLを使用する際は--with-http_ssl_moduleを指定するのがよいでしょう。<br />
+その他のconfigure時のオプションはWikiの以下のページが参考になります。<br />
+<br />
+<a href="http://wiki.nginx.org/NginxInstallOptions">Compile-time options</a><br />
+<br />
+<h3>nginxの設定</h3><br />
+<br />
+ここではnginxで設定する主要なパラメータについて解説します。<br />
+<br />
+<h3>worker_processesとworker_connections</h3><br />
+<br />
+worker_processesとworker_connectionsはApacheのMaxClientsに相当するパラメータです。<br />
+まず、worker_processesですが、これはnginxを起動した後に常駐し、<br />
+クライアントのアクセスを受け付けるワーカーの数です。<br />
+worker_connectionsは1つのワーカーが扱えるクライアントの最大数になります。<br />
+つまりものすごく単純化すると、nginxのmax_clientsは、<br />
+<br />
+<pre class="code"><br />
+max_clients = worker_processes * worker_connections<br />
+</pre><br />
+<br />
+ということになります。worker_connectionsはeventsディレクティブ内に以下のように記述します。<br />
+<br />
+<pre class="code"><br />
+events {<br />
+   worker_connections  1024;<br />
+   use epoll;<br />
+}<br />
+</pre><br />
+<br />
+useの部分にはnginxが使用するイベントモデルを指定します。<br />
+上記のepollのほかにおなじみのselectやkqueue等があります。<br />
+また、このあたりのより詳しい設定についてはWikiにある<a href="http://wiki.nginx.org/NginxHttpEventsModule">NginxHttpEventsModules</a>のページが参考になります。<br />
+<br />
+<h3>リバースプロキシとして使う</h3><br />
+<br />
+nginxをリバースプロキシとして動作させる場合の設定例は以下のようになります。<br />
+プロキシの後ろにWebサーバ2台(10.0.0.11と10.0.0.12)がぶら下がってるとすると、($nameと$domain_nameは任意)<br />
+<br />
+<pre class="code"><br />
+http {<br />
+   upstream $name {<br />
+       server 10.0.0.11:80 weight=3;<br />
+       server 10.0.0.12:80 weight=3;<br />
+   }<br />
+   server {<br />
+       listen 80;<br />
+       server_name $domain_name;<br />
+       location / {<br />
+           proxy_pass http://$name;<br />
+       }<br />
+   }<br />
+}<br />
+</pre><br />
+<br />
+という風になります。<br />
+<br />
+<h3>プロキシにアクセスしてきたクライアントのIPアドレスをWebサーバに引き継ぐ</h3><br />
+<br />
+通常、クライアントがプロキシサーバにアクセスし、<br />
+プロキシサーバがそのリクエストをWebサーバに渡す場合、<br />
+Webサーバに記録されるIPアドレスはプロキシサーバのものとなります。<br />
+携帯向けサービスでは特にキャリアの種類やPCか携帯からのアクセスか？等によって<br />
+処理を振り分ける必要があるので、Webサーバには元のIPアドレスを渡したい<br />
+ケースがあります。これを実現するには以下の設定を記述します。<br />
+<br />
+<pre class="code"><br />
+proxy_set_header        Host            $host;<br />
+proxy_set_header        X-Real-IP       $remote_addr;<br />
+proxy_set_header        X-Forwarded-For $proxy_add_x_forwarded_for;<br />
+</pre><br />
+<br />
+また、プロキシにぶら下がっているWebサーバがApacheの場合、<br />
+mod_extract_forwardedやmod_rpaf等を使うことによって<br />
+リバースプロキシ越しのIPアドレスを取得できます。<br />
+mod_extract_forwardedを使う場合、<br />
+Apacheの設定ファイルには以下のように記述します。<br />
+<br />
+<pre class="code"><br />
+MEForder refuse,accept<br />
+MEFrefuse all<br />
+MEFaccept x.x.x.x # プロキシのIPアドレス<br />
+</pre><br />
+<br />
+<h3>nginxでSSL</h3><br />
+<br />
+nginxでSSLを使うにはhttpディレクティブ内に以下のような記述をします($nameと$domain_nameは任意)。<br />
+<br />
+<pre class="code"><br />
+server {<br />
+   listen       443;<br />
+   server_name  $domain_name;<br />
+   ssl                  on;<br />
+   ssl_certificate      (サーバ証明書へのパス)<br />
+   ssl_certificate_key  (秘密鍵へのパス)<br />
+   ssl_session_timeout  5m;<br />
+   ssl_protocols  SSLv2 SSLv3 TLSv1;<br />
+   ssl_ciphers  ALL:!ADH:!EXPORT56:RC4+RSA:+HIGH:+MEDIUM:+LOW:+SSLv2:+EXP;<br />
+   ssl_prefer_server_ciphers   on;<br />
+   location / {<br />
+       root    /usr/share/nginx/html;<br />
+       index  index.html index.htm;<br />
+   }<br />
+}<br />
+</pre><br />
+<br />
+<h3>nginxで中間CA証明書を使用する</h3><br />
+<br />
+nginxには中間CA証明書を直接指定するための方法がありません。<br />
+そのため、ちょっと面倒ですが、サーバ証明書に追記する必要があります。<br />
+サーバ証明書と中間証明書が以下のような形式だとすると、<br />
+<br />
+<h3>サーバ証明書</h3><br />
+<br />
+<pre class="code">
 {% endraw %}

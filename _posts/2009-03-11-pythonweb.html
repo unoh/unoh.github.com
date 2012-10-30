@@ -3,5 +3,80 @@ layout: post
 title: "PythonでWebアプリ"
 ---
 {% raw %}
-おはようございます。うちだです。<br />最近Google App Engine(GAE)で何かを作りたくなってきました。何を作りたいわけでもなくGAEで何かを。<br />しかし、PythonでWebするのはド素人な為、まずは周辺技術を調査し列挙することにします。<br />完全なチラシの裏です。<br /><br /><h3>PythonのWeb関連技術</h3><br /><br />Django<br />・学習コスト大<br />・<a href="http://www.djangoproject.com/">Django | The Web framework for perfectionists with deadlines</a><br />・<a href="http://djangoproject.jp/doc/ja/1.0/">Django ドキュメント -- Django v1.0 documentation</a><br /><br />TurboGears<br />・学習コスト大<br />・merbみたい<br />・<a href="http://www.turbogears.org/">TurboGears: Front-to-Back Web Development</a><br /><br />Pylons<br />・学習コスト大<br />・railsに影響を受けているらしい<br />・merbみたい<br />・<a href="http://www.pylonshq.com/">PylonsHQ - Home</a><br /><br />web.py<br />・学習コスト小<br />・<a href="http://webpy.org/">(web.py)</a><br />・<a href="http://webpy.org/tutorial2.ja">web.py 0.2 チュートリアル (web.py)</a><br /><br />WSGI<br />・アプリケーションとサーバーの間のインターフェース<br />・とりあえず学ぶべき<br />・Rackの元ネタ<br />・<a href="http://wsgi.org/wsgi/">http://wsgi.org/wsgi/</a><br />・<a href="http://wiki.pylonshq.com/display/pylonsja/PEP333-ja">http://wiki.pylonshq.com/display/pylonsja/PEP333-ja</a><br /><br />mod_python<br />・ウェブサーバーで動かすモジュール<br /><br />mod_wsgi<br />・mod_pythonより良いよって書いてある<br />・<a href="http://code.google.com/p/modwsgi/">modwsgi - Google Code</a><br /><br /><h3>参考にRubyのWeb関連技術</h3><br /><br />Ruby on Rails<br />・学習コスト大<br />・2.3のMetalは素敵<br />・<a href="http://rubyonrails.org/">Ruby on Rails</a><br /><br />Merb<br />・学習コスト大<br />・モジュール方式<br />・railsに統合<br />・DataMapperがすごい<br />・<a href="http://merbivore.com/">Merb | Looking for a hacker's framework?</a><br /><br />Rack<br />・とりあえず学ぶべき<br />・実装も読むべき<br />・開発者はコードアーティスト<br />・<a href="http://rack.rubyforge.org/">Rack: a Ruby Webserver Interface</a><br />・<a href="http://mono.kmc.gr.jp/~yhara/d/?date=20080716">Greenbear Diary - 5分でわかるRack , シュレーディンガーの猫たち</a><br /><br />Passenger(mod_rails,mod_rack)<br />・railsが動く<br />・rackが動く<br />・rackが動くということはほぼ全部動く<br />・Not only do we support Rack, we now also support Python WSGI!って書いてある<br />・<a href="http://www.modrails.com/">Overview -- Phusion Passenger™ (a.k.a. mod_rails / mod_rack)</a><br /><br /><h3>感想</h3><br /><br />個人的には便利機能がそろってる重量級フレームワークよりも軽量なものが好き。GAEの場合標準CGIとして動かすようなので、かなり遅くなるだろうし。<br />まずはWSGIを実装を含めて学び、隙を見てWSGI+web.py(or オレオレフレームワーク)で開発しようかと思います。<br /><br />おわり
+おはようございます。うちだです。<br />
+最近Google App Engine(GAE)で何かを作りたくなってきました。何を作りたいわけでもなくGAEで何かを。<br />
+しかし、PythonでWebするのはド素人な為、まずは周辺技術を調査し列挙することにします。<br />
+完全なチラシの裏です。<br />
+<br />
+<h3>PythonのWeb関連技術</h3><br />
+<br />
+Django<br />
+・学習コスト大<br />
+・<a href="http://www.djangoproject.com/">Django | The Web framework for perfectionists with deadlines</a><br />
+・<a href="http://djangoproject.jp/doc/ja/1.0/">Django ドキュメント -- Django v1.0 documentation</a><br />
+<br />
+TurboGears<br />
+・学習コスト大<br />
+・merbみたい<br />
+・<a href="http://www.turbogears.org/">TurboGears: Front-to-Back Web Development</a><br />
+<br />
+Pylons<br />
+・学習コスト大<br />
+・railsに影響を受けているらしい<br />
+・merbみたい<br />
+・<a href="http://www.pylonshq.com/">PylonsHQ - Home</a><br />
+<br />
+web.py<br />
+・学習コスト小<br />
+・<a href="http://webpy.org/">(web.py)</a><br />
+・<a href="http://webpy.org/tutorial2.ja">web.py 0.2 チュートリアル (web.py)</a><br />
+<br />
+WSGI<br />
+・アプリケーションとサーバーの間のインターフェース<br />
+・とりあえず学ぶべき<br />
+・Rackの元ネタ<br />
+・<a href="http://wsgi.org/wsgi/">http://wsgi.org/wsgi/</a><br />
+・<a href="http://wiki.pylonshq.com/display/pylonsja/PEP333-ja">http://wiki.pylonshq.com/display/pylonsja/PEP333-ja</a><br />
+<br />
+mod_python<br />
+・ウェブサーバーで動かすモジュール<br />
+<br />
+mod_wsgi<br />
+・mod_pythonより良いよって書いてある<br />
+・<a href="http://code.google.com/p/modwsgi/">modwsgi - Google Code</a><br />
+<br />
+<h3>参考にRubyのWeb関連技術</h3><br />
+<br />
+Ruby on Rails<br />
+・学習コスト大<br />
+・2.3のMetalは素敵<br />
+・<a href="http://rubyonrails.org/">Ruby on Rails</a><br />
+<br />
+Merb<br />
+・学習コスト大<br />
+・モジュール方式<br />
+・railsに統合<br />
+・DataMapperがすごい<br />
+・<a href="http://merbivore.com/">Merb | Looking for a hacker's framework?</a><br />
+<br />
+Rack<br />
+・とりあえず学ぶべき<br />
+・実装も読むべき<br />
+・開発者はコードアーティスト<br />
+・<a href="http://rack.rubyforge.org/">Rack: a Ruby Webserver Interface</a><br />
+・<a href="http://mono.kmc.gr.jp/~yhara/d/?date=20080716">Greenbear Diary - 5分でわかるRack , シュレーディンガーの猫たち</a><br />
+<br />
+Passenger(mod_rails,mod_rack)<br />
+・railsが動く<br />
+・rackが動く<br />
+・rackが動くということはほぼ全部動く<br />
+・Not only do we support Rack, we now also support Python WSGI!って書いてある<br />
+・<a href="http://www.modrails.com/">Overview -- Phusion Passenger™ (a.k.a. mod_rails / mod_rack)</a><br />
+<br />
+<h3>感想</h3><br />
+<br />
+個人的には便利機能がそろってる重量級フレームワークよりも軽量なものが好き。GAEの場合標準CGIとして動かすようなので、かなり遅くなるだろうし。<br />
+まずはWSGIを実装を含めて学び、隙を見てWSGI+web.py(or オレオレフレームワーク)で開発しようかと思います。<br />
+<br />
+おわり
 {% endraw %}

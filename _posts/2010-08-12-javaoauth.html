@@ -3,5 +3,266 @@ layout: post
 title: "JavaライブラリでOAuth認証"
 ---
 {% raw %}
-<p>みなさん、こんにちは。<br />７月にウノウに入社しました細川です。</p><br /><br /><p>私は、これまでいろいろなオープンソースの恩恵にあずかってきましたが、こちらから貢献をしたことは、ほとんどありませんでした。この記事がお役に立てれば幸いです。</p><br /><br /><p>ウノウ入社前にはJavaを主に使っていましたので、今回は、JavaのOAuthライブラリを使う方法について書いてみたいと思います。</p><br /><br /><p><font class="Apple-style-span" style="font-size: 1.25em; "><font class="Apple-style-span" style="font-size: 1.25em; ">OAuthとは</font></font></p><p><a href="http://ja.wikipedia.org/wiki/OAuth">OAuth</a>は、セキュアな認証手段として多く使われてきています。<br />twitterもweb APIの認証手段として採用しています。<br />OAuthを使った認証を行うことで、ユーザーはアカウントやパスワードを知られることなく、第三者サービスにAPIの使用を許可することができます。また、その認証は第三者サービスに関係なく取り消すことができます。</p><br /><br /><p>OAuth Community&nbsp;<a href="http://oauth.net/" style="text-decoration: underline; ">http://oauth.net/</a></p><br /><br /><p>OAuthコミュニティが各種プラットフォーム向けのライブラリを公開していますので、今回は、Javaのライブラリをビルドして使用します。</p><br /><br /><p>Code - OAuth&nbsp;<a href="http://oauth.net/code/">http://oauth.net/code/</a></p><br /><br /><p></p><p>Repository&nbsp;<a href="http://oauth.googlecode.com/svn/code/">http://oauth.googlecode.com/svn/code/</a></p><p><font class="Apple-style-span" style="font-size: 1.25em; "><font class="Apple-style-span" style="font-size: 1.25em; ">OAuth Library をビルドする</font></font></p><p>Eclipseを使ったビルドを紹介します。</p><p>新規プロジェクトを生成し、ショートカットメニューから「インポート」を選択します</p><p></p><span class="mt-enclosure mt-enclosure-image" style="display: inline;"><a href="http://labs.unoh.net/assets_c/2010/08/import_project_from_svn-125.html" onclick="window.open('http://labs.unoh.net/assets_c/2010/08/import_project_from_svn-125.html','popup','width=470,height=550,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false"><img src="http://labs.unoh.net/assets_c/2010/08/import_project_from_svn-thumb-200x234-125.jpg" width="200" height="234" alt="import_project_from_svn.JPG" class="mt-image-none" style="" /></a></span><p></p><p></p><div>SVNからプロジェクトを選択」を選択し、次へ</div><div><br /></div><div><span class="mt-enclosure mt-enclosure-image" style="display: inline;"><a href="http://labs.unoh.net/assets_c/2010/08/check_out_from_svn-128.html" onclick="window.open('http://labs.unoh.net/assets_c/2010/08/check_out_from_svn-128.html','popup','width=499,height=550,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false"><img src="http://labs.unoh.net/assets_c/2010/08/check_out_from_svn-thumb-200x220-128.jpg" width="200" height="220" alt="check_out_from_svn.JPG" class="mt-image-none" style="" /></a></span></div><div>ロケーションに<a href="http://oauth.googlecode.com/svn/code/" style="text-decoration: underline; ">http://oauth.googlecode.com/svn/code/</a>&nbsp;を指定します。</div><div><br /></div><div><span class="mt-enclosure mt-enclosure-image" style="display: inline;"><a href="http://labs.unoh.net/assets_c/2010/08/select_check_out_folder-131.html" onclick="window.open('http://labs.unoh.net/assets_c/2010/08/select_check_out_folder-131.html','popup','width=499,height=550,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false"><img src="http://labs.unoh.net/assets_c/2010/08/select_check_out_folder-thumb-200x220-131.jpg" width="200" height="220" alt="select_check_out_folder.JPG" class="mt-image-none" style="" /></a></span></div><div>フォルダ「java」を選択します。</div><div><br /></div><div><span class="mt-enclosure mt-enclosure-image" style="display: inline;"><a href="http://labs.unoh.net/assets_c/2010/08/select_check_out_option-134.html" onclick="window.open('http://labs.unoh.net/assets_c/2010/08/select_check_out_option-134.html','popup','width=499,height=550,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false"><img src="http://labs.unoh.net/assets_c/2010/08/select_check_out_option-thumb-200x220-134.jpg" width="200" height="220" alt="select_check_out_option.JPG" class="mt-image-none" style="" /></a></span></div><div>チェックアウトオプションは上画像のように選択してください。</div><div><br /></div><div>チェックアウトできましたら、次にプロジェクトの設定を行います。</div><div><a href="http://labs.unoh.net/assets_c/2010/08/build_path_source-thumb-200x160-137-138.html" style="text-decoration: underline; "><img src="http://labs.unoh.net/assets_c/2010/08/build_path_source-thumb-200x160-137-thumb-200x160-138.jpg" width="200" height="160" alt="build_path_source.JPGのサムネール画像" class="mt-image-none" style="border-top-width: 0px; border-right-width: 0px; border-bottom-width: 0px; border-left-width: 0px; border-style: initial; border-color: initial; border-style: initial; border-color: initial; " /></a></div><div>Default output folderに「oauth/bin」を設定します。</div><div>また、Sourceタブから上画像のようにフォルダをパスに設定します。</div><div><br /></div><div><span class="mt-enclosure mt-enclosure-image" style="display: inline;"><a href="http://labs.unoh.net/assets_c/2010/08/build_path_libraries-140.html" onclick="window.open('http://labs.unoh.net/assets_c/2010/08/build_path_libraries-140.html','popup','width=677,height=543,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false"><img src="http://labs.unoh.net/assets_c/2010/08/build_path_libraries-thumb-200x160-140.jpg" width="200" height="160" alt="build_path_libraries.JPG" class="mt-image-none" style="" /></a></span></div><div>LibrariesタブからSVNからチェックアウトしたlibフォルダ以下にあるライブラリをビルドパスに追加します。</div><div>これで、ライブラリがビルドされるはずです。</div><div><br /></div><div>このままですと、classファイルがばらばらになっている状態ですので、Fat Jar Eclipse Plug-Inを使って、Jarファイルにアーカイブしましょう。インストールは<a href="http://sourceforge.net/projects/fjep/">こちら</a>から。</div><div><br /></div><div>Fat-Jarは、実行形式のJar ファイルを簡単に作れたり、参照する外部JarファイルライブラリもJar内に配置できたりする優れものですが、今回は、単純なアーカイブを作成します。</div><p></p><div>Fat-Jarをインストールしたら、プロジェクト上でショートカットメニューを開き、「Build Fat Jar」を選択します。</div><div><br /></div><div><span class="mt-enclosure mt-enclosure-image" style="display: inline;"><a href="http://labs.unoh.net/assets_c/2010/08/configure_fat_jar-145.html" onclick="window.open('http://labs.unoh.net/assets_c/2010/08/configure_fat_jar-145.html','popup','width=469,height=492,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false"><img src="http://labs.unoh.net/assets_c/2010/08/configure_fat_jar-thumb-200x209-145.jpg" width="200" height="209" alt="configure_fat_jar.JPG" class="mt-image-none" style="" /></a></span></div><div>Jarアーカイブの名前を設定して「Finish」で作成されます。</div><div><br /></div><div><font class="Apple-style-span" style="font-size: 1.25em; "><font class="Apple-style-span" style="font-size: 1.25em; ">OAuthライブラリを使う</font></font></div><div>今回は、Twitterを例にとって、サーブレットから認証、APIアクセスを行うこととします。</div><div><br /></div><div>Twitterのアカウントをもっている方なら、<a href="http://twitter.com/apps">Twitterアプリケーション</a>&nbsp;からアプリケーションを登録することができますので、実際に試したい場合には登録してください。</div><div>登録が完了すると、アプリケーションがOAuth認証に必要とする2つのキーと認証のためにアクセスする３つのURLが手に入ります。</div><div><br /></div><div>これらの提供された値とOAuthライブラリの主に4つのクラスを用いて認証を行い、Twitter APIにアクセスしてみましょう。</div><div><br /></div><div><font class="Apple-style-span" style="font-size: 1.25em; ">４つのクラス</font></div><div><div>net.oauth.client.OAuthClient</div><div>通信を行うクラス</div><div>実際に使用されるHTTP通信の実装をラップします。</div><div><br /></div><div>net.oauth.OAuthServiceProvider</div><div>プロバイダを定義しているクラス</div><div>プロバイダから提供されるURLをラップします。</div><div><br /></div><div>net.oauth.OAuthConsumer</div><div>コンシューマ(第三者サービス)を定義しているクラス</div><div>コンシューマ・キー、コンシューマ・シークレット、コールバックURLなど、コンシューマに結びつく値を扱います。</div><div><br /></div><div>net.oauth.OAuthAccessor</div><div>アクセスを定義しているクラス</div><div>アクセス・トークン、リクエスト・トークン、トークン・シークレットなど、個々の認証に関わる値を扱います。</div></div><div><br /></div><div><font class="Apple-style-span" style="font-size: 1.25em; ">認証URLを生成する</font></div><div>OAuth認証において認証はTwitter（プロバイダ）が行い、その結果がリダイレクトによりサイト（コンシューマ）に通知されます。</div><div>ですから、まず、認証先へのURLを生成し、それをユーザーにクリックしてもらうか、リダイレクトして認証先に移動させる必要があります。以下に、リダイレクトにより認証先に飛ばすサーブレットのdoGetメソッドを示します。</div><br /><br /><pre class="code">protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {<br />	<br />	String destUrl = request.getParameter("dest");<br /><br />	OAuthClient client = new OAuthClient( new URLConnectionClient());<br />	OAuthServiceProvider provider = new OAuthServiceProvider( REQUEST_TOKEN_URL, AUTHORIZE_URL, ACCESS_TOKEN_URL);<br />	OAuthConsumer consumer = new OAuthConsumer( CALL_BACK_URL,<br />			CONSUMER_KEY, COMSUMER_SECRET, provider);<br />	OAuthAccessor accessor = new OAuthAccessor( consumer);<br />		<br />	String redirectTo = null;<br />	try{<br />		try {<br /> 			//get request token first from Twitter.com<br /> 			HashMap<string,string> params = new HashMap<string, string="">();<br />			params.put( "oauth_callback", <br />					OAuth.addParameters(accessor.consumer.callbackURL,<br />							"dest", destUrl));<br />			//get request token first from Twitter.com<br />			client.getRequestToken(accessor, null, params.entrySet());<br />		} catch (OAuthException e) {<br />			throw new OperationFailedException( "It failed to authenticate Twitter account", e);<br />		} catch (URISyntaxException e) {<br />			throw new OperationFailedException( "It failed to authenticate Twitter account", e);<br />		}<br />			<br />		//build redirect path to twitter authentication page<br />		redirectTo = OAuth.addParameters(<br />				accessor.consumer.serviceProvider.userAuthorizationURL,//auth URL(twitter.com)<br />				"oauth_token", accessor.requestToken//<br />				);<br />	} catch (IOException e) {<br />		throw new RuntimeException( "It failed to authenticate Twitter account", e);<br />	}<br /><br />	response.sendRedirect( redirectTo);<br />}<br /></string,></string,string></pre>最初の部分ですが、ここでは、OAuthClientをもっとも単純なURLConnectionクラスを使うように初期化しています。<br /><pre class="code">OAuthClient client = new OAuthClient( new URLConnectionClient());</pre><br />Jakarta Commons HttpClientのv3やv4を使用することもできます。その場合にはそれぞれnet.oauth.client.HttpClient3、net.oauth.client.HttpClient4クラスを使って初期化します。しかし、Google App Engine for Java環境では、スレッドが使えない関係で、URLConnectionClientしか動作しません。&nbsp;<br /><div><br /></div><div>次に、OAuthライブラリの各クラスをTwitter（プロバイダ）から提供されたパラメータを使って初期化しています。<br /><pre class="code">	OAuthServiceProvider provider = new OAuthServiceProvider( REQUEST_TOKEN_URL, AUTHORIZE_URL, ACCESS_TOKEN_URL);<br />	OAuthConsumer consumer = new OAuthConsumer( CALL_BACK_URL,<br />			CONSUMER_KEY, COMSUMER_SECRET, provider);<br />	OAuthAccessor accessor = new OAuthAccessor( consumer);<br /></pre>アプリケーション登録で手に入れたパラメータを使って各クラスを初期化しています。</div><div><br /></div><br /><br />次のパートでは、パラメータを積んでTwitter（プロバイダ）と通信を行い、リクエストトークンを受け取ります。<br /><pre class="code"> 			//get request token first from Twitter.com<br /> 			HashMap<string,string> params = new HashMap<string, string="">();<br />			params.put( "oauth_callback", <br />					OAuth.addParameters(accessor.consumer.callbackURL,<br />							"dest", destUrl));<br />			//get request token first from Twitter.com<br />			client.getRequestToken(accessor, null, params.entrySet());<br /></string,></string,string></pre><br />リクエストトークンは認証をリクエストする際に必要になります。&nbsp;<div>パラメータ"oauth_callback"は、リダイレクトによるコールバックが呼び出すURLを指定します。アプリケーション登録でコールバックURLは登録しているのですが、ここではそのURLにパラメータ"dest"を追加するために使っています。"oauth_callback"を指定しない場合、アプリケーション登録で登録したURLにリダイレクトされます。</div><div><br /></div><div>&nbsp;次のパートでは、getRequestTokenでTwitter（プロバイダ）から取得されたリクエストトークンを取り出し、認証先URLを生成しています。<br /><pre class="code">		//build redirect path to twitter authentication page<br />		redirectTo = OAuth.addParameters(<br />				accessor.consumer.serviceProvider.userAuthorizationURL,//auth URL(twitter.com)<br />				"oauth_token", accessor.requestToken//<br />				);<br /></pre></div><br /><br />うまくいけば、ユーザーは以下のようなTwitterのページに誘導されます。Twitterと連携するWebアプリケーションを使っている方なら、見たことがあるのではないでしょうか。<br /><br /><br /><div><span class="mt-enclosure mt-enclosure-image" style="display: inline;"><a href="http://labs.unoh.net/assets_c/2010/08/twitter_auth_confirmstion-156.html" onclick="window.open('http://labs.unoh.net/assets_c/2010/08/twitter_auth_confirmstion-156.html','popup','width=798,height=553,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false"><img src="http://labs.unoh.net/assets_c/2010/08/twitter_auth_confirmstion-thumb-200x138-156.jpg" width="200" height="138" alt="twitter_auth_confirmstion.JPG" class="mt-image-none" style="" /></a></span></div><div>ユーザーが「許可する」もしくは「拒否する」をクリックすると、<span class="Apple-style-span" style="font-family: monospace; white-space: pre; ">"oauth_callback"で指定したURLにリダイレクトされます。</span></div><div><span class="Apple-style-span" style="font-family: monospace; white-space: pre; ">次にコールバック先での処理を見てみましょう。</span></div><div><span class="Apple-style-span" style="font-family: monospace; white-space: pre; "><br /></span></div><div><font class="Apple-style-span" style="font-size: 1.25em; ">コールバックでの処理</font></div><br /><pre class="code">protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {<br />	<br />	String destUrl = request.getParameter( "dest");<br />	<br />	String requestToken = request.getParameter(OAuth.OAUTH_TOKEN);<br />	if( requestToken == null){<br />		//rejected by USER<br />		response.sendRedirect( destUrl);<br />		return;<br />	}<br />	<br />	String verifire = request.getParameter(OAuth.OAUTH_VERIFIER);<br />	if( verifire == null){<br />		//rejected by USER<br />		response.sendRedirect( destUrl);<br />		return;<br />	}<br />	<br />	OAuthClient client = new OAuthClient( new URLConnectionClient());<br />	OAuthServiceProvider provider = new OAuthServiceProvider( REQUEST_TOKEN_URL, AUTHORIZE_URL, ACCESS_TOKEN_URL);<br />	OAuthConsumer consumer = new OAuthConsumer( CALL_BACK_URL,<br />			CONSUMER_KEY, COMSUMER_SECRET, provider);<br />	OAuthAccessor accessor = new OAuthAccessor( consumer);<br />	<br />	accessor.requestToken = requestToken;<br />	<br />	try {<br />		HashMap<string,string> params = new HashMap<string, string="">();<br />		params.put( OAuth.OAUTH_VERIFIER, verifire);<br />		//get access token and secret from twitter.com<br />		client.getAccessToken(accessor, null, params.entrySet());<br />	} catch (OAuthException e) {<br />		throw new RuntimeException( "It failed to authenticate Twitter account", e);<br />	} catch (URISyntaxException e) {<br />		throw new RuntimeException( "It failed to authenticate Twitter account", e);<br />	}<br />	<br />	<br />	//Retrieve user's information<br />	OAuthMessage oMessage = null;<br />	try {<br />		oMessage = accessor.newRequestMessage("GET", "http://api.twitter.com/1/account/verify_credentials.json", null);<br />	} catch (OAuthException e) {<br />		throw new RuntimeException( "It failed to authenticate Twitter account", e);<br />	} catch (URISyntaxException e) {<br />		throw new RuntimeException( "It failed to authenticate Twitter account", e);<br />	}<br /><br />	OAuthResponseMessage rMessage = client.access(oMessage, ParameterStyle.AUTHORIZATION_HEADER);<br />	int status = rMessage.getHttpResponse().getStatusCode();<br />	if( status == HttpResponseMessage.STATUS_OK){<br />		String jsonStr = rMessage.readBodyAsString();<br />		JSONObject jObj = JSONObject.fromObject(jsonStr);<br />		String userId = jObj.optString("id");<br />		accessor.setProperty( "id", userId);<br />	}else{<br />		throw new RuntimeException( "It failed to authenticate Twitter account STATUS CODE:"+status);<br />	}<br />	<br />	//Store access token and secret to Cookie<br />	TwitterAPIUtil.storeTokenToCookie(accessor, response);<br />	<br />	response.sendRedirect( destUrl);<br />}  	<br /></string,></string,string></pre><br />まず、認証によりTwitter（プロバイダ）から付け加えられたパラメータを取得しています。<br /><pre class="code">	String requestToken = request.getParameter(OAuth.OAUTH_TOKEN);<br />	if( requestToken == null){<br />		//rejected by USER<br />		response.sendRedirect( destUrl);<br />		return;<br />	}<br />	<br />	String verifire = request.getParameter(OAuth.OAUTH_VERIFIER);<br />	if( verifire == null){<br />		//rejected by USER<br />		response.sendRedirect( destUrl);<br />		return;<br />	}<br /></pre><br />これらがセットされていなかった場合、ユーザーが認証を拒否したと考えられますので、あらかじめコールバックURLに追加したパラメータに積んでおいた飛び先URLにリダイレクトさせます。<div><br /></div><div>先の処理と同様にOAuthのクラスを初期化後、認証により手に入ったリクエストトークン、ベリファイアを使ってTwitter（プロバイダ）からアクセストークンとトークンシークレットを取得します。<br /><pre class="code">	accessor.requestToken = requestToken;<br />	<br />	try {<br />		HashMap<string,string> params = new HashMap<string, string="">();<br />		params.put( OAuth.OAUTH_VERIFIER, verifire);<br />		//get access token and secret from twitter.com<br />		client.getAccessToken(accessor, null, params.entrySet());<br />	} catch (OAuthException e) {<br />		throw new RuntimeException( "It failed to authenticate Twitter account", e);<br />	} catch (URISyntaxException e) {<br />		throw new RuntimeException( "It failed to authenticate Twitter account", e);<br />	}<br /></string,></string,string></pre>アクセストークンとトークンシークレットはAPIをコールするために必要になります。<br />うまく取得できた場合、すでにOAuthAccessorオブジェクトにアクセストークンとトークンシークレットは格納されていますので、Twitter APIを呼び出すことができます。<br /><br /><pre class="code">	//Retrieve user's information<br />	OAuthMessage oMessage = null;<br />	try {<br />		oMessage = accessor.newRequestMessage("GET", "http://api.twitter.com/1/account/verify_credentials.json", null);<br />	} catch (OAuthException e) {<br />		throw new RuntimeException( "It failed to authenticate Twitter account", e);<br />	} catch (URISyntaxException e) {<br />		throw new RuntimeException( "It failed to authenticate Twitter account", e);<br />	}<br /><br />	OAuthResponseMessage rMessage = client.access(oMessage, ParameterStyle.AUTHORIZATION_HEADER);<br />	int status = rMessage.getHttpResponse().getStatusCode();<br />	if( status == HttpResponseMessage.STATUS_OK){<br />		String jsonStr = rMessage.readBodyAsString();<br />		JSONObject jObj = JSONObject.fromObject(jsonStr);<br />		String userId = jObj.optString("id");<br />		accessor.setProperty( "id", userId);<br />	}else{<br />		throw new RuntimeException( "It failed to authenticate Twitter account STATUS CODE:"+status);<br />	}<br /></pre><br />ここでは、認証済みユーザー自身のユーザー情報を返す <a href="http://dev.twitter.com/doc/get/account/verify_credentials">account/verify_credentials</a> APIを呼び出しています。レスポンスのJSONを扱うのには、<a href="http://json-lib.sourceforge.net/">Json-lib</a> ライブラリを使用しています。<div><br /></div><div>最後に認証情報をクッキーに保存しています。</div><br /><pre class="code">	//Store access token and secret to Cookie<br />	TwitterAPIUtil.storeTokenToCookie(accessor, response);<br /></pre><br />このメソッドの中身は以下のようになっています。<br /><pre class="code">public static void storeTokenToCookie( OAuthAccessor accessor, HttpServletResponse response, int maxAge){<br />	Cookie cookie = new Cookie( accessor.consumer.consumerKey+"_requesttoken", accessor.requestToken);<br />	cookie.setPath( "/" );<br />	cookie.setMaxAge( maxAge);<br />	response.addCookie( cookie);<br />	<br />	cookie = new Cookie( accessor.consumer.consumerKey+"_accesstoken", accessor.accessToken);<br />	cookie.setPath( "/" );<br />	cookie.setMaxAge( maxAge);<br />	response.addCookie( cookie);<br /><br />	cookie = new Cookie( accessor.consumer.consumerKey+"_secret", accessor.tokenSecret);<br />	cookie.setPath( "/" );<br />	cookie.setMaxAge( maxAge);<br />	response.addCookie( cookie);<br />	<br />	String userId = (String)accessor.getProperty("id");<br />	if( userId == null){<br />		userId = "";<br />	}<br />	cookie = new Cookie( accessor.consumer.consumerKey+"_id", userId);<br />	cookie.setPath( "/" );<br />	cookie.setMaxAge( maxAge);<br />	response.addCookie( cookie);<br />}<br /></pre><div>認証情報は、もちろんデータベースなどのストレージに保存することも可能です。しかし、これらの認証情報は、Twitter（プロバイダ）のサイトでユーザーが一方的に無効にできることには留意しておく必要があるでしょう。</div><div><br /></div><br />別の場所で認証情報を使ってAPIを呼び出すには、以下のようにします。<br /><pre class="code">	.........<br />	OAuthClient client = new OAuthClient( new URLConnectionClient());<br />	OAuthServiceProvider provider = new OAuthServiceProvider( REQUEST_TOKEN_URL, AUTHORIZE_URL, ACCESS_TOKEN_URL);<br />	OAuthConsumer consumer = new OAuthConsumer( CALL_BACK_URL,<br />			CONSUMER_KEY, COMSUMER_SECRET, provider);<br />	OAuthAccessor accessor = new OAuthAccessor( consumer);<br />	<br />	//try to retrieve token<br />	Cookie[] cookies = request.getCookies();<br />	for( int i = 0; i &lt; cookies.length; ++i){<br />		Cookie cookie = cookies[i];<br />		if( cookie.getName().equals( accessor.consumer.consumerKey+"_accesstoken")){<br />			accessor.accessToken = cookie.getValue();<br />		}else if( cookie.getName().equals( accessor.consumer.consumerKey+"_requesttoken")){<br />			accessor.requestToken = cookie.getValue();<br />		}else if( cookie.getName().equals( accessor.consumer.consumerKey+"_secret")){<br />			accessor.tokenSecret = cookie.getValue();<br />		}else if( cookie.getName().equals( accessor.consumer.consumerKey+"_id")){<br />			accessor.setProperty( "id", cookie.getValue());<br />		}<br />	}<br />	.........<br /></pre>非常に駆け足になってしまいましたが、どのような印象を受けましたか？ライブラリを使用することで、かなりOAuthへの敷居が下がったと感じた方もおられるのではないでしょうか？</div><div><br /></div><div>この記事がちょっとでもだれかのお役に立てば幸いです。</div><br /><br /><p><br /><br /></p>
+<p>みなさん、こんにちは。<br />
+７月にウノウに入社しました細川です。</p><br />
+<br />
+<p>私は、これまでいろいろなオープンソースの恩恵にあずかってきましたが、こちらから貢献をしたことは、ほとんどありませんでした。この記事がお役に立てれば幸いです。</p><br />
+<br />
+<p>ウノウ入社前にはJavaを主に使っていましたので、今回は、JavaのOAuthライブラリを使う方法について書いてみたいと思います。</p><br />
+<br />
+<p><font class="Apple-style-span" style="font-size: 1.25em; "><font class="Apple-style-span" style="font-size: 1.25em; ">OAuthとは</font></font></p><p><a href="http://ja.wikipedia.org/wiki/OAuth">OAuth</a>は、セキュアな認証手段として多く使われてきています。<br />
+twitterもweb APIの認証手段として採用しています。<br />
+OAuthを使った認証を行うことで、ユーザーはアカウントやパスワードを知られることなく、第三者サービスにAPIの使用を許可することができます。また、その認証は第三者サービスに関係なく取り消すことができます。</p><br />
+<br />
+<p>OAuth Community&nbsp;<a href="http://oauth.net/" style="text-decoration: underline; ">http://oauth.net/</a></p><br />
+<br />
+<p>OAuthコミュニティが各種プラットフォーム向けのライブラリを公開していますので、今回は、Javaのライブラリをビルドして使用します。</p><br />
+<br />
+<p>Code - OAuth&nbsp;<a href="http://oauth.net/code/">http://oauth.net/code/</a></p><br />
+<br />
+<p></p><p>Repository&nbsp;<a href="http://oauth.googlecode.com/svn/code/">http://oauth.googlecode.com/svn/code/</a></p><p><font class="Apple-style-span" style="font-size: 1.25em; "><font class="Apple-style-span" style="font-size: 1.25em; ">OAuth Library をビルドする</font></font></p><p>Eclipseを使ったビルドを紹介します。</p><p>新規プロジェクトを生成し、ショートカットメニューから「インポート」を選択します</p><p></p><span class="mt-enclosure mt-enclosure-image" style="display: inline;"><a href="http://labs.unoh.net/assets_c/2010/08/import_project_from_svn-125.html" onclick="window.open('http://labs.unoh.net/assets_c/2010/08/import_project_from_svn-125.html','popup','width=470,height=550,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false"><img src="http://labs.unoh.net/assets_c/2010/08/import_project_from_svn-thumb-200x234-125.jpg" width="200" height="234" alt="import_project_from_svn.JPG" class="mt-image-none" style="" /></a></span><p></p><p></p><div>SVNからプロジェクトを選択」を選択し、次へ</div><div><br /></div><div><span class="mt-enclosure mt-enclosure-image" style="display: inline;"><a href="http://labs.unoh.net/assets_c/2010/08/check_out_from_svn-128.html" onclick="window.open('http://labs.unoh.net/assets_c/2010/08/check_out_from_svn-128.html','popup','width=499,height=550,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false"><img src="http://labs.unoh.net/assets_c/2010/08/check_out_from_svn-thumb-200x220-128.jpg" width="200" height="220" alt="check_out_from_svn.JPG" class="mt-image-none" style="" /></a></span></div><div>ロケーションに<a href="http://oauth.googlecode.com/svn/code/" style="text-decoration: underline; ">http://oauth.googlecode.com/svn/code/</a>&nbsp;を指定します。</div><div><br /></div><div><span class="mt-enclosure mt-enclosure-image" style="display: inline;"><a href="http://labs.unoh.net/assets_c/2010/08/select_check_out_folder-131.html" onclick="window.open('http://labs.unoh.net/assets_c/2010/08/select_check_out_folder-131.html','popup','width=499,height=550,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false"><img src="http://labs.unoh.net/assets_c/2010/08/select_check_out_folder-thumb-200x220-131.jpg" width="200" height="220" alt="select_check_out_folder.JPG" class="mt-image-none" style="" /></a></span></div><div>フォルダ「java」を選択します。</div><div><br /></div><div><span class="mt-enclosure mt-enclosure-image" style="display: inline;"><a href="http://labs.unoh.net/assets_c/2010/08/select_check_out_option-134.html" onclick="window.open('http://labs.unoh.net/assets_c/2010/08/select_check_out_option-134.html','popup','width=499,height=550,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false"><img src="http://labs.unoh.net/assets_c/2010/08/select_check_out_option-thumb-200x220-134.jpg" width="200" height="220" alt="select_check_out_option.JPG" class="mt-image-none" style="" /></a></span></div><div>チェックアウトオプションは上画像のように選択してください。</div><div><br /></div><div>チェックアウトできましたら、次にプロジェクトの設定を行います。</div><div><a href="http://labs.unoh.net/assets_c/2010/08/build_path_source-thumb-200x160-137-138.html" style="text-decoration: underline; "><img src="http://labs.unoh.net/assets_c/2010/08/build_path_source-thumb-200x160-137-thumb-200x160-138.jpg" width="200" height="160" alt="build_path_source.JPGのサムネール画像" class="mt-image-none" style="border-top-width: 0px; border-right-width: 0px; border-bottom-width: 0px; border-left-width: 0px; border-style: initial; border-color: initial; border-style: initial; border-color: initial; " /></a></div><div>Default output folderに「oauth/bin」を設定します。</div><div>また、Sourceタブから上画像のようにフォルダをパスに設定します。</div><div><br /></div><div><span class="mt-enclosure mt-enclosure-image" style="display: inline;"><a href="http://labs.unoh.net/assets_c/2010/08/build_path_libraries-140.html" onclick="window.open('http://labs.unoh.net/assets_c/2010/08/build_path_libraries-140.html','popup','width=677,height=543,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false"><img src="http://labs.unoh.net/assets_c/2010/08/build_path_libraries-thumb-200x160-140.jpg" width="200" height="160" alt="build_path_libraries.JPG" class="mt-image-none" style="" /></a></span></div><div>LibrariesタブからSVNからチェックアウトしたlibフォルダ以下にあるライブラリをビルドパスに追加します。</div><div>これで、ライブラリがビルドされるはずです。</div><div><br /></div><div>このままですと、classファイルがばらばらになっている状態ですので、Fat Jar Eclipse Plug-Inを使って、Jarファイルにアーカイブしましょう。インストールは<a href="http://sourceforge.net/projects/fjep/">こちら</a>から。</div><div><br /></div><div>Fat-Jarは、実行形式のJar ファイルを簡単に作れたり、参照する外部JarファイルライブラリもJar内に配置できたりする優れものですが、今回は、単純なアーカイブを作成します。</div><p></p><div>Fat-Jarをインストールしたら、プロジェクト上でショートカットメニューを開き、「Build Fat Jar」を選択します。</div><div><br /></div><div><span class="mt-enclosure mt-enclosure-image" style="display: inline;"><a href="http://labs.unoh.net/assets_c/2010/08/configure_fat_jar-145.html" onclick="window.open('http://labs.unoh.net/assets_c/2010/08/configure_fat_jar-145.html','popup','width=469,height=492,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false"><img src="http://labs.unoh.net/assets_c/2010/08/configure_fat_jar-thumb-200x209-145.jpg" width="200" height="209" alt="configure_fat_jar.JPG" class="mt-image-none" style="" /></a></span></div><div>Jarアーカイブの名前を設定して「Finish」で作成されます。</div><div><br /></div><div><font class="Apple-style-span" style="font-size: 1.25em; "><font class="Apple-style-span" style="font-size: 1.25em; ">OAuthライブラリを使う</font></font></div><div>今回は、Twitterを例にとって、サーブレットから認証、APIアクセスを行うこととします。</div><div><br /></div><div>Twitterのアカウントをもっている方なら、<a href="http://twitter.com/apps">Twitterアプリケーション</a>&nbsp;からアプリケーションを登録することができますので、実際に試したい場合には登録してください。</div><div>登録が完了すると、アプリケーションがOAuth認証に必要とする2つのキーと認証のためにアクセスする３つのURLが手に入ります。</div><div><br /></div><div>これらの提供された値とOAuthライブラリの主に4つのクラスを用いて認証を行い、Twitter APIにアクセスしてみましょう。</div><div><br /></div><div><font class="Apple-style-span" style="font-size: 1.25em; ">４つのクラス</font></div><div><div>net.oauth.client.OAuthClient</div><div>通信を行うクラス</div><div>実際に使用されるHTTP通信の実装をラップします。</div><div><br /></div><div>net.oauth.OAuthServiceProvider</div><div>プロバイダを定義しているクラス</div><div>プロバイダから提供されるURLをラップします。</div><div><br /></div><div>net.oauth.OAuthConsumer</div><div>コンシューマ(第三者サービス)を定義しているクラス</div><div>コンシューマ・キー、コンシューマ・シークレット、コールバックURLなど、コンシューマに結びつく値を扱います。</div><div><br /></div><div>net.oauth.OAuthAccessor</div><div>アクセスを定義しているクラス</div><div>アクセス・トークン、リクエスト・トークン、トークン・シークレットなど、個々の認証に関わる値を扱います。</div></div><div><br /></div><div><font class="Apple-style-span" style="font-size: 1.25em; ">認証URLを生成する</font></div><div>OAuth認証において認証はTwitter（プロバイダ）が行い、その結果がリダイレクトによりサイト（コンシューマ）に通知されます。</div><div>ですから、まず、認証先へのURLを生成し、それをユーザーにクリックしてもらうか、リダイレクトして認証先に移動させる必要があります。以下に、リダイレクトにより認証先に飛ばすサーブレットのdoGetメソッドを示します。</div><br />
+<br />
+<pre class="code">protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {<br />
+	<br />
+	String destUrl = request.getParameter("dest");<br />
+<br />
+	OAuthClient client = new OAuthClient( new URLConnectionClient());<br />
+	OAuthServiceProvider provider = new OAuthServiceProvider( REQUEST_TOKEN_URL, AUTHORIZE_URL, ACCESS_TOKEN_URL);<br />
+	OAuthConsumer consumer = new OAuthConsumer( CALL_BACK_URL,<br />
+			CONSUMER_KEY, COMSUMER_SECRET, provider);<br />
+	OAuthAccessor accessor = new OAuthAccessor( consumer);<br />
+		<br />
+	String redirectTo = null;<br />
+	try{<br />
+		try {<br />
+ 			//get request token first from Twitter.com<br />
+ 			HashMap<string,string> params = new HashMap<string, string="">();<br />
+			params.put( "oauth_callback", <br />
+					OAuth.addParameters(accessor.consumer.callbackURL,<br />
+							"dest", destUrl));<br />
+			//get request token first from Twitter.com<br />
+			client.getRequestToken(accessor, null, params.entrySet());<br />
+		} catch (OAuthException e) {<br />
+			throw new OperationFailedException( "It failed to authenticate Twitter account", e);<br />
+		} catch (URISyntaxException e) {<br />
+			throw new OperationFailedException( "It failed to authenticate Twitter account", e);<br />
+		}<br />
+			<br />
+		//build redirect path to twitter authentication page<br />
+		redirectTo = OAuth.addParameters(<br />
+				accessor.consumer.serviceProvider.userAuthorizationURL,//auth URL(twitter.com)<br />
+				"oauth_token", accessor.requestToken//<br />
+				);<br />
+	} catch (IOException e) {<br />
+		throw new RuntimeException( "It failed to authenticate Twitter account", e);<br />
+	}<br />
+<br />
+	response.sendRedirect( redirectTo);<br />
+}<br />
+</string,></string,string></pre>最初の部分ですが、ここでは、OAuthClientをもっとも単純なURLConnectionクラスを使うように初期化しています。<br />
+<pre class="code">OAuthClient client = new OAuthClient( new URLConnectionClient());</pre><br />
+Jakarta Commons HttpClientのv3やv4を使用することもできます。その場合にはそれぞれnet.oauth.client.HttpClient3、net.oauth.client.HttpClient4クラスを使って初期化します。しかし、Google App Engine for Java環境では、スレッドが使えない関係で、URLConnectionClientしか動作しません。&nbsp;<br />
+<div><br /></div><div>次に、OAuthライブラリの各クラスをTwitter（プロバイダ）から提供されたパラメータを使って初期化しています。<br />
+<pre class="code">	OAuthServiceProvider provider = new OAuthServiceProvider( REQUEST_TOKEN_URL, AUTHORIZE_URL, ACCESS_TOKEN_URL);<br />
+	OAuthConsumer consumer = new OAuthConsumer( CALL_BACK_URL,<br />
+			CONSUMER_KEY, COMSUMER_SECRET, provider);<br />
+	OAuthAccessor accessor = new OAuthAccessor( consumer);<br />
+</pre>アプリケーション登録で手に入れたパラメータを使って各クラスを初期化しています。</div><div><br /></div><br />
+<br />
+次のパートでは、パラメータを積んでTwitter（プロバイダ）と通信を行い、リクエストトークンを受け取ります。<br />
+<pre class="code"> 			//get request token first from Twitter.com<br />
+ 			HashMap<string,string> params = new HashMap<string, string="">();<br />
+			params.put( "oauth_callback", <br />
+					OAuth.addParameters(accessor.consumer.callbackURL,<br />
+							"dest", destUrl));<br />
+			//get request token first from Twitter.com<br />
+			client.getRequestToken(accessor, null, params.entrySet());<br />
+</string,></string,string></pre><br />
+リクエストトークンは認証をリクエストする際に必要になります。&nbsp;<div>パラメータ"oauth_callback"は、リダイレクトによるコールバックが呼び出すURLを指定します。アプリケーション登録でコールバックURLは登録しているのですが、ここではそのURLにパラメータ"dest"を追加するために使っています。"oauth_callback"を指定しない場合、アプリケーション登録で登録したURLにリダイレクトされます。</div><div><br /></div><div>&nbsp;次のパートでは、getRequestTokenでTwitter（プロバイダ）から取得されたリクエストトークンを取り出し、認証先URLを生成しています。<br />
+<pre class="code">		//build redirect path to twitter authentication page<br />
+		redirectTo = OAuth.addParameters(<br />
+				accessor.consumer.serviceProvider.userAuthorizationURL,//auth URL(twitter.com)<br />
+				"oauth_token", accessor.requestToken//<br />
+				);<br />
+</pre></div><br />
+<br />
+うまくいけば、ユーザーは以下のようなTwitterのページに誘導されます。Twitterと連携するWebアプリケーションを使っている方なら、見たことがあるのではないでしょうか。<br />
+<br />
+<br />
+<div><span class="mt-enclosure mt-enclosure-image" style="display: inline;"><a href="http://labs.unoh.net/assets_c/2010/08/twitter_auth_confirmstion-156.html" onclick="window.open('http://labs.unoh.net/assets_c/2010/08/twitter_auth_confirmstion-156.html','popup','width=798,height=553,scrollbars=no,resizable=no,toolbar=no,directories=no,location=no,menubar=no,status=no,left=0,top=0'); return false"><img src="http://labs.unoh.net/assets_c/2010/08/twitter_auth_confirmstion-thumb-200x138-156.jpg" width="200" height="138" alt="twitter_auth_confirmstion.JPG" class="mt-image-none" style="" /></a></span></div><div>ユーザーが「許可する」もしくは「拒否する」をクリックすると、<span class="Apple-style-span" style="font-family: monospace; white-space: pre; ">"oauth_callback"で指定したURLにリダイレクトされます。</span></div><div><span class="Apple-style-span" style="font-family: monospace; white-space: pre; ">次にコールバック先での処理を見てみましょう。</span></div><div><span class="Apple-style-span" style="font-family: monospace; white-space: pre; "><br /></span></div><div><font class="Apple-style-span" style="font-size: 1.25em; ">コールバックでの処理</font></div><br />
+<pre class="code">protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {<br />
+	<br />
+	String destUrl = request.getParameter( "dest");<br />
+	<br />
+	String requestToken = request.getParameter(OAuth.OAUTH_TOKEN);<br />
+	if( requestToken == null){<br />
+		//rejected by USER<br />
+		response.sendRedirect( destUrl);<br />
+		return;<br />
+	}<br />
+	<br />
+	String verifire = request.getParameter(OAuth.OAUTH_VERIFIER);<br />
+	if( verifire == null){<br />
+		//rejected by USER<br />
+		response.sendRedirect( destUrl);<br />
+		return;<br />
+	}<br />
+	<br />
+	OAuthClient client = new OAuthClient( new URLConnectionClient());<br />
+	OAuthServiceProvider provider = new OAuthServiceProvider( REQUEST_TOKEN_URL, AUTHORIZE_URL, ACCESS_TOKEN_URL);<br />
+	OAuthConsumer consumer = new OAuthConsumer( CALL_BACK_URL,<br />
+			CONSUMER_KEY, COMSUMER_SECRET, provider);<br />
+	OAuthAccessor accessor = new OAuthAccessor( consumer);<br />
+	<br />
+	accessor.requestToken = requestToken;<br />
+	<br />
+	try {<br />
+		HashMap<string,string> params = new HashMap<string, string="">();<br />
+		params.put( OAuth.OAUTH_VERIFIER, verifire);<br />
+		//get access token and secret from twitter.com<br />
+		client.getAccessToken(accessor, null, params.entrySet());<br />
+	} catch (OAuthException e) {<br />
+		throw new RuntimeException( "It failed to authenticate Twitter account", e);<br />
+	} catch (URISyntaxException e) {<br />
+		throw new RuntimeException( "It failed to authenticate Twitter account", e);<br />
+	}<br />
+	<br />
+	<br />
+	//Retrieve user's information<br />
+	OAuthMessage oMessage = null;<br />
+	try {<br />
+		oMessage = accessor.newRequestMessage("GET", "http://api.twitter.com/1/account/verify_credentials.json", null);<br />
+	} catch (OAuthException e) {<br />
+		throw new RuntimeException( "It failed to authenticate Twitter account", e);<br />
+	} catch (URISyntaxException e) {<br />
+		throw new RuntimeException( "It failed to authenticate Twitter account", e);<br />
+	}<br />
+<br />
+	OAuthResponseMessage rMessage = client.access(oMessage, ParameterStyle.AUTHORIZATION_HEADER);<br />
+	int status = rMessage.getHttpResponse().getStatusCode();<br />
+	if( status == HttpResponseMessage.STATUS_OK){<br />
+		String jsonStr = rMessage.readBodyAsString();<br />
+		JSONObject jObj = JSONObject.fromObject(jsonStr);<br />
+		String userId = jObj.optString("id");<br />
+		accessor.setProperty( "id", userId);<br />
+	}else{<br />
+		throw new RuntimeException( "It failed to authenticate Twitter account STATUS CODE:"+status);<br />
+	}<br />
+	<br />
+	//Store access token and secret to Cookie<br />
+	TwitterAPIUtil.storeTokenToCookie(accessor, response);<br />
+	<br />
+	response.sendRedirect( destUrl);<br />
+}  	<br />
+</string,></string,string></pre><br />
+まず、認証によりTwitter（プロバイダ）から付け加えられたパラメータを取得しています。<br />
+<pre class="code">	String requestToken = request.getParameter(OAuth.OAUTH_TOKEN);<br />
+	if( requestToken == null){<br />
+		//rejected by USER<br />
+		response.sendRedirect( destUrl);<br />
+		return;<br />
+	}<br />
+	<br />
+	String verifire = request.getParameter(OAuth.OAUTH_VERIFIER);<br />
+	if( verifire == null){<br />
+		//rejected by USER<br />
+		response.sendRedirect( destUrl);<br />
+		return;<br />
+	}<br />
+</pre><br />
+これらがセットされていなかった場合、ユーザーが認証を拒否したと考えられますので、あらかじめコールバックURLに追加したパラメータに積んでおいた飛び先URLにリダイレクトさせます。<div><br /></div><div>先の処理と同様にOAuthのクラスを初期化後、認証により手に入ったリクエストトークン、ベリファイアを使ってTwitter（プロバイダ）からアクセストークンとトークンシークレットを取得します。<br />
+<pre class="code">	accessor.requestToken = requestToken;<br />
+	<br />
+	try {<br />
+		HashMap<string,string> params = new HashMap<string, string="">();<br />
+		params.put( OAuth.OAUTH_VERIFIER, verifire);<br />
+		//get access token and secret from twitter.com<br />
+		client.getAccessToken(accessor, null, params.entrySet());<br />
+	} catch (OAuthException e) {<br />
+		throw new RuntimeException( "It failed to authenticate Twitter account", e);<br />
+	} catch (URISyntaxException e) {<br />
+		throw new RuntimeException( "It failed to authenticate Twitter account", e);<br />
+	}<br />
+</string,></string,string></pre>アクセストークンとトークンシークレットはAPIをコールするために必要になります。<br />
+うまく取得できた場合、すでにOAuthAccessorオブジェクトにアクセストークンとトークンシークレットは格納されていますので、Twitter APIを呼び出すことができます。<br />
+<br />
+<pre class="code">	//Retrieve user's information<br />
+	OAuthMessage oMessage = null;<br />
+	try {<br />
+		oMessage = accessor.newRequestMessage("GET", "http://api.twitter.com/1/account/verify_credentials.json", null);<br />
+	} catch (OAuthException e) {<br />
+		throw new RuntimeException( "It failed to authenticate Twitter account", e);<br />
+	} catch (URISyntaxException e) {<br />
+		throw new RuntimeException( "It failed to authenticate Twitter account", e);<br />
+	}<br />
+<br />
+	OAuthResponseMessage rMessage = client.access(oMessage, ParameterStyle.AUTHORIZATION_HEADER);<br />
+	int status = rMessage.getHttpResponse().getStatusCode();<br />
+	if( status == HttpResponseMessage.STATUS_OK){<br />
+		String jsonStr = rMessage.readBodyAsString();<br />
+		JSONObject jObj = JSONObject.fromObject(jsonStr);<br />
+		String userId = jObj.optString("id");<br />
+		accessor.setProperty( "id", userId);<br />
+	}else{<br />
+		throw new RuntimeException( "It failed to authenticate Twitter account STATUS CODE:"+status);<br />
+	}<br />
+</pre><br />
+ここでは、認証済みユーザー自身のユーザー情報を返す <a href="http://dev.twitter.com/doc/get/account/verify_credentials">account/verify_credentials</a> APIを呼び出しています。レスポンスのJSONを扱うのには、<a href="http://json-lib.sourceforge.net/">Json-lib</a> ライブラリを使用しています。<div><br /></div><div>最後に認証情報をクッキーに保存しています。</div><br />
+<pre class="code">	//Store access token and secret to Cookie<br />
+	TwitterAPIUtil.storeTokenToCookie(accessor, response);<br />
+</pre><br />
+このメソッドの中身は以下のようになっています。<br />
+<pre class="code">public static void storeTokenToCookie( OAuthAccessor accessor, HttpServletResponse response, int maxAge){<br />
+	Cookie cookie = new Cookie( accessor.consumer.consumerKey+"_requesttoken", accessor.requestToken);<br />
+	cookie.setPath( "/" );<br />
+	cookie.setMaxAge( maxAge);<br />
+	response.addCookie( cookie);<br />
+	<br />
+	cookie = new Cookie( accessor.consumer.consumerKey+"_accesstoken", accessor.accessToken);<br />
+	cookie.setPath( "/" );<br />
+	cookie.setMaxAge( maxAge);<br />
+	response.addCookie( cookie);<br />
+<br />
+	cookie = new Cookie( accessor.consumer.consumerKey+"_secret", accessor.tokenSecret);<br />
+	cookie.setPath( "/" );<br />
+	cookie.setMaxAge( maxAge);<br />
+	response.addCookie( cookie);<br />
+	<br />
+	String userId = (String)accessor.getProperty("id");<br />
+	if( userId == null){<br />
+		userId = "";<br />
+	}<br />
+	cookie = new Cookie( accessor.consumer.consumerKey+"_id", userId);<br />
+	cookie.setPath( "/" );<br />
+	cookie.setMaxAge( maxAge);<br />
+	response.addCookie( cookie);<br />
+}<br />
+</pre><div>認証情報は、もちろんデータベースなどのストレージに保存することも可能です。しかし、これらの認証情報は、Twitter（プロバイダ）のサイトでユーザーが一方的に無効にできることには留意しておく必要があるでしょう。</div><div><br /></div><br />
+別の場所で認証情報を使ってAPIを呼び出すには、以下のようにします。<br />
+<pre class="code">	.........<br />
+	OAuthClient client = new OAuthClient( new URLConnectionClient());<br />
+	OAuthServiceProvider provider = new OAuthServiceProvider( REQUEST_TOKEN_URL, AUTHORIZE_URL, ACCESS_TOKEN_URL);<br />
+	OAuthConsumer consumer = new OAuthConsumer( CALL_BACK_URL,<br />
+			CONSUMER_KEY, COMSUMER_SECRET, provider);<br />
+	OAuthAccessor accessor = new OAuthAccessor( consumer);<br />
+	<br />
+	//try to retrieve token<br />
+	Cookie[] cookies = request.getCookies();<br />
+	for( int i = 0; i &lt; cookies.length; ++i){<br />
+		Cookie cookie = cookies[i];<br />
+		if( cookie.getName().equals( accessor.consumer.consumerKey+"_accesstoken")){<br />
+			accessor.accessToken = cookie.getValue();<br />
+		}else if( cookie.getName().equals( accessor.consumer.consumerKey+"_requesttoken")){<br />
+			accessor.requestToken = cookie.getValue();<br />
+		}else if( cookie.getName().equals( accessor.consumer.consumerKey+"_secret")){<br />
+			accessor.tokenSecret = cookie.getValue();<br />
+		}else if( cookie.getName().equals( accessor.consumer.consumerKey+"_id")){<br />
+			accessor.setProperty( "id", cookie.getValue());<br />
+		}<br />
+	}<br />
+	.........<br />
+</pre>非常に駆け足になってしまいましたが、どのような印象を受けましたか？ライブラリを使用することで、かなりOAuthへの敷居が下がったと感じた方もおられるのではないでしょうか？</div><div><br /></div><div>この記事がちょっとでもだれかのお役に立てば幸いです。</div><br />
+<br />
+<p><br /><br />
+</p>
 {% endraw %}

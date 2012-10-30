@@ -3,5 +3,112 @@ layout: post
 title: "WebエンジニアにやさしいYamahaルータRTX-*** 設定方法（導入編）"
 ---
 {% raw %}
-<br /><p>こんにちは。入社６ヶ月目のyusukeです。</p><br /><br /><p>Webエンジニアの方がルータを触る機会は、少ないと思います。<br/><br />ということで、Yamahaルータを例にルータの設定方法を紹介します。</p><br /><br /><h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;"><br />1. Yamahaルータへのログインについて<br /></h3><br /><br /><p><br />Yamahaルータへのログインは、通常以下の２つの方法いずれかでログインします。<br/><br /><br /><h3>- シリアルコンソールケーブルを使用したログイン</h3><br /><p><br />シリアルコンソールケーブルを直接Yamahaルータに接続します。</br><br />シリアルコンソールケーブルはクロスケーブルとDSUB9 or 25 と RJ45 変換コネクタでも自作できます。(ルータの購入時に付属している場合もあります。)<br /></p><br /><br /><h3>- telnetまたはsshを使用したログイン</h3><br /><p>これは、ご存知のようにtelnetコマンドやsshコマンドを使用したログインです。<br/><br /><br />いずれもログインした後の設定方法は同じです。<br/><br />ログイン時パスワードを入れてログインしますが、設定を行うには<br/><br />以下のコマンドを入力して管理者モードに移行してから行います。<br/><br /></p><br /><br /><pre class="code"><br /> $ administrator<br /></pre><br /><br /><h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;"><br />2. お勧めする初期設定<br /></h3><br /><br /><h3>- コンソールの表示文字コードを設定する</h3><br /><pre class="code"><br /> $ console character ascii<br /></pre><br /><br /><p><br /> 文字コードを設定します。euc, sjisなどにするとエラーなどが日本語になったりします。<br /></p><br /><br /><h3>- コンソールの表示行数のリミットを外す</h3><br /><pre class="code"><br /> $ console columns infinity<br /></pre><br /><br /><p><br />show ** 等でページ送りをしないように設定します。<br/><br />show configコマンドなどを一度に表示して保存する場合などに最適です。<br/><br />ページ送りを行いたい場合は、show ** | less で行えます。<br /></p><br /><br /><h3>- プロンプトの設定</h3><br /><pre class="code"><br /> # console prompt zynga<br /></pre><br /><p><br />これは、プロンプトの先頭文字列を設定するコマンドです。(例： zynga$ )<br/><br />bashなどの$PS1と同じようなものです。ただし、特殊変数などは使えません。<br /></p><br /><br /><h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;"><br />3. コマンド入力記法について<br /></h3><br /><h3>- showコマンドとクエスチョンマーク( ? )</h3><br /><p><br />自分の設定した内容を見るときは $ show configと入力します。また、設定内容と現在の動作状況を見るときは $show tech または $show techinfoと入力します。<br/><br />その他、show コマンドを入力後 ? を入力することでヘルプが表示されます。<br/><br /></p><br /><br /><h3>- noコマンド</h3><br /><pre class="code"><br /> $ no console character ascii<br /></pre><br /><p><br />今まで、入力したコマンドを無効にしたいときなどに使用します。<br/><br />show configで表示されるコマンドの先頭に no をつけて実行することにより該当行のコマンドが無効化または、デフォルト状態に戻ります。<br /></p><br /><br /><h3>- 設定の一括投入</h3><br /><p><br />一度に行う設定が複数ある場合、設定の反映はコピペで一括で行うことができます<br/><br />初期設定時やネットワークを遮断した際の設定は一括で行った方が効率がよいと思います。<br/><br />今までの設定は以下で行えます。管理者モードで以下３行をコピペすることで反映されます。<br /></p><br /><pre class="code"><br />console character ascii<br />console columns infinity<br />console prompt zynga<br /></pre><br /><br /><h3>- 設定の保存</h3><br /><pre class="code"><br /> # save<br /></pre><br /><p><br />設定内容を不揮発性メモリに保存して、ルータの再起動後でも設定が残るようにしておきます。<br /></p><br /><br /><p><br />最後に、オンラインでの設定変更は十分にマニュアルや設定例などを読んだ上行ってください。予期せぬ再起動。通信断を招く可能性があります。<br /></p><br /><br /><div style="margin:0;padding:.5em;border:2px solid #ccc">Zynga Japanでは積極的にエンジニアを採用しています。<br /> <br /><a href="http://www.zynga.co.jp/recruit/recruit.php?siteid=unohlabs">採用ページ</a>をご覧になり、興味のある方はぜひご応募ください。</div> 
+<br />
+<p>こんにちは。入社６ヶ月目のyusukeです。</p><br />
+<br />
+<p>Webエンジニアの方がルータを触る機会は、少ないと思います。<br/><br />
+ということで、Yamahaルータを例にルータの設定方法を紹介します。</p><br />
+<br />
+<h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;"><br />
+1. Yamahaルータへのログインについて<br />
+</h3><br />
+<br />
+<p><br />
+Yamahaルータへのログインは、通常以下の２つの方法いずれかでログインします。<br/><br />
+<br />
+<h3>- シリアルコンソールケーブルを使用したログイン</h3><br />
+<p><br />
+シリアルコンソールケーブルを直接Yamahaルータに接続します。</br><br />
+シリアルコンソールケーブルはクロスケーブルとDSUB9 or 25 と RJ45 変換コネクタでも自作できます。(ルータの購入時に付属している場合もあります。)<br />
+</p><br />
+<br />
+<h3>- telnetまたはsshを使用したログイン</h3><br />
+<p>これは、ご存知のようにtelnetコマンドやsshコマンドを使用したログインです。<br/><br />
+<br />
+いずれもログインした後の設定方法は同じです。<br/><br />
+ログイン時パスワードを入れてログインしますが、設定を行うには<br/><br />
+以下のコマンドを入力して管理者モードに移行してから行います。<br/><br />
+</p><br />
+<br />
+<pre class="code"><br />
+ $ administrator<br />
+</pre><br />
+<br />
+<h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;"><br />
+2. お勧めする初期設定<br />
+</h3><br />
+<br />
+<h3>- コンソールの表示文字コードを設定する</h3><br />
+<pre class="code"><br />
+ $ console character ascii<br />
+</pre><br />
+<br />
+<p><br />
+ 文字コードを設定します。euc, sjisなどにするとエラーなどが日本語になったりします。<br />
+</p><br />
+<br />
+<h3>- コンソールの表示行数のリミットを外す</h3><br />
+<pre class="code"><br />
+ $ console columns infinity<br />
+</pre><br />
+<br />
+<p><br />
+show ** 等でページ送りをしないように設定します。<br/><br />
+show configコマンドなどを一度に表示して保存する場合などに最適です。<br/><br />
+ページ送りを行いたい場合は、show ** | less で行えます。<br />
+</p><br />
+<br />
+<h3>- プロンプトの設定</h3><br />
+<pre class="code"><br />
+ # console prompt zynga<br />
+</pre><br />
+<p><br />
+これは、プロンプトの先頭文字列を設定するコマンドです。(例： zynga$ )<br/><br />
+bashなどの$PS1と同じようなものです。ただし、特殊変数などは使えません。<br />
+</p><br />
+<br />
+<h3 style="border-bottom:1px solid #6699CC;border-bottom-width:1px;border-bottom-style:solid;border-left:10px solid #6699CC;margin-top:25px;padding-left:10px;"><br />
+3. コマンド入力記法について<br />
+</h3><br />
+<h3>- showコマンドとクエスチョンマーク( ? )</h3><br />
+<p><br />
+自分の設定した内容を見るときは $ show configと入力します。また、設定内容と現在の動作状況を見るときは $show tech または $show techinfoと入力します。<br/><br />
+その他、show コマンドを入力後 ? を入力することでヘルプが表示されます。<br/><br />
+</p><br />
+<br />
+<h3>- noコマンド</h3><br />
+<pre class="code"><br />
+ $ no console character ascii<br />
+</pre><br />
+<p><br />
+今まで、入力したコマンドを無効にしたいときなどに使用します。<br/><br />
+show configで表示されるコマンドの先頭に no をつけて実行することにより該当行のコマンドが無効化または、デフォルト状態に戻ります。<br />
+</p><br />
+<br />
+<h3>- 設定の一括投入</h3><br />
+<p><br />
+一度に行う設定が複数ある場合、設定の反映はコピペで一括で行うことができます<br/><br />
+初期設定時やネットワークを遮断した際の設定は一括で行った方が効率がよいと思います。<br/><br />
+今までの設定は以下で行えます。管理者モードで以下３行をコピペすることで反映されます。<br />
+</p><br />
+<pre class="code"><br />
+console character ascii<br />
+console columns infinity<br />
+console prompt zynga<br />
+</pre><br />
+<br />
+<h3>- 設定の保存</h3><br />
+<pre class="code"><br />
+ # save<br />
+</pre><br />
+<p><br />
+設定内容を不揮発性メモリに保存して、ルータの再起動後でも設定が残るようにしておきます。<br />
+</p><br />
+<br />
+<p><br />
+最後に、オンラインでの設定変更は十分にマニュアルや設定例などを読んだ上行ってください。予期せぬ再起動。通信断を招く可能性があります。<br />
+</p><br />
+<br />
+<div style="margin:0;padding:.5em;border:2px solid #ccc">Zynga Japanでは積極的にエンジニアを採用しています。<br /> <br />
+<a href="http://www.zynga.co.jp/recruit/recruit.php?siteid=unohlabs">採用ページ</a>をご覧になり、興味のある方はぜひご応募ください。</div> 
 {% endraw %}

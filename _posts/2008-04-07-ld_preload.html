@@ -3,5 +3,130 @@ layout: post
 title: "LD_PRELOADを使って任意の関数呼び出しにフックしてみる"
 ---
 {% raw %}
-尾藤正人(a.k.a BTO)です<br /><br />先日の社内勉強会のLTでLD_PRELOADについて簡単にやってみました。<br /><br /><h2>LD_PRELOADって?</h2><br /><br />環境変数$LD_PRELOADを使うと他のライブラリの読み込みの前に任意のライブラリを先に読み込ませることができます。<br />実行プログラムの形式にELF形式を採用しているOSで使うことができます。<br />Linuxであれば問題なく使用できるはずです。<br /><br /><h2>何ができるのか</h2><br /><br />プログラムを変更することなく、任意の関数を上書きしたり、任意の関数にフックすることができます。<br /><br /><h2>libhookwriteを作ってみた</h2><br /><br />簡単なサンプルプログラムとしてlibhookwriteというのを作ってみました。<br />libhookwriteはその名の通りwrite(2)にフックをかけることができます。<br />といってもできることは限られていてファイルのタイムスタンプの更新か、任意のプログラムをsh経由で実行することしかできません。<br /><br /><h2>ダウンロード</h2><br /><br /><a href="http://labs.unoh.net/download/libhookwrite-0.0.1.tar.gz">libhookwrite-0.0.1.tar.gz</a><br /><br /><h2>インストール</h2><br /><br />お約束通り<br /><br /><pre class="code"><br />tar zxvf libhookwrite-0.0.1.tar.gz<br />cd libhookwrite-0.0.1<br />./configure<br />make<br />sudo make install<br /></pre><br /><br />rpmでもいけます。<br /><br /><pre class="code"><br />rpmbuild -ta libhookwrite-0.0.1.tar.gz<br />sudo rpm -ivh libhookwrite-0.0.1-1.i386.rpm<br /></pre><br /><br /><h2>使い方</h2><br /><br />環境変数$LD_PRELOADにlibhookwrite.soを指定します。<br />さらに環境変数$HOOKWRITE_UPDATE_FILEか$HOOKWRITE_COMMANDを指定します。<br /><br />HOOKWRITE_UPDATE_FILEにファイル名を指定すると、write(2)が呼ばれたときに指定されたファイルのタイムスタンプを現在時刻に更新します。<br /><br />HOOKWRITE_COMMANDに任意のコマンドを指定すると、write(2)が呼ばれたときに指定されたコマンドを/bin/sh経由で実行します。<br /><br />例えば、次のようなシェルスクリプトcat.shを実行すると、write(2)が呼ばれた時点で$HOME/tmp/catというファイルのタイムスタンプを現在の時刻に更新して、"hoge"と出力します。<br /><br /><pre class="code"><br />#!/bin/sh<br />HOOKWRITE_UPDATE_FILE=$HOME/tmp/cat ¥<br />  HOOKWRITE_COMMAND='echo hoge' ¥<br />  LD_PRELOAD=/usr/lib/libhookwrite.so ¥<br />  /bin/cat $@<br /></pre><br /><br /><h2>使い道</h2><br /><br />例えばエディタがファイルを保存したときに、何らかのアクションを起こしたい場合に使えるかもしれません。<br />プログラムに依存しないので、vimだろうがemacsだろうが何でもいけるはず。<br />ただ、スワップファイルの書き出しにも反応してしまいますが。(^^;<br /><br />vimを使ってsymfonyプロジェクトの開発をやってて、ファイルを保存したい瞬間にsymfony ccを走らせてキャッシュクリアしたい場合はこんな感じのaliasを作ればいいでしょうか。<br /><br /><pre class="code"><br />alias vim="LD_PRELOAD=/usr/lib/libhookwrite.so HOOKWRITE_COMMAND='/symfony/project/symfony cc' /usr/bin/vim"<br /></pre><br /><br /><h2>プログラム</h2><br /><br />プログラム自体は非常に簡単です。<br /><br /><pre class="code"><br />static ssize_t (*write_org) (int fd, const void *buf, size_t count) = NULL;<br /></pre><br /><br />write(2)と同じプロトタイプ宣言を持つ関数ポインタwrite_orgを定義しています。<br />オリジナルのwriteを保存するのに使います。<br /><br /><pre class="code"><br />__attribute__((constructor))<br />void<br />_save_original_functions()<br />{<br />    write_org = (ssize_t(*)(int, const void *, size_t)) dlsym(RTLD_NEXT, "write");<br />}<br /></pre><br /><br />dlsym(3)を使ってwriteのアドレスを取り出して、write_orgに保存しています。<br />__attribute__((constructor))というのはgccの拡張になってて、これを指定しておくとmain関数が呼ばれる前に実行してくれます。<br /><br />後は単純にwrite関数を改めて定義して、その中に任意の処理を書いておきます。<br />最後に    return write_org(fd, buf, count);でオリジナルの処理を呼び出して終わりです。<br /><br /><h2>参考</h2><br /><br /><a href="https://www.linux.or.jp/JM/html/LDP_man-pages/man8/ld.so.8.html">man ld.so</a>でマニュアルが読めます。<br />LD_PRELOADの他にもいろいろな機能がありますので、一度読んでおくといいかもしれません。<br /><br /><h2>fakechroot</h2><br /><br />LD_PRELOADを使った面白いソフトウェアで<a href="https://fakechroot.alioth.debian.org/">fakechroot</a>というのがあります。<br />chroot(2)の実行にはroot権限が必要ですが、fakechrootでは擬似的に一般ユーザ権限でchrootを実現しています。<br />LD_PRELOADを使って、ファイル操作に関わる部分にすべてフックをかけて擬似的にchroot環境を提供しているんでしょうね。<br /><br /><h2>Mac OS Xだと</h2><br /><br />実行プログラムの形式がELFではなくMach-Oが採用されています。<br />なので、LD_PRELOADは使えないはず。<br />代わりにDYLD_INSERT_LIBRARIESというのが使えます。<br /><br /><a href="https://developer.apple.com/documentation/Darwin/Reference/ManPages/man1/dyld.1.html">man dyld<br /></a><br /><br />詳しく検証してないので、詳細はよくわかってません。<br /><br /><h2>まとめ</h2><br /><br />LD_PRELOADを使うとプログラムに直接手を加えることなく、外から挙動をコントロールすることができます。<br />応用範囲は無限大です。
+尾藤正人(a.k.a BTO)です<br />
+<br />
+先日の社内勉強会のLTでLD_PRELOADについて簡単にやってみました。<br />
+<br />
+<h2>LD_PRELOADって?</h2><br />
+<br />
+環境変数$LD_PRELOADを使うと他のライブラリの読み込みの前に任意のライブラリを先に読み込ませることができます。<br />
+実行プログラムの形式にELF形式を採用しているOSで使うことができます。<br />
+Linuxであれば問題なく使用できるはずです。<br />
+<br />
+<h2>何ができるのか</h2><br />
+<br />
+プログラムを変更することなく、任意の関数を上書きしたり、任意の関数にフックすることができます。<br />
+<br />
+<h2>libhookwriteを作ってみた</h2><br />
+<br />
+簡単なサンプルプログラムとしてlibhookwriteというのを作ってみました。<br />
+libhookwriteはその名の通りwrite(2)にフックをかけることができます。<br />
+といってもできることは限られていてファイルのタイムスタンプの更新か、任意のプログラムをsh経由で実行することしかできません。<br />
+<br />
+<h2>ダウンロード</h2><br />
+<br />
+<a href="http://labs.unoh.net/download/libhookwrite-0.0.1.tar.gz">libhookwrite-0.0.1.tar.gz</a><br />
+<br />
+<h2>インストール</h2><br />
+<br />
+お約束通り<br />
+<br />
+<pre class="code"><br />
+tar zxvf libhookwrite-0.0.1.tar.gz<br />
+cd libhookwrite-0.0.1<br />
+./configure<br />
+make<br />
+sudo make install<br />
+</pre><br />
+<br />
+rpmでもいけます。<br />
+<br />
+<pre class="code"><br />
+rpmbuild -ta libhookwrite-0.0.1.tar.gz<br />
+sudo rpm -ivh libhookwrite-0.0.1-1.i386.rpm<br />
+</pre><br />
+<br />
+<h2>使い方</h2><br />
+<br />
+環境変数$LD_PRELOADにlibhookwrite.soを指定します。<br />
+さらに環境変数$HOOKWRITE_UPDATE_FILEか$HOOKWRITE_COMMANDを指定します。<br />
+<br />
+HOOKWRITE_UPDATE_FILEにファイル名を指定すると、write(2)が呼ばれたときに指定されたファイルのタイムスタンプを現在時刻に更新します。<br />
+<br />
+HOOKWRITE_COMMANDに任意のコマンドを指定すると、write(2)が呼ばれたときに指定されたコマンドを/bin/sh経由で実行します。<br />
+<br />
+例えば、次のようなシェルスクリプトcat.shを実行すると、write(2)が呼ばれた時点で$HOME/tmp/catというファイルのタイムスタンプを現在の時刻に更新して、"hoge"と出力します。<br />
+<br />
+<pre class="code"><br />
+#!/bin/sh<br />
+HOOKWRITE_UPDATE_FILE=$HOME/tmp/cat ¥<br />
+  HOOKWRITE_COMMAND='echo hoge' ¥<br />
+  LD_PRELOAD=/usr/lib/libhookwrite.so ¥<br />
+  /bin/cat $@<br />
+</pre><br />
+<br />
+<h2>使い道</h2><br />
+<br />
+例えばエディタがファイルを保存したときに、何らかのアクションを起こしたい場合に使えるかもしれません。<br />
+プログラムに依存しないので、vimだろうがemacsだろうが何でもいけるはず。<br />
+ただ、スワップファイルの書き出しにも反応してしまいますが。(^^;<br />
+<br />
+vimを使ってsymfonyプロジェクトの開発をやってて、ファイルを保存したい瞬間にsymfony ccを走らせてキャッシュクリアしたい場合はこんな感じのaliasを作ればいいでしょうか。<br />
+<br />
+<pre class="code"><br />
+alias vim="LD_PRELOAD=/usr/lib/libhookwrite.so HOOKWRITE_COMMAND='/symfony/project/symfony cc' /usr/bin/vim"<br />
+</pre><br />
+<br />
+<h2>プログラム</h2><br />
+<br />
+プログラム自体は非常に簡単です。<br />
+<br />
+<pre class="code"><br />
+static ssize_t (*write_org) (int fd, const void *buf, size_t count) = NULL;<br />
+</pre><br />
+<br />
+write(2)と同じプロトタイプ宣言を持つ関数ポインタwrite_orgを定義しています。<br />
+オリジナルのwriteを保存するのに使います。<br />
+<br />
+<pre class="code"><br />
+__attribute__((constructor))<br />
+void<br />
+_save_original_functions()<br />
+{<br />
+    write_org = (ssize_t(*)(int, const void *, size_t)) dlsym(RTLD_NEXT, "write");<br />
+}<br />
+</pre><br />
+<br />
+dlsym(3)を使ってwriteのアドレスを取り出して、write_orgに保存しています。<br />
+__attribute__((constructor))というのはgccの拡張になってて、これを指定しておくとmain関数が呼ばれる前に実行してくれます。<br />
+<br />
+後は単純にwrite関数を改めて定義して、その中に任意の処理を書いておきます。<br />
+最後に    return write_org(fd, buf, count);でオリジナルの処理を呼び出して終わりです。<br />
+<br />
+<h2>参考</h2><br />
+<br />
+<a href="https://www.linux.or.jp/JM/html/LDP_man-pages/man8/ld.so.8.html">man ld.so</a>でマニュアルが読めます。<br />
+LD_PRELOADの他にもいろいろな機能がありますので、一度読んでおくといいかもしれません。<br />
+<br />
+<h2>fakechroot</h2><br />
+<br />
+LD_PRELOADを使った面白いソフトウェアで<a href="https://fakechroot.alioth.debian.org/">fakechroot</a>というのがあります。<br />
+chroot(2)の実行にはroot権限が必要ですが、fakechrootでは擬似的に一般ユーザ権限でchrootを実現しています。<br />
+LD_PRELOADを使って、ファイル操作に関わる部分にすべてフックをかけて擬似的にchroot環境を提供しているんでしょうね。<br />
+<br />
+<h2>Mac OS Xだと</h2><br />
+<br />
+実行プログラムの形式がELFではなくMach-Oが採用されています。<br />
+なので、LD_PRELOADは使えないはず。<br />
+代わりにDYLD_INSERT_LIBRARIESというのが使えます。<br />
+<br />
+<a href="https://developer.apple.com/documentation/Darwin/Reference/ManPages/man1/dyld.1.html">man dyld<br />
+</a><br />
+<br />
+詳しく検証してないので、詳細はよくわかってません。<br />
+<br />
+<h2>まとめ</h2><br />
+<br />
+LD_PRELOADを使うとプログラムに直接手を加えることなく、外から挙動をコントロールすることができます。<br />
+応用範囲は無限大です。
 {% endraw %}

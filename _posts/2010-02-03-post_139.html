@@ -3,5 +3,138 @@ layout: post
 title: "位置情報を取得してみる"
 ---
 {% raw %}
-<div style="margin:0;padding:.5em;border:2px solid<br />#ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br /><a<br />href="http://www.unoh.net/recruit.html">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください。<br/><a<br />href="http://www.find-job.net/fj/showjob.cgi?id=50212">Find<br />Job!</a>でも募集してます！</div><br /><br />こんにちは。ryosuke です。<br /><br />先週からモバゲータウン内において、弊社の携帯まち育成ブラウザゲーム「まちつく！モバゲー版」の提供を開始しています。よろしければ遊んでみてください。<br /><br />まちつく！は、まち育成シミュレーションゲームですが、育成だけではなく携帯電話の位置情報を利用したおみやげやスタンプといった機能があります。最近は海外でもGPS機能を搭載したスマートフォンが普及してきたためか、世界的に位置情報を利用したサービスが活発化し始めているようです。<br /><br />NHKのTV番組ブラタモリと連携しているiPhoneアプリの「ブラアプリ」や、位置情報でつながる街情報SNS「foursquare」 が話題になったりしていていますね。位置情報自体は今更感があるのですが、個人的興味でにわかに位置情報がホットです。<br /><br /><h3>携帯電話</h3><br /><br />位置情報の活用と言えば一番に思い浮かぶのが携帯電話ですね。基地局を利用した位置情報とGPSを利用した位置情報があり、日本の携帯電話ではなじみの深い機能ですがGPSは実装が義務化されているそうです。<br /><br /><h3>docomo</h3><br /><br /><ul><br />	<li>オープンiエリア<br />           <ul><li><a href="http://www.nttdocomo.co.jp/service/imode/make/content/iarea/domestic/">オープンiエリア（国内版）</a></li></ul></li><br />        <li>GPS<br />           <ul><li><a href="http://www.nttdocomo.co.jp/service/imode/make/content/gps/">GPS</a></li></ul></li><br /></ul><br /><br />オープンiエリアでは5桁のエリアコードが付いており、公開されているエリアテーブルと関連づける事で全国を505に分割した地域名を取得できます。<br /><br /><pre class="code">&lt;a href="http://w1m.docomo.ne.jp/cp/iarea?ecode=OPENAREACODE&msn=OPENAREAKEY&nl=URL&posinfo=1"&gt;位置情報を送る&lt;/a&gt;</pre><br /><br />GPSはaタグやformタグにlcsを付けるだけで、リンク先に位置情報関連の引数を付けて渡してくれます。<br /><br /><pre class="code">&lt;a href="URL" lcs&gt;位置情報を送る&lt;/a&gt;</pre><br /><br /><h3>au</h3><br /><br /><ul><br />	<li>簡易位置情報 <br />           <ul><li><a href="http://www.au.kddi.com/ezfactory/tec/spec/eznavi.html">簡易位置情報</a></li></ul></li><br />        <li>GPS<br />           <ul><br />               <li><a href="http://symple.jp/16.html">非公開情報だよ！au GPSの使い方</a></li><br />               <li><a href="http://www.yaskey.cside.tv/mapserver/gps/#GPSPositionIinfo">GPS位置情報パラメータの取得方法</a></li><br />           </ul></li><br /></ul><br />簡易位置情報はドキュメントどおり以下の様に取得します。<br /><br /><pre class="code">&lt;a href="device:location?url=URL"&gt;位置情報を送る&lt;/a&gt;</pre><br /><br />auはGPSに関する資料は正式に公開されてはいないようです。しかしwebを検索すると有用な情報が揃っています。<br /><br />簡易位置情報は上記サイトでドキュメント化されていますが、GPSも簡易位置情報の device:location となってる所を device:gpsone に変更すれば、同様に扱えます。<br /><br /><pre class="code">&lt;a href="device:gpsone?url=URL"&gt;位置情報を送る&lt;/a&gt;</pre><br /><br /><h3>SoftBank</h3><br />SoftBank も au と同様に以下の様にURLにリンクする事で指定したURLに位置情報を渡してくれます。<br /><br /><pre class="code">&lt;a href="location:cell?url=URL"&gt;位置情報を送る&lt;/a&gt;</pre><br /><br />GPSの場合は cell の部分が gps になります。<br /><br /><pre class="code">&lt;a href="location:gps?url=URL"&gt;位置情報を送る&lt;/a&gt;</pre><br /><br /><h3>WILLCOM </h3><br /><br /><ul><br />	<li><a href="http://www.willcom-inc.com/ja/service/contents_service/create/location/<br />">位置情報</a></li><br /></ul><br /><br />忘れてはいけない WILLCOM です。会社にPHSがあったので、今回はじめて試してみましたが、携帯キャリアと同様に取得できました。(まちつく！mixi版はPHSでも遊べます)<br /><br /><pre class="code">&lt;a href="http://location.request/dummy.cgi?my=URL&pos=$location"&gt;位置情報を送る&lt;/a&gt;</pre><br /><br /><h3>スマートフォン</h3><br /><br /><h3>iPhone</h3><br />未確認ですが、Core Locationフレームワークを使用するそうです。<br /><br /><a href="http://developer.apple.com/iphone/library/documentation/CoreLocation/Reference/CoreLocation_Framework/index.html#//apple_ref/doc/uid/TP40007123">Core Location Framework Reference</a><br /><br /><h3>Android</h3><br />android.location パッケージが提供されています。<br /><br /><a href="http://developer.android.com/intl/ja/reference/android/location/package-summary.html">android.location</a><br /><br /><h4>参考</h4><br /><ul><br />	<li><a href="http://www.adakoda.com/android/000125.html">位置情報を取得するには/GPSを使用するには</a></li><br />	<li><a href="http://blog.justoneplanet.info/2009/07/08/">androidで位置情報を取得する</a></li><br /></ul><br /><br /><h3>WEBブラウザ</h3><br /><h4>Firefox</h4><br />Firefox 3.5以降ではプラグイン等を必要とせず、標準でGeolocation APIがサポートされています。<br /><br /><a href="https://developer.mozilla.org/Ja/Using_geolocation">Geolocation の利用</a><br /><br />場所にもよるのかもしれませんが、試してみた所なかなか良い精度で位置情報を取れました。<br /><br /><h4>Safari</h4><br /><ul><br /><li>iPhone OS3.1のSafariではGeolocation APIがサポートされているようです(未確認)</li><br /><li>ちなみに MacOSX Snow LeopardのSafari4.0.4では動作しませんでした</li><br /></ul><br /><br /><h3>その他位置情報に関するAPI</h3><br />取得した位置情報を簡単に加工する事が出来ます。<br /><br /><h4>沖電気提供の位置情報API</h4><br /><a href="http://okilab.jp/project/location/">http://okilab.jp/project/location/</a><br /><ul><br />	<li><a href="http://okilab.jp/project/location/2007/11/geocodeapi.html">地名を緯度経度に変換するAPI</a></li><br />	<li><a href="http://okilab.jp/project/location/2007/03/api.html">緯度経度から最寄りの駅を見つけ出すAPI</a></li><br />	<li><a href="http://okilab.jp/project/location/2007/02/api_3.html">文書中から住所表現を抽出するAPI</a></li><br /></ul><br /><br />その他、位置情報の加工に便利そうなAPIが提供されています<br /><br /><h4>シリウステクノロジーズ提供の位置情報API</h4><br /><a href="http://lab.cirius.co.jp/GeoPlatformAPI/">http://lab.cirius.co.jp/GeoPlatformAPI/</a><br /><ul><br />	<li><a href="http://lab.cirius.co.jp/GeoPlatformAPI/GeoFormAPI">携帯電話からキャリアを意識せずに緯度経度、住所を取得できるAPI (GeoFormAPI)</a></li><br />	<li><a href="http://lab.cirius.co.jp/GeoPlatformAPI/GeoPointAPI">住所や駅名、緯度経度、郵便番号を相互変換するAPI (GeoPointAPI)</a></li><br /></ul><br /><br /><h3>まとめ</h3><br /><br />実際調べてみると、各社の資料を読むに尽きる感じですが、位置情報を取得すること自体はどの環境でも難しい印象はありませんでした。<br /><br />実際には取得した情報を加工して使用する事になる為その辺りの処理を行わなければなりませんが、環境ごとに資料やライブラリは揃っているので(ウノウラボでも<a href="http://labs.unoh.net/2008/08/phpgeomobilejp_converter.html">Geomobilejp_Converter</a>を公開しています)試してみてはいかがでしょうか。<br />
+<div style="margin:0;padding:.5em;border:2px solid<br />
+#ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br /><a<br />
+href="http://www.unoh.net/recruit.html">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください。<br/><a<br />
+href="http://www.find-job.net/fj/showjob.cgi?id=50212">Find<br />
+Job!</a>でも募集してます！</div><br />
+<br />
+こんにちは。ryosuke です。<br />
+<br />
+先週からモバゲータウン内において、弊社の携帯まち育成ブラウザゲーム「まちつく！モバゲー版」の提供を開始しています。よろしければ遊んでみてください。<br />
+<br />
+まちつく！は、まち育成シミュレーションゲームですが、育成だけではなく携帯電話の位置情報を利用したおみやげやスタンプといった機能があります。最近は海外でもGPS機能を搭載したスマートフォンが普及してきたためか、世界的に位置情報を利用したサービスが活発化し始めているようです。<br />
+<br />
+NHKのTV番組ブラタモリと連携しているiPhoneアプリの「ブラアプリ」や、位置情報でつながる街情報SNS「foursquare」 が話題になったりしていていますね。位置情報自体は今更感があるのですが、個人的興味でにわかに位置情報がホットです。<br />
+<br />
+<h3>携帯電話</h3><br />
+<br />
+位置情報の活用と言えば一番に思い浮かぶのが携帯電話ですね。基地局を利用した位置情報とGPSを利用した位置情報があり、日本の携帯電話ではなじみの深い機能ですがGPSは実装が義務化されているそうです。<br />
+<br />
+<h3>docomo</h3><br />
+<br />
+<ul><br />
+	<li>オープンiエリア<br />
+           <ul><li><a href="http://www.nttdocomo.co.jp/service/imode/make/content/iarea/domestic/">オープンiエリア（国内版）</a></li></ul></li><br />
+        <li>GPS<br />
+           <ul><li><a href="http://www.nttdocomo.co.jp/service/imode/make/content/gps/">GPS</a></li></ul></li><br />
+</ul><br />
+<br />
+オープンiエリアでは5桁のエリアコードが付いており、公開されているエリアテーブルと関連づける事で全国を505に分割した地域名を取得できます。<br />
+<br />
+<pre class="code">&lt;a href="http://w1m.docomo.ne.jp/cp/iarea?ecode=OPENAREACODE&msn=OPENAREAKEY&nl=URL&posinfo=1"&gt;位置情報を送る&lt;/a&gt;</pre><br />
+<br />
+GPSはaタグやformタグにlcsを付けるだけで、リンク先に位置情報関連の引数を付けて渡してくれます。<br />
+<br />
+<pre class="code">&lt;a href="URL" lcs&gt;位置情報を送る&lt;/a&gt;</pre><br />
+<br />
+<h3>au</h3><br />
+<br />
+<ul><br />
+	<li>簡易位置情報 <br />
+           <ul><li><a href="http://www.au.kddi.com/ezfactory/tec/spec/eznavi.html">簡易位置情報</a></li></ul></li><br />
+        <li>GPS<br />
+           <ul><br />
+               <li><a href="http://symple.jp/16.html">非公開情報だよ！au GPSの使い方</a></li><br />
+               <li><a href="http://www.yaskey.cside.tv/mapserver/gps/#GPSPositionIinfo">GPS位置情報パラメータの取得方法</a></li><br />
+           </ul></li><br />
+</ul><br />
+簡易位置情報はドキュメントどおり以下の様に取得します。<br />
+<br />
+<pre class="code">&lt;a href="device:location?url=URL"&gt;位置情報を送る&lt;/a&gt;</pre><br />
+<br />
+auはGPSに関する資料は正式に公開されてはいないようです。しかしwebを検索すると有用な情報が揃っています。<br />
+<br />
+簡易位置情報は上記サイトでドキュメント化されていますが、GPSも簡易位置情報の device:location となってる所を device:gpsone に変更すれば、同様に扱えます。<br />
+<br />
+<pre class="code">&lt;a href="device:gpsone?url=URL"&gt;位置情報を送る&lt;/a&gt;</pre><br />
+<br />
+<h3>SoftBank</h3><br />
+SoftBank も au と同様に以下の様にURLにリンクする事で指定したURLに位置情報を渡してくれます。<br />
+<br />
+<pre class="code">&lt;a href="location:cell?url=URL"&gt;位置情報を送る&lt;/a&gt;</pre><br />
+<br />
+GPSの場合は cell の部分が gps になります。<br />
+<br />
+<pre class="code">&lt;a href="location:gps?url=URL"&gt;位置情報を送る&lt;/a&gt;</pre><br />
+<br />
+<h3>WILLCOM </h3><br />
+<br />
+<ul><br />
+	<li><a href="http://www.willcom-inc.com/ja/service/contents_service/create/location/<br />
+">位置情報</a></li><br />
+</ul><br />
+<br />
+忘れてはいけない WILLCOM です。会社にPHSがあったので、今回はじめて試してみましたが、携帯キャリアと同様に取得できました。(まちつく！mixi版はPHSでも遊べます)<br />
+<br />
+<pre class="code">&lt;a href="http://location.request/dummy.cgi?my=URL&pos=$location"&gt;位置情報を送る&lt;/a&gt;</pre><br />
+<br />
+<h3>スマートフォン</h3><br />
+<br />
+<h3>iPhone</h3><br />
+未確認ですが、Core Locationフレームワークを使用するそうです。<br />
+<br />
+<a href="http://developer.apple.com/iphone/library/documentation/CoreLocation/Reference/CoreLocation_Framework/index.html#//apple_ref/doc/uid/TP40007123">Core Location Framework Reference</a><br />
+<br />
+<h3>Android</h3><br />
+android.location パッケージが提供されています。<br />
+<br />
+<a href="http://developer.android.com/intl/ja/reference/android/location/package-summary.html">android.location</a><br />
+<br />
+<h4>参考</h4><br />
+<ul><br />
+	<li><a href="http://www.adakoda.com/android/000125.html">位置情報を取得するには/GPSを使用するには</a></li><br />
+	<li><a href="http://blog.justoneplanet.info/2009/07/08/">androidで位置情報を取得する</a></li><br />
+</ul><br />
+<br />
+<h3>WEBブラウザ</h3><br />
+<h4>Firefox</h4><br />
+Firefox 3.5以降ではプラグイン等を必要とせず、標準でGeolocation APIがサポートされています。<br />
+<br />
+<a href="https://developer.mozilla.org/Ja/Using_geolocation">Geolocation の利用</a><br />
+<br />
+場所にもよるのかもしれませんが、試してみた所なかなか良い精度で位置情報を取れました。<br />
+<br />
+<h4>Safari</h4><br />
+<ul><br />
+<li>iPhone OS3.1のSafariではGeolocation APIがサポートされているようです(未確認)</li><br />
+<li>ちなみに MacOSX Snow LeopardのSafari4.0.4では動作しませんでした</li><br />
+</ul><br />
+<br />
+<h3>その他位置情報に関するAPI</h3><br />
+取得した位置情報を簡単に加工する事が出来ます。<br />
+<br />
+<h4>沖電気提供の位置情報API</h4><br />
+<a href="http://okilab.jp/project/location/">http://okilab.jp/project/location/</a><br />
+<ul><br />
+	<li><a href="http://okilab.jp/project/location/2007/11/geocodeapi.html">地名を緯度経度に変換するAPI</a></li><br />
+	<li><a href="http://okilab.jp/project/location/2007/03/api.html">緯度経度から最寄りの駅を見つけ出すAPI</a></li><br />
+	<li><a href="http://okilab.jp/project/location/2007/02/api_3.html">文書中から住所表現を抽出するAPI</a></li><br />
+</ul><br />
+<br />
+その他、位置情報の加工に便利そうなAPIが提供されています<br />
+<br />
+<h4>シリウステクノロジーズ提供の位置情報API</h4><br />
+<a href="http://lab.cirius.co.jp/GeoPlatformAPI/">http://lab.cirius.co.jp/GeoPlatformAPI/</a><br />
+<ul><br />
+	<li><a href="http://lab.cirius.co.jp/GeoPlatformAPI/GeoFormAPI">携帯電話からキャリアを意識せずに緯度経度、住所を取得できるAPI (GeoFormAPI)</a></li><br />
+	<li><a href="http://lab.cirius.co.jp/GeoPlatformAPI/GeoPointAPI">住所や駅名、緯度経度、郵便番号を相互変換するAPI (GeoPointAPI)</a></li><br />
+</ul><br />
+<br />
+<h3>まとめ</h3><br />
+<br />
+実際調べてみると、各社の資料を読むに尽きる感じですが、位置情報を取得すること自体はどの環境でも難しい印象はありませんでした。<br />
+<br />
+実際には取得した情報を加工して使用する事になる為その辺りの処理を行わなければなりませんが、環境ごとに資料やライブラリは揃っているので(ウノウラボでも<a href="http://labs.unoh.net/2008/08/phpgeomobilejp_converter.html">Geomobilejp_Converter</a>を公開しています)試してみてはいかがでしょうか。<br />
+
 {% endraw %}

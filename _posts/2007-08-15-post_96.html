@@ -3,5 +3,60 @@ layout: post
 title: "グラフィック作りのコツとカン"
 ---
 {% raw %}
-こんにちは。yamazakiです。<br />前回はレイアウトなどについて非常にざっくりとですが書いてみたわけですが、いかがでしたでしょうか。<br />そろそろ「グラフィック」のほうも少し書いてみようかという気になってきたので、グラフィック品質を高めるベーシックな技術についても少しずつ書いていってみようと思います。<br /><br /><h3>基本のき</h3><br /><br />具体的な話に入る前に、まずは基本的な話から。<br />とりあえず、ざっとあなたの周囲を見回してみてください。壁にしても、PCにしても、「単なる一色のベタ塗り」にはなっていないのではないかと思います。光の加減などで、「影」や「グラデーション」がついていると思います。また、ものの表面には「つるつる」「ざらざら」といった「質感」があるのが当たり前、という中で私たちは生活しています。<br />そのため、人の目はそういう「グラデーション」や「影」、「質感」がある状況を「見慣れて」います。<br /><br />グラフィック上の処理で影をつけたり、グラデーションをつけたり、「質感」にこだわってみたりするのは、そういう「見慣れたもの」に近づけるという意味があります（それだけでもないですが）。<br />通常目にするものに対して違和感のあるもの、に対しては人は「安っぽさ」みたいなものを感じることがありまして、そういった意味で「グラデーション」や「影つけ」、「質感づけ」というのは、わりと「高品質なグラフィック」感を出すのに有効だったりします。<br /><br />ということでそれでは、実際にグラデーションや影などをグラフィック上で使うときのコツなどを簡単に…。<br /><br /><h3>グラデーション</h3><br /><br /><h4>色→白に抜けるグラデーションはあまり使わない</h4><br /><br />「白」っていうのはわりと特殊な色で、色のついたものが白に抜けていくようなグラデーションになっていること、って実はわりと少ない。ので、避けます。<br /><br /><h4>少し複雑な色使いをしてみる</h4><br /><br />夕暮れに空が薄く虹色っぽくなっているのを見てきれいだと思うこともあります。単に一色の明暗でなくて、色相の違う複数の色のグラデーションを作ってみるときれいなグラデーションができたりします。たとえば「緑寄りの暗い青」から「水色っぽい明るい青」に変化するグラデーションを作ってみると、ちょっといい感じです。<br /><br /><a href="http://photozou.jp/photo/show/784/4349256"><img src="http://art5.photozou.jp/pub/784/784/photo/4349256.jpg" alt="grad" width="402" height="275" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/4349256">grad</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br /><br /><a href="http://photozou.jp/photo/show/784/4349257"><img src="http://art5.photozou.jp/pub/784/784/photo/4349257.jpg" alt="grad2" width="402" height="220" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/4349257">grad2</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br /><br /><br /><h3>影付け</h3><br /><br />はっきりした影、というのはあまり現実にはありません。色んな光源からの光がミックスされて、複雑な影ができる状況を普段目にすることが多いです。<br />なのでグラフィック上でもそれに習ってみます。<br /><br /><a href="http://photozou.jp/photo/show/784/4349258"><img src="http://art5.photozou.jp/pub/784/784/photo/4349258.jpg" alt="shadow" width="402" height="159" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/4349258">shadow</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br /><br /><h3>立体感を出す</h3><br /><br />影やグラデーションに関係するところで「立体感」についても一つ。<br />人の目はなぜか知りませんが、必ず「上」、とくに「左上」に光がある、と仮定してできるハイライト、影に基づいて「膨らんでる」「へこんでる」と判断しがちです。<br /><br />ボタンを作るときなどにはそのことを意識して作ると立体感などがうまく出てくれます。<br /><br /><a href="http://photozou.jp/photo/show/784/4349260"><img src="http://art5.photozou.jp/pub/784/784/photo/4349260.jpg" alt="rittai" width="402" height="244" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/4349260">rittai</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br /><br /><br /><h3>テクスチャ</h3><br /><br />テクスチャ、というのは「表面の質感」のことです。たとえば金属であればツルツルしている、布であればデコボコしていて光を反射しにくい、など。そういった特徴を画面上で再現するために、グラデーションや表面のグラフィックの書き込みなどを駆使して「つるつる」「ざらざら」「でこぼこ」などを表現していきます。<br /><br /><a href="http://photozou.jp/photo/show/784/4349261"><img src="http://art5.photozou.jp/pub/784/784/photo/4349261.jpg" alt="texture1" width="402" height="234" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/4349261">texture1</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br /><br /><a href="http://photozou.jp/photo/show/784/4349296"><img src="http://art8.photozou.jp/pub/784/784/photo/4349296.jpg" alt="texture2" width="402" height="341" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/4349296">texture2</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br /><br />以上、今回はちょっと時間がなくて細かい解説ができないのが残念なところではありますが、何かのヒントになったら幸いです。
+こんにちは。yamazakiです。<br />
+前回はレイアウトなどについて非常にざっくりとですが書いてみたわけですが、いかがでしたでしょうか。<br />
+そろそろ「グラフィック」のほうも少し書いてみようかという気になってきたので、グラフィック品質を高めるベーシックな技術についても少しずつ書いていってみようと思います。<br />
+<br />
+<h3>基本のき</h3><br />
+<br />
+具体的な話に入る前に、まずは基本的な話から。<br />
+とりあえず、ざっとあなたの周囲を見回してみてください。壁にしても、PCにしても、「単なる一色のベタ塗り」にはなっていないのではないかと思います。光の加減などで、「影」や「グラデーション」がついていると思います。また、ものの表面には「つるつる」「ざらざら」といった「質感」があるのが当たり前、という中で私たちは生活しています。<br />
+そのため、人の目はそういう「グラデーション」や「影」、「質感」がある状況を「見慣れて」います。<br />
+<br />
+グラフィック上の処理で影をつけたり、グラデーションをつけたり、「質感」にこだわってみたりするのは、そういう「見慣れたもの」に近づけるという意味があります（それだけでもないですが）。<br />
+通常目にするものに対して違和感のあるもの、に対しては人は「安っぽさ」みたいなものを感じることがありまして、そういった意味で「グラデーション」や「影つけ」、「質感づけ」というのは、わりと「高品質なグラフィック」感を出すのに有効だったりします。<br />
+<br />
+ということでそれでは、実際にグラデーションや影などをグラフィック上で使うときのコツなどを簡単に…。<br />
+<br />
+<h3>グラデーション</h3><br />
+<br />
+<h4>色→白に抜けるグラデーションはあまり使わない</h4><br />
+<br />
+「白」っていうのはわりと特殊な色で、色のついたものが白に抜けていくようなグラデーションになっていること、って実はわりと少ない。ので、避けます。<br />
+<br />
+<h4>少し複雑な色使いをしてみる</h4><br />
+<br />
+夕暮れに空が薄く虹色っぽくなっているのを見てきれいだと思うこともあります。単に一色の明暗でなくて、色相の違う複数の色のグラデーションを作ってみるときれいなグラデーションができたりします。たとえば「緑寄りの暗い青」から「水色っぽい明るい青」に変化するグラデーションを作ってみると、ちょっといい感じです。<br />
+<br />
+<a href="http://photozou.jp/photo/show/784/4349256"><img src="http://art5.photozou.jp/pub/784/784/photo/4349256.jpg" alt="grad" width="402" height="275" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/4349256">grad</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br />
+<br />
+<a href="http://photozou.jp/photo/show/784/4349257"><img src="http://art5.photozou.jp/pub/784/784/photo/4349257.jpg" alt="grad2" width="402" height="220" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/4349257">grad2</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br />
+<br />
+<br />
+<h3>影付け</h3><br />
+<br />
+はっきりした影、というのはあまり現実にはありません。色んな光源からの光がミックスされて、複雑な影ができる状況を普段目にすることが多いです。<br />
+なのでグラフィック上でもそれに習ってみます。<br />
+<br />
+<a href="http://photozou.jp/photo/show/784/4349258"><img src="http://art5.photozou.jp/pub/784/784/photo/4349258.jpg" alt="shadow" width="402" height="159" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/4349258">shadow</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br />
+<br />
+<h3>立体感を出す</h3><br />
+<br />
+影やグラデーションに関係するところで「立体感」についても一つ。<br />
+人の目はなぜか知りませんが、必ず「上」、とくに「左上」に光がある、と仮定してできるハイライト、影に基づいて「膨らんでる」「へこんでる」と判断しがちです。<br />
+<br />
+ボタンを作るときなどにはそのことを意識して作ると立体感などがうまく出てくれます。<br />
+<br />
+<a href="http://photozou.jp/photo/show/784/4349260"><img src="http://art5.photozou.jp/pub/784/784/photo/4349260.jpg" alt="rittai" width="402" height="244" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/4349260">rittai</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br />
+<br />
+<br />
+<h3>テクスチャ</h3><br />
+<br />
+テクスチャ、というのは「表面の質感」のことです。たとえば金属であればツルツルしている、布であればデコボコしていて光を反射しにくい、など。そういった特徴を画面上で再現するために、グラデーションや表面のグラフィックの書き込みなどを駆使して「つるつる」「ざらざら」「でこぼこ」などを表現していきます。<br />
+<br />
+<a href="http://photozou.jp/photo/show/784/4349261"><img src="http://art5.photozou.jp/pub/784/784/photo/4349261.jpg" alt="texture1" width="402" height="234" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/4349261">texture1</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br />
+<br />
+<a href="http://photozou.jp/photo/show/784/4349296"><img src="http://art8.photozou.jp/pub/784/784/photo/4349296.jpg" alt="texture2" width="402" height="341" style="border:0" /></a><br /><a href="http://photozou.jp/photo/show/784/4349296">texture2</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br />
+<br />
+以上、今回はちょっと時間がなくて細かい解説ができないのが残念なところではありますが、何かのヒントになったら幸いです。
 {% endraw %}

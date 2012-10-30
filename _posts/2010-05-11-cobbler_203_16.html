@@ -3,5 +3,43 @@ layout: post
 title: "cobbler 2.0.3 サーバ構築で気をつけること(1.6 系との差分など)"
 ---
 {% raw %}
-こんにちは。kyagi です。今回は <a href="http://www.mail-archive.com/cobbler-devel@lists.fedorahosted.org/msg00664.html">2 月にリリースされた cobbler 2.0.3 </a>のサーバ構築にあたり気をつけることをご紹介します。1.6 系から切り替える方の参考になれば幸いです。<br /><br />構築手順は 1.6 系とほぼ同様ですが、sudo cobbler check の時点で 2 点ほど見慣れないメッセージが表示されましたのでその対処を含めて以下に展開します。<br /><br />- 専用のローダのインストールが必要になりました。対処としては sudo cobbler get-loaders すれば OK です。<br /><br /><pre class="code"><br />$ sudo cobbler check<br />(...snip...)<br />3 : some network boot-loaders are missing from /var/lib/cobbler/loaders, you may run 'cobbler<br />get-loaders' to download them, or, if you only want to handle x86/x86_64 netbooting, you may <br />ensure that you have installed a *recent* version of the syslinux package installed and can ignore <br />this message entirely.  Files in this directory, should you want to support all architectures, should <br />include pxelinux.0, menu.c32, elilo.efi, and yaboot. The 'cobbler get-loaders' command is the <br />easiest way to resolve these requirements.<br />(...snip...)<br /></pre><br /><br />- /etc/xinetd.d/rsync の修正が必要になりました。対処としては cobbler check の指示通りに /etc/xinetd.d/rsync を編集すれば OK です。<br /><br /><pre class="code"><br />$ sudo cobbler check<br />(...snip...)<br />5 : change 'disable' to 'no' in /etc/xinetd.d/rsync<br />(...snip...)<br /></pre><br /><br />また、1.6 系から dhcp.template をそのまま流用している場合 cobbler sync で失敗することがあります。対処としては /etc/cobbler/dhcp.template の以下の 3 行を削除すれば OK です。問題の詳細は <a href="http://www.mail-archive.com/cobbler@lists.fedorahosted.org/msg04918.html">このページ</a> の 「Despite we were not using OMAPI ...」付近をご覧ください。<br /><br /><pre class="code"><br />#if $omapi_enabled<br /> omapi-port $omapi_port;<br />#end if<br /></pre><br /><br />以上です。<br /><br /><div style="margin:0;padding:.5em;border:2px solid<br />#ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br /><a href="http://www.unoh.net/recruit.html">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください。<br/><a href="http://www.find-job.net/fj/showjob.cgi?id=50212">Find Job!</a>でも募集してます！</div>
+こんにちは。kyagi です。今回は <a href="http://www.mail-archive.com/cobbler-devel@lists.fedorahosted.org/msg00664.html">2 月にリリースされた cobbler 2.0.3 </a>のサーバ構築にあたり気をつけることをご紹介します。1.6 系から切り替える方の参考になれば幸いです。<br />
+<br />
+構築手順は 1.6 系とほぼ同様ですが、sudo cobbler check の時点で 2 点ほど見慣れないメッセージが表示されましたのでその対処を含めて以下に展開します。<br />
+<br />
+- 専用のローダのインストールが必要になりました。対処としては sudo cobbler get-loaders すれば OK です。<br />
+<br />
+<pre class="code"><br />
+$ sudo cobbler check<br />
+(...snip...)<br />
+3 : some network boot-loaders are missing from /var/lib/cobbler/loaders, you may run 'cobbler<br />
+get-loaders' to download them, or, if you only want to handle x86/x86_64 netbooting, you may <br />
+ensure that you have installed a *recent* version of the syslinux package installed and can ignore <br />
+this message entirely.  Files in this directory, should you want to support all architectures, should <br />
+include pxelinux.0, menu.c32, elilo.efi, and yaboot. The 'cobbler get-loaders' command is the <br />
+easiest way to resolve these requirements.<br />
+(...snip...)<br />
+</pre><br />
+<br />
+- /etc/xinetd.d/rsync の修正が必要になりました。対処としては cobbler check の指示通りに /etc/xinetd.d/rsync を編集すれば OK です。<br />
+<br />
+<pre class="code"><br />
+$ sudo cobbler check<br />
+(...snip...)<br />
+5 : change 'disable' to 'no' in /etc/xinetd.d/rsync<br />
+(...snip...)<br />
+</pre><br />
+<br />
+また、1.6 系から dhcp.template をそのまま流用している場合 cobbler sync で失敗することがあります。対処としては /etc/cobbler/dhcp.template の以下の 3 行を削除すれば OK です。問題の詳細は <a href="http://www.mail-archive.com/cobbler@lists.fedorahosted.org/msg04918.html">このページ</a> の 「Despite we were not using OMAPI ...」付近をご覧ください。<br />
+<br />
+<pre class="code"><br />
+#if $omapi_enabled<br />
+ omapi-port $omapi_port;<br />
+#end if<br />
+</pre><br />
+<br />
+以上です。<br />
+<br />
+<div style="margin:0;padding:.5em;border:2px solid<br />
+#ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br /><a href="http://www.unoh.net/recruit.html">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください。<br/><a href="http://www.find-job.net/fj/showjob.cgi?id=50212">Find Job!</a>でも募集してます！</div>
 {% endraw %}

@@ -3,5 +3,37 @@ layout: post
 title: "一番小さい PEAR パッケージって"
 ---
 {% raw %}
-こんにちは，ttsuruoka です．<br /><br /><a href="http://pear.php.net/">PEAR</a> には現在400個ほどの<br />パッケージが登録されているのですが，<br />この中で一番小さい PEAR パッケージって何なのでしょうか．<br /><br />全部のパッケージを見たことはないので確かではありませんが，<br />（自分の知る限り）一番小さいパッケージ，<br /><a href="http://pear.php.net/package/Numbers_Roman">Numbers_Roman</a><br />を紹介したいと思います．<br /><br /><br />Numbers_Roman はアラビア数字とローマ数字を相互に変換するパッケージで，<br />以下のように使います．<br /><br /><pre class="source_code"><br />&lt;?php<br />require_once "Numbers/Roman.php";<br /><br />echo Numbers_Roman::toNumeral(9); // IX が出力される<br />echo Numbers_Roman::toNumber('XII'); // 12 が出力される<br />?&gt;<br /></pre><br /><br />Numbers_Roman の<a href="http://cvs.php.net/viewvc.cgi/pear/Math_Numbers/Roman.php?revision=1.17&view=markup">コード</a>は275行で，プロパティは無く，メソッドが3つ．<br />しかもそのメソッドのうちのひとつ toRoman() は後方互換性を保つための toNumeral() へのエイリアスです．<br /><br />さっそく明日から使ってみてください．簡単に使えます．<br /><br /><br />■詳しい人へ■<br />このパッケージより小さいパッケージの情報について，<br />下のコメント欄，トラックバックで随時募集しています．
+こんにちは，ttsuruoka です．<br />
+<br />
+<a href="http://pear.php.net/">PEAR</a> には現在400個ほどの<br />
+パッケージが登録されているのですが，<br />
+この中で一番小さい PEAR パッケージって何なのでしょうか．<br />
+<br />
+全部のパッケージを見たことはないので確かではありませんが，<br />
+（自分の知る限り）一番小さいパッケージ，<br />
+<a href="http://pear.php.net/package/Numbers_Roman">Numbers_Roman</a><br />
+を紹介したいと思います．<br />
+<br />
+<br />
+Numbers_Roman はアラビア数字とローマ数字を相互に変換するパッケージで，<br />
+以下のように使います．<br />
+<br />
+<pre class="source_code"><br />
+&lt;?php<br />
+require_once "Numbers/Roman.php";<br />
+<br />
+echo Numbers_Roman::toNumeral(9); // IX が出力される<br />
+echo Numbers_Roman::toNumber('XII'); // 12 が出力される<br />
+?&gt;<br />
+</pre><br />
+<br />
+Numbers_Roman の<a href="http://cvs.php.net/viewvc.cgi/pear/Math_Numbers/Roman.php?revision=1.17&view=markup">コード</a>は275行で，プロパティは無く，メソッドが3つ．<br />
+しかもそのメソッドのうちのひとつ toRoman() は後方互換性を保つための toNumeral() へのエイリアスです．<br />
+<br />
+さっそく明日から使ってみてください．簡単に使えます．<br />
+<br />
+<br />
+■詳しい人へ■<br />
+このパッケージより小さいパッケージの情報について，<br />
+下のコメント欄，トラックバックで随時募集しています．
 {% endraw %}

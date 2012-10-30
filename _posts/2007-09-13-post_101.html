@@ -3,5 +3,38 @@ layout: post
 title: "正規表現の勉強法"
 ---
 {% raw %}
-bokkoです。<br /><br />テキストの整形処理を行う上で正規表現は非常に重要です。正規表現なしでテキストの整形処理をするくらいなら自分で正規表現ライブラリを書いてやるという人がいるのかどうかは知りませんが、実際、相当大規模なWebソフトウェアのプロジェクトならそっちの方が早いかもしれません。なんだか自分で書いてて何が言いたいのかわからないような文章になってしまいましたが、私が言いたいのは正規表現はそれくらい強力で、習得して使う価値があるということです。<br /><br />ただ、正規表現にはじめて触れる場合、非常にとっつきにくく思う方もいると思います。私も最初、意味のわからない文字の羅列に圧倒されたような気がします。<br /><br />このように最初の段階でとっつきづらく思ってしまうのは大抵慣れの問題なので、とりあえず、正規表現を使ったプログラムでも書いてみるのが一番の近道です。何かしらのテキストを整形するというのがいい題材ですが、私が特にオススメするのは<strong>Wikiなどのパーサを書くこと</strong>です。<br />私は去年、とあるWikiクローンを作成したのですが、当初の目的は、「正規表現を勉強すること」でした。(後で変わりました)<br />実際、これのおかげで私は正規表現に対するアレルギーもすっかりなくなり、テキスト整形のプログラムを書くときだけでなく、Emacs上やターミナル上で検索する際にも正規表現を積極的に使うようになりました。<br /><br />さすがにプログラミング言語のパーサを正規表現だけで書くのは無理があると思いますが、簡単なWikiのパーサであれば、正規表現が中心のプログラムでも結構書けます。(多段リストのように複数の入れ子からなる文法を正規表現だけで書くのは難しいですが)<br /><br />URLをAタグで囲んだり、*で始まった行はリストに変換したり、「引用」をblockquoteタグではなく、何か別の記号で記述できるようにしたりするなど、Wikiパーサの作成には正規表現を勉強するための題材がたくさん転がっています。<br /><br />もしくは、大学生なら所属しているサークルの名簿のテキストファイルやCSVファイルを正規表現を使って解析して、データベースに突っ込んだりするというのも前者ほどではないかもしれませんが、いい勉強になると思います。(私は実際やりました)<br />また、普段からgrepやegrepを積極的に使うことを心掛けるのもいいと思います。<br /><br /><br />ただ、やっぱり詳しく解説されている書籍がほしいところです。単に正規表現を使うだけでは、その動作原理を理解したり、その場その場で最適な正規表現を適用するのは難しいと思います。しかし、正規表現の動作原理まで扱った書籍はあまりありません。中には正規表現の動作原理がわかっていないと、どう使ったらいいのかわかりにくいものもあります。実際、アトミックグループなどは正規表現の動作原理を、ある程度理解していないと、なんでそんなのが必要なのかピンと来ないと思います。<br /><br />そういった要求を満たしてくれる数少ない書籍が「詳説 正規表現(第二版)」です。<br /><br />この本には、私が去年、Wiki文法のパーサーを書く過程で調べて身に付けたほぼすべてのことと、もっとうまくやるための方法と、何故そうすべきなのかということと、そして、初心者(つまり1年前の自分)が犯すであろうあらゆる過ちを回避するための方法が書いてありました。<br /><br /><h3>理論が先か実践が先か？</h3><br /><br />私の場合は、Wiki文法のパーサを書いて正規表現に慣れてからこの本を読んだため、<br />割とすんなり読めて、正規表現に対する理解も深まったと思っているのですが、<br />この辺は人によって好みが別れると思うので、自分に合う形で学習するのがいいと思います。<br /><br />そして、本当に理解しようと思うなら両方やるべきです。<br /><br /><div class="amazlet-box" style="margin-bottom:0px;"><div class="amazlet-image" style="float:left;"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4873111307/unoh-22/ref=nosim/" name="amazletlink" target="_blank"><img src="http://ec1.images-amazon.com/images/I/2105QQFEAXL.jpg" alt="詳説 正規表現 第2版" style="border: none;" /></a></div><div class="amazlet-info" style="float:left;margin-left:15px;line-height:120%"><div class="amazlet-name" style="margin-bottom:10px;line-height:120%"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4873111307/unoh-22/ref=nosim/" name="amazletlink" target="_blank">詳説 正規表現 第2版</a><div class="amazlet-powered-date" style="font-size:7pt;margin-top:5px;font-family:verdana;line-height:120%">posted with <a href="http://www.amazlet.com/browse/ASIN/4873111307/unoh-22" title="詳説 正規表現 第2版" target="_blank">amazlet</a> on 07.09.13</div></div><div class="amazlet-detail">Jeffrey E.F. Friedl 田和 勝 <br />オライリー・ジャパン (2003/05/26)<br />売り上げランキング: 25292<br /></div><div class="amazlet-review" style="margin-top:10px; margin-bottom:10px"><div class="amazlet-review-average" style="margin-bottom:5px">おすすめ度の平均: <img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-5-0.gif" alt="5.0" /></div><img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-4-0.gif" alt="4" /> 内容は大満足だけど高いです<br /><img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-5-0.gif" alt="5" /> 噛めば噛むほど<br /><img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-5-0.gif" alt="5" /> 正規表現の仕組みが分かります<br /></div><div class="amazlet-link" style="margin-top: 5px"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4873111307/unoh-22/ref=nosim/" name="amazletlink" target="_blank">Amazon.co.jp で詳細を見る</a></div></div><div class="amazlet-footer" style="clear: left"></div></div><br />
+bokkoです。<br />
+<br />
+テキストの整形処理を行う上で正規表現は非常に重要です。正規表現なしでテキストの整形処理をするくらいなら自分で正規表現ライブラリを書いてやるという人がいるのかどうかは知りませんが、実際、相当大規模なWebソフトウェアのプロジェクトならそっちの方が早いかもしれません。なんだか自分で書いてて何が言いたいのかわからないような文章になってしまいましたが、私が言いたいのは正規表現はそれくらい強力で、習得して使う価値があるということです。<br />
+<br />
+ただ、正規表現にはじめて触れる場合、非常にとっつきにくく思う方もいると思います。私も最初、意味のわからない文字の羅列に圧倒されたような気がします。<br />
+<br />
+このように最初の段階でとっつきづらく思ってしまうのは大抵慣れの問題なので、とりあえず、正規表現を使ったプログラムでも書いてみるのが一番の近道です。何かしらのテキストを整形するというのがいい題材ですが、私が特にオススメするのは<strong>Wikiなどのパーサを書くこと</strong>です。<br />
+私は去年、とあるWikiクローンを作成したのですが、当初の目的は、「正規表現を勉強すること」でした。(後で変わりました)<br />
+実際、これのおかげで私は正規表現に対するアレルギーもすっかりなくなり、テキスト整形のプログラムを書くときだけでなく、Emacs上やターミナル上で検索する際にも正規表現を積極的に使うようになりました。<br />
+<br />
+さすがにプログラミング言語のパーサを正規表現だけで書くのは無理があると思いますが、簡単なWikiのパーサであれば、正規表現が中心のプログラムでも結構書けます。(多段リストのように複数の入れ子からなる文法を正規表現だけで書くのは難しいですが)<br />
+<br />
+URLをAタグで囲んだり、*で始まった行はリストに変換したり、「引用」をblockquoteタグではなく、何か別の記号で記述できるようにしたりするなど、Wikiパーサの作成には正規表現を勉強するための題材がたくさん転がっています。<br />
+<br />
+もしくは、大学生なら所属しているサークルの名簿のテキストファイルやCSVファイルを正規表現を使って解析して、データベースに突っ込んだりするというのも前者ほどではないかもしれませんが、いい勉強になると思います。(私は実際やりました)<br />
+また、普段からgrepやegrepを積極的に使うことを心掛けるのもいいと思います。<br />
+<br />
+<br />
+ただ、やっぱり詳しく解説されている書籍がほしいところです。単に正規表現を使うだけでは、その動作原理を理解したり、その場その場で最適な正規表現を適用するのは難しいと思います。しかし、正規表現の動作原理まで扱った書籍はあまりありません。中には正規表現の動作原理がわかっていないと、どう使ったらいいのかわかりにくいものもあります。実際、アトミックグループなどは正規表現の動作原理を、ある程度理解していないと、なんでそんなのが必要なのかピンと来ないと思います。<br />
+<br />
+そういった要求を満たしてくれる数少ない書籍が「詳説 正規表現(第二版)」です。<br />
+<br />
+この本には、私が去年、Wiki文法のパーサーを書く過程で調べて身に付けたほぼすべてのことと、もっとうまくやるための方法と、何故そうすべきなのかということと、そして、初心者(つまり1年前の自分)が犯すであろうあらゆる過ちを回避するための方法が書いてありました。<br />
+<br />
+<h3>理論が先か実践が先か？</h3><br />
+<br />
+私の場合は、Wiki文法のパーサを書いて正規表現に慣れてからこの本を読んだため、<br />
+割とすんなり読めて、正規表現に対する理解も深まったと思っているのですが、<br />
+この辺は人によって好みが別れると思うので、自分に合う形で学習するのがいいと思います。<br />
+<br />
+そして、本当に理解しようと思うなら両方やるべきです。<br />
+<br />
+<div class="amazlet-box" style="margin-bottom:0px;"><div class="amazlet-image" style="float:left;"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4873111307/unoh-22/ref=nosim/" name="amazletlink" target="_blank"><img src="http://ec1.images-amazon.com/images/I/2105QQFEAXL.jpg" alt="詳説 正規表現 第2版" style="border: none;" /></a></div><div class="amazlet-info" style="float:left;margin-left:15px;line-height:120%"><div class="amazlet-name" style="margin-bottom:10px;line-height:120%"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4873111307/unoh-22/ref=nosim/" name="amazletlink" target="_blank">詳説 正規表現 第2版</a><div class="amazlet-powered-date" style="font-size:7pt;margin-top:5px;font-family:verdana;line-height:120%">posted with <a href="http://www.amazlet.com/browse/ASIN/4873111307/unoh-22" title="詳説 正規表現 第2版" target="_blank">amazlet</a> on 07.09.13</div></div><div class="amazlet-detail">Jeffrey E.F. Friedl 田和 勝 <br />オライリー・ジャパン (2003/05/26)<br />売り上げランキング: 25292<br /></div><div class="amazlet-review" style="margin-top:10px; margin-bottom:10px"><div class="amazlet-review-average" style="margin-bottom:5px">おすすめ度の平均: <img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-5-0.gif" alt="5.0" /></div><img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-4-0.gif" alt="4" /> 内容は大満足だけど高いです<br /><img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-5-0.gif" alt="5" /> 噛めば噛むほど<br /><img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-5-0.gif" alt="5" /> 正規表現の仕組みが分かります<br /></div><div class="amazlet-link" style="margin-top: 5px"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4873111307/unoh-22/ref=nosim/" name="amazletlink" target="_blank">Amazon.co.jp で詳細を見る</a></div></div><div class="amazlet-footer" style="clear: left"></div></div><br />
+
 {% endraw %}

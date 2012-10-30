@@ -3,5 +3,106 @@ layout: post
 title: "mod_proxy_balancer 小技集"
 ---
 {% raw %}
-こんにちは sato です。<br />　ベンチャーでは高価なハードウェアバランサなどを購入することはできないですが、<br />　apache2.2 から mod_proxy_balancerという apacheモジュールの ソフトウェアバランサが<br />　追加されたので、フォト蔵でも使用しています。　<br />　<br />　今のところ proxy サーバがボトルネックになることはないです。<br /><br />　想定構成は以下とし、apacheは 2.x を使用しました。<br />　　proxy1<br />　　　+------web1<br />　　　+------web2 ...<br />　　　+------webN<br />　<br />・基本設定<br /><br />    httpd.conf<br /><br />　　LoadModule proxy_module modules/mod_proxy.so<br />　　LoadModule proxy_balancer_module modules/mod_proxy_balancer.so    <br />　　ProxyPass / balancer://photoweb/ timeout=2<br />　　&lt;Proxy balancer://photoweb&gt;<br />　　　BalancerMember http://web1.photozou.jp loadfactor=10 keepalive=On<br />　　　BalancerMember http://web2.photozou.jp loadfactor=10 keepalive=On ..<br />　　　BalancerMember http://webN.photozou.jp loadfactor=10 keepalive=On<br />　　&lt;/Proxy&gt;<br /><br />　/ にアクセスした際に、BalancerMember に proxyされ、応答のないサーバには自動的にバランスしなくなります。<br />　BalancerMember には IPアドレスや URLがつかえます。一般的には IPアドレス を指定したほうが<br />　高速ですが、フォト蔵ではIPアドレスは使用せず、すべて名前で指定しています。<br />　<br /><br />・etag に関して<br />　etagの生成アルゴリズムはデフォルトで<br /><br />　FileETag INode MTime Size　<br /><br />　となっています。<br />　つまり web1 に画像を取りに行って ETag 値をもらっても web2にアクセスすると<br />　i-node値が異なるため、違うETag値が返ってしまうので、 304 になりません。<br />　<br />　そこで、web1, web2の httpd.conf に <br /><br />　FileETag MTime Size <br /><br />  と記述すると<br />　ファイルの最終修正時刻とファイルサイズを見るようなるので、どちにアクセスしても304が返るようになります。<br /><br />・アクセスログに関して<br />　web1,web2 は proxy1 からアクセスされるので ローカルネットの IPAdress が<br />　アクセスログに残ってしまいます。そこで web1,web2 に mod_rpaf を導入しましょう<br /><br />　http://stderr.net/apache/rpaf/<br /><br />　このモジュールをロードするとX-Forwarded-For を Host に上書きしてくれます。<br />　今回は mod_rpaf-0.5.tar.gz を使用しました。<br />　<br />　Makefile の APXS= の部分を適切な場所に書き換えて<br /><br />　tar zxfv mod_rpaf-0.5.tar.gz<br />　make rpaf-2.0<br />　sudo make install-2.0<br /><br />　httpd.confに<br /><br />　LoadModule rpaf_module        modules/mod_rpaf-2.0.so<br />　RPAFenable On<br />　RPAFsethostname Off<br />　RPAFproxy_ips 127.0.0.1 10.0.0.10<br /><br />　RPAFproxy_ips に書き換える HOSTのIPアドレスを連続して書けるのですが、10.0.0. や 10.0.0.0/16<br />　などと書くことはできません。<br /><br />　これは mod_rpaf-2.0.c の 123行目付近が strcmp(remote_ip, list[i]) == 0<br />　となっているのが原因なので。これを strstr や strncmp に変更すれば<br />　解決しそうです。<br /><br />・SSLに関して<br />　最初は poundを使用するつもりでしたが、不安定になることがあったので<br />　proxy1ではmod_sslでSSLデコードしています。よって、ローカルネット内ではhttp でパケットが流れています。<br />　しかし web1 が http、httpsでどちらでリクエストが来たのかを知りたい場合があります。<br />　例えばログイン部分でHTTPS と HTTP のリンクを切り替えたりする場合です。<br /><br />　そのような場合には<br /><br />　httpd.confに <br /><br />　RequestHeader set X-SSL-REQUEST %{HTTPS}s<br /><br />　とつけてあげると、 X-SSL-REQUEST というヘッダが入ります。 %{HTTPS}s の部分は<br />　apacheがSSLだと on と加えてくれますので、web側ではこのヘッダを見るのが<br />　良いかと思います。<br />　X-SSL-REQUEST は自由に変更できるので、推測されにくい文字列の方がよいかもしれないですね<br /><br />・Proxyする必要のあるものと無いもの<br />　静的な画像データなどは web にわざわざ取りに行かなくて proxyサーバに乗せておけば<br />　良いと思います。mod_rewrite で<br /><br />　RewriteRule ^(css|img|js)/ - [L]　<br /><br />　などとして、 /img などのファイルは そのまま document_root に飛ばすのが良いかと思います。<br /><br />　他にも役に立つノウハウ等ありましたら、ぜひ教えてください。
+こんにちは sato です。<br />
+　ベンチャーでは高価なハードウェアバランサなどを購入することはできないですが、<br />
+　apache2.2 から mod_proxy_balancerという apacheモジュールの ソフトウェアバランサが<br />
+　追加されたので、フォト蔵でも使用しています。　<br />
+　<br />
+　今のところ proxy サーバがボトルネックになることはないです。<br />
+<br />
+　想定構成は以下とし、apacheは 2.x を使用しました。<br />
+　　proxy1<br />
+　　　+------web1<br />
+　　　+------web2 ...<br />
+　　　+------webN<br />
+　<br />
+・基本設定<br />
+<br />
+    httpd.conf<br />
+<br />
+　　LoadModule proxy_module modules/mod_proxy.so<br />
+　　LoadModule proxy_balancer_module modules/mod_proxy_balancer.so    <br />
+　　ProxyPass / balancer://photoweb/ timeout=2<br />
+　　&lt;Proxy balancer://photoweb&gt;<br />
+　　　BalancerMember http://web1.photozou.jp loadfactor=10 keepalive=On<br />
+　　　BalancerMember http://web2.photozou.jp loadfactor=10 keepalive=On ..<br />
+　　　BalancerMember http://webN.photozou.jp loadfactor=10 keepalive=On<br />
+　　&lt;/Proxy&gt;<br />
+<br />
+　/ にアクセスした際に、BalancerMember に proxyされ、応答のないサーバには自動的にバランスしなくなります。<br />
+　BalancerMember には IPアドレスや URLがつかえます。一般的には IPアドレス を指定したほうが<br />
+　高速ですが、フォト蔵ではIPアドレスは使用せず、すべて名前で指定しています。<br />
+　<br />
+<br />
+・etag に関して<br />
+　etagの生成アルゴリズムはデフォルトで<br />
+<br />
+　FileETag INode MTime Size　<br />
+<br />
+　となっています。<br />
+　つまり web1 に画像を取りに行って ETag 値をもらっても web2にアクセスすると<br />
+　i-node値が異なるため、違うETag値が返ってしまうので、 304 になりません。<br />
+　<br />
+　そこで、web1, web2の httpd.conf に <br />
+<br />
+　FileETag MTime Size <br />
+<br />
+  と記述すると<br />
+　ファイルの最終修正時刻とファイルサイズを見るようなるので、どちにアクセスしても304が返るようになります。<br />
+<br />
+・アクセスログに関して<br />
+　web1,web2 は proxy1 からアクセスされるので ローカルネットの IPAdress が<br />
+　アクセスログに残ってしまいます。そこで web1,web2 に mod_rpaf を導入しましょう<br />
+<br />
+　http://stderr.net/apache/rpaf/<br />
+<br />
+　このモジュールをロードするとX-Forwarded-For を Host に上書きしてくれます。<br />
+　今回は mod_rpaf-0.5.tar.gz を使用しました。<br />
+　<br />
+　Makefile の APXS= の部分を適切な場所に書き換えて<br />
+<br />
+　tar zxfv mod_rpaf-0.5.tar.gz<br />
+　make rpaf-2.0<br />
+　sudo make install-2.0<br />
+<br />
+　httpd.confに<br />
+<br />
+　LoadModule rpaf_module        modules/mod_rpaf-2.0.so<br />
+　RPAFenable On<br />
+　RPAFsethostname Off<br />
+　RPAFproxy_ips 127.0.0.1 10.0.0.10<br />
+<br />
+　RPAFproxy_ips に書き換える HOSTのIPアドレスを連続して書けるのですが、10.0.0. や 10.0.0.0/16<br />
+　などと書くことはできません。<br />
+<br />
+　これは mod_rpaf-2.0.c の 123行目付近が strcmp(remote_ip, list[i]) == 0<br />
+　となっているのが原因なので。これを strstr や strncmp に変更すれば<br />
+　解決しそうです。<br />
+<br />
+・SSLに関して<br />
+　最初は poundを使用するつもりでしたが、不安定になることがあったので<br />
+　proxy1ではmod_sslでSSLデコードしています。よって、ローカルネット内ではhttp でパケットが流れています。<br />
+　しかし web1 が http、httpsでどちらでリクエストが来たのかを知りたい場合があります。<br />
+　例えばログイン部分でHTTPS と HTTP のリンクを切り替えたりする場合です。<br />
+<br />
+　そのような場合には<br />
+<br />
+　httpd.confに <br />
+<br />
+　RequestHeader set X-SSL-REQUEST %{HTTPS}s<br />
+<br />
+　とつけてあげると、 X-SSL-REQUEST というヘッダが入ります。 %{HTTPS}s の部分は<br />
+　apacheがSSLだと on と加えてくれますので、web側ではこのヘッダを見るのが<br />
+　良いかと思います。<br />
+　X-SSL-REQUEST は自由に変更できるので、推測されにくい文字列の方がよいかもしれないですね<br />
+<br />
+・Proxyする必要のあるものと無いもの<br />
+　静的な画像データなどは web にわざわざ取りに行かなくて proxyサーバに乗せておけば<br />
+　良いと思います。mod_rewrite で<br />
+<br />
+　RewriteRule ^(css|img|js)/ - [L]　<br />
+<br />
+　などとして、 /img などのファイルは そのまま document_root に飛ばすのが良いかと思います。<br />
+<br />
+　他にも役に立つノウハウ等ありましたら、ぜひ教えてください。
 {% endraw %}

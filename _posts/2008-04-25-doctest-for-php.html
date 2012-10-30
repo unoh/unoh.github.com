@@ -3,5 +3,89 @@ layout: post
 title: "PHPでDocTest"
 ---
 {% raw %}
-<p>yamaokaです。</p><br /><br /><p><br />何かソースコードを書いた場合、皆さんはどのようにテストをしていますか？<br />　PHPの場合、<a href="http://www.phpunit.de/">PHPUnit</a>や<a href="http://simpletest.org/">SimpleTest</a>を使ってユニットテストをすることが多いと思います。でも、ユニットテストのために新しいファイルを作ってメソッドを実装したりするの、面倒くさくないですか？<br /></p><br /><br /><p><br />Pythonには標準でDocTestという仕組みが付いています。詳細は<a href="http://docs.python.org/lib/module-doctest.html">Pythonのドキュメント</a>（<a href="http://www.python.jp/doc/2.4/lib/module-doctest.html">日本語</a>）を参照してもらうことにして、簡単に言うと、実際のソースコードの中にコメントとしてテストケースを書いてしまおうというアイデアです。<br /></p><br /><br /><p><br />「実際のソースコード＝テストケース」になるのですから、メソッドを修整したからテストケースも修整して…という手間が少なくて済みますよね。そうしたDocTestの仕組みを、PHPに移植しようとする試みを紹介します。<br /></p><br /><br /><h3>rhacoのDocTest</h3><br /><br /><p><br /><a href="http://rhaco.org/">rhaco</a>は「PHPのライブラリパッケージ／ セットアップアプリケーション」です（公式サイトより）。rhacoのソースコード自体にDocTestが記述されているので、サンプルとして見るにはちょうどいいでしょう。webアプリケーションフレームワークとして利用する以外に単にライブラリとして利用することもできるので、rhacoを利用していないソースコードのDocTestをrhacoを使って行うことも可能です。<br /></p><br /><br /><p><br />さっそくDocTestを試してみましょう。次のようなFooクラスを用意します。<br /><pre class="code"><code>&lt;?php<br />class Foo<br />{<br />    function bar()<br />    {<br />        <span style="color:#F00;">/*** eq('bar', Foo::bar()); */</span><br />        return 'bar';<br />    }<br />    function baz()<br />    {<br />        <span style="color:#F00;">/*** #pass */</span><br />    }<br />}<br /></code></pre><br />「<code><span style="color:#F00;">/*** … */</span></code>」で囲まれた箇所がDocTestのテストケースとして処理されることになります。今はテストしないとか、テストコードをまだ書いていない場合は「#pass」と書いておけばスキップされます。<br /></p><br /><br /><p><br />次に、テストを実行するためのtest.phpを準備します。<br /><pre class="code"><code>&lt;?php<br />require_once 'path/to/rhaco/Rhaco.php';<br />Rhaco::import('util.DocTest');<br />DocTest::execute('Foo.php');<br /></code></pre><br /></p><br /><br /><p><br />そして、test.phpを実行してみます。<br /><pre class="code"><code>$ php -q test.php<br />success: 1 / fail: 0 / pass: 1 / none: 0 / all: 2<br /><br />(Foo::baz:line. 9)PASS Foo.php</code></pre><br />テストが実行されましたね！　試しにFoo::barのテストコードを「<code>/*** eq('barrrr', Foo::bar()); */</code>」に書き換えて実行しなおすと、次のようにきちんとエラーになります。<br /><pre class="code"><code>$ php -q test.php<br />success: 0 / fail: 1 / pass: 1 / none: 0 / all: 2<br /><br />(Foo::bar:line. 4)FAIL expectation [string(6) "barrrr"<br />] : Result [string(3) "bar"<br />]<br />(Foo::baz:line. 9)PASS Foo.php</code></pre><br /></p><br /><br /><p><br />値の一致をテストする「eq」コマンド以外にもテスト用のコマンドが用意されているので、詳しくはrhacoのソースかドキュメントを参照してください。<br /></p><br /><br /><h3>その他のDocTest</h3><br /><br /><p><br />その他のDocTestの試みとしては、現在次のバージョンが開発されているwebアプリケーションフレームワーク、<a href="http://kunit.jp/maple/">Maple</a>の<a href="http://d.hatena.ne.jp/kunit/20080205#1202142580">DocTest導入の試み</a>があげられます。また、同じくwebアプリケーションフレームワークの<a href="http://www.symfony-project.org/">symfony</a>でも、<a href="http://blog.symfony.jp/2008/03/05/sfdoctestplugin/">sfDocTestPluginが開発されています</a>。<br /></p><br /><br /><p><br />PHPのライブラリ集、PEARでは、まだアルファ版ですが<a href="http://pear.php.net/package/Testing_DocTest/">Testing_DocTest</a>がリリースされています。<br /></p><br /><br /><h3>最後に</h3><br /><br /><p><br />rhacoのDocTestを中心に紹介しましたが、いかがでしょうか。テストコードを記述する負担をできるだけ軽くする試みとして、DocTestは面白いと思います。反面、ソースコード中にテストコードが混在するので、ソースコードが見づらくなるといった欠点もあります。そうした場合、従来のユニットテストと併用するのも手ですね（rhacoの場合、DocTestからユニットテストを実行できます）。いろいろなテストコードの書き方がありますが、選択肢の一つとして考えてもよいのではないでしょうか。<br /></p><br />
+<p>yamaokaです。</p><br />
+<br />
+<p><br />
+何かソースコードを書いた場合、皆さんはどのようにテストをしていますか？<br />
+　PHPの場合、<a href="http://www.phpunit.de/">PHPUnit</a>や<a href="http://simpletest.org/">SimpleTest</a>を使ってユニットテストをすることが多いと思います。でも、ユニットテストのために新しいファイルを作ってメソッドを実装したりするの、面倒くさくないですか？<br />
+</p><br />
+<br />
+<p><br />
+Pythonには標準でDocTestという仕組みが付いています。詳細は<a href="http://docs.python.org/lib/module-doctest.html">Pythonのドキュメント</a>（<a href="http://www.python.jp/doc/2.4/lib/module-doctest.html">日本語</a>）を参照してもらうことにして、簡単に言うと、実際のソースコードの中にコメントとしてテストケースを書いてしまおうというアイデアです。<br />
+</p><br />
+<br />
+<p><br />
+「実際のソースコード＝テストケース」になるのですから、メソッドを修整したからテストケースも修整して…という手間が少なくて済みますよね。そうしたDocTestの仕組みを、PHPに移植しようとする試みを紹介します。<br />
+</p><br />
+<br />
+<h3>rhacoのDocTest</h3><br />
+<br />
+<p><br />
+<a href="http://rhaco.org/">rhaco</a>は「PHPのライブラリパッケージ／ セットアップアプリケーション」です（公式サイトより）。rhacoのソースコード自体にDocTestが記述されているので、サンプルとして見るにはちょうどいいでしょう。webアプリケーションフレームワークとして利用する以外に単にライブラリとして利用することもできるので、rhacoを利用していないソースコードのDocTestをrhacoを使って行うことも可能です。<br />
+</p><br />
+<br />
+<p><br />
+さっそくDocTestを試してみましょう。次のようなFooクラスを用意します。<br />
+<pre class="code"><code>&lt;?php<br />
+class Foo<br />
+{<br />
+    function bar()<br />
+    {<br />
+        <span style="color:#F00;">/*** eq('bar', Foo::bar()); */</span><br />
+        return 'bar';<br />
+    }<br />
+    function baz()<br />
+    {<br />
+        <span style="color:#F00;">/*** #pass */</span><br />
+    }<br />
+}<br />
+</code></pre><br />
+「<code><span style="color:#F00;">/*** … */</span></code>」で囲まれた箇所がDocTestのテストケースとして処理されることになります。今はテストしないとか、テストコードをまだ書いていない場合は「#pass」と書いておけばスキップされます。<br />
+</p><br />
+<br />
+<p><br />
+次に、テストを実行するためのtest.phpを準備します。<br />
+<pre class="code"><code>&lt;?php<br />
+require_once 'path/to/rhaco/Rhaco.php';<br />
+Rhaco::import('util.DocTest');<br />
+DocTest::execute('Foo.php');<br />
+</code></pre><br />
+</p><br />
+<br />
+<p><br />
+そして、test.phpを実行してみます。<br />
+<pre class="code"><code>$ php -q test.php<br />
+success: 1 / fail: 0 / pass: 1 / none: 0 / all: 2<br />
+<br />
+(Foo::baz:line. 9)PASS Foo.php</code></pre><br />
+テストが実行されましたね！　試しにFoo::barのテストコードを「<code>/*** eq('barrrr', Foo::bar()); */</code>」に書き換えて実行しなおすと、次のようにきちんとエラーになります。<br />
+<pre class="code"><code>$ php -q test.php<br />
+success: 0 / fail: 1 / pass: 1 / none: 0 / all: 2<br />
+<br />
+(Foo::bar:line. 4)FAIL expectation [string(6) "barrrr"<br />
+] : Result [string(3) "bar"<br />
+]<br />
+(Foo::baz:line. 9)PASS Foo.php</code></pre><br />
+</p><br />
+<br />
+<p><br />
+値の一致をテストする「eq」コマンド以外にもテスト用のコマンドが用意されているので、詳しくはrhacoのソースかドキュメントを参照してください。<br />
+</p><br />
+<br />
+<h3>その他のDocTest</h3><br />
+<br />
+<p><br />
+その他のDocTestの試みとしては、現在次のバージョンが開発されているwebアプリケーションフレームワーク、<a href="http://kunit.jp/maple/">Maple</a>の<a href="http://d.hatena.ne.jp/kunit/20080205#1202142580">DocTest導入の試み</a>があげられます。また、同じくwebアプリケーションフレームワークの<a href="http://www.symfony-project.org/">symfony</a>でも、<a href="http://blog.symfony.jp/2008/03/05/sfdoctestplugin/">sfDocTestPluginが開発されています</a>。<br />
+</p><br />
+<br />
+<p><br />
+PHPのライブラリ集、PEARでは、まだアルファ版ですが<a href="http://pear.php.net/package/Testing_DocTest/">Testing_DocTest</a>がリリースされています。<br />
+</p><br />
+<br />
+<h3>最後に</h3><br />
+<br />
+<p><br />
+rhacoのDocTestを中心に紹介しましたが、いかがでしょうか。テストコードを記述する負担をできるだけ軽くする試みとして、DocTestは面白いと思います。反面、ソースコード中にテストコードが混在するので、ソースコードが見づらくなるといった欠点もあります。そうした場合、従来のユニットテストと併用するのも手ですね（rhacoの場合、DocTestからユニットテストを実行できます）。いろいろなテストコードの書き方がありますが、選択肢の一つとして考えてもよいのではないでしょうか。<br />
+</p><br />
+
 {% endraw %}

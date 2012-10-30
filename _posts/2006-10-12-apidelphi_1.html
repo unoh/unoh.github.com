@@ -3,5 +3,47 @@ layout: post
 title: "自作ソフトに写真投稿機能をつけよう～フォト蔵API(Delphi版)を公開"
 ---
 {% raw %}
-さかとくです。開発ツールのDelphiから使える、フォト蔵APIライブラリを公開します。<br />フォト蔵APIライブラリを使うと、画像ファイルを<a href="http://photozou.jp/">フォト蔵</a>に投稿できます。<br /><br />DelphiはWindowsで動く自作ツールやフリーソフトの作成で人気の開発ツールです。<br />もし、Delphiで画像ビューワなど、画像を扱うツールを作っているなら、画像を投稿する機能を手軽に追加できるでしょう。フォト蔵では、1万枚の画像、動画ファイルをアップロードすることができるので、自作ソフトをフリーソフトとして公開しているなら、きっとユーザーの人にも喜ばれる機能となるはずです。<br /><br /><a href="http://photozou.jp/photo/show/6/1538402"><img src="http://photozou.jp/pub/6/6/photo/1538402.gif?m=1160640863" alt="demo" width="240" height="148" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/6/1538402">demo</a> posted from <a href="http://photozou.jp/">フォト蔵</a><br /><br />以下に機能を追加する方法を紹介します。<br /><br />まずは、以下よりライブラリをダウンロードしてください。<br /><a href="http://labs.unoh.net/html/delphi_photozou_api.zip">→フォト蔵APIライブラリ(for Delphi)をダウンロード</a><br /><br />ここでは、Delphi7で、写真投稿機能を行う手順を紹介します。<br />(Delphi6を利用されている方で、Indy9がインストールされてなければ、Indy9をインストールしてください。)<br /><br />ダウンロードしたアーカイブを解凍します。すると、photozou_api というフォルダができます。<br />次に、Delphiを起動します。<br />プロジェクトに名前を付けて保存します。そして、先ほど解凍した＜photozou_api＞のフォルダに入っているPASファイルをすべてプロジェクトに追加します。<br /><br />そして、フォームの設計画面に戻って、Delphiの[ファイル-ユニットを使う]から「frmPhotozouUploadU」を追加します。これで準備は完了です。<br /><br />あとは、ボタンを作って、ボタンのイベントに以下のように記述します。<br /><br /><code>procedure TForm1.Button1Click(Sender: TObject);<br />begin<br />&nbsp;&nbsp;frmPhotozouUpload.Show;<br />end;</code><br /><br />これで機能が追加されました。ボタンをクリックすると、写真をアップロードする画面が表示されます。ログイン→画像を選択→アップロードまでの機能がすべて追加されます。<br /><br />もし、プログラム側でアップロードしたいファイルやタイトルを指定したいときは、以下のように、テキストボックスにデフォルト値を指定しておきます。<br /><br /><code>procedure TForm1.Button1Click(Sender: TObject);<br />begin<br />&nbsp;&nbsp;frmPhotozouUpload.edtTitle.Text := 'SAMPLE PHOTO';<br />&nbsp;&nbsp;frmPhotozouUpload.edtFile.Text  := 'c:\sample.jpg';<br />&nbsp;&nbsp;frmPhotozouUpload.Show;<br />end;</code><br /><br />このように手軽にアップロード機能を実装できます。<br />お絵かきソフトや画像加工ソフトなどなど、ちょっとしたソフトに<br />ぜひ、フォト蔵へのアップロード機能をつけてみてください。
+さかとくです。開発ツールのDelphiから使える、フォト蔵APIライブラリを公開します。<br />
+フォト蔵APIライブラリを使うと、画像ファイルを<a href="http://photozou.jp/">フォト蔵</a>に投稿できます。<br />
+<br />
+DelphiはWindowsで動く自作ツールやフリーソフトの作成で人気の開発ツールです。<br />
+もし、Delphiで画像ビューワなど、画像を扱うツールを作っているなら、画像を投稿する機能を手軽に追加できるでしょう。フォト蔵では、1万枚の画像、動画ファイルをアップロードすることができるので、自作ソフトをフリーソフトとして公開しているなら、きっとユーザーの人にも喜ばれる機能となるはずです。<br />
+<br />
+<a href="http://photozou.jp/photo/show/6/1538402"><img src="http://photozou.jp/pub/6/6/photo/1538402.gif?m=1160640863" alt="demo" width="240" height="148" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/6/1538402">demo</a> posted from <a href="http://photozou.jp/">フォト蔵</a><br />
+<br />
+以下に機能を追加する方法を紹介します。<br />
+<br />
+まずは、以下よりライブラリをダウンロードしてください。<br />
+<a href="http://labs.unoh.net/html/delphi_photozou_api.zip">→フォト蔵APIライブラリ(for Delphi)をダウンロード</a><br />
+<br />
+ここでは、Delphi7で、写真投稿機能を行う手順を紹介します。<br />
+(Delphi6を利用されている方で、Indy9がインストールされてなければ、Indy9をインストールしてください。)<br />
+<br />
+ダウンロードしたアーカイブを解凍します。すると、photozou_api というフォルダができます。<br />
+次に、Delphiを起動します。<br />
+プロジェクトに名前を付けて保存します。そして、先ほど解凍した＜photozou_api＞のフォルダに入っているPASファイルをすべてプロジェクトに追加します。<br />
+<br />
+そして、フォームの設計画面に戻って、Delphiの[ファイル-ユニットを使う]から「frmPhotozouUploadU」を追加します。これで準備は完了です。<br />
+<br />
+あとは、ボタンを作って、ボタンのイベントに以下のように記述します。<br />
+<br />
+<code>procedure TForm1.Button1Click(Sender: TObject);<br />
+begin<br />
+&nbsp;&nbsp;frmPhotozouUpload.Show;<br />
+end;</code><br />
+<br />
+これで機能が追加されました。ボタンをクリックすると、写真をアップロードする画面が表示されます。ログイン→画像を選択→アップロードまでの機能がすべて追加されます。<br />
+<br />
+もし、プログラム側でアップロードしたいファイルやタイトルを指定したいときは、以下のように、テキストボックスにデフォルト値を指定しておきます。<br />
+<br />
+<code>procedure TForm1.Button1Click(Sender: TObject);<br />
+begin<br />
+&nbsp;&nbsp;frmPhotozouUpload.edtTitle.Text := 'SAMPLE PHOTO';<br />
+&nbsp;&nbsp;frmPhotozouUpload.edtFile.Text  := 'c:\sample.jpg';<br />
+&nbsp;&nbsp;frmPhotozouUpload.Show;<br />
+end;</code><br />
+<br />
+このように手軽にアップロード機能を実装できます。<br />
+お絵かきソフトや画像加工ソフトなどなど、ちょっとしたソフトに<br />
+ぜひ、フォト蔵へのアップロード機能をつけてみてください。
 {% endraw %}

@@ -3,5 +3,144 @@ layout: post
 title: "サーバのネットワーク速度の調査/測定方法"
 ---
 {% raw %}
-こんにちは。kyagi です。先日データセンタ内のサーバ群のうち、なぜか特定の１台だけネットワークの速度が極端に遅いという問題がありました。今回はサーバのネットワーク速度の調査/測定方法と考えられる原因についてお話しします。同様のトラブルが発生している方のお役に立てれば幸いです。問題解決までの手順としては以下になります。<br /><br />1. 現在の状態を調べる<br />2. ハード/ソフト含めて考えられる原因をいくつか挙げる<br />3. 問題が改善されるまでそれぞれの原因への対処策をひとつひとつ実施/検証していく<br /><br />まず現在の NIC の HW 情報を lspci で調査します。ここでは Broadcom の NetXtreme BCM5722 という NIC を使用していることがわかります。<br /><br /><pre class="code"><br /># lspci -vvv | grep Ether<br />01:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5722 Gigabit Ethernet PCI Express<br />02:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5722 Gigabit Ethernet PCI Express<br /></pre><br /><br />次に実際に現在の回線速度を netperf で測定します。ここでは 83M の速度が出ていることがわかります。Broadcom NetXtreme BCM5722 はギガビット対応しているので通常であれば 800M～1000M の速度が出るはずなので、異常に低い数値であることがわかります。(※netperf を使うためにはサーバ netserver を構築する必要があります。詳細は 別途 Web 上の情報をご覧ください。<a href="http://www.netperf.org/netperf/">http://www.netperf.org/netperf/</a>)<br /><br /><pre class="code"><br /># netperf -H s1<br />TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to s1 (10.0.0.81) port 0 AF_INET<br />Recv   Send    Send<br />Socket Socket  Message  Elapsed<br />Size   Size    Size     Time     Throughput<br />bytes  bytes   bytes    secs.    10^6bits/sec<br /><br />87380  16384  16384    10.37      83.10<br /></pre><br /><br />次に NIC のドライバ情報とリンクアップ/ダウン情報を dmesg や /var/log/message で調べます。ここでは tg3 ドライバを使用し、初回リンクアップ時(サーバ起動時)に 10M でリンクアップしていることがわかります。その後、1000M に移行し一度ダウンして 100M になっているようです。<br /><br /><pre class="code"><br /># dmesg | grep eth0<br />eth0: Tigon3 [partno(BCM95722) rev a200 PHY(5722/5756)] (PCI Express) 10/100/1000Base-T Ethernet 00:24:e8:7c:ab:7a<br />eth0: RXcsums[1] LinkChgREG[0] MIirq[0] ASF[1] WireSpeed[1] TSOcap[1]<br />eth0: dma_rwctrl[76180000] dma_mask[64-bit]<br />tg3: eth0: Link is up at 10 Mbps, half duplex.<br />tg3: eth0: Flow control is off for TX and off for RX.<br />tg3: eth0: Link is up at 1000 Mbps, full duplex.<br />tg3: eth0: Flow control is off for TX and off for RX.<br />tg3: eth0: Link is up at 1000 Mbps, full duplex.<br />tg3: eth0: Flow control is off for TX and off for RX.<br />tg3: eth0: Link is down.<br />tg3: eth0: Link is up at 100 Mbps, full duplex.<br />tg3: eth0: Flow control is off for TX and off for RX.<br /></pre><br /><br />最後に ethtool で NIC の現在の状態を調べます。ここでは NIC 自体がサポートできる速度(Supported link modes)とスイッチから提案された速度(Advertised link modes) リンクは確立しているが(Link detected: yes)、速度は 100Mで(Speed: 100Mb/s) になっていることがわかります。<br /><br /><pre class="code"><br /># ethtool eth0<br />Settings for eth0:<br />           Supported ports: [ TP ]<br />           Supported link modes: 10baseT/Half 10baseT/Full<br />                                              100baseT/Half 100baseT/Full<br />                                              1000baseT/Half 1000baseT/Full<br />           Supports auto-negotiation: Yes<br />           Advertised link modes: 10baseT/Half 10baseT/Full<br />                                               100baseT/Half 100baseT/Full<br />                                               1000baseT/Half 1000baseT/Full<br />           Advertised auto-negotiation: Yes<br />           Speed: 100Mb/s<br />           Duplex: Full<br />           Port: Twisted Pair<br />           PHYAD: 1<br />           Transceiver: internal<br />           Auto-negotiation: on<br />           Supports Wake-on: g<br />           Wake-on: d<br />           Current message level: 0x000000ff (255)<br />           Link detected: yes <br /></pre><br /><br />ここまで現在の状態を調査したうえで、考えられる原因は下記になります。<br />a. スイッチとのオートネゴに失敗した<br />b. スイッチのポートがおかしい(本来 1000M のはずがこのポートだけ 100M)<br />c. NIC がおかしい<br />d. LAN ケーブルがおかしい <br /><br />NIC 自体は 1000M に対応しており、実際に 1000M でリンクアップした実績もあるのでここではひとまず(a)のオートネゴを原因として疑い、ひとまずオートネゴをオフにして再設定をしてみます（※注 ethtool による再設定はネットワーク越しではなく、必ず実機で行ってください。(b)スイッチのポート不良の場合、コマンドを打った後にプロンプトが戻ってこず、ネットワークが遮断される可能性があります！）<br /><br /><pre class="code"><br /># ethtool -s eth0 speed 1000 duplex full autoneg off<br />Cannot set new settings: Invalid argument<br />  not setting speed<br />  not setting duplex<br />  not setting autoneg<br /></pre><br /><br />オートネゴをオフにするとコマンドに失敗しました。tg3 ドライバの仕様かスイッチとの相性が考えられます。Advetised auto-negotiation も Yes なので、オートネゴをオンにして実際にスイッチとオートネゴさせてみます。<br /><br /><pre class="code"><br /># ethtool -s eth0 speed 1000 duplex full autoneg on<br /></pre><br /><br />うまくいきました。その後速度を再計測すると 83M だった速度が 941M まで復旧できたことがわかります。また ethtool の表示やdmesg にも 1000M になっていることを確認しました。<br /><br /><pre class="code"><br /># /usr/local/bin/netperf -H s1<br />TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to s1 (10.0.0.81) port 0 AF_INET<br />Recv   Send    Send<br />Socket Socket  Message  Elapsed<br />Size   Size    Size     Time     Throughput<br />bytes  bytes   bytes    secs.    10^6bits/sec<br /><br />87380  16384  16384    10.04     941.33<br /></pre><br /><br /><pre class="code"><br /># ethtool eth0<br />Settings for eth0:<br />           Supported ports: [ TP ]<br />           Supported link modes:   10baseT/Half 10baseT/Full<br />                                                100baseT/Half 100baseT/Full<br />                                                1000baseT/Half 1000baseT/Full<br />           Supports auto-negotiation: Yes<br />           Advertised link modes:  10baseT/Half 10baseT/Full<br />                                                100baseT/Half 100baseT/Full<br />                                                1000baseT/Half 1000baseT/Full<br />           Advertised auto-negotiation: Yes<br />           Speed: 1000Mb/s<br />           Duplex: Full<br />           Port: Twisted Pair<br />           PHYAD: 1<br />           Transceiver: internal<br />           Auto-negotiation: on<br />           Supports Wake-on: g<br />           Wake-on: d<br />           Current message level: 0x000000ff (255)<br />           Link detected: yes<br /></pre><br /><br />この状態を設定ファイルに記述しておくことで起動時や service network (re)start 時に反映することが可能です。<br /><br /><pre class="code"><br /># cat /etc/sysconfig/network-scripts/ifcfg-eth0 <br />(...snip...)<br />ETHTOOL_OPTS="speed 1000 duplex full autoneg on"<br />(...snip...)<br /></pre><br /><br />また、 Nagios などを使用して監視体制を組んでいるのであれば ethtool コマンドを利用したシェルスクリプトをプラグインとして作成することで定期的な監視が可能です。
+こんにちは。kyagi です。先日データセンタ内のサーバ群のうち、なぜか特定の１台だけネットワークの速度が極端に遅いという問題がありました。今回はサーバのネットワーク速度の調査/測定方法と考えられる原因についてお話しします。同様のトラブルが発生している方のお役に立てれば幸いです。問題解決までの手順としては以下になります。<br />
+<br />
+1. 現在の状態を調べる<br />
+2. ハード/ソフト含めて考えられる原因をいくつか挙げる<br />
+3. 問題が改善されるまでそれぞれの原因への対処策をひとつひとつ実施/検証していく<br />
+<br />
+まず現在の NIC の HW 情報を lspci で調査します。ここでは Broadcom の NetXtreme BCM5722 という NIC を使用していることがわかります。<br />
+<br />
+<pre class="code"><br />
+# lspci -vvv | grep Ether<br />
+01:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5722 Gigabit Ethernet PCI Express<br />
+02:00.0 Ethernet controller: Broadcom Corporation NetXtreme BCM5722 Gigabit Ethernet PCI Express<br />
+</pre><br />
+<br />
+次に実際に現在の回線速度を netperf で測定します。ここでは 83M の速度が出ていることがわかります。Broadcom NetXtreme BCM5722 はギガビット対応しているので通常であれば 800M～1000M の速度が出るはずなので、異常に低い数値であることがわかります。(※netperf を使うためにはサーバ netserver を構築する必要があります。詳細は 別途 Web 上の情報をご覧ください。<a href="http://www.netperf.org/netperf/">http://www.netperf.org/netperf/</a>)<br />
+<br />
+<pre class="code"><br />
+# netperf -H s1<br />
+TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to s1 (10.0.0.81) port 0 AF_INET<br />
+Recv   Send    Send<br />
+Socket Socket  Message  Elapsed<br />
+Size   Size    Size     Time     Throughput<br />
+bytes  bytes   bytes    secs.    10^6bits/sec<br />
+<br />
+87380  16384  16384    10.37      83.10<br />
+</pre><br />
+<br />
+次に NIC のドライバ情報とリンクアップ/ダウン情報を dmesg や /var/log/message で調べます。ここでは tg3 ドライバを使用し、初回リンクアップ時(サーバ起動時)に 10M でリンクアップしていることがわかります。その後、1000M に移行し一度ダウンして 100M になっているようです。<br />
+<br />
+<pre class="code"><br />
+# dmesg | grep eth0<br />
+eth0: Tigon3 [partno(BCM95722) rev a200 PHY(5722/5756)] (PCI Express) 10/100/1000Base-T Ethernet 00:24:e8:7c:ab:7a<br />
+eth0: RXcsums[1] LinkChgREG[0] MIirq[0] ASF[1] WireSpeed[1] TSOcap[1]<br />
+eth0: dma_rwctrl[76180000] dma_mask[64-bit]<br />
+tg3: eth0: Link is up at 10 Mbps, half duplex.<br />
+tg3: eth0: Flow control is off for TX and off for RX.<br />
+tg3: eth0: Link is up at 1000 Mbps, full duplex.<br />
+tg3: eth0: Flow control is off for TX and off for RX.<br />
+tg3: eth0: Link is up at 1000 Mbps, full duplex.<br />
+tg3: eth0: Flow control is off for TX and off for RX.<br />
+tg3: eth0: Link is down.<br />
+tg3: eth0: Link is up at 100 Mbps, full duplex.<br />
+tg3: eth0: Flow control is off for TX and off for RX.<br />
+</pre><br />
+<br />
+最後に ethtool で NIC の現在の状態を調べます。ここでは NIC 自体がサポートできる速度(Supported link modes)とスイッチから提案された速度(Advertised link modes) リンクは確立しているが(Link detected: yes)、速度は 100Mで(Speed: 100Mb/s) になっていることがわかります。<br />
+<br />
+<pre class="code"><br />
+# ethtool eth0<br />
+Settings for eth0:<br />
+           Supported ports: [ TP ]<br />
+           Supported link modes: 10baseT/Half 10baseT/Full<br />
+                                              100baseT/Half 100baseT/Full<br />
+                                              1000baseT/Half 1000baseT/Full<br />
+           Supports auto-negotiation: Yes<br />
+           Advertised link modes: 10baseT/Half 10baseT/Full<br />
+                                               100baseT/Half 100baseT/Full<br />
+                                               1000baseT/Half 1000baseT/Full<br />
+           Advertised auto-negotiation: Yes<br />
+           Speed: 100Mb/s<br />
+           Duplex: Full<br />
+           Port: Twisted Pair<br />
+           PHYAD: 1<br />
+           Transceiver: internal<br />
+           Auto-negotiation: on<br />
+           Supports Wake-on: g<br />
+           Wake-on: d<br />
+           Current message level: 0x000000ff (255)<br />
+           Link detected: yes <br />
+</pre><br />
+<br />
+ここまで現在の状態を調査したうえで、考えられる原因は下記になります。<br />
+a. スイッチとのオートネゴに失敗した<br />
+b. スイッチのポートがおかしい(本来 1000M のはずがこのポートだけ 100M)<br />
+c. NIC がおかしい<br />
+d. LAN ケーブルがおかしい <br />
+<br />
+NIC 自体は 1000M に対応しており、実際に 1000M でリンクアップした実績もあるのでここではひとまず(a)のオートネゴを原因として疑い、ひとまずオートネゴをオフにして再設定をしてみます（※注 ethtool による再設定はネットワーク越しではなく、必ず実機で行ってください。(b)スイッチのポート不良の場合、コマンドを打った後にプロンプトが戻ってこず、ネットワークが遮断される可能性があります！）<br />
+<br />
+<pre class="code"><br />
+# ethtool -s eth0 speed 1000 duplex full autoneg off<br />
+Cannot set new settings: Invalid argument<br />
+  not setting speed<br />
+  not setting duplex<br />
+  not setting autoneg<br />
+</pre><br />
+<br />
+オートネゴをオフにするとコマンドに失敗しました。tg3 ドライバの仕様かスイッチとの相性が考えられます。Advetised auto-negotiation も Yes なので、オートネゴをオンにして実際にスイッチとオートネゴさせてみます。<br />
+<br />
+<pre class="code"><br />
+# ethtool -s eth0 speed 1000 duplex full autoneg on<br />
+</pre><br />
+<br />
+うまくいきました。その後速度を再計測すると 83M だった速度が 941M まで復旧できたことがわかります。また ethtool の表示やdmesg にも 1000M になっていることを確認しました。<br />
+<br />
+<pre class="code"><br />
+# /usr/local/bin/netperf -H s1<br />
+TCP STREAM TEST from 0.0.0.0 (0.0.0.0) port 0 AF_INET to s1 (10.0.0.81) port 0 AF_INET<br />
+Recv   Send    Send<br />
+Socket Socket  Message  Elapsed<br />
+Size   Size    Size     Time     Throughput<br />
+bytes  bytes   bytes    secs.    10^6bits/sec<br />
+<br />
+87380  16384  16384    10.04     941.33<br />
+</pre><br />
+<br />
+<pre class="code"><br />
+# ethtool eth0<br />
+Settings for eth0:<br />
+           Supported ports: [ TP ]<br />
+           Supported link modes:   10baseT/Half 10baseT/Full<br />
+                                                100baseT/Half 100baseT/Full<br />
+                                                1000baseT/Half 1000baseT/Full<br />
+           Supports auto-negotiation: Yes<br />
+           Advertised link modes:  10baseT/Half 10baseT/Full<br />
+                                                100baseT/Half 100baseT/Full<br />
+                                                1000baseT/Half 1000baseT/Full<br />
+           Advertised auto-negotiation: Yes<br />
+           Speed: 1000Mb/s<br />
+           Duplex: Full<br />
+           Port: Twisted Pair<br />
+           PHYAD: 1<br />
+           Transceiver: internal<br />
+           Auto-negotiation: on<br />
+           Supports Wake-on: g<br />
+           Wake-on: d<br />
+           Current message level: 0x000000ff (255)<br />
+           Link detected: yes<br />
+</pre><br />
+<br />
+この状態を設定ファイルに記述しておくことで起動時や service network (re)start 時に反映することが可能です。<br />
+<br />
+<pre class="code"><br />
+# cat /etc/sysconfig/network-scripts/ifcfg-eth0 <br />
+(...snip...)<br />
+ETHTOOL_OPTS="speed 1000 duplex full autoneg on"<br />
+(...snip...)<br />
+</pre><br />
+<br />
+また、 Nagios などを使用して監視体制を組んでいるのであれば ethtool コマンドを利用したシェルスクリプトをプラグインとして作成することで定期的な監視が可能です。
 {% endraw %}

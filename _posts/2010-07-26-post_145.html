@@ -3,5 +3,82 @@ layout: post
 title: "オブジェクトをマウス操作で移動させる"
 ---
 {% raw %}
-こんにちは、はじめまして！<br />goです。<br /><br />6月からActionScriptのプログラマとして、ウノウに参画することになりました。<br />エンジニアとして経験がまだまだ浅いので、リファレンスを片手に日々奮闘しております。<br /><br />Flashを扱うエンジニアとして、ここではインタラクションに関わる小ネタをActionScriptで披露していこうかと考えています。<br /><br />ということで、今回はマウスを使ったオブジェクトの移動のお話です。<br /><br />以下の方針に従って、作業を進めていきます。<br /><br />１、画面全体でMOUSE_DOWNとMOUSE_MOVEのイベント監視<br />２、MOUSE_DOWNのイベントが発生したときに、マウスの座標、移動対象のオブジェクトの座標を取得します。<br />３、MOUSE_MOVE時に、移動前のマウス位置と、移動後のマウス位置の差（つまり移動量）を取得します。<br />４、移動前の円の座標に移動量を加算して、移動後の円の位置を取得します。<br /><br />以下、ソースコードと実行結果です。<br /><br /><pre class="code"><br />package {<br />	import flash.display.Sprite;<br />	import flash.events.MouseEvent;<br />	<br />	public class ObjectMove extends Sprite {<br />		<br />		/*円を描画されるオブジェクト*/<br />		private var childSprite:Sprite;<br />		<br />		/*マウスカーソルの位置*/<br />		private var thisX:Number, thisY:Number;<br />		<br />		/*円オブジェクトの位置*/<br />		private var circleX:Number, circleY:Number;<br />		<br />		public function ObjectMove() {<br />			/*円を描画するchildSprite（Sprite)を表示リストに追加する*/<br />			childSprite = new Sprite();<br />			childSprite.x = 60;<br />			childSprite.y = 60;<br />			addChild(childSprite);<br />			<br />			/*childSpriteに円を描画する*/<br />			childSprite.graphics.beginFill(0x000000);<br />			childSprite.graphics.drawCircle(0, 0, 40);<br />			childSprite.graphics.endFill();<br />			<br />			/*マウスダウン時のイベントハンドラーを設定*/<br />			addEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler);<br />			/*マウスムーブ時のイベントハンドラーを設定*/<br />			addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler);<br />		}<br />		<br />		/*マウスダウン時にマウスの位置と、円の位置を取得する。*/<br />		private function mouseDownHandler(event:MouseEvent):void{<br />			thisX = this.mouseX;<br />			thisY = this.mouseY;<br />			circleX =　childSprite.x;<br />			circleY = childSprite.y;<br />		}<br />		<br />		/*マウスが動いた時に、円を移動させる。*/<br />		private function mouseMoveHandler(event:MouseEvent):void{<br />			if(!event.buttonDown) return;<br />			childSprite.x = this.mouseX - thisX + circleX;<br />			childSprite.y = this.mouseY - thisY + circleY;<br />		}<br />	}<br />}<br /></pre><br /><div style="text-align:center;width:465px;"><iframe title="flash on 2010-7-26 - wonderfl build flash online" scrolling="no" src="http://wonderfl.net/blogparts/4Duv" width="465" height="490" style="border:1px black solid;"></iframe><a href="http://wonderfl.net/c/4Duv" title="flash on 2010-7-26 - wonderfl build flash online">flash on 2010-7-26 - wonderfl build flash online</a></div><br /><br />MOUSE_MOVEイベント発生時にMOUSE_DOWNイベントが発生していない場合は、値を返すのがポイントです。<br />こうすることで、マウスカーソルが円の内側にある場合に限り円を移動することが出来ます。<br />簡単ですね！<br /><br />次回は、もっといろんなモーションを加えていきたいと思います。<br />ではでは。
+こんにちは、はじめまして！<br />
+goです。<br />
+<br />
+6月からActionScriptのプログラマとして、ウノウに参画することになりました。<br />
+エンジニアとして経験がまだまだ浅いので、リファレンスを片手に日々奮闘しております。<br />
+<br />
+Flashを扱うエンジニアとして、ここではインタラクションに関わる小ネタをActionScriptで披露していこうかと考えています。<br />
+<br />
+ということで、今回はマウスを使ったオブジェクトの移動のお話です。<br />
+<br />
+以下の方針に従って、作業を進めていきます。<br />
+<br />
+１、画面全体でMOUSE_DOWNとMOUSE_MOVEのイベント監視<br />
+２、MOUSE_DOWNのイベントが発生したときに、マウスの座標、移動対象のオブジェクトの座標を取得します。<br />
+３、MOUSE_MOVE時に、移動前のマウス位置と、移動後のマウス位置の差（つまり移動量）を取得します。<br />
+４、移動前の円の座標に移動量を加算して、移動後の円の位置を取得します。<br />
+<br />
+以下、ソースコードと実行結果です。<br />
+<br />
+<pre class="code"><br />
+package {<br />
+	import flash.display.Sprite;<br />
+	import flash.events.MouseEvent;<br />
+	<br />
+	public class ObjectMove extends Sprite {<br />
+		<br />
+		/*円を描画されるオブジェクト*/<br />
+		private var childSprite:Sprite;<br />
+		<br />
+		/*マウスカーソルの位置*/<br />
+		private var thisX:Number, thisY:Number;<br />
+		<br />
+		/*円オブジェクトの位置*/<br />
+		private var circleX:Number, circleY:Number;<br />
+		<br />
+		public function ObjectMove() {<br />
+			/*円を描画するchildSprite（Sprite)を表示リストに追加する*/<br />
+			childSprite = new Sprite();<br />
+			childSprite.x = 60;<br />
+			childSprite.y = 60;<br />
+			addChild(childSprite);<br />
+			<br />
+			/*childSpriteに円を描画する*/<br />
+			childSprite.graphics.beginFill(0x000000);<br />
+			childSprite.graphics.drawCircle(0, 0, 40);<br />
+			childSprite.graphics.endFill();<br />
+			<br />
+			/*マウスダウン時のイベントハンドラーを設定*/<br />
+			addEventListener(MouseEvent.MOUSE_DOWN, mouseDownHandler);<br />
+			/*マウスムーブ時のイベントハンドラーを設定*/<br />
+			addEventListener(MouseEvent.MOUSE_MOVE, mouseMoveHandler);<br />
+		}<br />
+		<br />
+		/*マウスダウン時にマウスの位置と、円の位置を取得する。*/<br />
+		private function mouseDownHandler(event:MouseEvent):void{<br />
+			thisX = this.mouseX;<br />
+			thisY = this.mouseY;<br />
+			circleX =　childSprite.x;<br />
+			circleY = childSprite.y;<br />
+		}<br />
+		<br />
+		/*マウスが動いた時に、円を移動させる。*/<br />
+		private function mouseMoveHandler(event:MouseEvent):void{<br />
+			if(!event.buttonDown) return;<br />
+			childSprite.x = this.mouseX - thisX + circleX;<br />
+			childSprite.y = this.mouseY - thisY + circleY;<br />
+		}<br />
+	}<br />
+}<br />
+</pre><br />
+<div style="text-align:center;width:465px;"><iframe title="flash on 2010-7-26 - wonderfl build flash online" scrolling="no" src="http://wonderfl.net/blogparts/4Duv" width="465" height="490" style="border:1px black solid;"></iframe><a href="http://wonderfl.net/c/4Duv" title="flash on 2010-7-26 - wonderfl build flash online">flash on 2010-7-26 - wonderfl build flash online</a></div><br />
+<br />
+MOUSE_MOVEイベント発生時にMOUSE_DOWNイベントが発生していない場合は、値を返すのがポイントです。<br />
+こうすることで、マウスカーソルが円の内側にある場合に限り円を移動することが出来ます。<br />
+簡単ですね！<br />
+<br />
+次回は、もっといろんなモーションを加えていきたいと思います。<br />
+ではでは。
 {% endraw %}

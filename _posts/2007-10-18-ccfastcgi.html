@@ -3,5 +3,80 @@ layout: post
 title: "C/C++でFastCGIを作る"
 ---
 {% raw %}
-<p>こんにちは satoです。</p><br /><br /><p>現在 Ruby on Rails で書かれた アプリケーションの 一部のURIを高速化するために、lighttpd + FastCGI で 書き直しています。FastCGI は あらかじめ プロセスを常駐させておき、リクエストが来た際に、常駐しているプロセスに Unix domain socket あるいは TCP/IP で通信を行い プロセス起動時のオーバーヘッドを無くすことにより、処理を高速化します。今回は lighttpd + FastCGI で Hello word を作る 解説します。</p><br /><br /><p>まず lighttpd と FastCGI を 用意します 環境はCentOS5です。</p><br /><br /><pre class="code"><br />lighttpd:<br />yum install lighttpd<br />FastCGI:<br />wget http://www.fastcgi.com/dist/fcgi.tar.gz<br />tar xzvf fcgi-2.4.0.tar.gz<br />cd fcgi-2.4.0<br />make<br />sudo make install<br /></pre><br /><br /><p>lighttpd の設定ファイル ligttpd.conf を編集します</p><br /><pre class="code"><br />vi /etc/lighttpd/lighttpd.conf <br />server.modules              = (<br />  "mod_access",<br />  "mod_fastcgi",<br />  ""mod_accesslog")<br />(中略)<br />fastcgi.server = (<br />    "/" => (<br />        ("socket" => "/dev/shm/test.fcgi.socket.1",<br />         "check-local" => "disable")<br />   )<br />)<br /></pre><br /><br /><p>簡単に説明しますと、mod_fastcgiモジュールを有効にして、 / に来たリクエストを /dev/shm/test.fcgi.socket.1 に送ります</p><br /><p>fastcgi の test.cpp のソースは以下です。</p><br /><br /><pre class="code"><br />#include "fcgi_config.h"<br />#include <stdlib.h><br />#ifdef HAVE_UNISTD_H<br />#include <unistd.h><br />#endif<br />#ifdef _WIN32<br />#include <process.h><br />#else<br />extern char **environ;<br />#endif<br />#include "fcgi_stdio.h"<br />int main () {<br />    int count = 0;<br />    while (FCGI_Accept() >= 0) {<br />        printf("Content-type: text/html\r\n"<br />            "\r\n"<br />            "<title>FastCGI HelloWorld</title>"<br />            "<h1>FastCGI HelloWorld</h1>\n"<br />            "Request number %d,  Process ID: %d<p>\n", ++count, getpid());<br />    }<br />    return 0;<br />}<br /></pre><br /><br /><p>簡単に解説しますと FCGI_Accept() は システムコール の accept と似たような感じでリクエストが発生すると 待ち状態から ループに入ります。次にprintfですが これは #include "fcgi_stdio.h" の中で </p><br /><p>#define printf  FCGI_printf</p><br /><p>となっていて 実際には FCGI_printfが 呼ばれます。 FCGI_printf は 最終的には システムコールの write  を呼んで 通信などを行います(windowsでは send関数)。あとは content-type を出力して おしまいです。fcgi はそのまま終了しないで FCGI_Accept に戻り、リクエストがあるのを待ちます</p><br /><br /><pre class="code"><br />g++ -o test.fcgi test.c -lfcgi <br /></pre><br /><p>として test.fcgi の バイナリができたら、lighttpd に付属している spawn-fcgi というツールで fcgiを立ち上げます</p><br /><br /><pre class="code"><br />sudo spawn-fcgi -f ./test.fcgi -s /dev/shm/test.fcgi.socket.1 2>&1 > /dev/null<br /></pre><br /><br /><p>これでアクセスできるはずです。何度もアクセスすると プロセスは終了しないので、プロセスIDは変わっていないのに、count は増えているかと思います。mysqlのconnectや設定ファイルの読み出しは ループの外で行いましょう。</p><br /><p>勉強会の時にも出た質問なんですが、Apache module で作らない理由は、Apache にしか使用できないということと、そのサーバを他用途で使用するときに mod_test が読まれていると 無駄に connectionを張ってしまったりするためです。</p>
+<p>こんにちは satoです。</p><br />
+<br />
+<p>現在 Ruby on Rails で書かれた アプリケーションの 一部のURIを高速化するために、lighttpd + FastCGI で 書き直しています。FastCGI は あらかじめ プロセスを常駐させておき、リクエストが来た際に、常駐しているプロセスに Unix domain socket あるいは TCP/IP で通信を行い プロセス起動時のオーバーヘッドを無くすことにより、処理を高速化します。今回は lighttpd + FastCGI で Hello word を作る 解説します。</p><br />
+<br />
+<p>まず lighttpd と FastCGI を 用意します 環境はCentOS5です。</p><br />
+<br />
+<pre class="code"><br />
+lighttpd:<br />
+yum install lighttpd<br />
+FastCGI:<br />
+wget http://www.fastcgi.com/dist/fcgi.tar.gz<br />
+tar xzvf fcgi-2.4.0.tar.gz<br />
+cd fcgi-2.4.0<br />
+make<br />
+sudo make install<br />
+</pre><br />
+<br />
+<p>lighttpd の設定ファイル ligttpd.conf を編集します</p><br />
+<pre class="code"><br />
+vi /etc/lighttpd/lighttpd.conf <br />
+server.modules              = (<br />
+  "mod_access",<br />
+  "mod_fastcgi",<br />
+  ""mod_accesslog")<br />
+(中略)<br />
+fastcgi.server = (<br />
+    "/" => (<br />
+        ("socket" => "/dev/shm/test.fcgi.socket.1",<br />
+         "check-local" => "disable")<br />
+   )<br />
+)<br />
+</pre><br />
+<br />
+<p>簡単に説明しますと、mod_fastcgiモジュールを有効にして、 / に来たリクエストを /dev/shm/test.fcgi.socket.1 に送ります</p><br />
+<p>fastcgi の test.cpp のソースは以下です。</p><br />
+<br />
+<pre class="code"><br />
+#include "fcgi_config.h"<br />
+#include <stdlib.h><br />
+#ifdef HAVE_UNISTD_H<br />
+#include <unistd.h><br />
+#endif<br />
+#ifdef _WIN32<br />
+#include <process.h><br />
+#else<br />
+extern char **environ;<br />
+#endif<br />
+#include "fcgi_stdio.h"<br />
+int main () {<br />
+    int count = 0;<br />
+    while (FCGI_Accept() >= 0) {<br />
+        printf("Content-type: text/html\r\n"<br />
+            "\r\n"<br />
+            "<title>FastCGI HelloWorld</title>"<br />
+            "<h1>FastCGI HelloWorld</h1>\n"<br />
+            "Request number %d,  Process ID: %d<p>\n", ++count, getpid());<br />
+    }<br />
+    return 0;<br />
+}<br />
+</pre><br />
+<br />
+<p>簡単に解説しますと FCGI_Accept() は システムコール の accept と似たような感じでリクエストが発生すると 待ち状態から ループに入ります。次にprintfですが これは #include "fcgi_stdio.h" の中で </p><br />
+<p>#define printf  FCGI_printf</p><br />
+<p>となっていて 実際には FCGI_printfが 呼ばれます。 FCGI_printf は 最終的には システムコールの write  を呼んで 通信などを行います(windowsでは send関数)。あとは content-type を出力して おしまいです。fcgi はそのまま終了しないで FCGI_Accept に戻り、リクエストがあるのを待ちます</p><br />
+<br />
+<pre class="code"><br />
+g++ -o test.fcgi test.c -lfcgi <br />
+</pre><br />
+<p>として test.fcgi の バイナリができたら、lighttpd に付属している spawn-fcgi というツールで fcgiを立ち上げます</p><br />
+<br />
+<pre class="code"><br />
+sudo spawn-fcgi -f ./test.fcgi -s /dev/shm/test.fcgi.socket.1 2>&1 > /dev/null<br />
+</pre><br />
+<br />
+<p>これでアクセスできるはずです。何度もアクセスすると プロセスは終了しないので、プロセスIDは変わっていないのに、count は増えているかと思います。mysqlのconnectや設定ファイルの読み出しは ループの外で行いましょう。</p><br />
+<p>勉強会の時にも出た質問なんですが、Apache module で作らない理由は、Apache にしか使用できないということと、そのサーバを他用途で使用するときに mod_test が読まれていると 無駄に connectionを張ってしまったりするためです。</p>
 {% endraw %}

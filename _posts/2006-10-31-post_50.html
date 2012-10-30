@@ -3,5 +3,121 @@ layout: post
 title: "デフォルト派のためのWindowsデフォルトテクニック"
 ---
 {% raw %}
-先週ウノウに入社しましたkomagataです。<br /><br />入社したてなのでPCのセットアップなどをやっていました。便利なフリーソフトでも紹介できればよいのですが、僕はWindowsには「なるべく余計なソフトを入れずに済ませたい」というデフォルト派なのでデフォルトでWindowsを便利に使うためのTipsを少し紹介できればと思います。<br /><br /><strong>Windowsキーを積極的に使う</strong><br /><br />軟弱なキーと思われがちなWindowsキーですがWindowsをデフォルトで使うには欠かせません。ショートカットキーを表記する場合はEmacs等のC-sのようにWindowsキー＋eはW-eと表記します。（本当か？）<br /><br /><ul><br /><li>W-e --- エクスプローラ起動</li><br /><li>W-d --- デスクトップの表示/非表示</li><br /><li>W-w --- ウインドウを閉じる（=M-F4）</li><br /><li>W-l --- コンピュータのロック</li><br /><li>W-m --- 開いている全てのウインドウを最小化</li><br /><li>W-M --- 上記最小化のキャンセル</li><br /><li>W-f --- ファイル検索</li><br /><li>W-r --- ファイル名を指定して実行（重要！）</li><br /></ul><br /><br /><strong> ２つのランチャーを使い倒す</strong><br /><br />Windowsにデフォルトで入っている至高のランチャー、それが<br /><br /><img alt="file_launch.png" src="http://labs.unoh.net/images/file_launch.png" width="403" height="175" /><br /><br />“ファイル名を指定して実行”<br /><br />と、<br /><br /><img alt="quick_launch.png" src="http://labs.unoh.net/images/quick_launch.png" width="284" height="30" /><br /><br />“クイック起動”<br /><br />です。<br /><br />これらを便利に使いこなすためには、以前人気になったこともあった<a href="http://smartbro.blogspot.com/2006/09/117-run-commands-in-windows-xp.html">この一覧</a>を頭に叩き込みます。<br />“ファイル名を指定して実行”から素早くフリーセルを立ち上げ、仕事をサボるようになれば一人前です。<br /><br />更に“クイック起動”のフォルダに<a href="http://pocketstudio.jp/win/xp/path.html">パスを通せば</a>“クイック起動”に放り込んだショートカットが“ファイル名を指定して実行”からも実行できるようになって一石二鳥です。<br /><br />クイック起動のフォルダ：<br /><br /><pre><code>C:\Documents and Settings\ユーザー名\Application Data\Microsoft\Internet Explorer\Quick Launch</code></pre><br /><br /><img alt="2launch.png" src="http://labs.unoh.net/images/2launch.png" width="359" height="432" /><br /><br />（hosts.batはhostsファイルをメモ帳で開くだけのバッチファイル）<br /><br />また、開発者の方は<a href="http://p0t.jp/mt/archives/2006/09/1.html">コレ</a>を“クイック起動”に置けばマウスを使わずにunix環境へ入れて便利です。<br /><br />他にも便利なデフォルトテクニックを見つけたら教えてください。<br /><br /><strong>追記１</strong><br /><br /><blockquote><a title="p0t: デフォルト派のすすめ" href="http://p0t.jp/mt/archives/2006/10/post_486.html#comment-103719">p0t: デフォルト派のすすめ</a><br /><br />デフォ派ですが…ファ実で補完が効かない？<br /><br />「インラインオートコンプリート」がオンになってないわけではなくて？<br /><br />Posted by: Bar | 2006年11月01日 15:59</blockquote><br /><br />個人のブログの方で教えていただきました。<br /><br /><img alt="inline_completion.png" src="http://labs.unoh.net/images/inline_completion.png" width="471" height="426" /><br /><br />インラインオートコンプリートをオン（デフォルト）にすると、<br /><br /><img alt="launch_completion.png" src="http://labs.unoh.net/images/launch_completion.png" width="403" height="175" /><br /><br />“ファイル名を指定して実行”でも補完が！<br /><br /><strong>追記２</strong><br /><br /><blockquote><a title="nak2kのメモ帳 - 環境変数PATHEXTを使ったJavaScriptの実行" href="http://d.hatena.ne.jp/nak2k/20061020/p1">nak2kのメモ帳 - 環境変数PATHEXTを使ったJavaScriptの実行</a><br /><br />環境変数PATHEXTに拡張子を追加設定すると、例えばhello.jsであればhelloと入力するだけでスクリプト実行できて便利ですよ。<br /><br />ただ、デフォルトでは拡張子.jsはWScript.exeに関連付けられているので、CScript.exeで動かしたい場合は新しい拡張子.jscとでも追加して、それをCScript.exeと関連付けてから上記の環境変数設定まで行うといいです。</blockquote><br /><br /><a href="http://b.hatena.ne.jp/entry/http://labs.unoh.net/2006/10/post_50.html">はてブのコメント欄</a>で教えて頂きました。<br /><br />PATHEXTなんて環境変数があったなんて知りませんでした。それにcscriptなんてものがあったこともはじめて知りました。<br /><br />言語毎のエンジンとは別にスクリプトホストがあるんですね。<br /><br /><ul><br /><li>wscript --- 出力をGUIのウィンドウに出す。</li><br /><li>cscript --- 出力をCUIの標準出力に出す。</li><br /></ul><br /><br />（via <a href="http://www.atmarkit.co.jp/fwin2k/operation/wsh01/wsh01_02.html">Windows管理者のためのWindows Script Host入門</a>）<br /><br />激しく便利そうです。<br /><br /><pre><code>C:\Documents and Settings\komagata>cscript<br />Microsoft (R) Windows Script Host Version 5.6<br />Copyright (C) Microsoft Corporation 1996-2001. All rights reserved.<br /> <br />使い方 : CScript scriptname.extension [オプション...] [引数...]<br /> <br />オプション :<br /> //B         バッチ モード : スクリプトのエラーおよびプロンプトを非表示にする<br /> //D         アクティブ デバッグを使用可能にする<br /> //E:engine  スクリプト実行時にエンジンを使用する<br /> //H:CScript 既定のスクリプト ホストを CScript.exe に変更する<br /> //H:WScript 既定のスクリプト ホストを WScript.exe に変更する (既定値)<br /> //I         対話モード (既定値、//B と逆の動作)<br /> //Job:xxxx  WSF ジョブを実行する<br /> //Logo      ロゴを表示する (既定値)<br /> //Nologo    ロゴを表示しない : 実行時に見出しを表示しない<br /> //S         このユーザーの現在のコマンド ライン オプションを保存する<br /> //T:nn      秒単位のタイムアウト時間 :  スクリプトを実行できる時間の最大値<br /> //X         デバッガでスクリプトを実行する<br /> //U         コンソールからリダイレクトされた I/O に Unicode を使用する</code></pre><br /><br />デフォルト派のjs好きはGreasemonkeyやSpiderMonkeyじゃなくてcscriptで頑張るしか？
+先週ウノウに入社しましたkomagataです。<br />
+<br />
+入社したてなのでPCのセットアップなどをやっていました。便利なフリーソフトでも紹介できればよいのですが、僕はWindowsには「なるべく余計なソフトを入れずに済ませたい」というデフォルト派なのでデフォルトでWindowsを便利に使うためのTipsを少し紹介できればと思います。<br />
+<br />
+<strong>Windowsキーを積極的に使う</strong><br />
+<br />
+軟弱なキーと思われがちなWindowsキーですがWindowsをデフォルトで使うには欠かせません。ショートカットキーを表記する場合はEmacs等のC-sのようにWindowsキー＋eはW-eと表記します。（本当か？）<br />
+<br />
+<ul><br />
+<li>W-e --- エクスプローラ起動</li><br />
+<li>W-d --- デスクトップの表示/非表示</li><br />
+<li>W-w --- ウインドウを閉じる（=M-F4）</li><br />
+<li>W-l --- コンピュータのロック</li><br />
+<li>W-m --- 開いている全てのウインドウを最小化</li><br />
+<li>W-M --- 上記最小化のキャンセル</li><br />
+<li>W-f --- ファイル検索</li><br />
+<li>W-r --- ファイル名を指定して実行（重要！）</li><br />
+</ul><br />
+<br />
+<strong> ２つのランチャーを使い倒す</strong><br />
+<br />
+Windowsにデフォルトで入っている至高のランチャー、それが<br />
+<br />
+<img alt="file_launch.png" src="http://labs.unoh.net/images/file_launch.png" width="403" height="175" /><br />
+<br />
+“ファイル名を指定して実行”<br />
+<br />
+と、<br />
+<br />
+<img alt="quick_launch.png" src="http://labs.unoh.net/images/quick_launch.png" width="284" height="30" /><br />
+<br />
+“クイック起動”<br />
+<br />
+です。<br />
+<br />
+これらを便利に使いこなすためには、以前人気になったこともあった<a href="http://smartbro.blogspot.com/2006/09/117-run-commands-in-windows-xp.html">この一覧</a>を頭に叩き込みます。<br />
+“ファイル名を指定して実行”から素早くフリーセルを立ち上げ、仕事をサボるようになれば一人前です。<br />
+<br />
+更に“クイック起動”のフォルダに<a href="http://pocketstudio.jp/win/xp/path.html">パスを通せば</a>“クイック起動”に放り込んだショートカットが“ファイル名を指定して実行”からも実行できるようになって一石二鳥です。<br />
+<br />
+クイック起動のフォルダ：<br />
+<br />
+<pre><code>C:\Documents and Settings\ユーザー名\Application Data\Microsoft\Internet Explorer\Quick Launch</code></pre><br />
+<br />
+<img alt="2launch.png" src="http://labs.unoh.net/images/2launch.png" width="359" height="432" /><br />
+<br />
+（hosts.batはhostsファイルをメモ帳で開くだけのバッチファイル）<br />
+<br />
+また、開発者の方は<a href="http://p0t.jp/mt/archives/2006/09/1.html">コレ</a>を“クイック起動”に置けばマウスを使わずにunix環境へ入れて便利です。<br />
+<br />
+他にも便利なデフォルトテクニックを見つけたら教えてください。<br />
+<br />
+<strong>追記１</strong><br />
+<br />
+<blockquote><a title="p0t: デフォルト派のすすめ" href="http://p0t.jp/mt/archives/2006/10/post_486.html#comment-103719">p0t: デフォルト派のすすめ</a><br />
+<br />
+デフォ派ですが…ファ実で補完が効かない？<br />
+<br />
+「インラインオートコンプリート」がオンになってないわけではなくて？<br />
+<br />
+Posted by: Bar | 2006年11月01日 15:59</blockquote><br />
+<br />
+個人のブログの方で教えていただきました。<br />
+<br />
+<img alt="inline_completion.png" src="http://labs.unoh.net/images/inline_completion.png" width="471" height="426" /><br />
+<br />
+インラインオートコンプリートをオン（デフォルト）にすると、<br />
+<br />
+<img alt="launch_completion.png" src="http://labs.unoh.net/images/launch_completion.png" width="403" height="175" /><br />
+<br />
+“ファイル名を指定して実行”でも補完が！<br />
+<br />
+<strong>追記２</strong><br />
+<br />
+<blockquote><a title="nak2kのメモ帳 - 環境変数PATHEXTを使ったJavaScriptの実行" href="http://d.hatena.ne.jp/nak2k/20061020/p1">nak2kのメモ帳 - 環境変数PATHEXTを使ったJavaScriptの実行</a><br />
+<br />
+環境変数PATHEXTに拡張子を追加設定すると、例えばhello.jsであればhelloと入力するだけでスクリプト実行できて便利ですよ。<br />
+<br />
+ただ、デフォルトでは拡張子.jsはWScript.exeに関連付けられているので、CScript.exeで動かしたい場合は新しい拡張子.jscとでも追加して、それをCScript.exeと関連付けてから上記の環境変数設定まで行うといいです。</blockquote><br />
+<br />
+<a href="http://b.hatena.ne.jp/entry/http://labs.unoh.net/2006/10/post_50.html">はてブのコメント欄</a>で教えて頂きました。<br />
+<br />
+PATHEXTなんて環境変数があったなんて知りませんでした。それにcscriptなんてものがあったこともはじめて知りました。<br />
+<br />
+言語毎のエンジンとは別にスクリプトホストがあるんですね。<br />
+<br />
+<ul><br />
+<li>wscript --- 出力をGUIのウィンドウに出す。</li><br />
+<li>cscript --- 出力をCUIの標準出力に出す。</li><br />
+</ul><br />
+<br />
+（via <a href="http://www.atmarkit.co.jp/fwin2k/operation/wsh01/wsh01_02.html">Windows管理者のためのWindows Script Host入門</a>）<br />
+<br />
+激しく便利そうです。<br />
+<br />
+<pre><code>C:\Documents and Settings\komagata>cscript<br />
+Microsoft (R) Windows Script Host Version 5.6<br />
+Copyright (C) Microsoft Corporation 1996-2001. All rights reserved.<br />
+ <br />
+使い方 : CScript scriptname.extension [オプション...] [引数...]<br />
+ <br />
+オプション :<br />
+ //B         バッチ モード : スクリプトのエラーおよびプロンプトを非表示にする<br />
+ //D         アクティブ デバッグを使用可能にする<br />
+ //E:engine  スクリプト実行時にエンジンを使用する<br />
+ //H:CScript 既定のスクリプト ホストを CScript.exe に変更する<br />
+ //H:WScript 既定のスクリプト ホストを WScript.exe に変更する (既定値)<br />
+ //I         対話モード (既定値、//B と逆の動作)<br />
+ //Job:xxxx  WSF ジョブを実行する<br />
+ //Logo      ロゴを表示する (既定値)<br />
+ //Nologo    ロゴを表示しない : 実行時に見出しを表示しない<br />
+ //S         このユーザーの現在のコマンド ライン オプションを保存する<br />
+ //T:nn      秒単位のタイムアウト時間 :  スクリプトを実行できる時間の最大値<br />
+ //X         デバッガでスクリプトを実行する<br />
+ //U         コンソールからリダイレクトされた I/O に Unicode を使用する</code></pre><br />
+<br />
+デフォルト派のjs好きはGreasemonkeyやSpiderMonkeyじゃなくてcscriptで頑張るしか？
 {% endraw %}

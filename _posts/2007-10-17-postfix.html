@@ -3,5 +3,39 @@ layout: post
 title: "PostfixでSMTP EHLOコマンドで送るドメイン名を変更する方法"
 ---
 {% raw %}
-<p>こんにちは、naoyaです。</p><br /><br /><p>今日は、Postfix 2系で有効なSMTP EHLOコマンドで送るドメイン名を変更する方法を紹介したいと思います。</p><br /><p>最近、メールサーバのスパムチェック強化によって、SMTP EHLOコマンドで送るドメイン名が正引きできないとスパムメールと判定して受信を拒否するメールサーバが増えてきました。このようなメールサーバの場合、通常の設定で内部のメールサーバからメールを送信すると受信を拒否されてしまうことがあります。</p><br /><br /><p>Postfix 2系では、このEHLOコマンドで送るドメイン名を変更することができるようになっているので、さきほどのようなメールサーバでも対応することができます。</p><br /><br /><p>設定方法は、とても簡単でPostfixの設定ファイルmain.cf（Fedora Coreの場合は、/etc/postfix/main.cf）に、次の行を追加するだけです。</p><br /><br /><pre class="code"><br />smtp_helo_name = ドメイン名<br /></pre><br /><br /><p>この設定を保存後、Postfixを再起動することで有効になります。</p><br /><br /><br /><p>また、内部のメールサーバからメールを送信すると内部のドメイン名がメールヘッダに入り気になる人のために、この情報を破棄する方法もあわせて紹介します。</p><br /><br /><p>設定方法は、Postfixのheader_checks（Fedora Coreの場合は、/etc/postfix/header_checks）というファイルに設定を追加する必要がありますが、例えば次のように追加します。</p><br /><br /><pre class="code"><br />/^Received: by s1.server.unoh.net.*/ IGNORE<br /></pre><br /><br /><p>この例は、Recevied by: s1.server.unoh.netで始めるメールヘッダを破棄するという設定例になります。もちろん見ての通り、破棄する対象のメールヘッダの設定は正規表現でも記述することができます。</p><br /><br /><p>あとは、main.cfにheader_checksを読み込むように追加するだけです。</p><br /><br /><pre class="code"><br />header_checks = regexp:/etc/postfix/header_checks<br /></pre><br /><br /><p>Postfixはこのような柔軟な設定に加えて、パフォーマンスも非常によいのでウノウでは頻繁に利用しています。</p><br /><br />
+<p>こんにちは、naoyaです。</p><br />
+<br />
+<p>今日は、Postfix 2系で有効なSMTP EHLOコマンドで送るドメイン名を変更する方法を紹介したいと思います。</p><br />
+<p>最近、メールサーバのスパムチェック強化によって、SMTP EHLOコマンドで送るドメイン名が正引きできないとスパムメールと判定して受信を拒否するメールサーバが増えてきました。このようなメールサーバの場合、通常の設定で内部のメールサーバからメールを送信すると受信を拒否されてしまうことがあります。</p><br />
+<br />
+<p>Postfix 2系では、このEHLOコマンドで送るドメイン名を変更することができるようになっているので、さきほどのようなメールサーバでも対応することができます。</p><br />
+<br />
+<p>設定方法は、とても簡単でPostfixの設定ファイルmain.cf（Fedora Coreの場合は、/etc/postfix/main.cf）に、次の行を追加するだけです。</p><br />
+<br />
+<pre class="code"><br />
+smtp_helo_name = ドメイン名<br />
+</pre><br />
+<br />
+<p>この設定を保存後、Postfixを再起動することで有効になります。</p><br />
+<br />
+<br />
+<p>また、内部のメールサーバからメールを送信すると内部のドメイン名がメールヘッダに入り気になる人のために、この情報を破棄する方法もあわせて紹介します。</p><br />
+<br />
+<p>設定方法は、Postfixのheader_checks（Fedora Coreの場合は、/etc/postfix/header_checks）というファイルに設定を追加する必要がありますが、例えば次のように追加します。</p><br />
+<br />
+<pre class="code"><br />
+/^Received: by s1.server.unoh.net.*/ IGNORE<br />
+</pre><br />
+<br />
+<p>この例は、Recevied by: s1.server.unoh.netで始めるメールヘッダを破棄するという設定例になります。もちろん見ての通り、破棄する対象のメールヘッダの設定は正規表現でも記述することができます。</p><br />
+<br />
+<p>あとは、main.cfにheader_checksを読み込むように追加するだけです。</p><br />
+<br />
+<pre class="code"><br />
+header_checks = regexp:/etc/postfix/header_checks<br />
+</pre><br />
+<br />
+<p>Postfixはこのような柔軟な設定に加えて、パフォーマンスも非常によいのでウノウでは頻繁に利用しています。</p><br />
+<br />
+
 {% endraw %}

@@ -3,5 +3,54 @@ layout: post
 title: "dir_walk_recursive？"
 ---
 {% raw %}
-こんにちは。先々週、入社したbokkoです。<br /><br />普段はbokkoとかcubicdaiyaとか名乗っています。近々、「就職祝い」として、フルボッコの会が開かれるそうなのですが、大学時代の先輩がたくさん来るそうなので、期待と不安が半々といったところです。<br /><br />それはそれとして、アプリケーション内で、指定したディレクトリ以下のファイル全部に対して、何らかの処理を行いたい時がたまにあると思います。こういう場合、ディレクトリかファイルかで処理を分け、ループと再帰でぶん回したりしますが、去年、これを何回も書く機会があって面倒になったことがあったので、ディレクトリの規模があまり大きくない場合は、<br /><br /><pre class="code"><code>function divGeneric($dir, $f, $arg){<br />    if(!is_dir($dir)) return false;<br />    if($hd = opendir($dir)){<br />        while(false !== $file = readdir($hd)){<br />            if($file != "." && $file != ".."){<br />                $f($dir,$file,$arg,$f);<br />            }<br />        }<br />        closedir($hd);<br />    }<br />    return $arg;<br />}</code></pre><br /><br />↑のような関数を用意して、実行したい処理を引数で渡すだけで済むようにしています。例えば、あるディレクトリ以下の全ファイルを1つの配列に入れるような場合は、以下のように書きます。<br /><br /><pre class="code"><code><br />$f = create_function('$dir,$file,&$array,$f', <br />                     'if(is_dir($dir."/".$file)){<br />                          $array = divGeneric($dir."/".$file, $f, $array);<br />                      }<br />                      else{<br />                          $array[] = $dir."/".$file;<br />                      }<br />                     ');<br />$ret = divGeneric($root_dir, $f, array());<br /></code></pre><br /><br />こんな感じで、array_walk_recursiveならぬ, dir_walk_recursiveっぽいことができます。関数の名前が全然違いますが、気にしないでください。ただ、このやり方はうまくいかなかったときのデバッグが面倒なので、create_function内に書く処理はあんまり長くならないようにした方がいいかもしれません。<br /><br /><h3>■ほかの言語の場合</h3><br /><br />RubyとPythonの例は前に私が書いたのが<a href="http://d.hatena.ne.jp/cubicdaiya/20070507">こちら</a>にあります。ただ、Pythonでは、lambdaに単一の式しか渡せない(それがいいか悪いかどうかはまた別のお話)ので、少し強引に書いてます。<br /><br /><br /><h3>■余談</h3><br /><br />PHP5ではscandirがあるので、もう少しスマートに書けます。<br /><br /><br /><br />追記(7/30)<br /><br />コードにちょっと間違いがあったので、修正しました。<br />手元のコードをよく見たらdieじゃなくて、return false;でした。
+こんにちは。先々週、入社したbokkoです。<br />
+<br />
+普段はbokkoとかcubicdaiyaとか名乗っています。近々、「就職祝い」として、フルボッコの会が開かれるそうなのですが、大学時代の先輩がたくさん来るそうなので、期待と不安が半々といったところです。<br />
+<br />
+それはそれとして、アプリケーション内で、指定したディレクトリ以下のファイル全部に対して、何らかの処理を行いたい時がたまにあると思います。こういう場合、ディレクトリかファイルかで処理を分け、ループと再帰でぶん回したりしますが、去年、これを何回も書く機会があって面倒になったことがあったので、ディレクトリの規模があまり大きくない場合は、<br />
+<br />
+<pre class="code"><code>function divGeneric($dir, $f, $arg){<br />
+    if(!is_dir($dir)) return false;<br />
+    if($hd = opendir($dir)){<br />
+        while(false !== $file = readdir($hd)){<br />
+            if($file != "." && $file != ".."){<br />
+                $f($dir,$file,$arg,$f);<br />
+            }<br />
+        }<br />
+        closedir($hd);<br />
+    }<br />
+    return $arg;<br />
+}</code></pre><br />
+<br />
+↑のような関数を用意して、実行したい処理を引数で渡すだけで済むようにしています。例えば、あるディレクトリ以下の全ファイルを1つの配列に入れるような場合は、以下のように書きます。<br />
+<br />
+<pre class="code"><code><br />
+$f = create_function('$dir,$file,&$array,$f', <br />
+                     'if(is_dir($dir."/".$file)){<br />
+                          $array = divGeneric($dir."/".$file, $f, $array);<br />
+                      }<br />
+                      else{<br />
+                          $array[] = $dir."/".$file;<br />
+                      }<br />
+                     ');<br />
+$ret = divGeneric($root_dir, $f, array());<br />
+</code></pre><br />
+<br />
+こんな感じで、array_walk_recursiveならぬ, dir_walk_recursiveっぽいことができます。関数の名前が全然違いますが、気にしないでください。ただ、このやり方はうまくいかなかったときのデバッグが面倒なので、create_function内に書く処理はあんまり長くならないようにした方がいいかもしれません。<br />
+<br />
+<h3>■ほかの言語の場合</h3><br />
+<br />
+RubyとPythonの例は前に私が書いたのが<a href="http://d.hatena.ne.jp/cubicdaiya/20070507">こちら</a>にあります。ただ、Pythonでは、lambdaに単一の式しか渡せない(それがいいか悪いかどうかはまた別のお話)ので、少し強引に書いてます。<br />
+<br />
+<br />
+<h3>■余談</h3><br />
+<br />
+PHP5ではscandirがあるので、もう少しスマートに書けます。<br />
+<br />
+<br />
+<br />
+追記(7/30)<br />
+<br />
+コードにちょっと間違いがあったので、修正しました。<br />
+手元のコードをよく見たらdieじゃなくて、return false;でした。
 {% endraw %}

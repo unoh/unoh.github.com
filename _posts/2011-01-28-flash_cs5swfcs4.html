@@ -3,5 +3,79 @@ layout: post
 title: "都市伝説の検証！Flash CS5のswfはCS4よりファイル容量が大きい!?"
 ---
 {% raw %}
-flashエンジニアのnaoです。<br /><br />ディスカバリーチャンネルの番組に<a href="http://ja.wikipedia.org/wiki/%E6%80%AA%E3%81%97%E3%81%84%E4%BC%9D%E8%AA%AC">「怪しい伝説」(Mythbusters)</a>ってのがありますよね。そう、"ワイヤーが切れて自由落下するエレベーター、地面に衝突する寸前に中でジャンプしたら助かるんじゃね？"とか、<del>あほう</del>　希少な検証をやるあの番組です。<br />ちょっと考えればわかりそうな事を真面目に検証する彼らを生暖かく見守る私ですが、この度自分自身、都市伝説に遭遇いたしました。<br />その都市伝説というのが、標題の「Flash CS5のswfはCS4よりファイル容量が大きい!?」なワケであります。<br /><br /><br />私の所属するプロジェクトでは、前任のflashエンジニアがFlash Profesional CS4で開発を行い、私を含めた後任のチームはCS5で開発を行っております。<br />この時に、前任からの引き継ぎ注意事項として<br /><br /><p><h2><font color = red>『swfファイルはCS4で書きだしたほうが軽くなる』</font></h2></p><br /><br />という物があり、実際に前任から引き継いだflaファイルでswfを書きだしてみると、本当にCS5とCS4で容量が違ったのです。CS5で書きだしたswfは、3KBほど容量が重い。<br /><b><font color=red>なにこの怪奇現象こわい</b></font>。<br />flash liteを利用する製品では、3KBは命取りです。<br />臆病風に吹かれまくって天高く舞い上がった私は、CS4のライセンスを持っているチームメンバーに依頼して書き出しをしたのですが、上空の偏西風に流されてミッドウェイあたりまで来たところで、はたと気が付きました。<br /><br /><p><font color=yellow><b>同じ処理をしている100KB程度のバイトコードで、3KBもサイズが違うのって、明らかにおかしくね？</b></font></p><br /><br />100KBのうちの3KBといえば、全体の3%である。1989年に導入された当時の消費税率と同じである。当時の消費税の税収は、なんと6兆円！まぁ、金額は関係ないのですが。<br /><br />flashのバイトコードは、1処理で2バイトとか3バイト程度。それに変数名が付いたって、ActionScriptの1行分の処理でもせいぜい数十バイトである。いったい、どこで容量が増えるのだろうか？<br /><p class="code">【実験1】<br />まず私が試したのは、diffコマンドによって差分を比較する実験。swfファイルの差分を取って比べてみたら、何かわかるのではなかろうか、と思ったのですが、この実験はあえなく失敗。考えてみたら、バイナリの状態のコードなんて人間が一覧して分かるわけがない。実験以前に問題だった。Mythbustersを哂えない。<br /></p><br /><p class="code">【実験2】<br />次に行ったのは、swfmillをインストールしてswfファイルをテキスト化し、再びdiffを取る実験。こちらは成功。そらそうだ。<br />内部の構造を追っていくと、ActionScript部分は変化がない。しかし、途中で謎のベクタ描画のグラフィックスオブジェクトに遭遇する。CS4には存在しない。CS5で書きだしたswfにのみ存在するオブジェクトなのだ。<font color=red><b>犯人のしっぽをつかんだ</b></font>。<br /></p><br /><p class="code">【実験3】<br />初心に返り、Flashで書き出す際にファイルサイズのレポートを出力してみる。グラフィックスオブジェクトが書き出されているなら、何か記述されているはずである。<br />しかし、全てのオブジェクト名をチェックしたが、見覚えのないオブジェクトは存在しない。<br /></p><br /><p class="code">【考察】<br />・ActionScript部分の変化は観察されない<br />・内部に謎のグラフィックスオブジェクトが挿入されており、これがファイルサイズ増の原因らしい<br />・しかしサイズレポートには怪しいオブジェクトは記述されていない<br /></p><br />さて、この謎のグラフィックスオブジェクトは何か。レポートには名前も出ない存在だけのデータである。が、よくよくサイズレポートを見ているうちに、重大なものに気がついた。<br /><br />なんと<br /><p><h2><font color = red>デバイスフォントが埋め込み処理されている</font></h2></p><br />のである。<br /><br /><br />-再現イメージ-<br /> <p class="code">_等幅 : 確たなﾃﾞりなまﾀ認しくｰ<p><br /><br />いやいやいやいや、ないわー。完全にFlash Profesional CS5のバグである。<br />原因がわかれば対処方法も簡単。埋めこまれてしまっているなら、再定義してやればいい。<br />今回は以下のような手順で修正を行いました。<br /><br /><br /><p class="code">・デバイスフォントを指定しているテキストボックスを選択<br />・別の日本語フォント(_明朝でも何でもいい)に変更する<br />・全部のデバイスフォントのテキストボックスで上記を行う<br />・ファイルを保存して閉じる<br />・ファイルをもう一度開く<br />・全部のデバイスフォントのテキストボックスを、もう一度、等幅などのデバイスフォントに戻す<br />・保存して閉じる</p>以上である。すみませんね、手動作業で。<br />回避方法はあるかもしれないけど知りません。だってもう、私の環境では関係ないから。<br /><br />書きだしたswfファイルは、みごとCS4で書きだしたswfと完全に一致しました。<br />現在では無事、CS5で開発を行っております。<br /><b><font color=red>なお、この不具合はCS4で編集したファイルをCS5で読み込む場合に発生します。<br />一度対応するか、初めから CS5で製作されたファイルでは発生しません。</font></b><br /><br />こうして、Flash CS5のswfはCS4よりファイル容量が大きい!?疑惑は嘘っぱち（まぁバグっぽい物ではあったのですが）都市伝説と証明され、事なきを得ました。<br />何事も検証してみることが大事だよね☆<br /><br /><a href="http://www.youtube.com/watch?v=PnntGTOopDE&feature=player_embedded<br />" target="_blank">都市伝説の例</a><br />あやしい！と思った人は検証してみればいいと思うよ。<br /><br /><div class="amazlet-box" style="margin-bottom:0px;"><div class="amazlet-image" style="float:left;margin:0px 12px 1px 0px;"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/B000NO23W6/unoh-22/ref=nosim/" name="amazletlink" target="_blank"><img src="http://ecx.images-amazon.com/images/I/51o7q-LAOUL._SL160_.jpg" alt="Mythbusters: Collection 1 [DVD] [Import]" style="border: none;" /></a></div><div class="amazlet-info" style="line-height:120%; margin-bottom: 10px"><div class="amazlet-name" style="margin-bottom:10px;line-height:120%"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/B000NO23W6/unoh-22/ref=nosim/" name="amazletlink" target="_blank">Mythbusters: Collection 1 [DVD] [Import]</a><div class="amazlet-powered-date" style="font-size:80%;margin-top:5px;line-height:120%">posted with <a href="http://www.amazlet.com/browse/ASIN/B000NO23W6//ref=nosim/" title="Mythbusters: Collection 1 [DVD] [Import]" target="_blank">amazlet</a> at 11.01.28</div></div><div class="amazlet-detail">Discovery Channel (2007-05-22)<br />売り上げランキング: 79419<br /></div><div class="amazlet-sub-info" style="float: left;"><div class="amazlet-link" style="margin-top: 5px"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/B000NO23W6/unoh-22/ref=nosim/" name="amazletlink" target="_blank">Amazon.co.jp で詳細を見る</a></div></div></div><div class="amazlet-footer" style="clear: left"></div></div>
+flashエンジニアのnaoです。<br />
+<br />
+ディスカバリーチャンネルの番組に<a href="http://ja.wikipedia.org/wiki/%E6%80%AA%E3%81%97%E3%81%84%E4%BC%9D%E8%AA%AC">「怪しい伝説」(Mythbusters)</a>ってのがありますよね。そう、"ワイヤーが切れて自由落下するエレベーター、地面に衝突する寸前に中でジャンプしたら助かるんじゃね？"とか、<del>あほう</del>　希少な検証をやるあの番組です。<br />
+ちょっと考えればわかりそうな事を真面目に検証する彼らを生暖かく見守る私ですが、この度自分自身、都市伝説に遭遇いたしました。<br />
+その都市伝説というのが、標題の「Flash CS5のswfはCS4よりファイル容量が大きい!?」なワケであります。<br />
+<br />
+<br />
+私の所属するプロジェクトでは、前任のflashエンジニアがFlash Profesional CS4で開発を行い、私を含めた後任のチームはCS5で開発を行っております。<br />
+この時に、前任からの引き継ぎ注意事項として<br />
+<br />
+<p><h2><font color = red>『swfファイルはCS4で書きだしたほうが軽くなる』</font></h2></p><br />
+<br />
+という物があり、実際に前任から引き継いだflaファイルでswfを書きだしてみると、本当にCS5とCS4で容量が違ったのです。CS5で書きだしたswfは、3KBほど容量が重い。<br />
+<b><font color=red>なにこの怪奇現象こわい</b></font>。<br />
+flash liteを利用する製品では、3KBは命取りです。<br />
+臆病風に吹かれまくって天高く舞い上がった私は、CS4のライセンスを持っているチームメンバーに依頼して書き出しをしたのですが、上空の偏西風に流されてミッドウェイあたりまで来たところで、はたと気が付きました。<br />
+<br />
+<p><font color=yellow><b>同じ処理をしている100KB程度のバイトコードで、3KBもサイズが違うのって、明らかにおかしくね？</b></font></p><br />
+<br />
+100KBのうちの3KBといえば、全体の3%である。1989年に導入された当時の消費税率と同じである。当時の消費税の税収は、なんと6兆円！まぁ、金額は関係ないのですが。<br />
+<br />
+flashのバイトコードは、1処理で2バイトとか3バイト程度。それに変数名が付いたって、ActionScriptの1行分の処理でもせいぜい数十バイトである。いったい、どこで容量が増えるのだろうか？<br />
+<p class="code">【実験1】<br />
+まず私が試したのは、diffコマンドによって差分を比較する実験。swfファイルの差分を取って比べてみたら、何かわかるのではなかろうか、と思ったのですが、この実験はあえなく失敗。考えてみたら、バイナリの状態のコードなんて人間が一覧して分かるわけがない。実験以前に問題だった。Mythbustersを哂えない。<br />
+</p><br />
+<p class="code">【実験2】<br />
+次に行ったのは、swfmillをインストールしてswfファイルをテキスト化し、再びdiffを取る実験。こちらは成功。そらそうだ。<br />
+内部の構造を追っていくと、ActionScript部分は変化がない。しかし、途中で謎のベクタ描画のグラフィックスオブジェクトに遭遇する。CS4には存在しない。CS5で書きだしたswfにのみ存在するオブジェクトなのだ。<font color=red><b>犯人のしっぽをつかんだ</b></font>。<br />
+</p><br />
+<p class="code">【実験3】<br />
+初心に返り、Flashで書き出す際にファイルサイズのレポートを出力してみる。グラフィックスオブジェクトが書き出されているなら、何か記述されているはずである。<br />
+しかし、全てのオブジェクト名をチェックしたが、見覚えのないオブジェクトは存在しない。<br />
+</p><br />
+<p class="code">【考察】<br />
+・ActionScript部分の変化は観察されない<br />
+・内部に謎のグラフィックスオブジェクトが挿入されており、これがファイルサイズ増の原因らしい<br />
+・しかしサイズレポートには怪しいオブジェクトは記述されていない<br />
+</p><br />
+さて、この謎のグラフィックスオブジェクトは何か。レポートには名前も出ない存在だけのデータである。が、よくよくサイズレポートを見ているうちに、重大なものに気がついた。<br />
+<br />
+なんと<br />
+<p><h2><font color = red>デバイスフォントが埋め込み処理されている</font></h2></p><br />
+のである。<br />
+<br />
+<br />
+-再現イメージ-<br />
+ <p class="code">_等幅 : 確たなﾃﾞりなまﾀ認しくｰ<p><br />
+<br />
+いやいやいやいや、ないわー。完全にFlash Profesional CS5のバグである。<br />
+原因がわかれば対処方法も簡単。埋めこまれてしまっているなら、再定義してやればいい。<br />
+今回は以下のような手順で修正を行いました。<br />
+<br />
+<br />
+<p class="code">・デバイスフォントを指定しているテキストボックスを選択<br />
+・別の日本語フォント(_明朝でも何でもいい)に変更する<br />
+・全部のデバイスフォントのテキストボックスで上記を行う<br />
+・ファイルを保存して閉じる<br />
+・ファイルをもう一度開く<br />
+・全部のデバイスフォントのテキストボックスを、もう一度、等幅などのデバイスフォントに戻す<br />
+・保存して閉じる</p>以上である。すみませんね、手動作業で。<br />
+回避方法はあるかもしれないけど知りません。だってもう、私の環境では関係ないから。<br />
+<br />
+書きだしたswfファイルは、みごとCS4で書きだしたswfと完全に一致しました。<br />
+現在では無事、CS5で開発を行っております。<br />
+<b><font color=red>なお、この不具合はCS4で編集したファイルをCS5で読み込む場合に発生します。<br />
+一度対応するか、初めから CS5で製作されたファイルでは発生しません。</font></b><br />
+<br />
+こうして、Flash CS5のswfはCS4よりファイル容量が大きい!?疑惑は嘘っぱち（まぁバグっぽい物ではあったのですが）都市伝説と証明され、事なきを得ました。<br />
+何事も検証してみることが大事だよね☆<br />
+<br />
+<a href="http://www.youtube.com/watch?v=PnntGTOopDE&feature=player_embedded<br />
+" target="_blank">都市伝説の例</a><br />
+あやしい！と思った人は検証してみればいいと思うよ。<br />
+<br />
+<div class="amazlet-box" style="margin-bottom:0px;"><div class="amazlet-image" style="float:left;margin:0px 12px 1px 0px;"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/B000NO23W6/unoh-22/ref=nosim/" name="amazletlink" target="_blank"><img src="http://ecx.images-amazon.com/images/I/51o7q-LAOUL._SL160_.jpg" alt="Mythbusters: Collection 1 [DVD] [Import]" style="border: none;" /></a></div><div class="amazlet-info" style="line-height:120%; margin-bottom: 10px"><div class="amazlet-name" style="margin-bottom:10px;line-height:120%"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/B000NO23W6/unoh-22/ref=nosim/" name="amazletlink" target="_blank">Mythbusters: Collection 1 [DVD] [Import]</a><div class="amazlet-powered-date" style="font-size:80%;margin-top:5px;line-height:120%">posted with <a href="http://www.amazlet.com/browse/ASIN/B000NO23W6//ref=nosim/" title="Mythbusters: Collection 1 [DVD] [Import]" target="_blank">amazlet</a> at 11.01.28</div></div><div class="amazlet-detail">Discovery Channel (2007-05-22)<br />売り上げランキング: 79419<br /></div><div class="amazlet-sub-info" style="float: left;"><div class="amazlet-link" style="margin-top: 5px"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/B000NO23W6/unoh-22/ref=nosim/" name="amazletlink" target="_blank">Amazon.co.jp で詳細を見る</a></div></div></div><div class="amazlet-footer" style="clear: left"></div></div>
 {% endraw %}

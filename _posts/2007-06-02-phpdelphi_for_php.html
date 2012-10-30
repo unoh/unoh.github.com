@@ -3,5 +3,66 @@ layout: post
 title: "Delphi For PHPを簡単に触ってみました"
 ---
 {% raw %}
-jQueryは、ajaxSubmitプラグインが好きなKeitaです。<br /><br />僕はもともと、Delphiの技術者でそこからPHP技術者になりました。<br />もはや、Web系のアプリケーションの開発に夢中なので、Delphiをいじることは少なくなりましたが、ちょっと前に、Delphi For PHPという統合開発環境が発売されたようなので、Object Pascalじゃなくて、Delphiって言語の名前って誰か中の人いってたよなーとおもいつつ、軽く触ってみました。<br /><br />まず、Delphi　For PHPは、Delphiと同じようにその言語の開発環境というだけではなく、フレームワーク的なものを内包しています。<br /><br />Delphiでは、WindowsアプリケーションをIDEでぺたぺた貼り付けて開発するためにVCL(Visual Component Library)というライブラリがありますが、Delphi For PHPにも<a href="http://sourceforge.net/projects/vcl4php">VCL For PHP</a>というものが準備されているようです。<br /><br />こういうのが、準備されているおかげで、<a href="http://dn.codegear.com/jp/article/34075<br />">Delphi for PHPの概要（英語）</a>のビデオにあるような、本当にPHPで動いているのかわからないような開発方法で開発ができるようになるようです。<br /><br />「なようです」、とかいってるのもアレなので、とりあえず、使ってみたいと思います。<br /><br /><a href="http://photozou.jp/photo/show/784/3511808"><img src="http://art7.photozou.jp/pub/784/784/photo/3511808.jpg" alt="WS000001" width="450" height="350" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/784/3511808">WS000001</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br /><br />とりあえず、Hello PHPとかいて実行してみました。<br /><br /><br /><a href="http://photozou.jp/photo/show/784/3511886"><img src="http://art7.photozou.jp/pub/784/784/photo/3511886.jpg" alt="WS000002" width="450" height="420" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/784/3511886">WS000002</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br /><br />とりあえず、なんか動きました。<br /><br />で、まず最初に気になったこういうIDEでいわれる出力されるHTMLソースがどうかというあたりですが、こんな感じでした。<br /><pre><br />&lt;!-- Unit1 begin --&gt;<br /><br />&lt;html &gt;<br />&lt;head&gt;<br />&lt;script type=&amp;text/javascript&amp; src=&amp;/vcl-bin/js/common.js&amp;&gt;&lt;/script&gt;<br />&lt;title&gt;Unit1&lt;/title&gt;<br />&lt;meta http-equiv=&amp;Content-Type&amp; content=&amp;text/html; charset=euc-jp&amp; /&gt;<br />&lt;/head&gt;<br /><br />&lt;body  style=&amp; margin-left: 0px;  margin-top: 0px;  margin-right: 0px;  margin-bottom: 0px; &amp;  &gt;<br />&lt;form style=&amp;margin-bottom: 0&amp; id=&amp;Unit1&amp; name=&amp;Unit1&amp; method=&amp;post&amp;  action=&amp;/sample1.php&amp;&gt;<br />&lt;table  width=&amp;800&amp;   style=&amp;height:600px&amp;  border=&amp;0&amp; cellpadding=&amp;0&amp; cellspacing=&amp;0&amp;  &gt;&lt;tr&gt;&lt;td valign=&amp;top&amp;&gt;<br />&lt;div id=&amp;Label1_outer&amp; style=&amp;Z-INDEX: 0; LEFT: 104px; WIDTH: 75px; POSITION: absolute; TOP: 49px; HEIGHT: 13px&amp;&gt;<br />&lt;div id=&amp;Label1&amp; style=&amp; font-family: Verdana; font-size: 10px;  height:13px;width:75px;&amp;   &gt;Hello Delphi&lt;/div&gt;<br /><br />&lt;/div&gt;<br />&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;<br />&lt;/form&gt;&lt;/body&gt;<br />&lt;/html&gt;<br />&lt;!-- Unit1 end --&gt;<br /></pre><br /><br />ちなみに、ここまでの作業は、Delphi For PHPをインストールするだけで、Webサーバの立ち上げまでやってくれるので、他に別途作業する必要はありませんでした。<br /><br />もちろん、Delphiの名を冠しているだけあって、ステップ実行も可能です。これには、<a href="http://dd.cron.ru/dbg/">DBG</a>というPHPのエクステンションを利用しているようです。<br /><br />ちなみに、出来上がったPHPファイルを見てみると。<br />保存したファイル名のものとなにやら、PHPのふりをしたフォームの情報が入ったXMLファイルが出来上がっており、これを、Webサーバに配置して、VCL For PHPにファイルにパスを通してやれば、既存のApache上でも動きそうな気がします。<br /><br />さて、本来は、Delphi For PHPの売りであると予測される、DB接続なども紹介したいのですが（ビデオ見た限りはそこらへんがとても変態的でよかった）、とりあえず、触ってみたといいたかっただけで、それ以上の情熱は今の所わかなかったので、何か思い立ったら詳しくつっこみたいとおもいます。<br /><br />個人的な結論として、ちゃんと使えば、Accessなどと同じようなレベルで社内Webサーバに配置して配布せずに、社内アプリケーションとして用意するのには使えるかもしれないとおもいました。<br />が、すでにPHPをやっていて、ばりばりフレームワークを使って開発しているような人たちに必要かといわれると、住み分けが大切だと思いました。<br /><br />もし、ご興味が湧きましたら、フル機能あるトライアル版がありますので、そちらを試してみてはいかがでしょうか。<br /><br />
+jQueryは、ajaxSubmitプラグインが好きなKeitaです。<br />
+<br />
+僕はもともと、Delphiの技術者でそこからPHP技術者になりました。<br />
+もはや、Web系のアプリケーションの開発に夢中なので、Delphiをいじることは少なくなりましたが、ちょっと前に、Delphi For PHPという統合開発環境が発売されたようなので、Object Pascalじゃなくて、Delphiって言語の名前って誰か中の人いってたよなーとおもいつつ、軽く触ってみました。<br />
+<br />
+まず、Delphi　For PHPは、Delphiと同じようにその言語の開発環境というだけではなく、フレームワーク的なものを内包しています。<br />
+<br />
+Delphiでは、WindowsアプリケーションをIDEでぺたぺた貼り付けて開発するためにVCL(Visual Component Library)というライブラリがありますが、Delphi For PHPにも<a href="http://sourceforge.net/projects/vcl4php">VCL For PHP</a>というものが準備されているようです。<br />
+<br />
+こういうのが、準備されているおかげで、<a href="http://dn.codegear.com/jp/article/34075<br />
+">Delphi for PHPの概要（英語）</a>のビデオにあるような、本当にPHPで動いているのかわからないような開発方法で開発ができるようになるようです。<br />
+<br />
+「なようです」、とかいってるのもアレなので、とりあえず、使ってみたいと思います。<br />
+<br />
+<a href="http://photozou.jp/photo/show/784/3511808"><img src="http://art7.photozou.jp/pub/784/784/photo/3511808.jpg" alt="WS000001" width="450" height="350" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/784/3511808">WS000001</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br />
+<br />
+とりあえず、Hello PHPとかいて実行してみました。<br />
+<br />
+<br />
+<a href="http://photozou.jp/photo/show/784/3511886"><img src="http://art7.photozou.jp/pub/784/784/photo/3511886.jpg" alt="WS000002" width="450" height="420" style="border: solid 1px #000;"></a><br><a href="http://photozou.jp/photo/show/784/3511886">WS000002</a> posted by <a href="http://photozou.jp/mypage/top/784">(C)フォト蔵</a><br />
+<br />
+とりあえず、なんか動きました。<br />
+<br />
+で、まず最初に気になったこういうIDEでいわれる出力されるHTMLソースがどうかというあたりですが、こんな感じでした。<br />
+<pre><br />
+&lt;!-- Unit1 begin --&gt;<br />
+<br />
+&lt;html &gt;<br />
+&lt;head&gt;<br />
+&lt;script type=&amp;text/javascript&amp; src=&amp;/vcl-bin/js/common.js&amp;&gt;&lt;/script&gt;<br />
+&lt;title&gt;Unit1&lt;/title&gt;<br />
+&lt;meta http-equiv=&amp;Content-Type&amp; content=&amp;text/html; charset=euc-jp&amp; /&gt;<br />
+&lt;/head&gt;<br />
+<br />
+&lt;body  style=&amp; margin-left: 0px;  margin-top: 0px;  margin-right: 0px;  margin-bottom: 0px; &amp;  &gt;<br />
+&lt;form style=&amp;margin-bottom: 0&amp; id=&amp;Unit1&amp; name=&amp;Unit1&amp; method=&amp;post&amp;  action=&amp;/sample1.php&amp;&gt;<br />
+&lt;table  width=&amp;800&amp;   style=&amp;height:600px&amp;  border=&amp;0&amp; cellpadding=&amp;0&amp; cellspacing=&amp;0&amp;  &gt;&lt;tr&gt;&lt;td valign=&amp;top&amp;&gt;<br />
+&lt;div id=&amp;Label1_outer&amp; style=&amp;Z-INDEX: 0; LEFT: 104px; WIDTH: 75px; POSITION: absolute; TOP: 49px; HEIGHT: 13px&amp;&gt;<br />
+&lt;div id=&amp;Label1&amp; style=&amp; font-family: Verdana; font-size: 10px;  height:13px;width:75px;&amp;   &gt;Hello Delphi&lt;/div&gt;<br />
+<br />
+&lt;/div&gt;<br />
+&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;<br />
+&lt;/form&gt;&lt;/body&gt;<br />
+&lt;/html&gt;<br />
+&lt;!-- Unit1 end --&gt;<br />
+</pre><br />
+<br />
+ちなみに、ここまでの作業は、Delphi For PHPをインストールするだけで、Webサーバの立ち上げまでやってくれるので、他に別途作業する必要はありませんでした。<br />
+<br />
+もちろん、Delphiの名を冠しているだけあって、ステップ実行も可能です。これには、<a href="http://dd.cron.ru/dbg/">DBG</a>というPHPのエクステンションを利用しているようです。<br />
+<br />
+ちなみに、出来上がったPHPファイルを見てみると。<br />
+保存したファイル名のものとなにやら、PHPのふりをしたフォームの情報が入ったXMLファイルが出来上がっており、これを、Webサーバに配置して、VCL For PHPにファイルにパスを通してやれば、既存のApache上でも動きそうな気がします。<br />
+<br />
+さて、本来は、Delphi For PHPの売りであると予測される、DB接続なども紹介したいのですが（ビデオ見た限りはそこらへんがとても変態的でよかった）、とりあえず、触ってみたといいたかっただけで、それ以上の情熱は今の所わかなかったので、何か思い立ったら詳しくつっこみたいとおもいます。<br />
+<br />
+個人的な結論として、ちゃんと使えば、Accessなどと同じようなレベルで社内Webサーバに配置して配布せずに、社内アプリケーションとして用意するのには使えるかもしれないとおもいました。<br />
+が、すでにPHPをやっていて、ばりばりフレームワークを使って開発しているような人たちに必要かといわれると、住み分けが大切だと思いました。<br />
+<br />
+もし、ご興味が湧きましたら、フル機能あるトライアル版がありますので、そちらを試してみてはいかがでしょうか。<br />
+<br />
+
 {% endraw %}

@@ -3,5 +3,60 @@ layout: post
 title: "Apache で特定のコンテンツへのアクセスに対して帯域制限しよう"
 ---
 {% raw %}
-<p>こんばんは、最近自転車のライトを交換した naoya です。</p><br /><br /><p>今日は、Apache で特定のコンテンツへのアクセスに対して帯域制限する方法を紹介したいと思います。まず、特定のコンテンツの帯域を制限しようと思った背景から説明したいと思います。<a href="http://photozou.jp">フォト蔵</a>では、写真と動画をサポートしています。そのため、動画へのアクセスが増えると他の写真などへのコンテンツに対するレスポンスが悪くなってしまうことがあります。動画は、FLV 形式ですが比較的ファイルサイズが大きいものが多いため、FLV のみ帯域制限を行ってみることにしました。</p><br /><br /><p>まず、Apache で帯域制限できるモジュールについて調査しました。調査には、<a href="http://gihyo.jp/magazine/SD/archive/2007/200709">Software Design 2007年9月号</a>をおもに参考にさせていただきました。</p><br /><br /><p class="amazlet-box">&nbsp;</p><br /><p class="amazlet-image"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/B000UE0HPY/unoh-22/ref=nosim/" title="amazletlink" name="amazletlink" target="_blank"><img src="http://ecx.images-amazon.com/images/I/31o4lUA7YjL.jpg" alt="Software Design (ソフトウエア デザイン) 2007年 09月号 [雑誌]" /></a></p><br /><p class="amazlet-info">&nbsp;</p><br /><p class="amazlet-name"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/B000UE0HPY/unoh-22/ref=nosim/" title="amazletlink" name="amazletlink" target="_blank">Software Design (ソフトウエア デザイン) 2007年 09月号 [雑誌]</a></p><br /><p class="amazlet-powered-date">posted with <a href="http://www.amazlet.com/browse/ASIN/B000UE0HPY/unoh-22" title="Software Design (ソフトウエア デザイン) 2007年 09月号 [雑誌]" target="_blank">amazlet</a> on 07.11.15</p><br /><p class="amazlet-detail">技術評論社 (2007/08/18)</p><br /><p class="amazlet-link"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/B000UE0HPY/unoh-22/ref=nosim/" title="amazletlink" name="amazletlink" target="_blank">Amazon.co.jp で詳細を見る</a></p><br />Software Design 2007年9月号では、いくつかの Apache の帯域制限できるモジュールが紹介されていたのですが、今回選択したモジュールは <a href="http://apache.ivn.cl/">mod_bw</a> です。<br /><br /><p>mod_bw を選択した理由は、次のとおりです。</p><br /><ul><br />	<li>バーチャルホストに対応している</li><br />	<li>特定のコンテンツ (MIME) 別に設定できる</li><br />	<li>帯域設定が柔軟にできる</li><br />	<li>Apache 2 系で動作する</li><br /></ul><br /><p>それでは、mod_bw のインストール方法について説明します。</p><br /><br /><br /><br /><ol><br />	<li>mod_bw を<a href="http://apache.ivn.cl/">公式サイト</a>からソースコードをダウンロードします（現時点での最新版は 0.8 です）</li><br />	<li>展開してコンパイルします<br />apxs -i -a -c mod_bw.c</li><br />	<li>コンパイル後、mod_bw.so ファイルを /usr/lib/httpd/modules へコピーします</li><br /></ol><br /><br /><p>次に設定方法ですが、Apache の設定ファイル httpd.conf に、mod_bw を読み込むように、次の設定を追加します。</p><br /><br /><pre class="code"><br />LoadModule bw_module          /usr/lib/httpd/modules/mod_bw.so<br /></pre><br /><br /><p>次に、FLV に対して帯域制限する前に、通常の Apache の設定では FLV に対する MIME タイプは設定されてないので、次の設定を追加します。</p><br /><br /><pre class="code"><br />AddType video/x-flv .flv</pre><br /><br /><p>次に実際の帯域制限ですが、例えば次のように追加します。この設定は、すべてクライアントに対して最大 1024 bytes/s の制限を行うという意味になります。この設定は、VirutalHost の中に追加します。</p><br /><br /><pre class="code"><br />       BandWidthModule On<br />       BandWidth all 102400<br />       MinBandWidth all -1<br />       AddOutputFilterByType MOD_BW video/x-flv<br /></pre><br /><br /><p>最後に動作確認は、ab (Apache Bench) か、実際にファイルをダウンロードしながら正しく帯域制限が行われているかチェックします。</p><br /><br /><p>今回は、Apache で特定のコンテンツのみ帯域制限する方法について紹介しました。帯域には限りがあるので、サイトを訪れてくれたユーザに対して快適なサービスを提供していきたいですね。</p>
+<p>こんばんは、最近自転車のライトを交換した naoya です。</p><br />
+<br />
+<p>今日は、Apache で特定のコンテンツへのアクセスに対して帯域制限する方法を紹介したいと思います。まず、特定のコンテンツの帯域を制限しようと思った背景から説明したいと思います。<a href="http://photozou.jp">フォト蔵</a>では、写真と動画をサポートしています。そのため、動画へのアクセスが増えると他の写真などへのコンテンツに対するレスポンスが悪くなってしまうことがあります。動画は、FLV 形式ですが比較的ファイルサイズが大きいものが多いため、FLV のみ帯域制限を行ってみることにしました。</p><br />
+<br />
+<p>まず、Apache で帯域制限できるモジュールについて調査しました。調査には、<a href="http://gihyo.jp/magazine/SD/archive/2007/200709">Software Design 2007年9月号</a>をおもに参考にさせていただきました。</p><br />
+<br />
+<p class="amazlet-box">&nbsp;</p><br />
+<p class="amazlet-image"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/B000UE0HPY/unoh-22/ref=nosim/" title="amazletlink" name="amazletlink" target="_blank"><img src="http://ecx.images-amazon.com/images/I/31o4lUA7YjL.jpg" alt="Software Design (ソフトウエア デザイン) 2007年 09月号 [雑誌]" /></a></p><br />
+<p class="amazlet-info">&nbsp;</p><br />
+<p class="amazlet-name"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/B000UE0HPY/unoh-22/ref=nosim/" title="amazletlink" name="amazletlink" target="_blank">Software Design (ソフトウエア デザイン) 2007年 09月号 [雑誌]</a></p><br />
+<p class="amazlet-powered-date">posted with <a href="http://www.amazlet.com/browse/ASIN/B000UE0HPY/unoh-22" title="Software Design (ソフトウエア デザイン) 2007年 09月号 [雑誌]" target="_blank">amazlet</a> on 07.11.15</p><br />
+<p class="amazlet-detail">技術評論社 (2007/08/18)</p><br />
+<p class="amazlet-link"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/B000UE0HPY/unoh-22/ref=nosim/" title="amazletlink" name="amazletlink" target="_blank">Amazon.co.jp で詳細を見る</a></p><br />
+Software Design 2007年9月号では、いくつかの Apache の帯域制限できるモジュールが紹介されていたのですが、今回選択したモジュールは <a href="http://apache.ivn.cl/">mod_bw</a> です。<br />
+<br />
+<p>mod_bw を選択した理由は、次のとおりです。</p><br />
+<ul><br />
+	<li>バーチャルホストに対応している</li><br />
+	<li>特定のコンテンツ (MIME) 別に設定できる</li><br />
+	<li>帯域設定が柔軟にできる</li><br />
+	<li>Apache 2 系で動作する</li><br />
+</ul><br />
+<p>それでは、mod_bw のインストール方法について説明します。</p><br />
+<br />
+<br />
+<br />
+<ol><br />
+	<li>mod_bw を<a href="http://apache.ivn.cl/">公式サイト</a>からソースコードをダウンロードします（現時点での最新版は 0.8 です）</li><br />
+	<li>展開してコンパイルします<br />
+apxs -i -a -c mod_bw.c</li><br />
+	<li>コンパイル後、mod_bw.so ファイルを /usr/lib/httpd/modules へコピーします</li><br />
+</ol><br />
+<br />
+<p>次に設定方法ですが、Apache の設定ファイル httpd.conf に、mod_bw を読み込むように、次の設定を追加します。</p><br />
+<br />
+<pre class="code"><br />
+LoadModule bw_module          /usr/lib/httpd/modules/mod_bw.so<br />
+</pre><br />
+<br />
+<p>次に、FLV に対して帯域制限する前に、通常の Apache の設定では FLV に対する MIME タイプは設定されてないので、次の設定を追加します。</p><br />
+<br />
+<pre class="code"><br />
+AddType video/x-flv .flv</pre><br />
+<br />
+<p>次に実際の帯域制限ですが、例えば次のように追加します。この設定は、すべてクライアントに対して最大 1024 bytes/s の制限を行うという意味になります。この設定は、VirutalHost の中に追加します。</p><br />
+<br />
+<pre class="code"><br />
+       BandWidthModule On<br />
+       BandWidth all 102400<br />
+       MinBandWidth all -1<br />
+       AddOutputFilterByType MOD_BW video/x-flv<br />
+</pre><br />
+<br />
+<p>最後に動作確認は、ab (Apache Bench) か、実際にファイルをダウンロードしながら正しく帯域制限が行われているかチェックします。</p><br />
+<br />
+<p>今回は、Apache で特定のコンテンツのみ帯域制限する方法について紹介しました。帯域には限りがあるので、サイトを訪れてくれたユーザに対して快適なサービスを提供していきたいですね。</p>
 {% endraw %}

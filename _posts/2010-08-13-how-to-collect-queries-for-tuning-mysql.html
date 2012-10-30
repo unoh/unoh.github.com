@@ -3,5 +3,122 @@ layout: post
 title: "MySQLのチューニングのためのデータの集め方"
 ---
 {% raw %}
-<p>いつの間にか会社で古株になったyamaokaです。</p><br /><br /><p><br />webアプリケーションのバックエンドにMySQLを使っている場合、<br />クエリ（SQL）のチューニングをする必要がありますよね。<br />皆さんはチューニングの計画をどのように立てていますか。<br /></p><br /><br /><p><br />もちろん、既に明らかに重いことが想定されているページがあれば、<br />その処理で使われているクエリを中心にEXPLAINなどを使って解析していけばいいと思います。<br /></p><br /><br /><p><br />でもそうではなく、全体的にクエリの見直しやチューニングを行いたい場合は<br />実際に実行されているクエリを確認していくという作業が必要です。<br />そこで使うことができる3つの方法について書きたいと思います。<br /></p><br /><br /><h3>遅いクエリを記録する</h3><br /><p><br />MySQLにはスロークエリログといって、<br />実行に時間がかかったクエリを記録する機能が最初から付いています。<br />/etc/my.cnfに次のように設定を書けば実行時間が1秒を超えたクエリが出力されるようになります。<br /><pre class="code">slow_query_log = 1<br />slow_query_log_file = /path/to/mysql-slow.log<br />long_query_time = 1</pre><br />オンラインでset globalを使って変更する場合は次のようにします。<br /><pre class="code">set global slow_query_log = 1;<br />set global slow_query_log_file = '/path/to/mysql-slow.log';<br />set global long_query_time = 1;<br /></pre><br /></p><br /><p><br />出力されたログファイルをMySQLに付属しているmysqldumpslowというツールで解析すると便利です。次のように実行すれば、平均の実行時間が長い順にソートして表示してくれます。<br /><pre class="code">mysqldumpslow -s at /path/to/mysql-slow.log</pre><br />クエリのパラメータは数値はN、文字列はSに置換して表示してくれるので<br />同じクエリをまとめてチェックすることができます。<br /></p><br /><br /><h3>実行回数の多いクエリを記録する</h3><br /><p><br />実行時間は短いけれど多くの回数実行されるクエリというのもあります。<br />これらは通常のスローログには出てこないのですが、<br />実は負荷の大部分を占めている、ということもありえます。<br />キャッシュなど別の方法を考えることで<br />アプリケーションの負荷を減らすことができるかもしれません。<br /></p><br /><p><br />従来MySQLではlong_query_timeに1秒以上の値しか設定できませんでしたが、<br />MySQL 5.1から1秒未満の値も設定できるようになりました。<br />つまり、次のように/etc/my.cnfで「0」を設定すれば<br />全てのクエリが記録できることになります。<br /><pre class="code">slow_query_log = 1<br />slow_query_log_file = /path/to/mysql-slow.log<br />long_query_time = 0</pre><br /></p><br /><p><br />もちろん、全てのクエリの記録は負荷も大きくかかることを<br />理解してから設定を行うようにしてください。<br />また、ログの容量も大きくなるので、ディスクの空き容量にも注意が必要です。<br />オンラインでset globalを使って一時的に値を0に変更し、すぐに元の値（1など）に戻すのがオススメです。<br /><pre class="code">set global slow_query_log = 1;<br />set global slow_query_log_file = '/path/to/mysql-slow.log';<br />set global long_query_time = 0;<br /># 後で set global long_query_time = 1; で元に戻す</pre><br /></p><br /><p><br />出力されたログファイルをmysqldumpslowで次のように解析することで、<br />実行回数の多い順に表示することが可能です。<br /><pre class="code">mysqldumpslow -s c /path/to/mysql-slow.log</pre><br /></p><br /><p><br />mysqldumpslowは他にもいろいろ機能を持っているので、「--help」を付けて実行して<br />一度オプションを確認してみるといいかもしれません。<br /></p><br /><p><br />追記: MySQLでは/etc/my.cnfに次のような設定をすることで全てのクエリを記録することが可能です。<br />最初から全ての記録を保存したい場合はこちらの方法もいいかもしれません。<br /><pre class="code">log = /path/to/mysql-query.log</pre><br /></p><br /><br /><h3>インデックスを使っていないクエリを記録する</h3><br /><p><br />多くの場合、インデックスを使用しないクエリは遅いです。<br />インデックスの設計は計画的に行う必要があると思いますが、<br />今現在インデックスを使用していないクエリはどれなのか知りたい場合があると思います。<br />次のように/etc/my.cnfに記述することでインデックスを使用していないクエリを<br />スロークエリログに記録することができるようになります。<br /><pre class="code">slow_query_log = 1<br />slow_query_log_file = /path/to/mysql-slow.log<br />long_query_time = 5<br />log_queries_not_using_indexes = 1</pre><br />オンラインでset globalを使って設定する場合は次のようにします。<br /><pre class="code">set global slow_query_log = 1;<br />set global slow_query_log_file = '/path/to/mysql-slow.log';<br />set global long_query_time = 5;<br />set global log_queries_not_using_indexes = 1;</pre><br /></p><br /><p><br />出力されたログファイルは今までと同じように<br />mysqldumpslowを使って解析していくことになると思います。<br /></p><br /><br /><h3>終わりに</h3><br /><p><br />最近は、開発するときにフレームワークに付属のORマッパーを使ったりして<br />実際に発行されるクエリを意識しないことが多くなっていると思います。<br />もちろんそれはメリットだと思うのですが、実際に実行されるのはクエリ（SQL）である以上、<br />完全に意識しないで済むということはありません。<br /></p><br /><p><br />実際に発行されているクエリを眺めつつ、<br />少しでもパフォーマンスのよいwebアプリケーションを作っていけたらいいと思います。<br /></p><br /><br /><p>追記: オプションの変数名がMySQL 5.1基準のものになっていなかったのでMySQL 5.1をベースに修正しました。</p><br />
+<p>いつの間にか会社で古株になったyamaokaです。</p><br />
+<br />
+<p><br />
+webアプリケーションのバックエンドにMySQLを使っている場合、<br />
+クエリ（SQL）のチューニングをする必要がありますよね。<br />
+皆さんはチューニングの計画をどのように立てていますか。<br />
+</p><br />
+<br />
+<p><br />
+もちろん、既に明らかに重いことが想定されているページがあれば、<br />
+その処理で使われているクエリを中心にEXPLAINなどを使って解析していけばいいと思います。<br />
+</p><br />
+<br />
+<p><br />
+でもそうではなく、全体的にクエリの見直しやチューニングを行いたい場合は<br />
+実際に実行されているクエリを確認していくという作業が必要です。<br />
+そこで使うことができる3つの方法について書きたいと思います。<br />
+</p><br />
+<br />
+<h3>遅いクエリを記録する</h3><br />
+<p><br />
+MySQLにはスロークエリログといって、<br />
+実行に時間がかかったクエリを記録する機能が最初から付いています。<br />
+/etc/my.cnfに次のように設定を書けば実行時間が1秒を超えたクエリが出力されるようになります。<br />
+<pre class="code">slow_query_log = 1<br />
+slow_query_log_file = /path/to/mysql-slow.log<br />
+long_query_time = 1</pre><br />
+オンラインでset globalを使って変更する場合は次のようにします。<br />
+<pre class="code">set global slow_query_log = 1;<br />
+set global slow_query_log_file = '/path/to/mysql-slow.log';<br />
+set global long_query_time = 1;<br />
+</pre><br />
+</p><br />
+<p><br />
+出力されたログファイルをMySQLに付属しているmysqldumpslowというツールで解析すると便利です。次のように実行すれば、平均の実行時間が長い順にソートして表示してくれます。<br />
+<pre class="code">mysqldumpslow -s at /path/to/mysql-slow.log</pre><br />
+クエリのパラメータは数値はN、文字列はSに置換して表示してくれるので<br />
+同じクエリをまとめてチェックすることができます。<br />
+</p><br />
+<br />
+<h3>実行回数の多いクエリを記録する</h3><br />
+<p><br />
+実行時間は短いけれど多くの回数実行されるクエリというのもあります。<br />
+これらは通常のスローログには出てこないのですが、<br />
+実は負荷の大部分を占めている、ということもありえます。<br />
+キャッシュなど別の方法を考えることで<br />
+アプリケーションの負荷を減らすことができるかもしれません。<br />
+</p><br />
+<p><br />
+従来MySQLではlong_query_timeに1秒以上の値しか設定できませんでしたが、<br />
+MySQL 5.1から1秒未満の値も設定できるようになりました。<br />
+つまり、次のように/etc/my.cnfで「0」を設定すれば<br />
+全てのクエリが記録できることになります。<br />
+<pre class="code">slow_query_log = 1<br />
+slow_query_log_file = /path/to/mysql-slow.log<br />
+long_query_time = 0</pre><br />
+</p><br />
+<p><br />
+もちろん、全てのクエリの記録は負荷も大きくかかることを<br />
+理解してから設定を行うようにしてください。<br />
+また、ログの容量も大きくなるので、ディスクの空き容量にも注意が必要です。<br />
+オンラインでset globalを使って一時的に値を0に変更し、すぐに元の値（1など）に戻すのがオススメです。<br />
+<pre class="code">set global slow_query_log = 1;<br />
+set global slow_query_log_file = '/path/to/mysql-slow.log';<br />
+set global long_query_time = 0;<br />
+# 後で set global long_query_time = 1; で元に戻す</pre><br />
+</p><br />
+<p><br />
+出力されたログファイルをmysqldumpslowで次のように解析することで、<br />
+実行回数の多い順に表示することが可能です。<br />
+<pre class="code">mysqldumpslow -s c /path/to/mysql-slow.log</pre><br />
+</p><br />
+<p><br />
+mysqldumpslowは他にもいろいろ機能を持っているので、「--help」を付けて実行して<br />
+一度オプションを確認してみるといいかもしれません。<br />
+</p><br />
+<p><br />
+追記: MySQLでは/etc/my.cnfに次のような設定をすることで全てのクエリを記録することが可能です。<br />
+最初から全ての記録を保存したい場合はこちらの方法もいいかもしれません。<br />
+<pre class="code">log = /path/to/mysql-query.log</pre><br />
+</p><br />
+<br />
+<h3>インデックスを使っていないクエリを記録する</h3><br />
+<p><br />
+多くの場合、インデックスを使用しないクエリは遅いです。<br />
+インデックスの設計は計画的に行う必要があると思いますが、<br />
+今現在インデックスを使用していないクエリはどれなのか知りたい場合があると思います。<br />
+次のように/etc/my.cnfに記述することでインデックスを使用していないクエリを<br />
+スロークエリログに記録することができるようになります。<br />
+<pre class="code">slow_query_log = 1<br />
+slow_query_log_file = /path/to/mysql-slow.log<br />
+long_query_time = 5<br />
+log_queries_not_using_indexes = 1</pre><br />
+オンラインでset globalを使って設定する場合は次のようにします。<br />
+<pre class="code">set global slow_query_log = 1;<br />
+set global slow_query_log_file = '/path/to/mysql-slow.log';<br />
+set global long_query_time = 5;<br />
+set global log_queries_not_using_indexes = 1;</pre><br />
+</p><br />
+<p><br />
+出力されたログファイルは今までと同じように<br />
+mysqldumpslowを使って解析していくことになると思います。<br />
+</p><br />
+<br />
+<h3>終わりに</h3><br />
+<p><br />
+最近は、開発するときにフレームワークに付属のORマッパーを使ったりして<br />
+実際に発行されるクエリを意識しないことが多くなっていると思います。<br />
+もちろんそれはメリットだと思うのですが、実際に実行されるのはクエリ（SQL）である以上、<br />
+完全に意識しないで済むということはありません。<br />
+</p><br />
+<p><br />
+実際に発行されているクエリを眺めつつ、<br />
+少しでもパフォーマンスのよいwebアプリケーションを作っていけたらいいと思います。<br />
+</p><br />
+<br />
+<p>追記: オプションの変数名がMySQL 5.1基準のものになっていなかったのでMySQL 5.1をベースに修正しました。</p><br />
+
 {% endraw %}

@@ -3,5 +3,82 @@ layout: post
 title: "フィードバックサイクルを素早く回すために"
 ---
 {% raw %}
-この記事は、Symfony アドベントカレンダー 2010に参加しています。<br /><ul><br />	<li><a href="http://www.symfony.gr.jp/adventcalendar/2010">Symfonyアドベントカレンダー 2010 | 日本Symfonyユーザー会</a></li><br />	<li><a href="http://d.hatena.ne.jp/ja9/20101214/1292348839">前の記事: Symfony2 + MongoDB ODM を使ってみる - 今日も適当ダイアリー</a></li><br /></ul><br /><br />こんにちは。murahashi sanemat kenichi です。開発で重要なのはフィードバックのサイクルを素早く回すことですよね。<br /><br />こうなってくれるとうれしい。<br /><strong>落ちるテストを保存するとred</strong><br /><span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="for-quick-feedback-cycle-red.png" src="http://labs.unoh.net/for-quick-feedback-cycle-red.png" width="600" height="197" class="mt-image-none" style="" /></span><br /><strong>通る実装を保存するとgreen</strong><br /><span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="for-quick-feedback-cycle-green.png" src="http://labs.unoh.net/for-quick-feedback-cycle-green.png" width="600" height="197" class="mt-image-none" style="" /></span><br /><br /><h4>フィードバックサイクル</h4><br />簡単に達成するために必要なのは次の4つです。<br /><br />テストコードのグルーピング、ファイル更新検知、ファイル対応関係、screenのstatus line<br /><br />Symfonyの場合の話を順にみていきます。<br /><br /><h5>一発でグループ分けされたテストコードが走る仕組み</h5><br /><blockquote>Symfonyは簡単<br /><br />$ php symfony test:unit #=> 全ユニットテストが走る<br /><br />$ php symfony test:all #=> 全テストが走る<br /><br />$ php symfony test:functional NAME #=> NAMEの機能テストが走る<br /><br /></blockquote><br /><br /><h5>ファイル更新検知をして、それをトリガに別のスクリプトを呼び出す仕組み</h5><br /><blockquote>Symfonyのアプリルートを <a href="http://rubygems.org/gems/watchr">watchr</a> で監視して、レシピは <a href="https://github.com/sanemat/symfony_watchr">symfony-watchr</a> 書きました。</blockquote><br /><br /><h5>あるファイルを更新したときに、対応するテストがわかりやすい仕組み　そしてその逆も</h5><br /><blockquote>Symfonyは設定より規約 convention over configuration のルールに従っているので、対応するファイルがわかりやすいです。<br /></blockquote><br /><h5>テスト結果をparseして、GNU Screenのstatus lineに流し込む仕組み</h5><br /><blockquote> <a href="http://rubygems.org/gems/autotest_screen">autotest_screen</a> から、screenのstatus lineに表示する部分をはがして <a href="http://rubygems.org/gems/screenout">screenout</a> に切り出しました。</blockquote><br /><br />これで楽しいdeveloper testing lifeがおくれるようになりました。<br /><blockquote>$ watchr ~/work/symfony_watchr/bin/symfony_watchr.rb</blockquote><br /><hr /><br /><br /><h4>screenoutとwatchrとsymfony_watchr組み合わせた時の欠点</h4><br /><h5>欠点1</h5><br />ファイルの対応関係を雑に書いたので、粒度が大きすぎて素早いフィードバックが回らなかった。<br /><ul><br />	<li>modelかunit以下のファイルを更新したら全unit testが走る</li><br />	<li>test/functional 以下のファイルを更新したら、そのfunctional testが走る</li><br /></ul><br /><br /><h5>欠点2</h5><br />コードが悪くて、会社環境だと100MB近くメモリ食ってた<br /><br />そしてどこがわるいかよくわからない<br /><br />車輪の再発明感満載なので、どなたか、もっとまともな組み合わせがあれば教えてください。<br />cpan探したのですがどこみていいかよくわからなくて、みんなどんなの使ってるんでしょう。<br /><br />というわけで、 <a href="http://rubygems.org/gems/rspec">rspec</a> と <a href="http://rubygems.org/gems/autotest">autotest</a> と <a href="http://rubygems.org/gems/autotest_screen">autotest_screen</a> の説明をお送りしました。<br /><hr /><br /><h4>参考URL</h4><br /><ul><br />	<li><a href="http://openlab.dino.co.jp/2010/05/13/144546693.html">autotest で Symfony + Lime を自動テストする -- ディノオープンラボラトリ</a></li><br />	<li>screenでない場合、<a href="http://redmine.piece-framework.com/projects/stagehand-testrunner/wiki">Stagehand_TestRunner</a>でなんとかなるんじゃないでしょうか。</li><br />	<li>rubyでtmuxの人に <a href="http://rubygems.org/gems/autotest-tmux">autotest-tmux</a> </li><br />	<li>growlは自分で探して</li><br /></ul><br /><br /><hr /><br /><h4>Symfony Advent 2010</h4><br /><br />Symfony Advent 2010 では12月1日から12月24日までを使って日替わりで symfony でイイなと思った小さな tips から内部構造まで迫った解説などを ブログ記事にして公開していくイベントです。<br /><ul><br />	<li><a href="http://www.symfony.gr.jp/">日本Symfonyユーザー会</a></li><br />	<li><a href="http://www.symfony.gr.jp/adventcalendar/2010">Symfony アドベントカレンダー2010</a></li><br /></ul><br /><br />※Syfony Advent 2010はsymfony好きな有志で集まったチームです。<br /><br />以上デース<br /><br /><div style="margin:0;padding:.5em;border:2px solid #ccc">Zynga Japanでは積極的にエンジニアを採用しています。<br /><br /><a href="http://www.zynga.co.jp/recruit/recruit.php?siteid=unohlabs">採用ページ</a>をご覧になり、興味のある方はぜひご応募ください。</div>
+この記事は、Symfony アドベントカレンダー 2010に参加しています。<br />
+<ul><br />
+	<li><a href="http://www.symfony.gr.jp/adventcalendar/2010">Symfonyアドベントカレンダー 2010 | 日本Symfonyユーザー会</a></li><br />
+	<li><a href="http://d.hatena.ne.jp/ja9/20101214/1292348839">前の記事: Symfony2 + MongoDB ODM を使ってみる - 今日も適当ダイアリー</a></li><br />
+</ul><br />
+<br />
+こんにちは。murahashi sanemat kenichi です。開発で重要なのはフィードバックのサイクルを素早く回すことですよね。<br />
+<br />
+こうなってくれるとうれしい。<br />
+<strong>落ちるテストを保存するとred</strong><br />
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="for-quick-feedback-cycle-red.png" src="http://labs.unoh.net/for-quick-feedback-cycle-red.png" width="600" height="197" class="mt-image-none" style="" /></span><br />
+<strong>通る実装を保存するとgreen</strong><br />
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="for-quick-feedback-cycle-green.png" src="http://labs.unoh.net/for-quick-feedback-cycle-green.png" width="600" height="197" class="mt-image-none" style="" /></span><br />
+<br />
+<h4>フィードバックサイクル</h4><br />
+簡単に達成するために必要なのは次の4つです。<br /><br />
+テストコードのグルーピング、ファイル更新検知、ファイル対応関係、screenのstatus line<br /><br />
+Symfonyの場合の話を順にみていきます。<br />
+<br />
+<h5>一発でグループ分けされたテストコードが走る仕組み</h5><br />
+<blockquote>Symfonyは簡単<br /><br />
+$ php symfony test:unit #=> 全ユニットテストが走る<br /><br />
+$ php symfony test:all #=> 全テストが走る<br /><br />
+$ php symfony test:functional NAME #=> NAMEの機能テストが走る<br /><br />
+</blockquote><br />
+<br />
+<h5>ファイル更新検知をして、それをトリガに別のスクリプトを呼び出す仕組み</h5><br />
+<blockquote>Symfonyのアプリルートを <a href="http://rubygems.org/gems/watchr">watchr</a> で監視して、レシピは <a href="https://github.com/sanemat/symfony_watchr">symfony-watchr</a> 書きました。</blockquote><br />
+<br />
+<h5>あるファイルを更新したときに、対応するテストがわかりやすい仕組み　そしてその逆も</h5><br />
+<blockquote>Symfonyは設定より規約 convention over configuration のルールに従っているので、対応するファイルがわかりやすいです。<br />
+</blockquote><br />
+<h5>テスト結果をparseして、GNU Screenのstatus lineに流し込む仕組み</h5><br />
+<blockquote> <a href="http://rubygems.org/gems/autotest_screen">autotest_screen</a> から、screenのstatus lineに表示する部分をはがして <a href="http://rubygems.org/gems/screenout">screenout</a> に切り出しました。</blockquote><br />
+<br />
+これで楽しいdeveloper testing lifeがおくれるようになりました。<br />
+<blockquote>$ watchr ~/work/symfony_watchr/bin/symfony_watchr.rb</blockquote><br />
+<hr /><br />
+<br />
+<h4>screenoutとwatchrとsymfony_watchr組み合わせた時の欠点</h4><br />
+<h5>欠点1</h5><br />
+ファイルの対応関係を雑に書いたので、粒度が大きすぎて素早いフィードバックが回らなかった。<br />
+<ul><br />
+	<li>modelかunit以下のファイルを更新したら全unit testが走る</li><br />
+	<li>test/functional 以下のファイルを更新したら、そのfunctional testが走る</li><br />
+</ul><br />
+<br />
+<h5>欠点2</h5><br />
+コードが悪くて、会社環境だと100MB近くメモリ食ってた<br /><br />
+そしてどこがわるいかよくわからない<br />
+<br />
+車輪の再発明感満載なので、どなたか、もっとまともな組み合わせがあれば教えてください。<br />cpan探したのですがどこみていいかよくわからなくて、みんなどんなの使ってるんでしょう。<br />
+<br />
+というわけで、 <a href="http://rubygems.org/gems/rspec">rspec</a> と <a href="http://rubygems.org/gems/autotest">autotest</a> と <a href="http://rubygems.org/gems/autotest_screen">autotest_screen</a> の説明をお送りしました。<br />
+<hr /><br />
+<h4>参考URL</h4><br />
+<ul><br />
+	<li><a href="http://openlab.dino.co.jp/2010/05/13/144546693.html">autotest で Symfony + Lime を自動テストする -- ディノオープンラボラトリ</a></li><br />
+	<li>screenでない場合、<a href="http://redmine.piece-framework.com/projects/stagehand-testrunner/wiki">Stagehand_TestRunner</a>でなんとかなるんじゃないでしょうか。</li><br />
+	<li>rubyでtmuxの人に <a href="http://rubygems.org/gems/autotest-tmux">autotest-tmux</a> </li><br />
+	<li>growlは自分で探して</li><br />
+</ul><br />
+<br />
+<hr /><br />
+<h4>Symfony Advent 2010</h4><br />
+<br />
+Symfony Advent 2010 では12月1日から12月24日までを使って日替わりで symfony でイイなと思った小さな tips から内部構造まで迫った解説などを ブログ記事にして公開していくイベントです。<br />
+<ul><br />
+	<li><a href="http://www.symfony.gr.jp/">日本Symfonyユーザー会</a></li><br />
+	<li><a href="http://www.symfony.gr.jp/adventcalendar/2010">Symfony アドベントカレンダー2010</a></li><br />
+</ul><br />
+<br />
+※Syfony Advent 2010はsymfony好きな有志で集まったチームです。<br />
+<br />
+以上デース<br />
+<br />
+<div style="margin:0;padding:.5em;border:2px solid #ccc">Zynga Japanでは積極的にエンジニアを採用しています。<br /><br />
+<a href="http://www.zynga.co.jp/recruit/recruit.php?siteid=unohlabs">採用ページ</a>をご覧になり、興味のある方はぜひご応募ください。</div>
 {% endraw %}

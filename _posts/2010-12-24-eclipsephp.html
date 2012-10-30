@@ -3,5 +3,45 @@ layout: post
 title: "EclipseでPHP開発"
 ---
 {% raw %}
-<p>メリークリスマス！11月に入社した関山です。</p><br /><br /><p>みなさんはPHP開発に何を使っていますか？<br /><br />僕はMac用のエディタ<a href="http://macromates.com/" target="_blank">TextMate</a>と<a href="http://www.mimikaki.net/" target="_blank">mi</a>、コンソールでは<a href="http://www.vim.org/" target="_blank">vim</a>を併用していますが、入社を機に<a href="http://www.eclipse.org/" target="_blank">Eclipse</a>でのPHP開発にトライしました。</p><br /><br /><h3>Eclipse for PHP Developersをインストール</h3><br /><br /><p><a href="http://www.eclipse.org/downloads/" target="_blank">Eclipse Downloads</a>よりPHP開発ツール (PDT) がセットアップ済みのパッケージ<strong>Eclipse for PHP Developers</strong>が入手できますので、これを使いました。バージョンは最新のEclipse Helios (3.6.1 SR1)です。</p><br /><br /><hr /><br /><br /><h3>プラグインをインストール</h3><br /><br /><p>ローカルで開発するだけならそのままでも大丈夫ですが、僕は以下のプラグインをインストールしました。</p><br /><br /><dl><br /><dt><a href="http://www.eclipse.org/babel/" target="_blank">Babel</a></dt><br /><dd>インストール直後はUIが英語なので、プラグインで日本語化します。<br /><br />「ヘルプ」&gt;「新規ソフトウェアのインストール...」を開き、<strong>Work with:</strong>の欄に<a href="http://www.eclipse.org/babel/downloads.php" target="_blank">Eclipse Babel Project Downloads</a>の<strong>Babel Language Pack Update Site for Helios</strong>のURLを入力後、ガイドに従ってプラグインをインストール・再起動すればEclipseのUIが日本語になります。</dd><br /><dt><a href="http://www.eclipse.org/subversive/" target="_blank">Subversive</a> & <a href="http://www.eclipse.org/egit/" target="_blank">EGit</a></dt><br /><dd>EclipseのGUI上でSubversionやGitのレポジトリ操作ができるプラグインです。<br />Heliosでは更新サイトが登録済みですが、デフォルトでは無効だったので環境設定の「有効なソフトウェア・サイト」でsubversive/egitの更新サイトをアクティベートした後、「新規ソフトウェアのインストール...」でWork with: の欄からsubversive/egitを選んでインストールします。</dd><br /><dt><a href="http://www.eclipse.org/dsdp/tm/" target="_blank">Remote System Explorer</a> (RSE)</dt><br /><dd>SSHでリモートサーバーに接続し、リモートサーバー上のファイルを直接編集したりコマンドを実行したりといったことが可能になるプラグインです。Helios PDTではデフォルトで使えるので、追加インストールする必要はありません。<br /><br />PHP開発ならリモート・システム・エクスプローラーのパースペクティブを使うより、PHPパースペクティブをカスタマイズしてRSEの「リモート・システム」ビューを追加すると、「PHP Explorer」ビューにリモートプロジェクトをインポートできたりして便利です。</dd><br /><dt><a href="http://vrapper.sourceforge.net/home/" target="_blank">Vrapper</a></dt><br /><dd>Eclipseでvimライクなテキスト編集ができるようになるプラグインです。<br /><a href="http://d.hatena.ne.jp/yuroyoro/20100218/1266477264" target="_blank">Eclipseのキーバインドをvim風にできるVrapperが素晴らしすぎる件について - ゆろよろ日記</a>で知りました。<br /><br />IDEとしては強力なEclipseですが、テキスト編集機能は単体のエディタに劣る面も少なからずあります。プラグインでそういった欠点をカバーできるのは素晴らしいですね。</dd><br /><dt><a href="http://redmine.piece-framework.com/wiki/makegood/Ja_Overview" target="_blank">MakeGood</a></dt><br /><dd>PDTでTDDを可能にするプラグインです。テスティングフレームワークはPHPUnitのほか、SimpleTest、CakePHP等をサポートしています。風の噂ではSymfony2にも対応予定とか...<br /><br />プラグイン自体の他にもPHP側でいくつか動作に必要なものがありますので、詳細は<a href="http://redmine.piece-framework.com/wiki/makegood/Ja_Overview" target="_blank">公式サイト</a>をご覧ください。</dd><br /></dl><br /><br /><hr /><br /><br /><h3>あとがき</h3><br /><p>今回はプラグインの紹介のみでしたが、次回は実際にこんな風に使っているよ、ということを書きたいと思います。<br /><br />また、僕もEclipseを使い始めて日が浅いので、便利なプラグインやTipsを教えていただけると嬉しいです。</p><br /><p>余談ですが本日12月24日は弊社で外部からもエンジニアもお招きしてハッカソンを開催します。みなさんも楽しいクリスマスを！</p><br /><br /><div style="margin:0;padding:.5em;border:2px solid #ccc">Zynga Japanでは積極的にエンジニアを採用しています。<br /><br /><a href="http://www.zynga.co.jp/recruit/recruit.php?siteid=unohlabs">採用ページ</a>をご覧になり、興味のある方はぜひご応募ください。</div>
+<p>メリークリスマス！11月に入社した関山です。</p><br />
+<br />
+<p>みなさんはPHP開発に何を使っていますか？<br /><br />
+僕はMac用のエディタ<a href="http://macromates.com/" target="_blank">TextMate</a>と<a href="http://www.mimikaki.net/" target="_blank">mi</a>、コンソールでは<a href="http://www.vim.org/" target="_blank">vim</a>を併用していますが、入社を機に<a href="http://www.eclipse.org/" target="_blank">Eclipse</a>でのPHP開発にトライしました。</p><br />
+<br />
+<h3>Eclipse for PHP Developersをインストール</h3><br />
+<br />
+<p><a href="http://www.eclipse.org/downloads/" target="_blank">Eclipse Downloads</a>よりPHP開発ツール (PDT) がセットアップ済みのパッケージ<strong>Eclipse for PHP Developers</strong>が入手できますので、これを使いました。バージョンは最新のEclipse Helios (3.6.1 SR1)です。</p><br />
+<br />
+<hr /><br />
+<br />
+<h3>プラグインをインストール</h3><br />
+<br />
+<p>ローカルで開発するだけならそのままでも大丈夫ですが、僕は以下のプラグインをインストールしました。</p><br />
+<br />
+<dl><br />
+<dt><a href="http://www.eclipse.org/babel/" target="_blank">Babel</a></dt><br />
+<dd>インストール直後はUIが英語なので、プラグインで日本語化します。<br /><br />
+「ヘルプ」&gt;「新規ソフトウェアのインストール...」を開き、<strong>Work with:</strong>の欄に<a href="http://www.eclipse.org/babel/downloads.php" target="_blank">Eclipse Babel Project Downloads</a>の<strong>Babel Language Pack Update Site for Helios</strong>のURLを入力後、ガイドに従ってプラグインをインストール・再起動すればEclipseのUIが日本語になります。</dd><br />
+<dt><a href="http://www.eclipse.org/subversive/" target="_blank">Subversive</a> & <a href="http://www.eclipse.org/egit/" target="_blank">EGit</a></dt><br />
+<dd>EclipseのGUI上でSubversionやGitのレポジトリ操作ができるプラグインです。<br />Heliosでは更新サイトが登録済みですが、デフォルトでは無効だったので環境設定の「有効なソフトウェア・サイト」でsubversive/egitの更新サイトをアクティベートした後、「新規ソフトウェアのインストール...」でWork with: の欄からsubversive/egitを選んでインストールします。</dd><br />
+<dt><a href="http://www.eclipse.org/dsdp/tm/" target="_blank">Remote System Explorer</a> (RSE)</dt><br />
+<dd>SSHでリモートサーバーに接続し、リモートサーバー上のファイルを直接編集したりコマンドを実行したりといったことが可能になるプラグインです。Helios PDTではデフォルトで使えるので、追加インストールする必要はありません。<br /><br />
+PHP開発ならリモート・システム・エクスプローラーのパースペクティブを使うより、PHPパースペクティブをカスタマイズしてRSEの「リモート・システム」ビューを追加すると、「PHP Explorer」ビューにリモートプロジェクトをインポートできたりして便利です。</dd><br />
+<dt><a href="http://vrapper.sourceforge.net/home/" target="_blank">Vrapper</a></dt><br />
+<dd>Eclipseでvimライクなテキスト編集ができるようになるプラグインです。<br /><a href="http://d.hatena.ne.jp/yuroyoro/20100218/1266477264" target="_blank">Eclipseのキーバインドをvim風にできるVrapperが素晴らしすぎる件について - ゆろよろ日記</a>で知りました。<br /><br />
+IDEとしては強力なEclipseですが、テキスト編集機能は単体のエディタに劣る面も少なからずあります。プラグインでそういった欠点をカバーできるのは素晴らしいですね。</dd><br />
+<dt><a href="http://redmine.piece-framework.com/wiki/makegood/Ja_Overview" target="_blank">MakeGood</a></dt><br />
+<dd>PDTでTDDを可能にするプラグインです。テスティングフレームワークはPHPUnitのほか、SimpleTest、CakePHP等をサポートしています。風の噂ではSymfony2にも対応予定とか...<br /><br />
+プラグイン自体の他にもPHP側でいくつか動作に必要なものがありますので、詳細は<a href="http://redmine.piece-framework.com/wiki/makegood/Ja_Overview" target="_blank">公式サイト</a>をご覧ください。</dd><br />
+</dl><br />
+<br />
+<hr /><br />
+<br />
+<h3>あとがき</h3><br />
+<p>今回はプラグインの紹介のみでしたが、次回は実際にこんな風に使っているよ、ということを書きたいと思います。<br /><br />
+また、僕もEclipseを使い始めて日が浅いので、便利なプラグインやTipsを教えていただけると嬉しいです。</p><br />
+<p>余談ですが本日12月24日は弊社で外部からもエンジニアもお招きしてハッカソンを開催します。みなさんも楽しいクリスマスを！</p><br />
+<br />
+<div style="margin:0;padding:.5em;border:2px solid #ccc">Zynga Japanでは積極的にエンジニアを採用しています。<br /><br />
+<a href="http://www.zynga.co.jp/recruit/recruit.php?siteid=unohlabs">採用ページ</a>をご覧になり、興味のある方はぜひご応募ください。</div>
 {% endraw %}

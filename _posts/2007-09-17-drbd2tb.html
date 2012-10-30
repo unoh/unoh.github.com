@@ -3,5 +3,71 @@ layout: post
 title: "DRBDで2TBのハードディスク容量を使う方法"
 ---
 {% raw %}
-<p>こんにちは、naoyaです。</p><br /><br /><p>先日、<a href="http://photozou.jp">フォト蔵</a>のサーバのハードディスク空き容量が減ってきたので、ハードディスクを500GBx4から1TBx4のハードディスクに交換しました。</p><br /><br /><p>フォト蔵のサーバでは、以前<a href="http://labs.unoh.net/cgi-bin/mt-search.cgi?tag=sato&blog_id=2">sato</a>が紹介したように<a href="http://labs.unoh.net/2006/12/drbd.html">DRBD</a>を使って写真や動画のデータを相互バックアップしています。</p><br /><br /><p>フォト蔵のサーバのハードウェアとソフトウェア環境は、次のとおりです。</p><br /><br /><ul><br />  <li>HDD: 1TB x 4</li><br />  <li>OS: Fedora Core 5(2.6.20)</li><br />  <li>DRBD: 0.7.24</li><br /></ul><br /><br /><p>ハードディスクは、二本ずつソフトウェアRAID0で組んでいます。</p><br /><br /><pre class="code"><br /># cat /proc/mdstat<br />Personalities : [raid0]<br />md1 : active raid0 sdb1[0] sdc1[1]<br />      1953519872 blocks 64k chunks<br /><br />md0 : active raid0 sda3[0] sdd1[1]<br />      1943639872 blocks 64k chunks<br /><br />unused devices: <none><br /></pre><br /><br /><br /><p>この状態で、次のコマンドでDRBDを起動させてみました。</p><br /><br /><pre class="code"><br /># /etc/init.d/drbd start<br /></pre><br /><br /><p>そうすると、次のエラーメッセージが表示されてしまいました。</p><br /><br /><pre class="code"><br />/etc/init.d/drbd start<br />Starting DRBD resources:    [ d0 d1 d2 ioctl(,SET_DISK_CONFIG,)<br />failed: Cannot allocate memory<br />...<br /></pre><br /><br /><p>調べてみると、vmalloc sizeを192m割り当ててると、うまくいくそうなので、grubの設定ファイル(/etc/grub.conf)に、次の内容に変更してみました。</p><br /><br /><pre class="code"><br />...<br />  title Fedora Core (2.6.20-1.2320.fc5smp)<br />  root (hd0,0)<br />  uppermem 524288<br />  kernel /vmlinuz-2.6.20-1.2320.fc5smp ro vmalloc=192m root=LABEL=/<br />  initrd /initrd-2.6.20-1.2320.fc5smp.img<br />...<br /></pre><br /><br /><p>vmallocの設定は、rootより後ろに書けないので注意してください。</p><br /><br /><p>この設定で、初めてDRBDで2TBのハードディスク容量を使うようにすることができました。</p><br /><br /><br /><p>最初、移行するとき、DRBD上のファイルシステムはXFSにしていたのですがbonnie++でハードディスクに負荷をかけると落ちてしまうので、従来通りext3に変更して現在稼働中です。</p><br /><br /><p>次は、現在<a href="http://labs.unoh.net/cgi-bin/mt-search.cgi?tag=sato&blog_id=2">sato</a>がDRBD 8系でのprimary/primaryの構成を試しているようなので、フォト蔵のサーバにも組み込めるか検討したいと思っています。</p><br /><br /><br />
+<p>こんにちは、naoyaです。</p><br />
+<br />
+<p>先日、<a href="http://photozou.jp">フォト蔵</a>のサーバのハードディスク空き容量が減ってきたので、ハードディスクを500GBx4から1TBx4のハードディスクに交換しました。</p><br />
+<br />
+<p>フォト蔵のサーバでは、以前<a href="http://labs.unoh.net/cgi-bin/mt-search.cgi?tag=sato&blog_id=2">sato</a>が紹介したように<a href="http://labs.unoh.net/2006/12/drbd.html">DRBD</a>を使って写真や動画のデータを相互バックアップしています。</p><br />
+<br />
+<p>フォト蔵のサーバのハードウェアとソフトウェア環境は、次のとおりです。</p><br />
+<br />
+<ul><br />
+  <li>HDD: 1TB x 4</li><br />
+  <li>OS: Fedora Core 5(2.6.20)</li><br />
+  <li>DRBD: 0.7.24</li><br />
+</ul><br />
+<br />
+<p>ハードディスクは、二本ずつソフトウェアRAID0で組んでいます。</p><br />
+<br />
+<pre class="code"><br />
+# cat /proc/mdstat<br />
+Personalities : [raid0]<br />
+md1 : active raid0 sdb1[0] sdc1[1]<br />
+      1953519872 blocks 64k chunks<br />
+<br />
+md0 : active raid0 sda3[0] sdd1[1]<br />
+      1943639872 blocks 64k chunks<br />
+<br />
+unused devices: <none><br />
+</pre><br />
+<br />
+<br />
+<p>この状態で、次のコマンドでDRBDを起動させてみました。</p><br />
+<br />
+<pre class="code"><br />
+# /etc/init.d/drbd start<br />
+</pre><br />
+<br />
+<p>そうすると、次のエラーメッセージが表示されてしまいました。</p><br />
+<br />
+<pre class="code"><br />
+/etc/init.d/drbd start<br />
+Starting DRBD resources:    [ d0 d1 d2 ioctl(,SET_DISK_CONFIG,)<br />
+failed: Cannot allocate memory<br />
+...<br />
+</pre><br />
+<br />
+<p>調べてみると、vmalloc sizeを192m割り当ててると、うまくいくそうなので、grubの設定ファイル(/etc/grub.conf)に、次の内容に変更してみました。</p><br />
+<br />
+<pre class="code"><br />
+...<br />
+  title Fedora Core (2.6.20-1.2320.fc5smp)<br />
+  root (hd0,0)<br />
+  uppermem 524288<br />
+  kernel /vmlinuz-2.6.20-1.2320.fc5smp ro vmalloc=192m root=LABEL=/<br />
+  initrd /initrd-2.6.20-1.2320.fc5smp.img<br />
+...<br />
+</pre><br />
+<br />
+<p>vmallocの設定は、rootより後ろに書けないので注意してください。</p><br />
+<br />
+<p>この設定で、初めてDRBDで2TBのハードディスク容量を使うようにすることができました。</p><br />
+<br />
+<br />
+<p>最初、移行するとき、DRBD上のファイルシステムはXFSにしていたのですがbonnie++でハードディスクに負荷をかけると落ちてしまうので、従来通りext3に変更して現在稼働中です。</p><br />
+<br />
+<p>次は、現在<a href="http://labs.unoh.net/cgi-bin/mt-search.cgi?tag=sato&blog_id=2">sato</a>がDRBD 8系でのprimary/primaryの構成を試しているようなので、フォト蔵のサーバにも組み込めるか検討したいと思っています。</p><br />
+<br />
+<br />
+
 {% endraw %}

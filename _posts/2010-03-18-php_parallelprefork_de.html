@@ -3,5 +3,62 @@ layout: post
 title: "PHP版 Parallel::Prefork で奥一穂さんと親に感謝しよう"
 ---
 {% raw %}
-こんちにわ、去年末に入社した「ちわ」です、こんにちわ。<br /><br />Perl には <a href="http://search.cpan.org/">CPAN </a> というものがあり、そこには様々なライブラリが登録されています。国内の方々も多くライブラリを登録されていますがその中で<a href="http://mt.endeworks.jp/d-6/">牧大輔さん</a>の <a href="http://search.cpan.org/~dmaki/Queue-Q4M-0.00019/">Queue::Q4M</a>、<a href="http://developer.cybozu.co.jp/kazuho/">奥一穂さん</a>の <a href="http://search.cpan.org/~kazuho/Parallel-Prefork-0.05/">Parallel::Prefork</a> を PHP に移植したので今回は奥一穂さんの Parallel::Prefork のPHP版を紹介したいと思います。(Queue::Q4M はインターフェースを若干変更して移植してしまったので今回は Parallel::Prefork のみ紹介となります)<br /><br />弊社が提供しているサービスの「まちつく！mixi版」、「まちつく！モバゲー版」の地図を生成、Amazon S3 への転送をキューを使って処理していまして、そのキュー処理に Q4M を導入することになりました。キュー処理の主な流れは下記のようになります。<br /><br /><strong>主な処理の流れ</strong><br /><ul><br /><li>Web やバッチで生成キューをエンキュー</li><br /><li>生成デーモンがデキューし地図を生成</li><br /><li>正常に地図を生成できたら転送キューにエンキュー</li><br /><li>転送デーモンがデキューし地図を Amazon S3 に転送</li><br /></ul><br /><br />地図を生成するデーモンは OpenMP が有効になっている ImageMagick を1プロセスで起動しますが、地図を Amazon S3 へ転送するデーモンはHTTP通信を行うのでマルチプロセスで起動してパフォーマンスを稼ぐ必要があります。<br />ウノウに入社するまでずっと Perl のエンジニアだったこともあり、この手の処理は <a href="http://search.cpan.org/~dmaki/Queue-Q4M-0.00019/">Queue::Q4M</a> + <a href="http://search.cpan.org/~kazuho/Parallel-Prefork-0.05/">Parallel::Prefork</a> で実装し daemontools で起動したいところですがご存知の通りウノウは Perl な会社ではありません。PHP を使うのもの初めてということもあり、PHP の文法などの勉強がてら Queue::Q4M と Parallel::Prefork (0.05) を PHP に移植することにしました。<br />実際にサービスで使用しているものとは若干違いはありますがソースは <a href="http://github.com/travail/php-parallel-prefork">github</a> に置いてあります。<br /><br />Parallel::Prefork の使い方は作者の<a href="http://labs.cybozu.co.jp/blog/kazuho/archives/2008/04/parallel-prefork.php">奥一穂さんのページ</a>か CPAN の <a href="http://search.cpan.org/~kazuho/Parallel-Prefork-0.05/lib/Parallel/Prefork.pm">Parallel::Prefork</a> のドキュメントをご覧ください。<br /><a href="http://search.cpan.org/~kazuho/Parallel-Prefork-0.05/lib/Parallel/Prefork.pm#SYNOPSIS">Parallel::Prefork の SYNOPSIS のサンプルコード</a>を Parallel_Prefork で書くとするとこうなります。<br /><br /><script src="http://gist.github.com/335483.js?file=parallel_prefork_synopsis.php"></script><br /><br />次に実際に動く単純なサンプルコードを紹介します。<br /><br /><script src="http://gist.github.com/335530.js"></script><br /><br />10行目のコンストラクタで Parallel_Prefork のオブジェクトを生成しています。max_workers は生成したい子プロセスを指定します。このコンストラクタで重要な引数の trap_signals には<br /><br /><pre class="code">trap_signals => array(<br />    親プロセスで捕捉したいシグナル => そのシグナルを捕捉した場合に子プロセスに送りたいシグナル<br />)</pre><br /><br />といった配列を指定します。例では、<br /><br /><pre class="code">trap_signals => array(<br />    SIGHUP  => SIGTERM,<br />    SIGTERM => SIGTERM,<br />)</pre><br /><br />と指定いるので SIGHUP, SIGTERM を親プロセスが捕捉したら子プロセスに SIGTERM を送ることになります。Parallel_Prefork では内部でシグナルハンドラを上書きしているので上記の例だと親プロセスが SIGHUP, SIGTERM を捕捉してもそれ自体でプロセスが終了してしまうことはありません。<br /><br />次に19行目の $pp->signalReceived() ですが、このメソッドは親プロセスが捕捉したシグナルが格納されていますので while は親プロセスが SIGTERM を捕捉するまでループします。<br /><br />21行目の $pp->start() で子プロセスが max_workers で指定した数まで fork されます。$pp->start() は親プロセスがコールした場合は true を返しますので while の中では親プロセスが23行目以降のコードを実行することはありません。<br /><br />24行目以降が子プロセスが実行するコードになります。例ではそれぞれの子プロセスがfor文で1〜3秒 sleep して $pp->finish() で exit します。<br /><br />お子様プロセスがのんきに sleep している間、親プロセスは $pp->start() メソッドの中でお子様プロセスの数が max_workers をキープできるようにお子様プロセスの fork と wait、シグナルが送られていないかなどの監視にせっせと励んでいます。本当、親には感謝しないといけません。今年の母の日は5月9日（日）で父の日は6月20日（日）ですよ。準備はできていますか？<br /><br />以上が while の中の処理になりますが、この処理の最中に親プロセスが SIGTERM を捕捉していなければ上記の処理を繰り返します。もし、親プロセスが SIGTERM を捕捉していれば while を抜け終了しますが SIGHUP を捕捉した場合は子プロセスを SIGTERM で殺して親プロセス自体は 19行目の while に戻ります。任意のシグナルを捕捉した場合に親プロセスが終了するかどうかは while をどのような条件で回すかによりますが、そもそも trap_signals で指定していないシグナルを捕捉した場合はデフォルトの挙動を取ります。例では SIGINT (Ctrl+C) を親プロセスに送ると直ちにプログラムが終了します。<br /><br />以上がサンプルコードの説明になります。<br />このサンプルコードは <a href="http://github.com/travail/php-parallel-prefork">github のリポジトリ</a>にも置いてあるので興味のある方は奥一穂さんのすばらしいライブラリと日頃見守ってくれている親に感謝しつつ実際に動かしてみてください。<br /><br /><div style="margin:0;padding:.5em;border:2px solid #ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br /><br /><a href="http://www.unoh.net/recruit.html">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください。<br/><br /><a href="http://www.find-job.net/fj/showjob.cgi?id=50212">Find Job!</a>でも募集してます！</div>
+こんちにわ、去年末に入社した「ちわ」です、こんにちわ。<br />
+<br />
+Perl には <a href="http://search.cpan.org/">CPAN </a> というものがあり、そこには様々なライブラリが登録されています。国内の方々も多くライブラリを登録されていますがその中で<a href="http://mt.endeworks.jp/d-6/">牧大輔さん</a>の <a href="http://search.cpan.org/~dmaki/Queue-Q4M-0.00019/">Queue::Q4M</a>、<a href="http://developer.cybozu.co.jp/kazuho/">奥一穂さん</a>の <a href="http://search.cpan.org/~kazuho/Parallel-Prefork-0.05/">Parallel::Prefork</a> を PHP に移植したので今回は奥一穂さんの Parallel::Prefork のPHP版を紹介したいと思います。(Queue::Q4M はインターフェースを若干変更して移植してしまったので今回は Parallel::Prefork のみ紹介となります)<br />
+<br />
+弊社が提供しているサービスの「まちつく！mixi版」、「まちつく！モバゲー版」の地図を生成、Amazon S3 への転送をキューを使って処理していまして、そのキュー処理に Q4M を導入することになりました。キュー処理の主な流れは下記のようになります。<br />
+<br />
+<strong>主な処理の流れ</strong><br />
+<ul><br />
+<li>Web やバッチで生成キューをエンキュー</li><br />
+<li>生成デーモンがデキューし地図を生成</li><br />
+<li>正常に地図を生成できたら転送キューにエンキュー</li><br />
+<li>転送デーモンがデキューし地図を Amazon S3 に転送</li><br />
+</ul><br />
+<br />
+地図を生成するデーモンは OpenMP が有効になっている ImageMagick を1プロセスで起動しますが、地図を Amazon S3 へ転送するデーモンはHTTP通信を行うのでマルチプロセスで起動してパフォーマンスを稼ぐ必要があります。<br />
+ウノウに入社するまでずっと Perl のエンジニアだったこともあり、この手の処理は <a href="http://search.cpan.org/~dmaki/Queue-Q4M-0.00019/">Queue::Q4M</a> + <a href="http://search.cpan.org/~kazuho/Parallel-Prefork-0.05/">Parallel::Prefork</a> で実装し daemontools で起動したいところですがご存知の通りウノウは Perl な会社ではありません。PHP を使うのもの初めてということもあり、PHP の文法などの勉強がてら Queue::Q4M と Parallel::Prefork (0.05) を PHP に移植することにしました。<br />
+実際にサービスで使用しているものとは若干違いはありますがソースは <a href="http://github.com/travail/php-parallel-prefork">github</a> に置いてあります。<br />
+<br />
+Parallel::Prefork の使い方は作者の<a href="http://labs.cybozu.co.jp/blog/kazuho/archives/2008/04/parallel-prefork.php">奥一穂さんのページ</a>か CPAN の <a href="http://search.cpan.org/~kazuho/Parallel-Prefork-0.05/lib/Parallel/Prefork.pm">Parallel::Prefork</a> のドキュメントをご覧ください。<br />
+<a href="http://search.cpan.org/~kazuho/Parallel-Prefork-0.05/lib/Parallel/Prefork.pm#SYNOPSIS">Parallel::Prefork の SYNOPSIS のサンプルコード</a>を Parallel_Prefork で書くとするとこうなります。<br />
+<br />
+<script src="http://gist.github.com/335483.js?file=parallel_prefork_synopsis.php"></script><br />
+<br />
+次に実際に動く単純なサンプルコードを紹介します。<br />
+<br />
+<script src="http://gist.github.com/335530.js"></script><br />
+<br />
+10行目のコンストラクタで Parallel_Prefork のオブジェクトを生成しています。max_workers は生成したい子プロセスを指定します。このコンストラクタで重要な引数の trap_signals には<br />
+<br />
+<pre class="code">trap_signals => array(<br />
+    親プロセスで捕捉したいシグナル => そのシグナルを捕捉した場合に子プロセスに送りたいシグナル<br />
+)</pre><br />
+<br />
+といった配列を指定します。例では、<br />
+<br />
+<pre class="code">trap_signals => array(<br />
+    SIGHUP  => SIGTERM,<br />
+    SIGTERM => SIGTERM,<br />
+)</pre><br />
+<br />
+と指定いるので SIGHUP, SIGTERM を親プロセスが捕捉したら子プロセスに SIGTERM を送ることになります。Parallel_Prefork では内部でシグナルハンドラを上書きしているので上記の例だと親プロセスが SIGHUP, SIGTERM を捕捉してもそれ自体でプロセスが終了してしまうことはありません。<br />
+<br />
+次に19行目の $pp->signalReceived() ですが、このメソッドは親プロセスが捕捉したシグナルが格納されていますので while は親プロセスが SIGTERM を捕捉するまでループします。<br />
+<br />
+21行目の $pp->start() で子プロセスが max_workers で指定した数まで fork されます。$pp->start() は親プロセスがコールした場合は true を返しますので while の中では親プロセスが23行目以降のコードを実行することはありません。<br />
+<br />
+24行目以降が子プロセスが実行するコードになります。例ではそれぞれの子プロセスがfor文で1〜3秒 sleep して $pp->finish() で exit します。<br />
+<br />
+お子様プロセスがのんきに sleep している間、親プロセスは $pp->start() メソッドの中でお子様プロセスの数が max_workers をキープできるようにお子様プロセスの fork と wait、シグナルが送られていないかなどの監視にせっせと励んでいます。本当、親には感謝しないといけません。今年の母の日は5月9日（日）で父の日は6月20日（日）ですよ。準備はできていますか？<br />
+<br />
+以上が while の中の処理になりますが、この処理の最中に親プロセスが SIGTERM を捕捉していなければ上記の処理を繰り返します。もし、親プロセスが SIGTERM を捕捉していれば while を抜け終了しますが SIGHUP を捕捉した場合は子プロセスを SIGTERM で殺して親プロセス自体は 19行目の while に戻ります。任意のシグナルを捕捉した場合に親プロセスが終了するかどうかは while をどのような条件で回すかによりますが、そもそも trap_signals で指定していないシグナルを捕捉した場合はデフォルトの挙動を取ります。例では SIGINT (Ctrl+C) を親プロセスに送ると直ちにプログラムが終了します。<br />
+<br />
+以上がサンプルコードの説明になります。<br />
+このサンプルコードは <a href="http://github.com/travail/php-parallel-prefork">github のリポジトリ</a>にも置いてあるので興味のある方は奥一穂さんのすばらしいライブラリと日頃見守ってくれている親に感謝しつつ実際に動かしてみてください。<br />
+<br />
+<div style="margin:0;padding:.5em;border:2px solid #ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br /><br />
+<a href="http://www.unoh.net/recruit.html">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください。<br/><br />
+<a href="http://www.find-job.net/fj/showjob.cgi?id=50212">Find Job!</a>でも募集してます！</div>
 {% endraw %}

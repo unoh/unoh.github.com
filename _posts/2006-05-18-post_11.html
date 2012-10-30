@@ -3,5 +3,23 @@ layout: post
 title: "ループ内の無名関数"
 ---
 {% raw %}
-スーパーなエンジニアの近くに座っているMODです。<br />こないだJavascriptを書いててハマったネタをひとつ。<br /><br />for文等繰り返し文の中で無名関数を定義するとき、定義内でインデックスの変数の値を用いることができないらしいです。<br />例えばこんなコード<br /><br />&lt;input type='button' id='wan1' value='わん'&gt;<br />&lt;input type='button' id='wan2' value='わんわん'&gt;<br />&lt;script type="text/javascript"&gt;<br />for (i=1; i&lt;=2; i++) {<br />　　　　elem = document.getElementById('wan'+i);<br />　　　　elem.attachEvent('onclick', function(){alert('いぬ No.'+i);});<br />}<br />&lt;/script&gt;<br />※このコードはＩＥのみ対応です。<br /><br />ボタンをクリックすればそれぞれ「いぬ No.1」、「いぬ No.2」とアラートで表示させる意図ですが、実際にはどっちをクリックしても表示されるのは「いぬ No.3」という文字列。<br />どうやら i の値は関数を呼び出した時点で評価されているようです。<br />実行時に関数に渡されるイベントオブジェクトを用いてなんとかするしか今のところ解決策がみつかっていません。Javascript難しいです。
+スーパーなエンジニアの近くに座っているMODです。<br />
+こないだJavascriptを書いててハマったネタをひとつ。<br />
+<br />
+for文等繰り返し文の中で無名関数を定義するとき、定義内でインデックスの変数の値を用いることができないらしいです。<br />
+例えばこんなコード<br />
+<br />
+&lt;input type='button' id='wan1' value='わん'&gt;<br />
+&lt;input type='button' id='wan2' value='わんわん'&gt;<br />
+&lt;script type="text/javascript"&gt;<br />
+for (i=1; i&lt;=2; i++) {<br />
+　　　　elem = document.getElementById('wan'+i);<br />
+　　　　elem.attachEvent('onclick', function(){alert('いぬ No.'+i);});<br />
+}<br />
+&lt;/script&gt;<br />
+※このコードはＩＥのみ対応です。<br />
+<br />
+ボタンをクリックすればそれぞれ「いぬ No.1」、「いぬ No.2」とアラートで表示させる意図ですが、実際にはどっちをクリックしても表示されるのは「いぬ No.3」という文字列。<br />
+どうやら i の値は関数を呼び出した時点で評価されているようです。<br />
+実行時に関数に渡されるイベントオブジェクトを用いてなんとかするしか今のところ解決策がみつかっていません。Javascript難しいです。
 {% endraw %}

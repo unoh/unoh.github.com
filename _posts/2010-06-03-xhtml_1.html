@@ -3,5 +3,76 @@ layout: post
 title: "携帯向けXHTML"
 ---
 {% raw %}
-おはようございます。<br /><br />最近携帯向けのページを作成することが多いので、携帯向けのXHTMLと格闘しておりますkayです。<br /><br />その際に個人的に感じたこと等をまとめてみましたので、少しでもご参考になればと思います。<br />なお、ここでご紹介しますものはあくまでも個人的な趣味に基づいており、一定時期より古い機種は配慮しておりませんのでご了承ください。<br /><br /><br />3キャリア対応の携帯サイトを作成する場合、docomoに合わせてCSSをインラインで書く必要があります。<br />これはPCサイトを作成したことのある人にとってはきっととても気持ち悪いことなんですが、我慢してstyle=""を使っています。<br /><br />また携帯ですので、実際に出来ることはとても限られており、機種やキャリアによっても異なりますので個人的にはベーシックなものを中心に使用してデザインすることをおすすめします。<br />その際、一番制限が厳しいのは相変わらずdocomoですので、いつもはそれに合わせて作成しております。<br /><br /><h3>よく使うものたち</h3><br /><ul><br /><li>フォントカラー</li><br /><pre class="code"><br />&lt;span style="color:red;"&gt;赤文字&lt;/span&gt;<br />&lt;div style="color:blue;"&gt;青文字&lt;/div&gt;<br /></pre><br /><li>center</li><br /><pre class="code"><br />&lt;div style="text-align:center;"&gt;真ん中に来る文字&lt;/div&gt;<br /></pre><br /><li>blink</li><br /><pre class="code"><br />&lt;span style="text-decoration:blink;"&gt;点滅している文字&lt;/span&gt;<br /></pre><br /><li>ボックス</li><br /><pre class="code"><br />&lt;div style="background:yellow;margin:0px 5px;border:1px orange solid;"&gt;<br />文章<br />&lt;/div&gt;<br /></pre><br />上記の場合、1pxのボーダーに囲まれた左右に少しマージンのあるボックスになりますが、marginとborderは機種によってはきちんと表示されません。<br /><br />正しく表示されない場合はただの黄色背景のボックスとして表示されます。<br /></ul><br /><br /><h3>個人的に気を付けていること</h3><br /><br /><ul><br /><li>フォントカラー</li><br />絵文字の色に注意する必要があります。<br /><br />docomoの絵文字のみ色を変更することが出来ますので、意図しない場所で勝手な色にならないよう、普通はspanタグのほうで絵文字以外の部分だけの色を変えるように心がけています。<br /><li>フォントサイズ</li><br /><pre class="code"><br />font-size:xx-large<br />font-size:x-large<br />font-size:large<br />font-size:medium<br />font-size:small<br />font-size:x-small<br />font-size:xx-small<br /></pre><br />で指定することが多いかと思いますが、docomoの場合large,medium,smallの3パターンしかなかったり、機種によって文字の大きさが異なっていたり、pxで指定する必要があったりとバラバラです。<br /><br />ある程度妥協が必要な部分ですが、こだわる場合はいろいろなキャリアや機種で実際に表示させてみるのが一番かと思います。<br /><li>imgタグ</li><br />携帯の場合、画像が全部表示されるとは限りません。せっかちなユーザは全て表示されなくても先に進んでしまいますし、電波の問題で途中までしかロード出来ないケースもしばしばあります。<br />それを配慮して、携帯向けサイトの場合はaltとheight・width属性を忘れずに記述してあげたほうがとても親切です。<br /><br />また、style="float:left;"等で文字の回り込みを指定出来ますが、一部機種ではきちんと表示されないことがあるので合わせてalign="left"も記述しておくと安全です。<br /><li>table</li><br />PCサイトではあまり推奨出来ないtableタグでのデザインも、携帯サイトではどうしても必要になることがあります。<br /><br />携帯でウェブを見るする時に、隣通しで並んでいるリンクが2つ以上ある場合、左から順に追っていくことになるかと思いますが、そのリンクの上下の位置が微妙にずれていると少しでも上に位置しているものから追っていくことになる機種もあり、少々気持ち悪いことになります。<br /><br />それを解消するためにも、style="vertical-align:top;"でテキストの位置をきちんと揃えてあげることが大事です。<br /><br />更に、機種によっては、フォントサイズを既に指定していてもtable内ではそれがリセットされてしまうものがありますので、&lt;td&gt;の度にサイズを再度指定してあげましょう。<br /></ul><br /><br /><h3>以上</h3><br />ほんの一部のみ紹介させて頂きましたが、他にもこんなのに気を付けているよ等ありましたら、ぜひぜひ教えて下さい。<br /><br /><div style="margin:1em 0;padding:.5em;border:2px solid#ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br /><a href="http://www.unoh.net/recruit.html" target="_blank">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください！！<br /><a href="http://www.find-job.net/fj/showjob.cgi?id=50212" target="_blank">Find Job!</a>でも募集開始してます！</div>
+おはようございます。<br />
+<br />
+最近携帯向けのページを作成することが多いので、携帯向けのXHTMLと格闘しておりますkayです。<br />
+<br />
+その際に個人的に感じたこと等をまとめてみましたので、少しでもご参考になればと思います。<br />
+なお、ここでご紹介しますものはあくまでも個人的な趣味に基づいており、一定時期より古い機種は配慮しておりませんのでご了承ください。<br />
+<br />
+<br />
+3キャリア対応の携帯サイトを作成する場合、docomoに合わせてCSSをインラインで書く必要があります。<br />
+これはPCサイトを作成したことのある人にとってはきっととても気持ち悪いことなんですが、我慢してstyle=""を使っています。<br />
+<br />
+また携帯ですので、実際に出来ることはとても限られており、機種やキャリアによっても異なりますので個人的にはベーシックなものを中心に使用してデザインすることをおすすめします。<br />
+その際、一番制限が厳しいのは相変わらずdocomoですので、いつもはそれに合わせて作成しております。<br />
+<br />
+<h3>よく使うものたち</h3><br />
+<ul><br />
+<li>フォントカラー</li><br />
+<pre class="code"><br />
+&lt;span style="color:red;"&gt;赤文字&lt;/span&gt;<br />
+&lt;div style="color:blue;"&gt;青文字&lt;/div&gt;<br />
+</pre><br />
+<li>center</li><br />
+<pre class="code"><br />
+&lt;div style="text-align:center;"&gt;真ん中に来る文字&lt;/div&gt;<br />
+</pre><br />
+<li>blink</li><br />
+<pre class="code"><br />
+&lt;span style="text-decoration:blink;"&gt;点滅している文字&lt;/span&gt;<br />
+</pre><br />
+<li>ボックス</li><br />
+<pre class="code"><br />
+&lt;div style="background:yellow;margin:0px 5px;border:1px orange solid;"&gt;<br />
+文章<br />
+&lt;/div&gt;<br />
+</pre><br />
+上記の場合、1pxのボーダーに囲まれた左右に少しマージンのあるボックスになりますが、marginとborderは機種によってはきちんと表示されません。<br /><br />
+正しく表示されない場合はただの黄色背景のボックスとして表示されます。<br />
+</ul><br />
+<br />
+<h3>個人的に気を付けていること</h3><br />
+<br />
+<ul><br />
+<li>フォントカラー</li><br />
+絵文字の色に注意する必要があります。<br /><br />
+docomoの絵文字のみ色を変更することが出来ますので、意図しない場所で勝手な色にならないよう、普通はspanタグのほうで絵文字以外の部分だけの色を変えるように心がけています。<br />
+<li>フォントサイズ</li><br />
+<pre class="code"><br />
+font-size:xx-large<br />
+font-size:x-large<br />
+font-size:large<br />
+font-size:medium<br />
+font-size:small<br />
+font-size:x-small<br />
+font-size:xx-small<br />
+</pre><br />
+で指定することが多いかと思いますが、docomoの場合large,medium,smallの3パターンしかなかったり、機種によって文字の大きさが異なっていたり、pxで指定する必要があったりとバラバラです。<br /><br />
+ある程度妥協が必要な部分ですが、こだわる場合はいろいろなキャリアや機種で実際に表示させてみるのが一番かと思います。<br />
+<li>imgタグ</li><br />
+携帯の場合、画像が全部表示されるとは限りません。せっかちなユーザは全て表示されなくても先に進んでしまいますし、電波の問題で途中までしかロード出来ないケースもしばしばあります。<br />
+それを配慮して、携帯向けサイトの場合はaltとheight・width属性を忘れずに記述してあげたほうがとても親切です。<br /><br />
+また、style="float:left;"等で文字の回り込みを指定出来ますが、一部機種ではきちんと表示されないことがあるので合わせてalign="left"も記述しておくと安全です。<br />
+<li>table</li><br />
+PCサイトではあまり推奨出来ないtableタグでのデザインも、携帯サイトではどうしても必要になることがあります。<br /><br />
+携帯でウェブを見るする時に、隣通しで並んでいるリンクが2つ以上ある場合、左から順に追っていくことになるかと思いますが、そのリンクの上下の位置が微妙にずれていると少しでも上に位置しているものから追っていくことになる機種もあり、少々気持ち悪いことになります。<br /><br />
+それを解消するためにも、style="vertical-align:top;"でテキストの位置をきちんと揃えてあげることが大事です。<br /><br />
+更に、機種によっては、フォントサイズを既に指定していてもtable内ではそれがリセットされてしまうものがありますので、&lt;td&gt;の度にサイズを再度指定してあげましょう。<br />
+</ul><br />
+<br />
+<h3>以上</h3><br />
+ほんの一部のみ紹介させて頂きましたが、他にもこんなのに気を付けているよ等ありましたら、ぜひぜひ教えて下さい。<br />
+<br />
+<div style="margin:1em 0;padding:.5em;border:2px solid#ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br /><a href="http://www.unoh.net/recruit.html" target="_blank">採用ページ</a>をご覧になり興味のある方、ぜひご応募ください！！<br /><a href="http://www.find-job.net/fj/showjob.cgi?id=50212" target="_blank">Find Job!</a>でも募集開始してます！</div>
 {% endraw %}

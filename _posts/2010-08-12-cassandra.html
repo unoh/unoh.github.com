@@ -3,5 +3,414 @@ layout: post
 title: "今からはじめるCassandra入門"
 ---
 {% raw %}
-<div><img alt="emori01.gif" src="http://labs.unoh.net/emori01.gif" width="494" height="124" /></div><br /><br /><p>こんにちわ、7月に入社したばかりの<a href="http://twitter.com/emorins" target="_blank">@emorins</a>です。</p><br /><br /><p>題名の通りですが分散データベース『<a href="http://cassandra.apache.org/">Apache Cassandra</a>』を紹介したいと思います。</p><br /><p>少し前はHadoop(とHBase)と比較されることの多かったCassandraですが、最近はHadoopの人気に押されつつあるようにも感じます。<br>しかし、CassandraとHadoopは特徴が異なり、よく言われるのがCassandraはリアルタイム処理に向き、一貫性のかわりに可用性を重視し、またHadoopとは違って単一障害点もありません。</p><br /><br /><p>今日はそんなHadoopとは違った魅力のある分散データベース『Apache Cassandra』をはじめてみましょう。</p><br /><br /><h2>目次</h2><br /><ul><br /><li>Cassandraとは</li><br /><li>アーキテクチャ<br /><ul><br /><li>Cassandraの特徴</li><br /><li>コンシステンシレベル</li><br /><li>データモデル</li><br /><li>MemtableとSSTable</li><br /></ul><br /></li><br /><li>セットアップ</li><br /><li>storage-conf.xmlの設定<br /><ul><br /><li>Keyspace</li><br /><li>ColumnFamily</li><br /><li>MemtableThroughputInMB</li><br /><li>MemtableFlushAfterMinutes </li><br /></ul><br /></li><br /><li>Cassandra-CLIの使い方</li><br /><li>ThriftAPIによるクライアントからの操作<br /><ul><br /><li>Thriftとは</li><br /><li>Thriftのインストール</li><br /></ul><br /></li><br /><li>PHPによるクライアントアプリケーションを作る<br /><ul><br /><li>データを取得する簡単なプログラム</li><br /><li>ThriftAPI </li><br /></ul><br /></li><br /><li>最後に<br /><ul><br /><li>本エントリで取り上げなかったこと</li><br /><li>参考</li><br /></ul><br /></li><br /></ul><br /><hr><br /><br /><h2>Cassandraとは</h2><br /><div><span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="emori02.gif" src="http://labs.unoh.net/emori02.gif" width="408" height="348" class="mt-image-none" style="" /></span></div><br /><p>そもそもCassandraとは何でしょうか。</p><br /><p>長い間データベースと言えばRDBMS(MySQL、PostgreSQL、Oracle Databaseなど)と、それを操作するSQL言語を使用するのが主流でした。しかし、大規模データ処理を必要としたGoogleやAmazonは、リレーショナルデータベースより(ペタバイトクラスの膨大なデータ処理に対して)高速で可用性のある、スケールアウトしやすいデータベースを必要としました。そこで生まれたのがGoogleのBigtableと、AmazonのDynamoです。</p><br /><br /><p>Cassandraは、そんなBigtableやDynamoを参考にFacebookが開発したNoSQLデータベースです。現在はApacheソフトウェア財団に寄贈され、オープンソースとして開発が進められています。</p><br /><br /><h2>アーキテクチャ</h2><br /><h3>Cassandraの特徴</h3><br /><div>Cassandraは、<a href="http://www.hyuki.com/yukiwiki/wiki.cgi?BrewersCapTheorem" target="_blank">CAP定理</a>のうちAP(可用性:Availabilityと分割耐性:Partition Tolerance)を重視しています。また一貫性:Consistencyについては、どのレベルの整合性にするか調整可能です(後述)。</div><br /><div><br />Cassandraの主な特徴として<br /><ul><br /><li>高可用性</li><br /><li><a href="http://ja.wikipedia.org/wiki/%E3%82%A4%E3%83%99%E3%83%B3%E3%83%81%E3%83%A5%E3%82%A2%E3%83%AB%E3%83%BB%E3%82%B3%E3%83%B3%E3%82%B7%E3%82%B9%E3%83%86%E3%83%B3%E3%82%B7%E3%83%BC">イベンチュアル・コンシステンシー</a></li><br /><li>一貫性と遅延のトレードオフを調整可能</li><br /><li>単純なKey/Valueではないデータモデル</li><br /><li>単一障害点(SPOF)がない</li><br /></ul><br />などが言えます。<br><br />特に可用性の高さとSPOFが無いのが特筆すべき点です。<br /></div><br /><br /><h3>コンシステンシレベル</h3><br /><div>Cassandraは可用性の代わりに一貫性を犠牲にしていますが、遅延とのトレードオフで一貫性のレベル設定ができます。</div><br /><ul><br /><li>W=書き込みを保証するレプリケート数</li><br /><li>R=読み込むレプリケート数</li><br /><li>N=レプリケートしているノード数(storage-conf.xml内の&lt;ReplicationFactor&gt;)</li><br /><li>Q=QUORUM (Q = N / 2 + 1) </li><br /></ul><br /><pre class="code">R + W > N</pre><br /><div>の条件を満たすとき、一貫性があると言えます。</div><br /><div><br />設定できるレベルは以下の4つです。<br /><ul><br /><li>Zero：保証なし</li><br /><li>One：W=1,R=1<br /><ul><br /><li>[書き込み]１つのノードの書き込みを保証</li><br /><li>[読み込み]最初に読み込んだノードから返す</li><br /></ul><br /></li><br /><li>Quorum：w=Q,R=Q<br /><ul><br /><li>[書き込み](N+1)/2数のノードに書き込まれたことを保証</li><br /><li>[読み込み](N+1)/2数のノードから読み込み、最新を返す</li><br /></ul><br /></li><br /><li>All：w=N,R=N<br /><ul><br /><li>[書き込み]N個のノードに書き込まれたことを保証する</li><br /><li>[読み込み]N個ののノードから読み込み、最新を返す</li><br /></ul><br /></li><br /></ul><br /></div><br /><h3>データモデル</h3><br /><div>基本はKey/Value型ですが、階層的な構造を持つ4次元or5次元のデータモデルになっています。単純なKVSよりも高機能かつ表現力豊かなデータをモデリングできます。</div><br /><div>それぞれのデータ構造をRDBMSと照らし合わせながら見ていきましょう。</div><br /><span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="emori03.gif" src="http://labs.unoh.net/emori03.gif" width="588" height="615" class="mt-image-none" style="" /></span><br /><dl><br /><dt>キースペース</dt><br /><dd>RDBMSでいうデータベースに当たるものです。Cassandraデータモデルの一次元目で、カラムファミリのコンテナになります。一般に1アプリケーションに1キースペースとされます。</dd><br /><dt>カラムファミリ</dt><br /><dd>RDBMSでいうテーブルに当たるものです。カラムのコンテナです。カラムファミリは後述するstorage-conf.xmlで設定して作成します。複数の行(Row)から構成されます。</dd><br /><dt>行(Row)</dt><br /><dd>キーと複数のカラムを持つ。RDBMSでいえば、行はレコード、キーは主キーのイメージです。</dd><br /><dt>カラム</dt><br /><dd>Cassandraでの最小のデータ構造。名前(name)、値(value)、タイムスタンプ(timestamp)を持ちます。</dd><br /><dt>スーパーカラム</dt><br /><dd>値(value)にソート済みの複数のカラムのリストを持つ。スーパーカラムは必ずしも必要ではありません。</dd><br /></dl><br /><br /><div>分かりにくいと思うので、以下のCassandra-CLIでのデータ挿入の命令文を、少し無理にSQL文に置き換えてみましょう(Cassandra-CLIの使い方については後述します)。</div><br /><br /><ul><br /><li>Cassandra-CLIでのデータ挿入<br><br /><pre class="code">set Keyspace1.Standard2['jsmith']['job']='developer'</pre><br /></li><br /><li>SQLによるINSERT文(※syntax error)<br><br /><pre class="code">INSERT INTO Keyspace1.Standard2 (job) VALUES('developer') WHERE id='jsmith';</pre><br /></li><br /></ul><br /><br /><div>この場合、Keyspace1がキースペース、Standard2がカラムファミリ、['jsmith']が行(キーは'jsmith')、そして['job']がカラムで'job'が名前(name)です。</div><br /><br /><h3>MemtableとSSTable</h3><br /><p>ハードウェア上のデータの流れはどうなっているでしょうか。<br><br />まずCassandraに書き込み操作がされるとCommitLogに書き込まれます。その後、カラムファミリ毎にMemtableというメモリ空間に対して書き込まれます。Memtableが一杯になると、ディスク上にSSTableという形式で保存(フラッシュ)されます。</p><br /><br /><p>MemtableではSSTableにフラッシュする際に使用するキーを設定してソートしておくので、MySQLでのランダムアクセスとは違い、HDDにシーケンシャルに書き込みむので、高速です。</p><br /><br /><p>ここまで話を聞くと、MemtableからSSTableにフラッシュする回数を極力減らすため、Memtableの容量を設定したくなるかと思いますが、もちろん可能です。後述するstorage-conf.xmlという設定ファイルで、Memtableに使うメモリ容量や保存時間などが指定できます。</p><br /><br /><h2>セットアップ</h2><br /><div>今回使用した環境は以下です。<br><br /><ul><br /><li>FreeBSD 8.1</li><br /><li>JDK 1.6</li><br /><li>Cassandra 0.6.3</li><br /><li>PHP 5.3.2</li><br /></ul><br /></div><br /><div>まずはCassandraを動かすために必要なJava環境を作るため、JDK 1.6をインストール。</div><br /><pre class="code"># wget http://www.FreeBSDFoundation.org/cgi-bin/download?download=diablo-caffe-freebsd7-i386-1.6.0_07-b02.tar.bz2<br /># make install clean</pre><br /><div>Cassandraのインストール。</div><br /><pre class="code"># cd /usr/ports/databases/cassandra<br /># make install clean</pre><br /><div>続いて初期設定。取りあえずサンプルで用意されているlog4j.properties.sampleとstorage-conf.xml.sampleをリネームして作成。設定ファイルの説明は後述します。</div><br /><pre class="code"># cd /usr/local/share/cassandra<br /># cp conf/log4j.properties.sample conf/log4j.properties<br /># cp conf/storage-conf.xml.sample conf/storage-conf.xml</pre><br /><div>準備完了なので、起動します。これでシングルノードではありますがCassandraクラスタのできあがりです。</div><br /><pre class="code"># /usr/local/share/cassandra/bin/cassandra</pre><br /><div>起動オプション<br /><ul><br /><li>-f:フォアグラウンドで起動</li><br /><li>-h:使用できるオプションを表示</li><br /><li>-p <pidfile>:PIDを<pidfile>に出力。</li><br /></ul><br /></div><br /><br /><h2>storage-conf.xmlの設定</h2><br /><p>Cassandraの最も重要な設定ファイルがstorage-conf.xmlです。このファイル内で、クラスタの各設定や、カラムファミリの作成、Memtableの容量など設定できます。</p><br /><p>全ては紹介できませんが、いくつか重要な設定箇所をピックアップします。詳しい情報や設定例はstorage-conf.xml.sampleを見てください。</p><br /><br /><h3>Keyspace</h3><br /><p>キースペースを作成します。Name属性を指定して、カラムファミリはこのKeyspaceタグ内に記述します。<br><br />今回の設定例:</p><br /><pre class="code">&lt;Keyspace Name="Keyspace1"&gt;<br />...<br />&lt;/Keyspace&gt;</pre><br /><br /><h3>ColumnFamily</h3><br /><div>カラムファミリの設定です。下記のような属性を指定できます。</div><br /><ul><br /><li>Name:カラムファミリ名</li><br /><li>ColumnType:カラムタイプ。デフォルトは"Standard"。スーパーカラムを持ちたい場合は"Super"にする。</li><br /><li>CompareWith:カラムのソート方法</li><br /><li>KeysCached:キーをキャッシュする個数(%をつけると割合)</li><br /></ul><br /><div>今回の設定例:</div><br /><pre class="code">&lt;ColumnFamily Name="Standard2" CompareWith="UTF8Type" KeysCached="100%"/&gt;</pre><br /><br /><h3>MemtableThroughputInMB</h3><br /><div>Memtableのデータ容量</div><br /><br /><h3>MemtableFlushAfterMinutes</h3><br /><p>フラッシュまでの最大時間。この時間を超えると強制的にフラッシュする。</p><br /><p>その他詳しい設定例などは以下をご参考ください。<br><br /><a href="http://wiki.apache.org/cassandra/StorageConfiguration" target="_blank">StorageConfiguration - Cassandra Wiki</a></p><br /><br /><h2>Cassandra-CLIの使い方</h2><br /><p>データモデルの項でチラっと出てきましたが、Cassandra-CLIというクライアントツールを使って、Cassandraのデータを操作してみましょう。</p><br /><p>Cassandraを起動した状態で、Cassandra-CLIを立ち上げます。</p><br /><pre class="code">/usr/local/share/cassandra/bin/cassandra-cli --host localhost --port 9160</pre><br /><div>すると</div><br /><pre class="code">Connected to: "Test Cluster" on localhost/9160<br />Welcome to cassandra CLI.<br /><br />Type 'help' or '?' for help. Type 'quit' or 'exit' to quit.<br />cassandra&gt; </pre><br /><div>と、Cassandra-CLIのコンソールに入ります。</div><br /><div>では、手始めにデータを書き込んでみましょう。今回はKeyspace1のStandard2カラムファミリを利用します。Keyspace1と Standard2自体はstorage-conf.xml.sampleに初めから定義されているキースペース・カラムファミリですので、特別なことをしなくてもそのまま利用できるはずです。</div><br /><pre class="code">cassandra&gt; set Keyspace1.Standard2['unoh']['age']='25'</pre><br /><br /><p>set文で、Standard2カラムファミリに'unoh'キーを追加した上で、'age'という名前のカラムに25という値を挿入しました。</p><br /><br /><p>実際にちゃんとデータの追加ができているかget文で確認してみます。</p><br /><br /><pre class="code">cassandra&gt; get Keyspace1.Standard2['unoh']            <br />=&gt; (column=age, value=25, timestamp=1281559772819000)<br />Returned 1 results.</pre><br /><br /><div>Standard2カラムファミリの'unoh'キーにあるカラムが取得できました。カラム名、カラム値、タイムスタンプがきちんと挿入されているのが確認できます。<br><br />さらに追加してみましょう。</div><br /><br /><pre class="code">cassandra&gt; set Keyspace1.Standard2['unoh']['phone']='03-5766-3911'<br />Value inserted.<br />cassandra&gt; set Keyspace1.Standard2['unoh']['web']='www.unoh.net'  <br />Value inserted.</pre><br /><br /><div>で、再度取り出してみる。</div><br /><br /><pre class="code">cassandra&gt; get Keyspace1.Standard2['unoh']                        <br />=&gt; (column=web, value=www.unoh.net, timestamp=1281560104883000)<br />=&gt; (column=phone, value=03-5766-3911, timestamp=1281560057868000)<br />=&gt; (column=age, value=25, timestamp=1281559772819000)<br />Returned 3 results.</pre><br /><br /><div>完璧ですね。</div><br /><br /><pre class="code">cassandra> help </pre><br /><br /><div>とすれば、実行可能なコマンド一覧がでますので、各自試してみてください。Cassandra-CLIはこれくらいにして次に進みます。</div><br /><br /><br /><h2>ThriftAPIによるクライアントからの操作</h2><br /><div>Cassandraをクライアントプログラムから操作するときには、RPCフレームワークである『Thrift』が利用できます。</div><br /><br /><h3>Thriftとは</h3><br /><p>Thriftは、同じくFacebookが開発した言語間サービス開発のためのRPCフレームワークです。C++、C#、Java、OCaml、Perl、Python、PHP、Rubyなどで書かれたプログラム間を通信可能にしてくれます。</p><br /><p>CassandraはJavaで書かれているわけですが、Thriftを使うことで、異なる言語からCassandraを操作することができるようになります。CassandraにはThiftインターフェースがあらかじめ用意されているので、Thrift（とCassandra）がサポートしている言語ならどの言語のクライアントコードからでも操作可能です。今回はタイトル通りPHPから利用してみましょう。</p><br /><p>※CassandraのAPI/RPC/Thriftポートは9160番です。</p><br /><br /><h3>Thriftのインストール</h3><br /><div>Thriftの大まかな使い方の流れは、<br /><ol><br /><li>Thriftインターフェース（.thrift）の作成</li><br /><li>そのインターフェースに沿った各言語のスケルトンを生成</li><br /><li>スケルトンを元にサーバー・クライアントのコーディング</li><br /></ol><br />という流れになります。Thriftインターフェース（.thrift）は、Cassandraのインストール先ディレクトリ下のinterfaceディレクトリに"cassandra.thrift"ファイルを利用するので、1の作業は必要ありません。また、2,3のサーバー(Cassandra)側のコーディングも必要ありません。</div><br /><div>では、Thriftをインストールします。</div><br /><br /><pre class="code"># cd /usr/ports/devel/thrift/<br /># make install clean</pre><br /><br /><div>インストールが完了したら、まずはThriftプロジェクト用のディレクトリを適当な場所に作成しましょう。</div><br /><br /><pre class="code"># mkdir ~/thrift</pre><br /><br /><div>次に、Thriftプロトコルが実装されたPHPコードをThriftパッケージ内からコピーしてきます。このコードはPHPからThriftを扱うために必要な全プロジェクトで共通して使うライブラリです。</div><br /><br /><pre class="code"># wget http://ftp.riken.jp/net/apache/incubator/thrift/0.2.0-incubating/thrift-0.2.0-incubating.tar.gz<br /># tar zxvf thrift-0.2.0-incubating.tar.gz<br /># cp -R thrift-0.2.0/lib/php/src ~/thrift</pre><br /><br /><div>次に"cassandra.thrift"を使ってCassandra用Thriftクライントを生成します。サーバーごとのThriftクライントはsrcディレクトリ内のpackagesディレクトリに分けて入れておきましょう。</div><br /><br /><pre class="code"># cd thrift<br /># mkdir src/packages<br /># cp /usr/local/share/cassandra/interface/cassandra.thrift ~/thrift/cassandra.thrift<br /># thrift --gen php cassandra.thrift<br /># mv -R gen-php/cassandra src/packages</pre><br /><br /><div>これでCassandraをThriftから扱うための準備が整いました。ディレクトリ構成を以下にまとめます。</div><br /><br /><pre class="code">/thrift<br />  ├ /src・・・Thriftプロトコルの実装ファイル<br />　　　├ Thrift.php<br />      ├ autoload.php<br />      ├ /ext<br />      ├ /packages・・・各サーバごとのThriftクライアント(gen-phpとして生成されたコード)<br />           └ /cassandra・・・cassandra用Thriftクライアントが入ったディレクトリ<br />                ├ Cassandra.php<br />                ├ cassandra_constants.php<br />                └ cassandra_types.php<br />      ├ /protocol<br />      └ /transport<br />  └ /unoh・・・プロジェクトディレクトリ<br />      └sample.php・・・クライアントアプリケーション(ここで具体的にCassandraを操作するコードを書きます)</pre><br /><br /><h2>PHPによるクライアントアプリケーションを作る</h2><br /><div>では、いよいよPHPでCassandraを使ったアプリケーションを書いていきましょう。</div><br /><br /><h3>データを取得する簡単なプログラム</h3><br /><div>・~/thrift/unoh/sample.php</div><br /><pre class="code"> &lt;?php<br /> $GLOBALS['THRIFT_ROOT'] = '../src';<br /> require_once $GLOBALS['THRIFT_ROOT'].'/packages/cassandra/Cassandra.php';<br /> require_once $GLOBALS['THRIFT_ROOT'].'/packages/cassandra/cassandra_types.php';<br /> <br /> require_once $GLOBALS['THRIFT_ROOT'].'/transport/TSocket.php';<br /> require_once $GLOBALS['THRIFT_ROOT'].'/protocol/TBinaryProtocol.php';<br /> require_once $GLOBALS['THRIFT_ROOT'].'/transport/TFramedTransport.php';<br /> require_once $GLOBALS['THRIFT_ROOT'].'/transport/TBufferedTransport.php';<br /> <br /> try {<br />   // Thriftの接続用インスタンスの作成                 <br />   $socket = new TSocket('localhost', 9160);<br />   $transport = new TBufferedTransport($socket, 1024, 1024);<br />   $protocol = new TBinaryProtocolAccelerated($transport);<br /> <br />   //Cassandraクライアントの作成                        <br />   $client = new CassandraClient($protocol);<br /> <br />   //接続開始                                            <br />   $transport-&gt;open();<br /> <br />   // ColumnFamilyの指定                                <br />   $columnParent = new cassandra_ColumnParent();<br />   $columnParent-&gt;column_family = "Standard2";<br /> <br />   //スライスの指定。切り出すColumnの範囲を指定できる。<br />   $predicate = new cassandra_SlicePredicate();<br />   $sliceRange = new cassandra_SliceRange();<br />   //例えば、'age'から'phone'までのColumnを切り出す(Columnは昇順でソートされる)<br />   $sliceRange-&gt;start = "age";<br />   $sliceRange-&gt;finish = "phone";<br />   $predicate-&gt;slice_range = $sliceRange;<br /> <br />   //クエリを投げる<br />   $result = $client-&gt;get_slice('Keyspace1', 'unoh', $columnParent,$predicate, cassandra_ConsistencyLevel::ONE);<br />   //中身を出力してみる<br />   var_dump($result);<br /> <br />   //接続終了<br />   $transport-&gt;close();<br /> }<br /> catch (TException $tx) {<br />   print 'TException: '.$tx-&gt;why. ' Error: '.$tx-&gt;getMessage() . "\n";<br /> }</pre><br /><br /><div>出力結果</div><br /><br /><pre class="code"># php ~/thrift/unoh/sample.php</pre><br /><br /><pre class="code">array(2) {<br />  [0]=&gt;<br />  object(cassandra_ColumnOrSuperColumn)#9 (2) {<br />    ["column"]=&gt;<br />    object(cassandra_Column)#10 (3) {<br />      ["name"]=&gt;<br />      string(3) "age"<br />      ["value"]=&gt;<br />      string(2) "25"<br />      ["timestamp"]=&gt;<br />      float(1.281559772819E+15)<br />    }<br />    ["super_column"]=&gt;<br />    NULL<br />  }<br />  [1]=><br />  object(cassandra_ColumnOrSuperColumn)#11 (2) {<br />    ["column"]=&gt;<br />   object(cassandra_Column)#12 (3) {<br />      ["name"]=&gt;<br />      string(5) "phone"<br />      ["value"]=&gt;<br />      string(12) "03-5766-3911"<br />      ["timestamp"]=&gt;<br />      float(1.281560057868E+15)<br />    }<br />    ["super_column"]=&gt;<br />    NULL<br />  }<br />}</pre><br /><div>Cassandraからデータを取り出すだけの簡単なコードですが、Cassandraとうまく連携できているのが確認できました。</div><br /><br /><h3>ThriftAPI</h3><br /><div>先程のコード中でnew cassandra_SliceRange()を使ってスライスを作成したり、$client-&gt;get_slice()でクエリを投げて結果を受け取ったりしていました。これらはThriftAPIで利用できます。</div><br /><div>利用可能なThriftAPI一覧は以下のページを参照してください。<br><br /><a href="http://wiki.apache.org/cassandra/API" target="_blank">API - Cassandra Wiki</a></div><br /><br /><h2>最後に</h2><br /><h3>本エントリで取り上げなかったこと</h3><br /><div>かけ足になりましたが、Cassandraの概要とシングルノードによる基本的な操作をご紹介しました。マルチノードクラスタ、ノードの追加・削除方法、チューニング、モニタリング、実用性など、また次の機会に突っ込めたらと思います。</div><br /><br /><h3>参考</h3><br /><ul><br /><li><a href="http://wiki.apache.org/cassandra/FrontPage_JP" target="_blank">FrontPage_JP - Cassandra Wiki</a></li><br /><li><a href="http://gihyo.jp/dev/serial/01/cassandra" target="_blank">連載：Cassandraのはじめ方─手を動かしてNoSQLを体感しよう｜gihyo.jp ... 技術評論社</a></li><br /><li><a href="http://www.ne.jp/asahi/hishidama/home/tech/apache/cassandra/" target="_blank">Cassandraメモ(Hishidama's Apache Cassandra Memo)</a></li><br /></ul><br /><br />
+<div><img alt="emori01.gif" src="http://labs.unoh.net/emori01.gif" width="494" height="124" /></div><br />
+<br />
+<p>こんにちわ、7月に入社したばかりの<a href="http://twitter.com/emorins" target="_blank">@emorins</a>です。</p><br />
+<br />
+<p>題名の通りですが分散データベース『<a href="http://cassandra.apache.org/">Apache Cassandra</a>』を紹介したいと思います。</p><br />
+<p>少し前はHadoop(とHBase)と比較されることの多かったCassandraですが、最近はHadoopの人気に押されつつあるようにも感じます。<br>しかし、CassandraとHadoopは特徴が異なり、よく言われるのがCassandraはリアルタイム処理に向き、一貫性のかわりに可用性を重視し、またHadoopとは違って単一障害点もありません。</p><br />
+<br />
+<p>今日はそんなHadoopとは違った魅力のある分散データベース『Apache Cassandra』をはじめてみましょう。</p><br />
+<br />
+<h2>目次</h2><br />
+<ul><br />
+<li>Cassandraとは</li><br />
+<li>アーキテクチャ<br />
+<ul><br />
+<li>Cassandraの特徴</li><br />
+<li>コンシステンシレベル</li><br />
+<li>データモデル</li><br />
+<li>MemtableとSSTable</li><br />
+</ul><br />
+</li><br />
+<li>セットアップ</li><br />
+<li>storage-conf.xmlの設定<br />
+<ul><br />
+<li>Keyspace</li><br />
+<li>ColumnFamily</li><br />
+<li>MemtableThroughputInMB</li><br />
+<li>MemtableFlushAfterMinutes </li><br />
+</ul><br />
+</li><br />
+<li>Cassandra-CLIの使い方</li><br />
+<li>ThriftAPIによるクライアントからの操作<br />
+<ul><br />
+<li>Thriftとは</li><br />
+<li>Thriftのインストール</li><br />
+</ul><br />
+</li><br />
+<li>PHPによるクライアントアプリケーションを作る<br />
+<ul><br />
+<li>データを取得する簡単なプログラム</li><br />
+<li>ThriftAPI </li><br />
+</ul><br />
+</li><br />
+<li>最後に<br />
+<ul><br />
+<li>本エントリで取り上げなかったこと</li><br />
+<li>参考</li><br />
+</ul><br />
+</li><br />
+</ul><br />
+<hr><br />
+<br />
+<h2>Cassandraとは</h2><br />
+<div><span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="emori02.gif" src="http://labs.unoh.net/emori02.gif" width="408" height="348" class="mt-image-none" style="" /></span></div><br />
+<p>そもそもCassandraとは何でしょうか。</p><br />
+<p>長い間データベースと言えばRDBMS(MySQL、PostgreSQL、Oracle Databaseなど)と、それを操作するSQL言語を使用するのが主流でした。しかし、大規模データ処理を必要としたGoogleやAmazonは、リレーショナルデータベースより(ペタバイトクラスの膨大なデータ処理に対して)高速で可用性のある、スケールアウトしやすいデータベースを必要としました。そこで生まれたのがGoogleのBigtableと、AmazonのDynamoです。</p><br />
+<br />
+<p>Cassandraは、そんなBigtableやDynamoを参考にFacebookが開発したNoSQLデータベースです。現在はApacheソフトウェア財団に寄贈され、オープンソースとして開発が進められています。</p><br />
+<br />
+<h2>アーキテクチャ</h2><br />
+<h3>Cassandraの特徴</h3><br />
+<div>Cassandraは、<a href="http://www.hyuki.com/yukiwiki/wiki.cgi?BrewersCapTheorem" target="_blank">CAP定理</a>のうちAP(可用性:Availabilityと分割耐性:Partition Tolerance)を重視しています。また一貫性:Consistencyについては、どのレベルの整合性にするか調整可能です(後述)。</div><br />
+<div><br />
+Cassandraの主な特徴として<br />
+<ul><br />
+<li>高可用性</li><br />
+<li><a href="http://ja.wikipedia.org/wiki/%E3%82%A4%E3%83%99%E3%83%B3%E3%83%81%E3%83%A5%E3%82%A2%E3%83%AB%E3%83%BB%E3%82%B3%E3%83%B3%E3%82%B7%E3%82%B9%E3%83%86%E3%83%B3%E3%82%B7%E3%83%BC">イベンチュアル・コンシステンシー</a></li><br />
+<li>一貫性と遅延のトレードオフを調整可能</li><br />
+<li>単純なKey/Valueではないデータモデル</li><br />
+<li>単一障害点(SPOF)がない</li><br />
+</ul><br />
+などが言えます。<br><br />
+特に可用性の高さとSPOFが無いのが特筆すべき点です。<br />
+</div><br />
+<br />
+<h3>コンシステンシレベル</h3><br />
+<div>Cassandraは可用性の代わりに一貫性を犠牲にしていますが、遅延とのトレードオフで一貫性のレベル設定ができます。</div><br />
+<ul><br />
+<li>W=書き込みを保証するレプリケート数</li><br />
+<li>R=読み込むレプリケート数</li><br />
+<li>N=レプリケートしているノード数(storage-conf.xml内の&lt;ReplicationFactor&gt;)</li><br />
+<li>Q=QUORUM (Q = N / 2 + 1) </li><br />
+</ul><br />
+<pre class="code">R + W > N</pre><br />
+<div>の条件を満たすとき、一貫性があると言えます。</div><br />
+<div><br />
+設定できるレベルは以下の4つです。<br />
+<ul><br />
+<li>Zero：保証なし</li><br />
+<li>One：W=1,R=1<br />
+<ul><br />
+<li>[書き込み]１つのノードの書き込みを保証</li><br />
+<li>[読み込み]最初に読み込んだノードから返す</li><br />
+</ul><br />
+</li><br />
+<li>Quorum：w=Q,R=Q<br />
+<ul><br />
+<li>[書き込み](N+1)/2数のノードに書き込まれたことを保証</li><br />
+<li>[読み込み](N+1)/2数のノードから読み込み、最新を返す</li><br />
+</ul><br />
+</li><br />
+<li>All：w=N,R=N<br />
+<ul><br />
+<li>[書き込み]N個のノードに書き込まれたことを保証する</li><br />
+<li>[読み込み]N個ののノードから読み込み、最新を返す</li><br />
+</ul><br />
+</li><br />
+</ul><br />
+</div><br />
+<h3>データモデル</h3><br />
+<div>基本はKey/Value型ですが、階層的な構造を持つ4次元or5次元のデータモデルになっています。単純なKVSよりも高機能かつ表現力豊かなデータをモデリングできます。</div><br />
+<div>それぞれのデータ構造をRDBMSと照らし合わせながら見ていきましょう。</div><br />
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="emori03.gif" src="http://labs.unoh.net/emori03.gif" width="588" height="615" class="mt-image-none" style="" /></span><br />
+<dl><br />
+<dt>キースペース</dt><br />
+<dd>RDBMSでいうデータベースに当たるものです。Cassandraデータモデルの一次元目で、カラムファミリのコンテナになります。一般に1アプリケーションに1キースペースとされます。</dd><br />
+<dt>カラムファミリ</dt><br />
+<dd>RDBMSでいうテーブルに当たるものです。カラムのコンテナです。カラムファミリは後述するstorage-conf.xmlで設定して作成します。複数の行(Row)から構成されます。</dd><br />
+<dt>行(Row)</dt><br />
+<dd>キーと複数のカラムを持つ。RDBMSでいえば、行はレコード、キーは主キーのイメージです。</dd><br />
+<dt>カラム</dt><br />
+<dd>Cassandraでの最小のデータ構造。名前(name)、値(value)、タイムスタンプ(timestamp)を持ちます。</dd><br />
+<dt>スーパーカラム</dt><br />
+<dd>値(value)にソート済みの複数のカラムのリストを持つ。スーパーカラムは必ずしも必要ではありません。</dd><br />
+</dl><br />
+<br />
+<div>分かりにくいと思うので、以下のCassandra-CLIでのデータ挿入の命令文を、少し無理にSQL文に置き換えてみましょう(Cassandra-CLIの使い方については後述します)。</div><br />
+<br />
+<ul><br />
+<li>Cassandra-CLIでのデータ挿入<br><br />
+<pre class="code">set Keyspace1.Standard2['jsmith']['job']='developer'</pre><br />
+</li><br />
+<li>SQLによるINSERT文(※syntax error)<br><br />
+<pre class="code">INSERT INTO Keyspace1.Standard2 (job) VALUES('developer') WHERE id='jsmith';</pre><br />
+</li><br />
+</ul><br />
+<br />
+<div>この場合、Keyspace1がキースペース、Standard2がカラムファミリ、['jsmith']が行(キーは'jsmith')、そして['job']がカラムで'job'が名前(name)です。</div><br />
+<br />
+<h3>MemtableとSSTable</h3><br />
+<p>ハードウェア上のデータの流れはどうなっているでしょうか。<br><br />
+まずCassandraに書き込み操作がされるとCommitLogに書き込まれます。その後、カラムファミリ毎にMemtableというメモリ空間に対して書き込まれます。Memtableが一杯になると、ディスク上にSSTableという形式で保存(フラッシュ)されます。</p><br />
+<br />
+<p>MemtableではSSTableにフラッシュする際に使用するキーを設定してソートしておくので、MySQLでのランダムアクセスとは違い、HDDにシーケンシャルに書き込みむので、高速です。</p><br />
+<br />
+<p>ここまで話を聞くと、MemtableからSSTableにフラッシュする回数を極力減らすため、Memtableの容量を設定したくなるかと思いますが、もちろん可能です。後述するstorage-conf.xmlという設定ファイルで、Memtableに使うメモリ容量や保存時間などが指定できます。</p><br />
+<br />
+<h2>セットアップ</h2><br />
+<div>今回使用した環境は以下です。<br><br />
+<ul><br />
+<li>FreeBSD 8.1</li><br />
+<li>JDK 1.6</li><br />
+<li>Cassandra 0.6.3</li><br />
+<li>PHP 5.3.2</li><br />
+</ul><br />
+</div><br />
+<div>まずはCassandraを動かすために必要なJava環境を作るため、JDK 1.6をインストール。</div><br />
+<pre class="code"># wget http://www.FreeBSDFoundation.org/cgi-bin/download?download=diablo-caffe-freebsd7-i386-1.6.0_07-b02.tar.bz2<br />
+# make install clean</pre><br />
+<div>Cassandraのインストール。</div><br />
+<pre class="code"># cd /usr/ports/databases/cassandra<br />
+# make install clean</pre><br />
+<div>続いて初期設定。取りあえずサンプルで用意されているlog4j.properties.sampleとstorage-conf.xml.sampleをリネームして作成。設定ファイルの説明は後述します。</div><br />
+<pre class="code"># cd /usr/local/share/cassandra<br />
+# cp conf/log4j.properties.sample conf/log4j.properties<br />
+# cp conf/storage-conf.xml.sample conf/storage-conf.xml</pre><br />
+<div>準備完了なので、起動します。これでシングルノードではありますがCassandraクラスタのできあがりです。</div><br />
+<pre class="code"># /usr/local/share/cassandra/bin/cassandra</pre><br />
+<div>起動オプション<br />
+<ul><br />
+<li>-f:フォアグラウンドで起動</li><br />
+<li>-h:使用できるオプションを表示</li><br />
+<li>-p <pidfile>:PIDを<pidfile>に出力。</li><br />
+</ul><br />
+</div><br />
+<br />
+<h2>storage-conf.xmlの設定</h2><br />
+<p>Cassandraの最も重要な設定ファイルがstorage-conf.xmlです。このファイル内で、クラスタの各設定や、カラムファミリの作成、Memtableの容量など設定できます。</p><br />
+<p>全ては紹介できませんが、いくつか重要な設定箇所をピックアップします。詳しい情報や設定例はstorage-conf.xml.sampleを見てください。</p><br />
+<br />
+<h3>Keyspace</h3><br />
+<p>キースペースを作成します。Name属性を指定して、カラムファミリはこのKeyspaceタグ内に記述します。<br><br />
+今回の設定例:</p><br />
+<pre class="code">&lt;Keyspace Name="Keyspace1"&gt;<br />
+...<br />
+&lt;/Keyspace&gt;</pre><br />
+<br />
+<h3>ColumnFamily</h3><br />
+<div>カラムファミリの設定です。下記のような属性を指定できます。</div><br />
+<ul><br />
+<li>Name:カラムファミリ名</li><br />
+<li>ColumnType:カラムタイプ。デフォルトは"Standard"。スーパーカラムを持ちたい場合は"Super"にする。</li><br />
+<li>CompareWith:カラムのソート方法</li><br />
+<li>KeysCached:キーをキャッシュする個数(%をつけると割合)</li><br />
+</ul><br />
+<div>今回の設定例:</div><br />
+<pre class="code">&lt;ColumnFamily Name="Standard2" CompareWith="UTF8Type" KeysCached="100%"/&gt;</pre><br />
+<br />
+<h3>MemtableThroughputInMB</h3><br />
+<div>Memtableのデータ容量</div><br />
+<br />
+<h3>MemtableFlushAfterMinutes</h3><br />
+<p>フラッシュまでの最大時間。この時間を超えると強制的にフラッシュする。</p><br />
+<p>その他詳しい設定例などは以下をご参考ください。<br><br />
+<a href="http://wiki.apache.org/cassandra/StorageConfiguration" target="_blank">StorageConfiguration - Cassandra Wiki</a></p><br />
+<br />
+<h2>Cassandra-CLIの使い方</h2><br />
+<p>データモデルの項でチラっと出てきましたが、Cassandra-CLIというクライアントツールを使って、Cassandraのデータを操作してみましょう。</p><br />
+<p>Cassandraを起動した状態で、Cassandra-CLIを立ち上げます。</p><br />
+<pre class="code">/usr/local/share/cassandra/bin/cassandra-cli --host localhost --port 9160</pre><br />
+<div>すると</div><br />
+<pre class="code">Connected to: "Test Cluster" on localhost/9160<br />
+Welcome to cassandra CLI.<br />
+<br />
+Type 'help' or '?' for help. Type 'quit' or 'exit' to quit.<br />
+cassandra&gt; </pre><br />
+<div>と、Cassandra-CLIのコンソールに入ります。</div><br />
+<div>では、手始めにデータを書き込んでみましょう。今回はKeyspace1のStandard2カラムファミリを利用します。Keyspace1と Standard2自体はstorage-conf.xml.sampleに初めから定義されているキースペース・カラムファミリですので、特別なことをしなくてもそのまま利用できるはずです。</div><br />
+<pre class="code">cassandra&gt; set Keyspace1.Standard2['unoh']['age']='25'</pre><br />
+<br />
+<p>set文で、Standard2カラムファミリに'unoh'キーを追加した上で、'age'という名前のカラムに25という値を挿入しました。</p><br />
+<br />
+<p>実際にちゃんとデータの追加ができているかget文で確認してみます。</p><br />
+<br />
+<pre class="code">cassandra&gt; get Keyspace1.Standard2['unoh']            <br />
+=&gt; (column=age, value=25, timestamp=1281559772819000)<br />
+Returned 1 results.</pre><br />
+<br />
+<div>Standard2カラムファミリの'unoh'キーにあるカラムが取得できました。カラム名、カラム値、タイムスタンプがきちんと挿入されているのが確認できます。<br><br />
+さらに追加してみましょう。</div><br />
+<br />
+<pre class="code">cassandra&gt; set Keyspace1.Standard2['unoh']['phone']='03-5766-3911'<br />
+Value inserted.<br />
+cassandra&gt; set Keyspace1.Standard2['unoh']['web']='www.unoh.net'  <br />
+Value inserted.</pre><br />
+<br />
+<div>で、再度取り出してみる。</div><br />
+<br />
+<pre class="code">cassandra&gt; get Keyspace1.Standard2['unoh']                        <br />
+=&gt; (column=web, value=www.unoh.net, timestamp=1281560104883000)<br />
+=&gt; (column=phone, value=03-5766-3911, timestamp=1281560057868000)<br />
+=&gt; (column=age, value=25, timestamp=1281559772819000)<br />
+Returned 3 results.</pre><br />
+<br />
+<div>完璧ですね。</div><br />
+<br />
+<pre class="code">cassandra> help </pre><br />
+<br />
+<div>とすれば、実行可能なコマンド一覧がでますので、各自試してみてください。Cassandra-CLIはこれくらいにして次に進みます。</div><br />
+<br />
+<br />
+<h2>ThriftAPIによるクライアントからの操作</h2><br />
+<div>Cassandraをクライアントプログラムから操作するときには、RPCフレームワークである『Thrift』が利用できます。</div><br />
+<br />
+<h3>Thriftとは</h3><br />
+<p>Thriftは、同じくFacebookが開発した言語間サービス開発のためのRPCフレームワークです。C++、C#、Java、OCaml、Perl、Python、PHP、Rubyなどで書かれたプログラム間を通信可能にしてくれます。</p><br />
+<p>CassandraはJavaで書かれているわけですが、Thriftを使うことで、異なる言語からCassandraを操作することができるようになります。CassandraにはThiftインターフェースがあらかじめ用意されているので、Thrift（とCassandra）がサポートしている言語ならどの言語のクライアントコードからでも操作可能です。今回はタイトル通りPHPから利用してみましょう。</p><br />
+<p>※CassandraのAPI/RPC/Thriftポートは9160番です。</p><br />
+<br />
+<h3>Thriftのインストール</h3><br />
+<div>Thriftの大まかな使い方の流れは、<br />
+<ol><br />
+<li>Thriftインターフェース（.thrift）の作成</li><br />
+<li>そのインターフェースに沿った各言語のスケルトンを生成</li><br />
+<li>スケルトンを元にサーバー・クライアントのコーディング</li><br />
+</ol><br />
+という流れになります。Thriftインターフェース（.thrift）は、Cassandraのインストール先ディレクトリ下のinterfaceディレクトリに"cassandra.thrift"ファイルを利用するので、1の作業は必要ありません。また、2,3のサーバー(Cassandra)側のコーディングも必要ありません。</div><br />
+<div>では、Thriftをインストールします。</div><br />
+<br />
+<pre class="code"># cd /usr/ports/devel/thrift/<br />
+# make install clean</pre><br />
+<br />
+<div>インストールが完了したら、まずはThriftプロジェクト用のディレクトリを適当な場所に作成しましょう。</div><br />
+<br />
+<pre class="code"># mkdir ~/thrift</pre><br />
+<br />
+<div>次に、Thriftプロトコルが実装されたPHPコードをThriftパッケージ内からコピーしてきます。このコードはPHPからThriftを扱うために必要な全プロジェクトで共通して使うライブラリです。</div><br />
+<br />
+<pre class="code"># wget http://ftp.riken.jp/net/apache/incubator/thrift/0.2.0-incubating/thrift-0.2.0-incubating.tar.gz<br />
+# tar zxvf thrift-0.2.0-incubating.tar.gz<br />
+# cp -R thrift-0.2.0/lib/php/src ~/thrift</pre><br />
+<br />
+<div>次に"cassandra.thrift"を使ってCassandra用Thriftクライントを生成します。サーバーごとのThriftクライントはsrcディレクトリ内のpackagesディレクトリに分けて入れておきましょう。</div><br />
+<br />
+<pre class="code"># cd thrift<br />
+# mkdir src/packages<br />
+# cp /usr/local/share/cassandra/interface/cassandra.thrift ~/thrift/cassandra.thrift<br />
+# thrift --gen php cassandra.thrift<br />
+# mv -R gen-php/cassandra src/packages</pre><br />
+<br />
+<div>これでCassandraをThriftから扱うための準備が整いました。ディレクトリ構成を以下にまとめます。</div><br />
+<br />
+<pre class="code">/thrift<br />
+  ├ /src・・・Thriftプロトコルの実装ファイル<br />
+　　　├ Thrift.php<br />
+      ├ autoload.php<br />
+      ├ /ext<br />
+      ├ /packages・・・各サーバごとのThriftクライアント(gen-phpとして生成されたコード)<br />
+           └ /cassandra・・・cassandra用Thriftクライアントが入ったディレクトリ<br />
+                ├ Cassandra.php<br />
+                ├ cassandra_constants.php<br />
+                └ cassandra_types.php<br />
+      ├ /protocol<br />
+      └ /transport<br />
+  └ /unoh・・・プロジェクトディレクトリ<br />
+      └sample.php・・・クライアントアプリケーション(ここで具体的にCassandraを操作するコードを書きます)</pre><br />
+<br />
+<h2>PHPによるクライアントアプリケーションを作る</h2><br />
+<div>では、いよいよPHPでCassandraを使ったアプリケーションを書いていきましょう。</div><br />
+<br />
+<h3>データを取得する簡単なプログラム</h3><br />
+<div>・~/thrift/unoh/sample.php</div><br />
+<pre class="code"> &lt;?php<br />
+ $GLOBALS['THRIFT_ROOT'] = '../src';<br />
+ require_once $GLOBALS['THRIFT_ROOT'].'/packages/cassandra/Cassandra.php';<br />
+ require_once $GLOBALS['THRIFT_ROOT'].'/packages/cassandra/cassandra_types.php';<br />
+ <br />
+ require_once $GLOBALS['THRIFT_ROOT'].'/transport/TSocket.php';<br />
+ require_once $GLOBALS['THRIFT_ROOT'].'/protocol/TBinaryProtocol.php';<br />
+ require_once $GLOBALS['THRIFT_ROOT'].'/transport/TFramedTransport.php';<br />
+ require_once $GLOBALS['THRIFT_ROOT'].'/transport/TBufferedTransport.php';<br />
+ <br />
+ try {<br />
+   // Thriftの接続用インスタンスの作成                 <br />
+   $socket = new TSocket('localhost', 9160);<br />
+   $transport = new TBufferedTransport($socket, 1024, 1024);<br />
+   $protocol = new TBinaryProtocolAccelerated($transport);<br />
+ <br />
+   //Cassandraクライアントの作成                        <br />
+   $client = new CassandraClient($protocol);<br />
+ <br />
+   //接続開始                                            <br />
+   $transport-&gt;open();<br />
+ <br />
+   // ColumnFamilyの指定                                <br />
+   $columnParent = new cassandra_ColumnParent();<br />
+   $columnParent-&gt;column_family = "Standard2";<br />
+ <br />
+   //スライスの指定。切り出すColumnの範囲を指定できる。<br />
+   $predicate = new cassandra_SlicePredicate();<br />
+   $sliceRange = new cassandra_SliceRange();<br />
+   //例えば、'age'から'phone'までのColumnを切り出す(Columnは昇順でソートされる)<br />
+   $sliceRange-&gt;start = "age";<br />
+   $sliceRange-&gt;finish = "phone";<br />
+   $predicate-&gt;slice_range = $sliceRange;<br />
+ <br />
+   //クエリを投げる<br />
+   $result = $client-&gt;get_slice('Keyspace1', 'unoh', $columnParent,$predicate, cassandra_ConsistencyLevel::ONE);<br />
+   //中身を出力してみる<br />
+   var_dump($result);<br />
+ <br />
+   //接続終了<br />
+   $transport-&gt;close();<br />
+ }<br />
+ catch (TException $tx) {<br />
+   print 'TException: '.$tx-&gt;why. ' Error: '.$tx-&gt;getMessage() . "\n";<br />
+ }</pre><br />
+<br />
+<div>出力結果</div><br />
+<br />
+<pre class="code"># php ~/thrift/unoh/sample.php</pre><br />
+<br />
+<pre class="code">array(2) {<br />
+  [0]=&gt;<br />
+  object(cassandra_ColumnOrSuperColumn)#9 (2) {<br />
+    ["column"]=&gt;<br />
+    object(cassandra_Column)#10 (3) {<br />
+      ["name"]=&gt;<br />
+      string(3) "age"<br />
+      ["value"]=&gt;<br />
+      string(2) "25"<br />
+      ["timestamp"]=&gt;<br />
+      float(1.281559772819E+15)<br />
+    }<br />
+    ["super_column"]=&gt;<br />
+    NULL<br />
+  }<br />
+  [1]=><br />
+  object(cassandra_ColumnOrSuperColumn)#11 (2) {<br />
+    ["column"]=&gt;<br />
+   object(cassandra_Column)#12 (3) {<br />
+      ["name"]=&gt;<br />
+      string(5) "phone"<br />
+      ["value"]=&gt;<br />
+      string(12) "03-5766-3911"<br />
+      ["timestamp"]=&gt;<br />
+      float(1.281560057868E+15)<br />
+    }<br />
+    ["super_column"]=&gt;<br />
+    NULL<br />
+  }<br />
+}</pre><br />
+<div>Cassandraからデータを取り出すだけの簡単なコードですが、Cassandraとうまく連携できているのが確認できました。</div><br />
+<br />
+<h3>ThriftAPI</h3><br />
+<div>先程のコード中でnew cassandra_SliceRange()を使ってスライスを作成したり、$client-&gt;get_slice()でクエリを投げて結果を受け取ったりしていました。これらはThriftAPIで利用できます。</div><br />
+<div>利用可能なThriftAPI一覧は以下のページを参照してください。<br><br />
+<a href="http://wiki.apache.org/cassandra/API" target="_blank">API - Cassandra Wiki</a></div><br />
+<br />
+<h2>最後に</h2><br />
+<h3>本エントリで取り上げなかったこと</h3><br />
+<div>かけ足になりましたが、Cassandraの概要とシングルノードによる基本的な操作をご紹介しました。マルチノードクラスタ、ノードの追加・削除方法、チューニング、モニタリング、実用性など、また次の機会に突っ込めたらと思います。</div><br />
+<br />
+<h3>参考</h3><br />
+<ul><br />
+<li><a href="http://wiki.apache.org/cassandra/FrontPage_JP" target="_blank">FrontPage_JP - Cassandra Wiki</a></li><br />
+<li><a href="http://gihyo.jp/dev/serial/01/cassandra" target="_blank">連載：Cassandraのはじめ方─手を動かしてNoSQLを体感しよう｜gihyo.jp ... 技術評論社</a></li><br />
+<li><a href="http://www.ne.jp/asahi/hishidama/home/tech/apache/cassandra/" target="_blank">Cassandraメモ(Hishidama's Apache Cassandra Memo)</a></li><br />
+</ul><br />
+<br />
+
 {% endraw %}

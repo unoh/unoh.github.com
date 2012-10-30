@@ -3,5 +3,32 @@ layout: post
 title: "PHPでのswitch文のトリッキーな使い方"
 ---
 {% raw %}
-こんにちは、ケンジです。<br /><br />先日の勉強会で初めて知った、switch文のトリッキーな使い方をご紹介します。<br /><br /><blockquote><pre><br /><br />if ($a || $b || $c || $d || $e .....) {<br />    echo "どれかはtrue\n";<br />}<br /><br /></pre></blockquote><br /><br />if文の中の条件がこんな感じでだらだら続くとき。<br />こんな風に書けます。<br /><br /><blockquote><pre><br /><br />switch (true) {<br />case $a:<br />case $b:<br />case $c:<br />case $d:<br />case $e:<br />    echo "どれかは true\n";<br />}<br /></pre></blockquote><br /><br />条件式が複雑に色々と横に並ぶよりも、このように縦に並ぶと読みやすくなりますね。
+こんにちは、ケンジです。<br />
+<br />
+先日の勉強会で初めて知った、switch文のトリッキーな使い方をご紹介します。<br />
+<br />
+<blockquote><pre><br />
+<br />
+if ($a || $b || $c || $d || $e .....) {<br />
+    echo "どれかはtrue\n";<br />
+}<br />
+<br />
+</pre></blockquote><br />
+<br />
+if文の中の条件がこんな感じでだらだら続くとき。<br />
+こんな風に書けます。<br />
+<br />
+<blockquote><pre><br />
+<br />
+switch (true) {<br />
+case $a:<br />
+case $b:<br />
+case $c:<br />
+case $d:<br />
+case $e:<br />
+    echo "どれかは true\n";<br />
+}<br />
+</pre></blockquote><br />
+<br />
+条件式が複雑に色々と横に並ぶよりも、このように縦に並ぶと読みやすくなりますね。
 {% endraw %}

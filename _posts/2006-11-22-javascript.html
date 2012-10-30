@@ -3,5 +3,92 @@ layout: post
 title: "JavaScriptのバグを退治する３つの手法"
 ---
 {% raw %}
-<STYLE><br /><!--<br />.js_src {<br />    border: 1px gray solid;<br />    background: #F0F0F0;<br />    margin: 10px 30px;<br />    padding: 4px 8px;<br />    overflow: auto;<br />    max-height: 400px;<br />    color: black;<br />}<br />--><br /></STYLE><br /><br />こんにちは、さかとくです。今日は、世界中のプログラマーを悩ませているバグを退治する方法について考えてみたいと思います。今回は、特に、JavaScriptのバグを退治する方法にスポットを当ててみたいと思います。<br /><br />そもそも、バグ(Bug)とは、正しくプログラムが動かない状態、不具合のある状態です。<br />書き間違いや、なんらかの勘違いが原因であることが多いです。簡単なつづりミスならば、構文エラー（Syntax Error）によって、すぐに間違いが見つかります。しかし、<b>簡単にバグの原因が特定できない</b>ことも多くあります。そんなときはどうしたら良いでしょうか？<br /><br />以下の３点から考えてみます。<br /><br />・具体的なデバッグ方法<br />・バグを予防する<br />・精神論<br /><br /><br /><strong><u>具体的なデバッグの方法</u></strong><br /><br />どんな天才的なプログラマーでも、間違いの１つや２つは犯してしまうものです。一度もバグに遭遇せずプログラムを完成させることはできません。「うまく動かない！どうしたら良いだろうか？」と慌てる前に、プログラムのどの部分が間違っているのか、特定することが一番大切です。<br /><br />よくプログラミングの掲示板に「どうしてもバグが取れないんです。ソースをちょっと見てください。」と、長い長いソースがコピペされているを見ます。こういうのは、間違いなく「自分で何とかしろ！」と突っ込まれることになります。<br /><br />とにかく、まずは、どの部分で処理が間違っているのか、ブレークポイントを設定したり、変数の値を確認してみましょう。JavaScriptなら、FireFoxのアドオンである<a href="https://addons.mozilla.org/firefox/1843/">FireBug</a>を利用することで、ブレークポイントを設定したり、変数の内容を見ることができます。※FireBugは便利すぎるので、使わないのはもったいないです。<br /><br />また、IEでデバッグが必要なら、Visual Studioをインストールすると、Visual InterDev というのが入るので、これでステップ実行させることができます。（IEのオプションの詳細設定で、「スクリプトのデバッグを使用しない」をオフにしておきます。）<br /><br />これらの、デバッガーを使うまでもない時は、alert("xxx") で変数の内容を確認したり、document.writeln("xxx") で処理の一連の流れを表示させるのが定石でしょう。<br /><br />JavaScriptでよくはまるのが、メソッドが存在すると思って呼んでいるのに、綴りミスだったり、オブジェクト違いでメソッドが存在しなかったという場合です。怪しいと思うメソッドが存在するか、以下のようにしてチェックしてみましょう。<br /><br /><div class="js_src"><code><br />alert( object.method );<br /></code></div><br /><br />また、オブジェクトの内容を再帰的に表示したい場合がよくあります。そのときは、PHPのprint_r()に似た関数を作って使っています。<br /><br /><code><div class="js_src"><br />&lt;script&nbsp;type="text/javascript"&gt;&lt;!--<br/>function&nbsp;print_r(obj)&nbsp;{<br/>	var&nbsp;count_obj&nbsp;=&nbsp;0;<br/>&nbsp;&nbsp;&nbsp;&nbsp;function&nbsp;_output(str)&nbsp;{<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;　document.writeln(str&nbsp;+&nbsp;"&lt;br/&gt;");<br/>&nbsp;&nbsp;&nbsp;&nbsp;}<br/>&nbsp;&nbsp;&nbsp;&nbsp;function&nbsp;_print_r(obj,&nbsp;name,&nbsp;level)&nbsp;{<br/>&nbsp;&nbsp;&nbsp;&nbsp;	var&nbsp;s&nbsp;=&nbsp;"";<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(obj&nbsp;==&nbsp;undefined&nbsp;||&nbsp;level&nbsp;&gt;&nbsp;4)&nbsp;return;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;(var&nbsp;i&nbsp;=&nbsp;0;&nbsp;i&nbsp;&lt;&nbsp;level;&nbsp;i++)&nbsp;{&nbsp;s&nbsp;+=&nbsp;"&nbsp;|&nbsp;";&nbsp;}<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;s&nbsp;+=&nbsp;"&nbsp;-&nbsp;"&nbsp;+&nbsp;name&nbsp;+&nbsp;":"&nbsp;+&nbsp;typeof(obj)&nbsp;+&nbsp;"="&nbsp;+&nbsp;obj;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_output(s);<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(name&nbsp;==&nbsp;"document"&nbsp;||&nbsp;typeof(obj)&nbsp;!=&nbsp;"object")&nbsp;return;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;(&nbsp;key&nbsp;in&nbsp;obj&nbsp;)&nbsp;{<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(count_obj++&nbsp;&gt;&nbsp;150)&nbsp;return;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	_print_r(obj[key],&nbsp;key,&nbsp;level&nbsp;+&nbsp;1);<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>&nbsp;&nbsp;&nbsp;&nbsp;}<br/>&nbsp;&nbsp;	_print_r(obj,&nbsp;"*",&nbsp;0);<br/>}<br/>//--&gt;<br/>&lt;/script&gt;<br /></div></code><br /><br />これなら、print_r( obj ); とやるとオブジェクトのプロパティ一覧を確認できます。<br /><br /><img alt="print_r.gif" src="http://labs.unoh.net/images/print_r.gif" width="499" height="313" /><br /><br /><br /><strong><u>バグを予防する</u></strong><br /><br />また、バグの原因を作らないようにするのも、最大のデバッグ方法だと言えます。プログラムをユニット単位に分割し、ユニットテストを行いながらプログラムを作ります。完成してからデバッグするよりも、テストファーストでテストをしながら作る方が、結果的には、短時間で完成することが多いようです。<br /><br />JavaScriptの、ユニットテストライブラリ「<a href="http://jstester.sourceforge.net/">JsTrester</a>」や「<a href="http://sourceforge.net/projects/jsunit">JsUnit</a>」を利用してみるのも良いでしょうか。<br /><br />ただ、私はそれほど大きなプログラムをJavaScriptで組まないので、もっと単純に C言語にあるような assert() 関数を作っておいて、ファイルごとにテスト項目を作ってテストするようにしています。<br /><br /><br /><strong><u>精神論</u></strong><br /><br />また、時には、どうしてもバグの原因が分からず、精神論で勝負しないといけないこともあります。プログラミングに煮詰まってしまったら、一度、その場を離れて冷静になって考えなおしてみましょう。<br /><br />煮詰まったときの対処方法として、私が一番効果があると思っているのは、プログラムの内容を誰か他の人に聞いてもらうことです。職場の同僚や友達に、とにかく処理の内容を聞いてもらうのです。<br /><br />相手がプログラマーなら、プログラムの矛盾を指摘してくれたりするので、一番良いのですが、全くの素人だとしても、「ここがこうなって、こうなって…」と丁寧に説明していくうちに、怪しい点を見つけることができるでしょう。<br /><br />他の方法としては、プログラムのソースコードを声を出して読んで見るのも、効果があるようです。このとき、ただ読むだけでなく、処理の流れごとにコメントを書き加えながら読んでいくと矛盾点を見つけることができます。<br /><br />そして、究極の方法ですが「眠る」のが一番です。原因がつかめずムキになってパソコンに噛り付いているよりも、睡眠をとって、脳を休ませると、良い解決が見つかります。無駄な時間を浪費することもなくなります。私はよく夢の中でデバッグをしていることがあり、バグの原因を特定したところで目が覚めたこともあります。<br /><br />それから、部屋をぐるぐる歩き回って考えるというのもよく聞きます。階段を上ったり降りたり、トイレに篭ってみたり、コンビニに飲み物を買いに行くなどなど、その人それぞれの効果的な方法があると思います。こうした方法は、他の人から見ると「奇行」なので変態扱いされることが多いのですが、なるべくカッコよくデバッグしたいものです。<br /><br /><strong><u>頑張らないこと</u></strong><br /><br />とにかく、頑張ってプログラミングしていると、バグを作りこみがちです。<br /><br />難しくてトリッキーなプログラムを作るのはバグの元凶となります。自分の能力や理解を超えた処理が必要なら、既存のライブラリを使いましょう。<br /><br />若いころ、自動車の免許を取りに行ったとき、事故を起こさない最大の対処方法は、車に乗らないことだと言われました。プログラミングにおいても、時には自分で作らないことも大切だと思います。<br /><br />また、誰が見ても、処理の内容が分かるプログラムを書きましょう。ちょっとダサくて冗長でも、バグに悩んで時間を浪費するよりは、ずっと良いはずです。力を抜いて頑張らないで作ることが大切だと思います。<br />
+<STYLE><br />
+<!--<br />
+.js_src {<br />
+    border: 1px gray solid;<br />
+    background: #F0F0F0;<br />
+    margin: 10px 30px;<br />
+    padding: 4px 8px;<br />
+    overflow: auto;<br />
+    max-height: 400px;<br />
+    color: black;<br />
+}<br />
+--><br />
+</STYLE><br />
+<br />
+こんにちは、さかとくです。今日は、世界中のプログラマーを悩ませているバグを退治する方法について考えてみたいと思います。今回は、特に、JavaScriptのバグを退治する方法にスポットを当ててみたいと思います。<br />
+<br />
+そもそも、バグ(Bug)とは、正しくプログラムが動かない状態、不具合のある状態です。<br />
+書き間違いや、なんらかの勘違いが原因であることが多いです。簡単なつづりミスならば、構文エラー（Syntax Error）によって、すぐに間違いが見つかります。しかし、<b>簡単にバグの原因が特定できない</b>ことも多くあります。そんなときはどうしたら良いでしょうか？<br />
+<br />
+以下の３点から考えてみます。<br />
+<br />
+・具体的なデバッグ方法<br />
+・バグを予防する<br />
+・精神論<br />
+<br />
+<br />
+<strong><u>具体的なデバッグの方法</u></strong><br />
+<br />
+どんな天才的なプログラマーでも、間違いの１つや２つは犯してしまうものです。一度もバグに遭遇せずプログラムを完成させることはできません。「うまく動かない！どうしたら良いだろうか？」と慌てる前に、プログラムのどの部分が間違っているのか、特定することが一番大切です。<br />
+<br />
+よくプログラミングの掲示板に「どうしてもバグが取れないんです。ソースをちょっと見てください。」と、長い長いソースがコピペされているを見ます。こういうのは、間違いなく「自分で何とかしろ！」と突っ込まれることになります。<br />
+<br />
+とにかく、まずは、どの部分で処理が間違っているのか、ブレークポイントを設定したり、変数の値を確認してみましょう。JavaScriptなら、FireFoxのアドオンである<a href="https://addons.mozilla.org/firefox/1843/">FireBug</a>を利用することで、ブレークポイントを設定したり、変数の内容を見ることができます。※FireBugは便利すぎるので、使わないのはもったいないです。<br />
+<br />
+また、IEでデバッグが必要なら、Visual Studioをインストールすると、Visual InterDev というのが入るので、これでステップ実行させることができます。（IEのオプションの詳細設定で、「スクリプトのデバッグを使用しない」をオフにしておきます。）<br />
+<br />
+これらの、デバッガーを使うまでもない時は、alert("xxx") で変数の内容を確認したり、document.writeln("xxx") で処理の一連の流れを表示させるのが定石でしょう。<br />
+<br />
+JavaScriptでよくはまるのが、メソッドが存在すると思って呼んでいるのに、綴りミスだったり、オブジェクト違いでメソッドが存在しなかったという場合です。怪しいと思うメソッドが存在するか、以下のようにしてチェックしてみましょう。<br />
+<br />
+<div class="js_src"><code><br />
+alert( object.method );<br />
+</code></div><br />
+<br />
+また、オブジェクトの内容を再帰的に表示したい場合がよくあります。そのときは、PHPのprint_r()に似た関数を作って使っています。<br />
+<br />
+<code><div class="js_src"><br />
+&lt;script&nbsp;type="text/javascript"&gt;&lt;!--<br/>function&nbsp;print_r(obj)&nbsp;{<br/>	var&nbsp;count_obj&nbsp;=&nbsp;0;<br/>&nbsp;&nbsp;&nbsp;&nbsp;function&nbsp;_output(str)&nbsp;{<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;　document.writeln(str&nbsp;+&nbsp;"&lt;br/&gt;");<br/>&nbsp;&nbsp;&nbsp;&nbsp;}<br/>&nbsp;&nbsp;&nbsp;&nbsp;function&nbsp;_print_r(obj,&nbsp;name,&nbsp;level)&nbsp;{<br/>&nbsp;&nbsp;&nbsp;&nbsp;	var&nbsp;s&nbsp;=&nbsp;"";<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(obj&nbsp;==&nbsp;undefined&nbsp;||&nbsp;level&nbsp;&gt;&nbsp;4)&nbsp;return;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;(var&nbsp;i&nbsp;=&nbsp;0;&nbsp;i&nbsp;&lt;&nbsp;level;&nbsp;i++)&nbsp;{&nbsp;s&nbsp;+=&nbsp;"&nbsp;|&nbsp;";&nbsp;}<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;s&nbsp;+=&nbsp;"&nbsp;-&nbsp;"&nbsp;+&nbsp;name&nbsp;+&nbsp;":"&nbsp;+&nbsp;typeof(obj)&nbsp;+&nbsp;"="&nbsp;+&nbsp;obj;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;_output(s);<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(name&nbsp;==&nbsp;"document"&nbsp;||&nbsp;typeof(obj)&nbsp;!=&nbsp;"object")&nbsp;return;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for&nbsp;(&nbsp;key&nbsp;in&nbsp;obj&nbsp;)&nbsp;{<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if&nbsp;(count_obj++&nbsp;&gt;&nbsp;150)&nbsp;return;<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;	_print_r(obj[key],&nbsp;key,&nbsp;level&nbsp;+&nbsp;1);<br/>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}<br/>&nbsp;&nbsp;&nbsp;&nbsp;}<br/>&nbsp;&nbsp;	_print_r(obj,&nbsp;"*",&nbsp;0);<br/>}<br/>//--&gt;<br/>&lt;/script&gt;<br />
+</div></code><br />
+<br />
+これなら、print_r( obj ); とやるとオブジェクトのプロパティ一覧を確認できます。<br />
+<br />
+<img alt="print_r.gif" src="http://labs.unoh.net/images/print_r.gif" width="499" height="313" /><br />
+<br />
+<br />
+<strong><u>バグを予防する</u></strong><br />
+<br />
+また、バグの原因を作らないようにするのも、最大のデバッグ方法だと言えます。プログラムをユニット単位に分割し、ユニットテストを行いながらプログラムを作ります。完成してからデバッグするよりも、テストファーストでテストをしながら作る方が、結果的には、短時間で完成することが多いようです。<br />
+<br />
+JavaScriptの、ユニットテストライブラリ「<a href="http://jstester.sourceforge.net/">JsTrester</a>」や「<a href="http://sourceforge.net/projects/jsunit">JsUnit</a>」を利用してみるのも良いでしょうか。<br />
+<br />
+ただ、私はそれほど大きなプログラムをJavaScriptで組まないので、もっと単純に C言語にあるような assert() 関数を作っておいて、ファイルごとにテスト項目を作ってテストするようにしています。<br />
+<br />
+<br />
+<strong><u>精神論</u></strong><br />
+<br />
+また、時には、どうしてもバグの原因が分からず、精神論で勝負しないといけないこともあります。プログラミングに煮詰まってしまったら、一度、その場を離れて冷静になって考えなおしてみましょう。<br />
+<br />
+煮詰まったときの対処方法として、私が一番効果があると思っているのは、プログラムの内容を誰か他の人に聞いてもらうことです。職場の同僚や友達に、とにかく処理の内容を聞いてもらうのです。<br />
+<br />
+相手がプログラマーなら、プログラムの矛盾を指摘してくれたりするので、一番良いのですが、全くの素人だとしても、「ここがこうなって、こうなって…」と丁寧に説明していくうちに、怪しい点を見つけることができるでしょう。<br />
+<br />
+他の方法としては、プログラムのソースコードを声を出して読んで見るのも、効果があるようです。このとき、ただ読むだけでなく、処理の流れごとにコメントを書き加えながら読んでいくと矛盾点を見つけることができます。<br />
+<br />
+そして、究極の方法ですが「眠る」のが一番です。原因がつかめずムキになってパソコンに噛り付いているよりも、睡眠をとって、脳を休ませると、良い解決が見つかります。無駄な時間を浪費することもなくなります。私はよく夢の中でデバッグをしていることがあり、バグの原因を特定したところで目が覚めたこともあります。<br />
+<br />
+それから、部屋をぐるぐる歩き回って考えるというのもよく聞きます。階段を上ったり降りたり、トイレに篭ってみたり、コンビニに飲み物を買いに行くなどなど、その人それぞれの効果的な方法があると思います。こうした方法は、他の人から見ると「奇行」なので変態扱いされることが多いのですが、なるべくカッコよくデバッグしたいものです。<br />
+<br />
+<strong><u>頑張らないこと</u></strong><br />
+<br />
+とにかく、頑張ってプログラミングしていると、バグを作りこみがちです。<br />
+<br />
+難しくてトリッキーなプログラムを作るのはバグの元凶となります。自分の能力や理解を超えた処理が必要なら、既存のライブラリを使いましょう。<br />
+<br />
+若いころ、自動車の免許を取りに行ったとき、事故を起こさない最大の対処方法は、車に乗らないことだと言われました。プログラミングにおいても、時には自分で作らないことも大切だと思います。<br />
+<br />
+また、誰が見ても、処理の内容が分かるプログラムを書きましょう。ちょっとダサくて冗長でも、バグに悩んで時間を浪費するよりは、ずっと良いはずです。力を抜いて頑張らないで作ることが大切だと思います。<br />
+
 {% endraw %}

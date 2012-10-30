@@ -3,5 +3,48 @@ layout: post
 title: "仕事用Ubuntu導入レポート"
 ---
 {% raw %}
-<p>yukiです。</p><br /><br /><br /><br /><p>最近は会社で扱うPCをPanasonicのLet's note CF-Y7 にUbuntu(8.04)を導入してみようと思い、試行錯誤の日々を送っています。<br /><br />今回はそんな導入までの道のりと、使い方を簡単にレポートしてみたいと思います。(そのままだとVista仕様になっていたので、Wubiで試すのも面倒でしたのでそのままクリーンインストールしました。)</p><br /><br /><h3>GRUB</h3><br /><br /><br /><br /><p>まず最初にハマったポイントは最初のGRUBオプション時に「acpi=off」と「pnpbios=off」をつけないとまともに起動しなかったこと。</p><br /><pre class="code">$ cat /boot/grub/menu.lst<br />(中略)<br />title           Ubuntu 8.04, kernel 2.6.24-16-generic<br />root            (hd0,0)<br />kernel          /vmlinuz-2.6.24-16-generic root=UUID=XXXXXXXXXXXXXXXXXXX ro splash acpi=off pnpbios=off<br />initrd          /initrd.img-2.6.24-16-generic</pre><br /><p>ちゃんと追求していけば、これははずせると思うのでもう少し試行錯誤してみたいと思います。(蛇足ですが、個人的には起動画面で文字を眺めていたいのでquietオプションははずしています。)</p><br /><br /><h3>キーマップ変更</h3><br /><br /><p>個人的にはとてつもなく重要なCtrlとCapsLockを入れ替え、無変換キーを半角/全角キーに、半角/全角キーをEscへ移動。</p><br /><pre class="code">$ cat ~/.Xmodmap<br />keycode 131 = Zenkaku_Hankaku Kanji<br />keycode 49 = Escape</pre><br /><p>GUIのキー設定だと柔軟に設定できなかったので、もしかしたらもっと簡単な方法はあるかもしれませんが、調べるのが時間かかりそうだったので断念。kevからキーコードを見てホームディレクトリに.Xmodmapを記述して解決。</p><br /><br /><h3>日常使うパッケージを導入</h3><br /><br /><p>screen,zsh,subversionなど、どなたでも日常使うものたちをインストールする。<br />.zshrc、.vimrcなどは現状使っている所からコピーしました。</p><br /><h3>SSH鍵やsambaまわりを整える</h3><br /><br /><p>sshfs,smbfsを導入。smbfsはどうも8.04から仕様が変わったっぽいけど、とりあえず入れておきます。基本的にはNautilusからネットワークを見れば見えるので、必要ないかもしれませんが。<br />sshfsは自宅サーバをマウントしたりしているので便利です。</p><br /><pre class="code">$ sshfs [username]@[hostname]:[directory] [mountpoint]</pre><h3>端末(terminal)</h3><br /><br /><p>putty,putty-toolsパッケージがあったので導入してみました。<br />Windowsの時は愛用していただけに、なじみのある設定項目がわかりやすくていいのですが、日本語フォントを扱えないようなので、もし扱えるようならどなたか教えてください。</p><br /><h3>最後に「Gnome Do」と「Avant Window Navigator」</h3><br /><br /><p>普通はこちらが最初にくるのかもしれませんが、ローカル環境で開発をしようと目論んでいたので後回しになっていました。導入後とくにこだわりがなければすぐに使えるようになりますし、入れておいて損はないと思います。</p><br /><p>こんな感じでだいぶ簡単に導入することができました。ただ鬼門があるとすれば、画面出力は割と面倒です。BenQ FP71V+, Intel 945GMな自宅PCはどうしてもSXGA表示ができずに泣いていますが、なんとかして動かし、素敵なUbuntu族になりたいものです。</p><br /><p>PS: 禁煙は成功した模様です。</p><br />
+<p>yukiです。</p><br />
+<br />
+<br />
+<br />
+<p>最近は会社で扱うPCをPanasonicのLet's note CF-Y7 にUbuntu(8.04)を導入してみようと思い、試行錯誤の日々を送っています。<br />
+<br />
+今回はそんな導入までの道のりと、使い方を簡単にレポートしてみたいと思います。(そのままだとVista仕様になっていたので、Wubiで試すのも面倒でしたのでそのままクリーンインストールしました。)</p><br />
+<br />
+<h3>GRUB</h3><br />
+<br />
+<br />
+<br />
+<p>まず最初にハマったポイントは最初のGRUBオプション時に「acpi=off」と「pnpbios=off」をつけないとまともに起動しなかったこと。</p><br />
+<pre class="code">$ cat /boot/grub/menu.lst<br />
+(中略)<br />
+title           Ubuntu 8.04, kernel 2.6.24-16-generic<br />
+root            (hd0,0)<br />
+kernel          /vmlinuz-2.6.24-16-generic root=UUID=XXXXXXXXXXXXXXXXXXX ro splash acpi=off pnpbios=off<br />
+initrd          /initrd.img-2.6.24-16-generic</pre><br />
+<p>ちゃんと追求していけば、これははずせると思うのでもう少し試行錯誤してみたいと思います。(蛇足ですが、個人的には起動画面で文字を眺めていたいのでquietオプションははずしています。)</p><br />
+<br />
+<h3>キーマップ変更</h3><br />
+<br />
+<p>個人的にはとてつもなく重要なCtrlとCapsLockを入れ替え、無変換キーを半角/全角キーに、半角/全角キーをEscへ移動。</p><br />
+<pre class="code">$ cat ~/.Xmodmap<br />
+keycode 131 = Zenkaku_Hankaku Kanji<br />
+keycode 49 = Escape</pre><br />
+<p>GUIのキー設定だと柔軟に設定できなかったので、もしかしたらもっと簡単な方法はあるかもしれませんが、調べるのが時間かかりそうだったので断念。kevからキーコードを見てホームディレクトリに.Xmodmapを記述して解決。</p><br />
+<br />
+<h3>日常使うパッケージを導入</h3><br />
+<br />
+<p>screen,zsh,subversionなど、どなたでも日常使うものたちをインストールする。<br />.zshrc、.vimrcなどは現状使っている所からコピーしました。</p><br />
+<h3>SSH鍵やsambaまわりを整える</h3><br />
+<br />
+<p>sshfs,smbfsを導入。smbfsはどうも8.04から仕様が変わったっぽいけど、とりあえず入れておきます。基本的にはNautilusからネットワークを見れば見えるので、必要ないかもしれませんが。<br />sshfsは自宅サーバをマウントしたりしているので便利です。</p><br />
+<pre class="code">$ sshfs [username]@[hostname]:[directory] [mountpoint]</pre><h3>端末(terminal)</h3><br />
+<br />
+<p>putty,putty-toolsパッケージがあったので導入してみました。<br />Windowsの時は愛用していただけに、なじみのある設定項目がわかりやすくていいのですが、日本語フォントを扱えないようなので、もし扱えるようならどなたか教えてください。</p><br />
+<h3>最後に「Gnome Do」と「Avant Window Navigator」</h3><br />
+<br />
+<p>普通はこちらが最初にくるのかもしれませんが、ローカル環境で開発をしようと目論んでいたので後回しになっていました。導入後とくにこだわりがなければすぐに使えるようになりますし、入れておいて損はないと思います。</p><br />
+<p>こんな感じでだいぶ簡単に導入することができました。ただ鬼門があるとすれば、画面出力は割と面倒です。BenQ FP71V+, Intel 945GMな自宅PCはどうしてもSXGA表示ができずに泣いていますが、なんとかして動かし、素敵なUbuntu族になりたいものです。</p><br />
+<p>PS: 禁煙は成功した模様です。</p><br />
+
 {% endraw %}

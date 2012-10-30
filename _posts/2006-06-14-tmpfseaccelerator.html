@@ -3,5 +3,19 @@ layout: post
 title: "tmpfs上にeacceleratorのキャッシュファイルを置く"
 ---
 {% raw %}
-こんにちは satoです。<br /><br />新しいfedoraには　デフォルトでtmpfsが入っています。<br />fstab のオプションで　size=1G と書けば自動的に 1Gまで拡張してくれます。<br /><br />php のアクセラレータであるeaccelerator の吐くキャッシュファイルは大きいもので<br />200kを超えるので、webサーバのメモリーを tmpfs に割り当ててキャッシュファイルは<br />メモリ上に吐いています。<br /><br />キャッシュはphpスクリプトが変更されるたびに変わってしまうので<br />find /dev/shm -atime +7 -exec rm {} \;<br />と apacheのcronに登録すれば　7日以上アクセスの無いキャッシュファイルは自動的に<br />クリアしてくれます。<br /><br />
+こんにちは satoです。<br />
+<br />
+新しいfedoraには　デフォルトでtmpfsが入っています。<br />
+fstab のオプションで　size=1G と書けば自動的に 1Gまで拡張してくれます。<br />
+<br />
+php のアクセラレータであるeaccelerator の吐くキャッシュファイルは大きいもので<br />
+200kを超えるので、webサーバのメモリーを tmpfs に割り当ててキャッシュファイルは<br />
+メモリ上に吐いています。<br />
+<br />
+キャッシュはphpスクリプトが変更されるたびに変わってしまうので<br />
+find /dev/shm -atime +7 -exec rm {} \;<br />
+と apacheのcronに登録すれば　7日以上アクセスの無いキャッシュファイルは自動的に<br />
+クリアしてくれます。<br />
+<br />
+
 {% endraw %}

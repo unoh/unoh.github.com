@@ -3,5 +3,268 @@ layout: post
 title: "Mercurialでバージョン管理"
 ---
 {% raw %}
-<p>stoplightで最大化したターミナル上でzshとscreenとEmacsを立ち上げ、<br />明朝体フォントでプログラミングするbokkoです。<br /></p><br /><br /><p>今回はバージョン管理システムの1つであるMercurialについて紹介します。</p><br /><br /><p><br />ウノウではSubversionとTracを組み合わせて開発を行っていますが、<br />僕個人では今年の春ぐらいからEmacsやzsh、screenなどの各種設定ファイルをMercurialでバージョン管理しています。<br /></p><br /><br /><h2><strong>Mercurialとは？</strong></h2><br /><br /><p><br />Mercurialは分散型のバージョン管理システムです。<br />これに対して、CVSやSubversion(以下SVN)は集中型のバージョン管理システムにあたります。<br />分散型と聞くと難しそうなイメージがわくかもしれませんが、<br />CVSやSVNに比べてると、より手軽にバージョン管理を行うことができるというのが、<br />Mercurialに対する僕の印象です。というのもCVSやSVNでは、まず単一のリポジトリを作成した後、<br />バージョン管理したいファイルをリポジトリにimportして、コピーをチェックアウトし、<br />コピーを編集してからその差分をリポジトリにコミットします。<br />これに対して、Mercurialではバージョン管理の対象そのものがリポジトリになります。<br />このため、単に1つのマシン上で編集の履歴を保持したりするだけの場合、<br />集中型よりも手軽に扱うことができます。もちろん、複数のマシンでファイルの同期を取るといったことも可能です。<br /></p><br /><br /><br /><h2><strong>とりあえず使ってみる</strong></h2><br /><br /><p><br />概要だけではあまりピンとこないと思いますので、実際に使ってみましょう。<br />使用しているMercurialのバージョンは1.0です。<br />例えば、以下のディレクトリでバージョン管理を行いたいとします。<br /></p><br /><br /><pre class="code">$ pwd<br />/Users/username/mercurialSample<br />$ ls<br />test.txt<br />$ cat test.txt<br />test<br />$<br /></pre><br /><br /><h2><strong>リポジトリの初期化</strong></h2><br /><br /><p><br />リポジトリの初期化は下記のコマンドを実行するだけです。<br /></p><br /><br /><pre class="code">$ hg init<br />$</pre><br /><br /><p><br />何も表示されませんが成功すれば.hgというディレクトリができているはずです。<br />バージョン管理をやめたくなったらこのディレクトリを削除するだけでOKです。<br /></p><br /><br /><pre class="code">$ ls -a<br />.               ..              .hg             test.txt<br /></pre><br /><br /><p><br />また、initコマンドで初期化しただけでは、test.txtはリポジトリには追加されていません。<br /></p><br /><br /><pre class="code">$ hg status<br />? test.txt<br />$<br /></pre><br /><br /><p><br />addとcommitでリポジトリにtest.txtを追加します。<br /></p><br /><br /><pre class="code">$ hg add test.txt<br />$ hg status<br />A test.txt<br />$ hg commit -m &quot;test&quot; test.txt<br />$ hg status<br />$<br /></pre><br /><br /><h2><strong>基本的なコマンド</strong></h2><br /><br /><p><br />ファイルの追加や削除、差分の更新やコミットはCVSやSubversionとほとんど同じなので、<br />CVSやSVNを使ったことのある人なら特に困ることなく、使えるでしょう。<br /></p><br /><br /><pre class="code">$ hg add test.txt<br />$ hg remove test.txt<br />$ hg update test.txt<br />$ hg commit test.txt<br />$ hg diff test.txt<br /></pre><br /><br /><h2><strong>リポジトリの複製</strong></h2><br /><br /><p><br />上記のように特に分散型というのを意識せずに単純に個人でローカルだけで<br />手軽に差分を保持するということができるのも僕がMercurialを気に入っている理由の一つですが、<br />もちろんCVSやSVNのようにネットワークを介した複数のマシンの間で同期を取ることもできます。<br />ここでmacというホストとubuntuというホストの間でさっきのリポジトリを共有することを考えてみましょう。<br />何故macとubuntuかと言うと、実際に僕がMacとParallesDesktopにインストールしたUbuntuとの間で、<br />Mercurialを使って設定ファイル等の同期を取っているからです。<br />まず、mac上にある先程のリポジトリをubuntu側から複製してみましょう。<br />リポジトリを複製するにはcloneコマンドを使います。<br /></p><br /><br /><pre class="code"><br />$ pwd<br />/home/username<br />$ hg clone ssh://username@mac//Users/username/mercurialSample mercurialSample<br /></pre><br /><br /><p><br />macがホスト名、/を一つ挟んだ後の文字列がリポジトリのルートディレクトリへのパス、<br />その次が複製側で作成するリポジトリのルートディレクトリの名前です。<br />問題がなければ、これで上記コマンドを実行したubuntu側のディレクトリに<br />リポジトリができます。また、このリポジトリの.hgにあるhgrcというファイルに<br />どこからリポジトリを複製したのかが記録されています。<br /></p><br /><br /><pre class="code">[paths]<br />default = ssh://username@mac//Users/username/mercurialSample</pre><br /><br /><p><br />pathsコマンドで確認することも可能です。<br /></p><br /><br /><pre class="code">$ hg paths<br />default = ssh://username@mac//Users/username/mercurialSample<br /><br /></pre><br /><br /><h2><strong>ローカルリポジトリの内容をリモートリポジトリに反映</strong></h2><br /><br /><p><br />CVSやSVNではチェックアウトしたコピーから単一のリポジトリに対してコミットを行いますが、<br />Mercurialでは通常、コミットはローカルのリポジトリに対してのみ行います。<br />単にコミットしただけでは別のマシンのリポジトリに変更内容は反映されません。<br />前者のリポジトリをローカルリポジトリ、後者のリポジトリをリモートリポジトリと言います。<br /></p><br /><br /><p><br />例えば、さっき複製したubuntu側のリポジトリの内容を変更してみます。<br /></p><br /><br /><pre class="code">$ cat test.txt<br />test<br />ubuntu<br />$ hg status test.txt<br />M test.txt<br />$ hg commit -m &quot;add ubuntu&quot; test.txt<br />$</pre><br /><br /><p><br />これでubuntu側のリポジトリの内容が変更されました。<br />これをmac側のリポジトリにubuntu側から反映させるにはpushコマンドを使用します。<br /></p><br /><br /><pre class="code">$ hg push ssh://username@mac//Users/username/mercurialSample<br /></pre><br /><br /><p><br />pushコマンドが成功したら、mac側のリポジトリでupdateコマンドを使用します。<br /></p><br /><br /><pre class="code">$ hg update<br />1 files updated, 0 files merged, 0 files removed, 0 files unresolved<br />$ cat test.txt<br />test<br />ubuntu<br />$<br /></pre><br /><br /><h2><strong>リモートリポジトリの内容をローカルリポジトリに反映</strong></h2><br /><br /><p><br />逆に別のマシンで変更されたリポジトリの内容を自分のリポジトリに反映させるには<br />pullコマンドを使用します。ubuntu側で変更された内容をmac側から取り込んで見ましょう。<br /></p><br /><br /><pre class="code">$ hostname<br />ubunutu<br />$ cat test.txt<br />test<br />ubuntu<br />more ubuntu<br />$ hg status<br />M test.txt<br />$ hg commit -m &quot;add more ubuntu&quot; test.txt<br />$<br /></pre><br /><br /><pre class="code">$ hostname<br />mac<br />$ pwd<br />/Users/username/mercurialSample<br />$ hg pull ssh://username@ubuntu//home/username/mercrurialSample<br /></pre><br /><br /><p><br />pullコマンドが成功したら、updateコマンドを実行します。<br /></p><br /><br /><pre class="code">$ hg update<br />1 files updated, 0 files merged, 0 files removed, 0 files unresolved<br />$ cat test.txt<br />test<br />ubuntu<br />more ubuntu<br />$<br /></pre><br /><br /><h2><strong>ファイル無視の設定</strong></h2><br /><br /><p><br />ソースコードなどのバージョン管理をしていると、<br />一部例外としてバージョン管理の対象に含めたくないファイルが出てきます。<br />例えば、makeコマンドで生成される実行ファイル、etagsで生成されるTAGS、またEmacsが生成する<br />一時ファイル(末尾に~が付いたファイルや各種拡張が生成する一時ファイル)などがあります。<br />Mercurialでは.hgignoreというファイルをリポジトリのルートディレクトリに作成して、<br />ファイル無視に関する設定を記述することができます。<br />僕の環境では以下のような設定をしています。<br /></p><br /><br /><h3>.hgignore</h3><br /><br /><pre class="code">syntax: glob<br />*~<br />.semantic.cache<br />.DS_Store<br />TAGS<br /></pre><br /><br /><p><br />また、僕は使っていませんが、正規表現による指定もできます。<br /></p><br /><br /><pre class="code">syntax: regexp<br />^t<br /></pre><br /><br /><h2><strong>.hgignoreの設定を共有する</strong></h2><br /><br /><p><br />ただ、上記のやり方だと新しいリポジトリを作成する度に設定ファイルを用意する必要があります。<br />すべてのリポジトリで.hginoreの設定を共有するには、<br />ホームディレクトリに以下の内容の.hgrcとさっきの.hgignoreを作成します。<br /></p><br /><br /><h3>.hgrc</h3><br /><br /><pre class="code">[ui]<br />ignore=~/.hgignore<br /></pre><br /><br /><p><br />.hgrcにはほかにもいろいろな設定を記述することができるので、<br />興味のある方は<a href="http://www.selenic.com/mercurial/wiki/index.cgi/Tutorial">本家のチュートリアル</a>を読んでみるとよいでしょう。<br /><a href="http://www.selenic.com/mercurial/wiki/index.cgi/JapaneseTutorial">日本語版</a>もあります。<br /></p>
+<p>stoplightで最大化したターミナル上でzshとscreenとEmacsを立ち上げ、<br />
+明朝体フォントでプログラミングするbokkoです。<br />
+</p><br />
+<br />
+<p>今回はバージョン管理システムの1つであるMercurialについて紹介します。</p><br />
+<br />
+<p><br />
+ウノウではSubversionとTracを組み合わせて開発を行っていますが、<br />
+僕個人では今年の春ぐらいからEmacsやzsh、screenなどの各種設定ファイルをMercurialでバージョン管理しています。<br />
+</p><br />
+<br />
+<h2><strong>Mercurialとは？</strong></h2><br />
+<br />
+<p><br />
+Mercurialは分散型のバージョン管理システムです。<br />
+これに対して、CVSやSubversion(以下SVN)は集中型のバージョン管理システムにあたります。<br />
+分散型と聞くと難しそうなイメージがわくかもしれませんが、<br />
+CVSやSVNに比べてると、より手軽にバージョン管理を行うことができるというのが、<br />
+Mercurialに対する僕の印象です。というのもCVSやSVNでは、まず単一のリポジトリを作成した後、<br />
+バージョン管理したいファイルをリポジトリにimportして、コピーをチェックアウトし、<br />
+コピーを編集してからその差分をリポジトリにコミットします。<br />
+これに対して、Mercurialではバージョン管理の対象そのものがリポジトリになります。<br />
+このため、単に1つのマシン上で編集の履歴を保持したりするだけの場合、<br />
+集中型よりも手軽に扱うことができます。もちろん、複数のマシンでファイルの同期を取るといったことも可能です。<br />
+</p><br />
+<br />
+<br />
+<h2><strong>とりあえず使ってみる</strong></h2><br />
+<br />
+<p><br />
+概要だけではあまりピンとこないと思いますので、実際に使ってみましょう。<br />
+使用しているMercurialのバージョンは1.0です。<br />
+例えば、以下のディレクトリでバージョン管理を行いたいとします。<br />
+</p><br />
+<br />
+<pre class="code">$ pwd<br />
+/Users/username/mercurialSample<br />
+$ ls<br />
+test.txt<br />
+$ cat test.txt<br />
+test<br />
+$<br />
+</pre><br />
+<br />
+<h2><strong>リポジトリの初期化</strong></h2><br />
+<br />
+<p><br />
+リポジトリの初期化は下記のコマンドを実行するだけです。<br />
+</p><br />
+<br />
+<pre class="code">$ hg init<br />
+$</pre><br />
+<br />
+<p><br />
+何も表示されませんが成功すれば.hgというディレクトリができているはずです。<br />
+バージョン管理をやめたくなったらこのディレクトリを削除するだけでOKです。<br />
+</p><br />
+<br />
+<pre class="code">$ ls -a<br />
+.               ..              .hg             test.txt<br />
+</pre><br />
+<br />
+<p><br />
+また、initコマンドで初期化しただけでは、test.txtはリポジトリには追加されていません。<br />
+</p><br />
+<br />
+<pre class="code">$ hg status<br />
+? test.txt<br />
+$<br />
+</pre><br />
+<br />
+<p><br />
+addとcommitでリポジトリにtest.txtを追加します。<br />
+</p><br />
+<br />
+<pre class="code">$ hg add test.txt<br />
+$ hg status<br />
+A test.txt<br />
+$ hg commit -m &quot;test&quot; test.txt<br />
+$ hg status<br />
+$<br />
+</pre><br />
+<br />
+<h2><strong>基本的なコマンド</strong></h2><br />
+<br />
+<p><br />
+ファイルの追加や削除、差分の更新やコミットはCVSやSubversionとほとんど同じなので、<br />
+CVSやSVNを使ったことのある人なら特に困ることなく、使えるでしょう。<br />
+</p><br />
+<br />
+<pre class="code">$ hg add test.txt<br />
+$ hg remove test.txt<br />
+$ hg update test.txt<br />
+$ hg commit test.txt<br />
+$ hg diff test.txt<br />
+</pre><br />
+<br />
+<h2><strong>リポジトリの複製</strong></h2><br />
+<br />
+<p><br />
+上記のように特に分散型というのを意識せずに単純に個人でローカルだけで<br />
+手軽に差分を保持するということができるのも僕がMercurialを気に入っている理由の一つですが、<br />
+もちろんCVSやSVNのようにネットワークを介した複数のマシンの間で同期を取ることもできます。<br />
+ここでmacというホストとubuntuというホストの間でさっきのリポジトリを共有することを考えてみましょう。<br />
+何故macとubuntuかと言うと、実際に僕がMacとParallesDesktopにインストールしたUbuntuとの間で、<br />
+Mercurialを使って設定ファイル等の同期を取っているからです。<br />
+まず、mac上にある先程のリポジトリをubuntu側から複製してみましょう。<br />
+リポジトリを複製するにはcloneコマンドを使います。<br />
+</p><br />
+<br />
+<pre class="code"><br />
+$ pwd<br />
+/home/username<br />
+$ hg clone ssh://username@mac//Users/username/mercurialSample mercurialSample<br />
+</pre><br />
+<br />
+<p><br />
+macがホスト名、/を一つ挟んだ後の文字列がリポジトリのルートディレクトリへのパス、<br />
+その次が複製側で作成するリポジトリのルートディレクトリの名前です。<br />
+問題がなければ、これで上記コマンドを実行したubuntu側のディレクトリに<br />
+リポジトリができます。また、このリポジトリの.hgにあるhgrcというファイルに<br />
+どこからリポジトリを複製したのかが記録されています。<br />
+</p><br />
+<br />
+<pre class="code">[paths]<br />
+default = ssh://username@mac//Users/username/mercurialSample</pre><br />
+<br />
+<p><br />
+pathsコマンドで確認することも可能です。<br />
+</p><br />
+<br />
+<pre class="code">$ hg paths<br />
+default = ssh://username@mac//Users/username/mercurialSample<br />
+<br />
+</pre><br />
+<br />
+<h2><strong>ローカルリポジトリの内容をリモートリポジトリに反映</strong></h2><br />
+<br />
+<p><br />
+CVSやSVNではチェックアウトしたコピーから単一のリポジトリに対してコミットを行いますが、<br />
+Mercurialでは通常、コミットはローカルのリポジトリに対してのみ行います。<br />
+単にコミットしただけでは別のマシンのリポジトリに変更内容は反映されません。<br />
+前者のリポジトリをローカルリポジトリ、後者のリポジトリをリモートリポジトリと言います。<br />
+</p><br />
+<br />
+<p><br />
+例えば、さっき複製したubuntu側のリポジトリの内容を変更してみます。<br />
+</p><br />
+<br />
+<pre class="code">$ cat test.txt<br />
+test<br />
+ubuntu<br />
+$ hg status test.txt<br />
+M test.txt<br />
+$ hg commit -m &quot;add ubuntu&quot; test.txt<br />
+$</pre><br />
+<br />
+<p><br />
+これでubuntu側のリポジトリの内容が変更されました。<br />
+これをmac側のリポジトリにubuntu側から反映させるにはpushコマンドを使用します。<br />
+</p><br />
+<br />
+<pre class="code">$ hg push ssh://username@mac//Users/username/mercurialSample<br />
+</pre><br />
+<br />
+<p><br />
+pushコマンドが成功したら、mac側のリポジトリでupdateコマンドを使用します。<br />
+</p><br />
+<br />
+<pre class="code">$ hg update<br />
+1 files updated, 0 files merged, 0 files removed, 0 files unresolved<br />
+$ cat test.txt<br />
+test<br />
+ubuntu<br />
+$<br />
+</pre><br />
+<br />
+<h2><strong>リモートリポジトリの内容をローカルリポジトリに反映</strong></h2><br />
+<br />
+<p><br />
+逆に別のマシンで変更されたリポジトリの内容を自分のリポジトリに反映させるには<br />
+pullコマンドを使用します。ubuntu側で変更された内容をmac側から取り込んで見ましょう。<br />
+</p><br />
+<br />
+<pre class="code">$ hostname<br />
+ubunutu<br />
+$ cat test.txt<br />
+test<br />
+ubuntu<br />
+more ubuntu<br />
+$ hg status<br />
+M test.txt<br />
+$ hg commit -m &quot;add more ubuntu&quot; test.txt<br />
+$<br />
+</pre><br />
+<br />
+<pre class="code">$ hostname<br />
+mac<br />
+$ pwd<br />
+/Users/username/mercurialSample<br />
+$ hg pull ssh://username@ubuntu//home/username/mercrurialSample<br />
+</pre><br />
+<br />
+<p><br />
+pullコマンドが成功したら、updateコマンドを実行します。<br />
+</p><br />
+<br />
+<pre class="code">$ hg update<br />
+1 files updated, 0 files merged, 0 files removed, 0 files unresolved<br />
+$ cat test.txt<br />
+test<br />
+ubuntu<br />
+more ubuntu<br />
+$<br />
+</pre><br />
+<br />
+<h2><strong>ファイル無視の設定</strong></h2><br />
+<br />
+<p><br />
+ソースコードなどのバージョン管理をしていると、<br />
+一部例外としてバージョン管理の対象に含めたくないファイルが出てきます。<br />
+例えば、makeコマンドで生成される実行ファイル、etagsで生成されるTAGS、またEmacsが生成する<br />
+一時ファイル(末尾に~が付いたファイルや各種拡張が生成する一時ファイル)などがあります。<br />
+Mercurialでは.hgignoreというファイルをリポジトリのルートディレクトリに作成して、<br />
+ファイル無視に関する設定を記述することができます。<br />
+僕の環境では以下のような設定をしています。<br />
+</p><br />
+<br />
+<h3>.hgignore</h3><br />
+<br />
+<pre class="code">syntax: glob<br />
+*~<br />
+.semantic.cache<br />
+.DS_Store<br />
+TAGS<br />
+</pre><br />
+<br />
+<p><br />
+また、僕は使っていませんが、正規表現による指定もできます。<br />
+</p><br />
+<br />
+<pre class="code">syntax: regexp<br />
+^t<br />
+</pre><br />
+<br />
+<h2><strong>.hgignoreの設定を共有する</strong></h2><br />
+<br />
+<p><br />
+ただ、上記のやり方だと新しいリポジトリを作成する度に設定ファイルを用意する必要があります。<br />
+すべてのリポジトリで.hginoreの設定を共有するには、<br />
+ホームディレクトリに以下の内容の.hgrcとさっきの.hgignoreを作成します。<br />
+</p><br />
+<br />
+<h3>.hgrc</h3><br />
+<br />
+<pre class="code">[ui]<br />
+ignore=~/.hgignore<br />
+</pre><br />
+<br />
+<p><br />
+.hgrcにはほかにもいろいろな設定を記述することができるので、<br />
+興味のある方は<a href="http://www.selenic.com/mercurial/wiki/index.cgi/Tutorial">本家のチュートリアル</a>を読んでみるとよいでしょう。<br />
+<a href="http://www.selenic.com/mercurial/wiki/index.cgi/JapaneseTutorial">日本語版</a>もあります。<br />
+</p>
 {% endraw %}

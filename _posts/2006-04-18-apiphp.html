@@ -3,5 +3,42 @@ layout: post
 title: "フォト蔵API(β版)へPHPでアクセス"
 ---
 {% raw %}
-こんにちは！　やまもと＠テスト番長です。<br /><br />フォト蔵では、フォト蔵API(β版)を公開しています。<br />最近テスト用にPHPでアクセスするコードを用意したので、簡単ですがご紹介します。<br />写真を追加する「photo_add」へアクセスしてみましょう。<br /><br />&lt;?php<br />/*photo-zo api test*/<br /><br />require_once "HTTP/Request.php";<br /><br />$req =& new HTTP_Request("http://api.photozou.jp/rest/photo_add");<br />$req->setBasicAuth("mailaddress","password"); <br />$req->setMethod(HTTP_REQUEST_METHOD_POST);<br />$req->addFile( 'photo', 'C:\Documents and Settings\user\My Documents\My Pictures\test.gif', 'image/gif');<br />$req->addPostData('album_id', 'xxxxxx');<br />$req->addPostData('photo_title', 'test');<br />$req->addPostData('date_type', 'date');<br />$req->addPostData('year', 'yyyy');<br />$req->addPostData('month', 'm');<br />$req->addPostData('day', 'd');<br /><br />if (!PEAR::isError($req->sendRequest())) {<br />&nbsp;&nbsp;&nbsp;&nbsp; $response1 = $req->getResponseBody();<br />&nbsp;&nbsp;&nbsp;&nbsp;} else {<br />&nbsp;&nbsp;&nbsp;&nbsp;$response1 = "";<br />}<br />print $response1;<br />?><br /><br />ご覧の通り特に変わったところはないのですが、<br />β版ゆえにちょっとだけコツみたいなものがあります。<br />それは、「Content-Type を小文字で指定すること」です。<br /><br />宜しければ試してみてくださいね。<br /><br /><br />※β版サービスなので、今後予告無しに仕様変更される可能性があります。
+こんにちは！　やまもと＠テスト番長です。<br />
+<br />
+フォト蔵では、フォト蔵API(β版)を公開しています。<br />
+最近テスト用にPHPでアクセスするコードを用意したので、簡単ですがご紹介します。<br />
+写真を追加する「photo_add」へアクセスしてみましょう。<br />
+<br />
+&lt;?php<br />
+/*photo-zo api test*/<br />
+<br />
+require_once "HTTP/Request.php";<br />
+<br />
+$req =& new HTTP_Request("http://api.photozou.jp/rest/photo_add");<br />
+$req->setBasicAuth("mailaddress","password"); <br />
+$req->setMethod(HTTP_REQUEST_METHOD_POST);<br />
+$req->addFile( 'photo', 'C:\Documents and Settings\user\My Documents\My Pictures\test.gif', 'image/gif');<br />
+$req->addPostData('album_id', 'xxxxxx');<br />
+$req->addPostData('photo_title', 'test');<br />
+$req->addPostData('date_type', 'date');<br />
+$req->addPostData('year', 'yyyy');<br />
+$req->addPostData('month', 'm');<br />
+$req->addPostData('day', 'd');<br />
+<br />
+if (!PEAR::isError($req->sendRequest())) {<br />
+&nbsp;&nbsp;&nbsp;&nbsp; $response1 = $req->getResponseBody();<br />
+&nbsp;&nbsp;&nbsp;&nbsp;} else {<br />
+&nbsp;&nbsp;&nbsp;&nbsp;$response1 = "";<br />
+}<br />
+print $response1;<br />
+?><br />
+<br />
+ご覧の通り特に変わったところはないのですが、<br />
+β版ゆえにちょっとだけコツみたいなものがあります。<br />
+それは、「Content-Type を小文字で指定すること」です。<br />
+<br />
+宜しければ試してみてくださいね。<br />
+<br />
+<br />
+※β版サービスなので、今後予告無しに仕様変更される可能性があります。
 {% endraw %}

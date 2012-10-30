@@ -3,5 +3,184 @@ layout: post
 title: "daemontoolsでデーモン管理"
 ---
 {% raw %}
-Emacsでbackward-charをC-lに割り当てているbokkoです。「指相撲で相手の指に届かないくらい指が短いので一回も勝ったことがないんです。だからそんな短い指でC-bなんて押してたら指が痛いんです」と言ってもなかなか信じてもらえないのですが、そんな私でも(global-set-key "\C-l" 'backward-char)というelispを評価するだけで快適にプログラミングさせてくれるEmacsが大好きです。<br /><br /><br />と、タイトルと関係ない話はこれくいらいにしておいて、今日はdaemontoolsのお話です。<br /><br /><br /><h2>daemontools</h2><br /><br />daemontoolsは異常終了してしまったデーモンプロセスを再起動してくれたり、ログローテートを肩代わりしてくれたりするなど、デーモンの制御や管理、監視を行うプログラムの集まりです。例えば、以下のようなプログラムが含まれています。<br /><br /><ul><br /><li>supervise</li><br /><ul><br /><li>デーモンの起動、監視</li><br /></ul><br /><li>svc</li><br /><ul><br /><li>superviseによって監視されているデーモンの制御</li><br /></ul><br /><li>svstat</li><br /><ul><br /><li>指定したデーモンの状態を出力</li><br /></ul><br /><li>setuidgid</li><br /><ul><br /><li>ユーザIDとグループIDを変更</li><br /></ul><br /><li>multilog</li><br /><ul><br /><li>デーモンプログラムの出力をロギング</li><br /></ul><br /></ul><br /><br />ほかにもいろいろありますが、詳しくは<a href="http://cr.yp.to/daemontools.html">本家のマニュアル</a>(<a href="http://www.emaillab.org/djb/tools/daemontools/top.html">日本語版</a>)を見るとよいでしょう。<br /><br /><h2>インストール</h2><br /><br />ソースコードが<a href="http://cr.yp.to/daemontools/install.html">こちら</a>で、SRPMが<a href="http://www.qmailtoaster.org/">こちら</a>で配布されています。Linuxディストリビューションによってはapt-getでインストールすることもできますが、その場合は名前がdaemontoolsではなく、svtoolsになっているものがあります(Ubuntuは後者でした)。インストールすると、/commandに各プログラムが配置され、/にserviceというディレクトリが作成されます。daemontoolsでデーモンを管理する場合、この/serviceディレクトリにデーモンの起動スクリプトやログ収集のためのスクリプトを配置します。<br /><br /><h2>デーモンの登録</h2><br /><br />デーモンを登録するには/service以下に登録したいデーモンの起動スクリプトとログ収集のためのスクリプトを配置します。<br /><br /><pre class="code"><br />$ mkdir /var/daemon<br />$ mkdir /var/daemon/log<br />$ mkdir /var/daemon/log/main<br />$ chmod 1755 /var/daemon<br />$ chmod +x /var/daemon/run<br />$ chmod +x /var/daemon/log/run<br />$ chown hoge:fuga /var/daemon/log/main<br />$ ln -s /var/daemon /service<br /></pre><br /><br /><h3>/var/daemon/run</h3><br /><br /><pre class="code"><br />#!/bin/sh<br />exec 2>&1 # エラー出力を標準出力へ<br />exec setuidgid hoge /usr/bin/daemon<br /></pre><br /><br /><h3>/var/daemon/log/run</h3><br /><br /><pre class="code"><br />#!/bin/sh<br />exec 2>&1 # エラー出力を標準出力へ<br />exec setuidgid hoge multilog t ./main<br /></pre><br /><br />runを実行したプロセス自身をデーモン化しなければいかないので、必ずexecを付けます。また、runで実行するプロセスはフォアグラウンドで起動させなければいけません。<br /><br />追記:(2008/07/24)<br /><br />/var/daemon/runの内容が/var/daemon/log/runのものになっており、/var/daemon/runの内容が抜けていたのを修正しました。また、現行のdaemontools-0.76ではstickyビットを立てる必要はありません。ご指摘ありがとうございます。>fumiyasさん<br /><br /><h2>デーモンの起動制御</h2><br /><br />/service以下のデーモンを起動するにはsvscanを使うとよいでしょう。<br /><br /><pre class="code"><br />$ sh -c 'svscan /service &'<br /></pre><br /><br />↑を実行すると/serviceディレクトリ以下にあるすべてのデーモンに対してsuperviseによるデーモンの監視が行えます。なんらかの原因でデーモンが終了してしまってもsuperviseが自動的にデーモンを再起動してくれます。ただ、デーモンプログラム自体に問題があって起動できない場合、何度も再起動を試み、ずっとログに起動失敗のメッセージを書き込み続けてしまうので注意しましょう。<br /><br />OS起動時からdaemontoolsに関連するプログラムを起動しておく場合は、/etc/inittabに以下の記述をしておくとよいでしょう。<br /><br /><pre class="code"><br />SV:123456:respawn:/command/svscanboot      <br /></pre>                                     <br /><br /><h3>svcでデーモンに命令を発行する</h3><br /><br />svcコマンドを使うと指定したデーモンに対して以下のような命令を発行することができます。<br /><br /><pre class="code"><br />$ svc -u /service/daemon # 起動<br />$ svc -d /service/daemon # 一時停止<br />$ svc -t /service/daemon # 再起動<br />               ・<br />               ・<br />               ・<br /></pre><br /><br /><h3>svstatで状態確認</h3><br /><br />svstatを使うと指定したデーモンの状態を確認することができます。<br /><br /><pre class="code"><br />$ svstat /service/daemon # 起動中<br />/service/daemon: up (pid 8131) 3 seconds<br />$ svstat /service/daemon # 停止中<br />/service/daemon: down (pid 8131) 57 seconds, normally up<br /></pre><br /><br />ただ、たまにdaemontools側から起動しているように見えているだけの時があるので注意しましょう。詳しくは後述します。<br /><br /><h2>ロギング</h2><br /><br />デーモンプログラムの出力は/var/daemon/log/runで実行しているmultilogによって/var/daemon/log/main以下に保存されます。multilogもdaemontoolsに含まれるツールの一つです。保存されるログはそのままでは見づらいので、同じくdaemontoolsに含まれるtai64nlocalで見やすい形式に変換するのがよいでしょう。<br /><br /><pre class="code">$ tai64nlocal < /service/daemon/log/main/current</pre><br /><br /><h2>デーモンが正常に動作しない場合の対処法</h2><br /><br />最後にdaemontoolsを使用していて実際に遭遇した問題を紹介します。<br /><br /><h3>デーモンがゾンビプロセス化</h3><br /><br />なんらかの原因でデーモンが異常終了したり、正常に起動しなかった場合、デーモンプロセスがゾンビ化することがあります。daemontools側から見ると正常に動作しているように見えてしまうので、デーモンが正常に動作しているかpsコマンドなどを使って調べてみましょう。特に、異常終了した後に、そのままでは正常に再起動できないようなプログラムをデーモン化している場合は注意が必要です。<br /><br /><h3>superviseがエラーを吐く</h3><br /><br /><pre class="code"><br />supervise: fatal: unable to acquire daemon/supervise/lock: temporary failure<br /></pre><br /><br />既に指定したデーモンに対してsupervise(もしくはsvscan)が起動していたり、操作ミスなどによりsupervise(もしくはsvscan)自体が異常終了した場合に上記のエラーメッセージが出ることがあります。<br />この場合、該当するデーモンに対して起動しているsuperviseを終了し(svscanが起動している場合は先にそっちを終了します)、以下のファイルを削除します。<br /><br /><pre class="code"><br />rm /var/daemon/supervise/lock<br />rm /var/daemon/log/supervise/lock<br />rm /var/daemon/log/main/lock<br /></pre><br /><br />追記:(2008/07/24)<br /><br />一部誤解を与える表現がありましたので、修正しました。<br /><br />修正箇所<br /><br /><pre class="code"><br />supervise(もしくはsvscan)自体が異常終了した場合に<br />↓<br />操作ミスなどによりsupervise(もしくはsvscan)自体が異常終了した場合に<br /></pre><br /><br />また、lockファイルを削除するよりもいい方法があるようです(コメント<br />欄参照)。<br /><br />ご指摘ありがとうございます>fumiyasさん<br /><br /><h2>フォト蔵におけるdaemontoolsの活用例</h2><br /><br />フォト蔵では今年の7月頃からHyperEstraierによる全文検索を導入したのですが、このHyperEstraierに含まれるestmasterというサーバプログラムの管理にdaemontoolsを活用しています。使い方の一つとしては、estmasterの死活監視があります。estmasterが停止してしまうと検索自体ができなくなってしまいますが、停止してしまってもdaemontools側で自動的に再起動してくれるわけです。<br /><br /><br />フォト蔵でのHyperEstraierの活用例に関しては、また後日紹介する予定です。<br /><br /><br /><h2>参考ページ</h2><br /><br /><ul><br /><li><a href="http://www.emaillab.org/djb/daemontools/daemontools-howto.html">daemontools howto</a></li><br /><li><a href="http://cr.yp.to/daemontools.html">daemontools</a></li><br /><li><a href="http://www.emaillab.org/djb/tools/daemontools/top.html">daemontools日本語訳</a></li><br /><li><a href="http://quox.org/tips/server/daemontools.html">Tip COllection - daemontools</a></li><br /></ul>
+Emacsでbackward-charをC-lに割り当てているbokkoです。「指相撲で相手の指に届かないくらい指が短いので一回も勝ったことがないんです。だからそんな短い指でC-bなんて押してたら指が痛いんです」と言ってもなかなか信じてもらえないのですが、そんな私でも(global-set-key "\C-l" 'backward-char)というelispを評価するだけで快適にプログラミングさせてくれるEmacsが大好きです。<br />
+<br />
+<br />
+と、タイトルと関係ない話はこれくいらいにしておいて、今日はdaemontoolsのお話です。<br />
+<br />
+<br />
+<h2>daemontools</h2><br />
+<br />
+daemontoolsは異常終了してしまったデーモンプロセスを再起動してくれたり、ログローテートを肩代わりしてくれたりするなど、デーモンの制御や管理、監視を行うプログラムの集まりです。例えば、以下のようなプログラムが含まれています。<br />
+<br />
+<ul><br />
+<li>supervise</li><br />
+<ul><br />
+<li>デーモンの起動、監視</li><br />
+</ul><br />
+<li>svc</li><br />
+<ul><br />
+<li>superviseによって監視されているデーモンの制御</li><br />
+</ul><br />
+<li>svstat</li><br />
+<ul><br />
+<li>指定したデーモンの状態を出力</li><br />
+</ul><br />
+<li>setuidgid</li><br />
+<ul><br />
+<li>ユーザIDとグループIDを変更</li><br />
+</ul><br />
+<li>multilog</li><br />
+<ul><br />
+<li>デーモンプログラムの出力をロギング</li><br />
+</ul><br />
+</ul><br />
+<br />
+ほかにもいろいろありますが、詳しくは<a href="http://cr.yp.to/daemontools.html">本家のマニュアル</a>(<a href="http://www.emaillab.org/djb/tools/daemontools/top.html">日本語版</a>)を見るとよいでしょう。<br />
+<br />
+<h2>インストール</h2><br />
+<br />
+ソースコードが<a href="http://cr.yp.to/daemontools/install.html">こちら</a>で、SRPMが<a href="http://www.qmailtoaster.org/">こちら</a>で配布されています。Linuxディストリビューションによってはapt-getでインストールすることもできますが、その場合は名前がdaemontoolsではなく、svtoolsになっているものがあります(Ubuntuは後者でした)。インストールすると、/commandに各プログラムが配置され、/にserviceというディレクトリが作成されます。daemontoolsでデーモンを管理する場合、この/serviceディレクトリにデーモンの起動スクリプトやログ収集のためのスクリプトを配置します。<br />
+<br />
+<h2>デーモンの登録</h2><br />
+<br />
+デーモンを登録するには/service以下に登録したいデーモンの起動スクリプトとログ収集のためのスクリプトを配置します。<br />
+<br />
+<pre class="code"><br />
+$ mkdir /var/daemon<br />
+$ mkdir /var/daemon/log<br />
+$ mkdir /var/daemon/log/main<br />
+$ chmod 1755 /var/daemon<br />
+$ chmod +x /var/daemon/run<br />
+$ chmod +x /var/daemon/log/run<br />
+$ chown hoge:fuga /var/daemon/log/main<br />
+$ ln -s /var/daemon /service<br />
+</pre><br />
+<br />
+<h3>/var/daemon/run</h3><br />
+<br />
+<pre class="code"><br />
+#!/bin/sh<br />
+exec 2>&1 # エラー出力を標準出力へ<br />
+exec setuidgid hoge /usr/bin/daemon<br />
+</pre><br />
+<br />
+<h3>/var/daemon/log/run</h3><br />
+<br />
+<pre class="code"><br />
+#!/bin/sh<br />
+exec 2>&1 # エラー出力を標準出力へ<br />
+exec setuidgid hoge multilog t ./main<br />
+</pre><br />
+<br />
+runを実行したプロセス自身をデーモン化しなければいかないので、必ずexecを付けます。また、runで実行するプロセスはフォアグラウンドで起動させなければいけません。<br />
+<br />
+追記:(2008/07/24)<br />
+<br />
+/var/daemon/runの内容が/var/daemon/log/runのものになっており、/var/daemon/runの内容が抜けていたのを修正しました。また、現行のdaemontools-0.76ではstickyビットを立てる必要はありません。ご指摘ありがとうございます。>fumiyasさん<br />
+<br />
+<h2>デーモンの起動制御</h2><br />
+<br />
+/service以下のデーモンを起動するにはsvscanを使うとよいでしょう。<br />
+<br />
+<pre class="code"><br />
+$ sh -c 'svscan /service &'<br />
+</pre><br />
+<br />
+↑を実行すると/serviceディレクトリ以下にあるすべてのデーモンに対してsuperviseによるデーモンの監視が行えます。なんらかの原因でデーモンが終了してしまってもsuperviseが自動的にデーモンを再起動してくれます。ただ、デーモンプログラム自体に問題があって起動できない場合、何度も再起動を試み、ずっとログに起動失敗のメッセージを書き込み続けてしまうので注意しましょう。<br />
+<br />
+OS起動時からdaemontoolsに関連するプログラムを起動しておく場合は、/etc/inittabに以下の記述をしておくとよいでしょう。<br />
+<br />
+<pre class="code"><br />
+SV:123456:respawn:/command/svscanboot      <br />
+</pre>                                     <br />
+<br />
+<h3>svcでデーモンに命令を発行する</h3><br />
+<br />
+svcコマンドを使うと指定したデーモンに対して以下のような命令を発行することができます。<br />
+<br />
+<pre class="code"><br />
+$ svc -u /service/daemon # 起動<br />
+$ svc -d /service/daemon # 一時停止<br />
+$ svc -t /service/daemon # 再起動<br />
+               ・<br />
+               ・<br />
+               ・<br />
+</pre><br />
+<br />
+<h3>svstatで状態確認</h3><br />
+<br />
+svstatを使うと指定したデーモンの状態を確認することができます。<br />
+<br />
+<pre class="code"><br />
+$ svstat /service/daemon # 起動中<br />
+/service/daemon: up (pid 8131) 3 seconds<br />
+$ svstat /service/daemon # 停止中<br />
+/service/daemon: down (pid 8131) 57 seconds, normally up<br />
+</pre><br />
+<br />
+ただ、たまにdaemontools側から起動しているように見えているだけの時があるので注意しましょう。詳しくは後述します。<br />
+<br />
+<h2>ロギング</h2><br />
+<br />
+デーモンプログラムの出力は/var/daemon/log/runで実行しているmultilogによって/var/daemon/log/main以下に保存されます。multilogもdaemontoolsに含まれるツールの一つです。保存されるログはそのままでは見づらいので、同じくdaemontoolsに含まれるtai64nlocalで見やすい形式に変換するのがよいでしょう。<br />
+<br />
+<pre class="code">$ tai64nlocal < /service/daemon/log/main/current</pre><br />
+<br />
+<h2>デーモンが正常に動作しない場合の対処法</h2><br />
+<br />
+最後にdaemontoolsを使用していて実際に遭遇した問題を紹介します。<br />
+<br />
+<h3>デーモンがゾンビプロセス化</h3><br />
+<br />
+なんらかの原因でデーモンが異常終了したり、正常に起動しなかった場合、デーモンプロセスがゾンビ化することがあります。daemontools側から見ると正常に動作しているように見えてしまうので、デーモンが正常に動作しているかpsコマンドなどを使って調べてみましょう。特に、異常終了した後に、そのままでは正常に再起動できないようなプログラムをデーモン化している場合は注意が必要です。<br />
+<br />
+<h3>superviseがエラーを吐く</h3><br />
+<br />
+<pre class="code"><br />
+supervise: fatal: unable to acquire daemon/supervise/lock: temporary failure<br />
+</pre><br />
+<br />
+既に指定したデーモンに対してsupervise(もしくはsvscan)が起動していたり、操作ミスなどによりsupervise(もしくはsvscan)自体が異常終了した場合に上記のエラーメッセージが出ることがあります。<br />
+この場合、該当するデーモンに対して起動しているsuperviseを終了し(svscanが起動している場合は先にそっちを終了します)、以下のファイルを削除します。<br />
+<br />
+<pre class="code"><br />
+rm /var/daemon/supervise/lock<br />
+rm /var/daemon/log/supervise/lock<br />
+rm /var/daemon/log/main/lock<br />
+</pre><br />
+<br />
+追記:(2008/07/24)<br />
+<br />
+一部誤解を与える表現がありましたので、修正しました。<br />
+<br />
+修正箇所<br />
+<br />
+<pre class="code"><br />
+supervise(もしくはsvscan)自体が異常終了した場合に<br />
+↓<br />
+操作ミスなどによりsupervise(もしくはsvscan)自体が異常終了した場合に<br />
+</pre><br />
+<br />
+また、lockファイルを削除するよりもいい方法があるようです(コメント<br />
+欄参照)。<br />
+<br />
+ご指摘ありがとうございます>fumiyasさん<br />
+<br />
+<h2>フォト蔵におけるdaemontoolsの活用例</h2><br />
+<br />
+フォト蔵では今年の7月頃からHyperEstraierによる全文検索を導入したのですが、このHyperEstraierに含まれるestmasterというサーバプログラムの管理にdaemontoolsを活用しています。使い方の一つとしては、estmasterの死活監視があります。estmasterが停止してしまうと検索自体ができなくなってしまいますが、停止してしまってもdaemontools側で自動的に再起動してくれるわけです。<br />
+<br />
+<br />
+フォト蔵でのHyperEstraierの活用例に関しては、また後日紹介する予定です。<br />
+<br />
+<br />
+<h2>参考ページ</h2><br />
+<br />
+<ul><br />
+<li><a href="http://www.emaillab.org/djb/daemontools/daemontools-howto.html">daemontools howto</a></li><br />
+<li><a href="http://cr.yp.to/daemontools.html">daemontools</a></li><br />
+<li><a href="http://www.emaillab.org/djb/tools/daemontools/top.html">daemontools日本語訳</a></li><br />
+<li><a href="http://quox.org/tips/server/daemontools.html">Tip COllection - daemontools</a></li><br />
+</ul>
 {% endraw %}

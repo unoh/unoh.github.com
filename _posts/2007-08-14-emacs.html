@@ -3,5 +3,42 @@ layout: post
 title: "言語モード毎にキーボードマクロを設定する(Emacs)"
 ---
 {% raw %}
-こんばんは。bokkoです。<br /><br />Emacsを使っている人に限らず、タイプ数を減らすために、<br />キーボードマクロを使っている人は多いと思います。<br />私の場合、for文やmain関数などをキーボードマクロで自動生成したりしているのですが、<br />最近、ほかの言語の構文と名前がかぶってしまったり、<br />RubyやPythonで書いているときは欲しいんだけど、<br />CやC++で書いているときは、全然いらないマクロがあったりするのが気になったので、<br />整理することにしました。<br />最初はマクロに言語の名前をつけて区別しようとしたのですが、<br />Emacsではadd-hookが使えるので、そっちを使って言語モード毎にマクロを設定することにしました。<br /><br /><pre class="code">(setq c_macros_dir "~bokko/emacs-macros/c/")<br />(add-hook 'c-mode-hook<br />          '(lambda ()<br />             (load-file (concat c_macros_dir "create_nested_block_main.macs"))<br />             (load-file (concat c_macros_dir "create_nested_block_for.macs"))<br />             (load-file (concat c_macros_dir "create_nested_block_while.macs"))<br />                                                        ・<br />                                                        ・<br />                                                        ・<br />             ))<br />(setq php_macros_dir "~bokko/emacs-macros/php/")<br />(add-hook 'php-mode-hook<br />          '(lambda ()<br />             (load-file (concat php_macros_dir "create_nested_block_func.macs"))<br />             (load-file (concat php_macros_dir "create_nested_block_class.macs"))<br />             (load-file (concat php_macros_dir "create_nested_block_foreach.macs"))<br />             (load-file (concat php_macros_dir "var_dump_exit.macs"))<br />                                                        ・<br />                                                        ・<br />                                                        ・<br />             ))<br /></pre><br /><br />このように書くと、各言語モードだけに必要なキーボードマクロを設定することができますし、<br />別の言語に同じ名前のマクロがあっても大丈夫です。<br />
+こんばんは。bokkoです。<br />
+<br />
+Emacsを使っている人に限らず、タイプ数を減らすために、<br />
+キーボードマクロを使っている人は多いと思います。<br />
+私の場合、for文やmain関数などをキーボードマクロで自動生成したりしているのですが、<br />
+最近、ほかの言語の構文と名前がかぶってしまったり、<br />
+RubyやPythonで書いているときは欲しいんだけど、<br />
+CやC++で書いているときは、全然いらないマクロがあったりするのが気になったので、<br />
+整理することにしました。<br />
+最初はマクロに言語の名前をつけて区別しようとしたのですが、<br />
+Emacsではadd-hookが使えるので、そっちを使って言語モード毎にマクロを設定することにしました。<br />
+<br />
+<pre class="code">(setq c_macros_dir "~bokko/emacs-macros/c/")<br />
+(add-hook 'c-mode-hook<br />
+          '(lambda ()<br />
+             (load-file (concat c_macros_dir "create_nested_block_main.macs"))<br />
+             (load-file (concat c_macros_dir "create_nested_block_for.macs"))<br />
+             (load-file (concat c_macros_dir "create_nested_block_while.macs"))<br />
+                                                        ・<br />
+                                                        ・<br />
+                                                        ・<br />
+             ))<br />
+(setq php_macros_dir "~bokko/emacs-macros/php/")<br />
+(add-hook 'php-mode-hook<br />
+          '(lambda ()<br />
+             (load-file (concat php_macros_dir "create_nested_block_func.macs"))<br />
+             (load-file (concat php_macros_dir "create_nested_block_class.macs"))<br />
+             (load-file (concat php_macros_dir "create_nested_block_foreach.macs"))<br />
+             (load-file (concat php_macros_dir "var_dump_exit.macs"))<br />
+                                                        ・<br />
+                                                        ・<br />
+                                                        ・<br />
+             ))<br />
+</pre><br />
+<br />
+このように書くと、各言語モードだけに必要なキーボードマクロを設定することができますし、<br />
+別の言語に同じ名前のマクロがあっても大丈夫です。<br />
+
 {% endraw %}

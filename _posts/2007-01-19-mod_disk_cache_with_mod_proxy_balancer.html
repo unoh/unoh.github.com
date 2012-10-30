@@ -3,5 +3,64 @@ layout: post
 title: "データキャッシュを利用したウェブサーバの高速化"
 ---
 {% raw %}
-こんにちは satoです<br /><br />Aapcheでproxyサーバを利用している場合、頻繁にアクセスされて、なおかつ<br />更新の少ないデータ、（フォト蔵や mixiでいう マイピクチャーなど）<br />は proxyサーバにキャッシュするとレスポンスが良くなります。<br /><br />mod_proxy_balancerと mod_disk_cache を利用して、proxyサーバに<br />データをキャッシュする手順を紹介します<br /><br /><br /><pre class="code"><code>&lt;VirtualHost * *:443&gt;<br />    ServerName example.com   <br />    ProxyPass /img ! # cssやイメージファイルは proxyしないでローカル参照<br />    ProxyPass /css !<br />    &lt;Proxy balancer://web&gt;<br />        AddOutputFilterByType DEFLATE text/html text/css application/x-javascript<br />        BalancerMember http://10.0.0.1 loadfactor=10 keepalive=On<br />        BalancerMember http://10.0.0.2 loadfactor=10 keepalive=On<br />        BalancerMember http://10.0.0.3 loadfactor=10 keepalive=On<br />        BalancerMember http://10.0.0.4 loadfactor=10 keepalive=On<br />    &lt;/Proxy&gt;<br />    ProxyPass / balancer://web/ timeout=2<br />    # キャッシュの設定<br />    &lt;IfModule mod_cache.c&gt;<br />        &lt;IfModule mod_disk_cache.c&gt;<br />           CacheRoot /usr/local/apache2/cache<br />           CacheIgnoreCacheControl On<br />           CacheIgnoreHeaders Set-Cookie<br />           CacheEnable disk /bin/my_pic/<br />           CacheMaxFileSize 1024000<br />           CacheMinFileSize 64<br />           CacheDefaultExpire 86400<br />           CacheDirLevels 5<br />           CacheDirLength 3<br />        &lt;/IfModule&gt;<br />    &lt;/IfModule&gt;<br />&lt;/VirtualHost&gt;<br /></code></pre><br /><br /><br />CacheRoot - キャッシュの保存先を設定します<br />CacheIgnoreHeaders Set-Cookie - cookieはキャッシュしないようにします<br />CacheEnable disk /bin/my_pic/ - キャッシュするディレクトリを指定します<br />CacheMaxFileSize 1024000 - キャッシュするファイルの最大サイズを指定します<br />CacheMinFileSize 64 - キャッシュするファイルの最小サイズを指定します<br />CacheDefaultExpire 86400 - キャッシュがエクスパイアされるまでの時間を指定します<br />CacheDirLevels 5 - キャッシュのサブディレクトリの深さを指定します<br />CacheDirLength 3 - サブディレクトリ名の文字<br /><br />こんな感じでキャッシュが使用されるようになります。<br /><br />最新のファイルなどのアクセス頻度が多い場合には<br /> <br />/new/ <br /><br />などと時間で参照先のディレクトリが変わるようにしておいて<br />new のディレクトリをキャッシュするようにすると良いかもしれません。<br /><br />設定は<a href="http://www.amazon.co.jp/exec/obidos/ASIN/B000LPRI9A/">Software Design (ソフトウエア デザイン) 2007年 01月号</a>を参考にしました。<br />こちらには mod_mem_cache の設定方法なども詳しく書いてあります
+こんにちは satoです<br />
+<br />
+Aapcheでproxyサーバを利用している場合、頻繁にアクセスされて、なおかつ<br />
+更新の少ないデータ、（フォト蔵や mixiでいう マイピクチャーなど）<br />
+は proxyサーバにキャッシュするとレスポンスが良くなります。<br />
+<br />
+mod_proxy_balancerと mod_disk_cache を利用して、proxyサーバに<br />
+データをキャッシュする手順を紹介します<br />
+<br />
+<br />
+<pre class="code"><code>&lt;VirtualHost * *:443&gt;<br />
+    ServerName example.com   <br />
+    ProxyPass /img ! # cssやイメージファイルは proxyしないでローカル参照<br />
+    ProxyPass /css !<br />
+    &lt;Proxy balancer://web&gt;<br />
+        AddOutputFilterByType DEFLATE text/html text/css application/x-javascript<br />
+        BalancerMember http://10.0.0.1 loadfactor=10 keepalive=On<br />
+        BalancerMember http://10.0.0.2 loadfactor=10 keepalive=On<br />
+        BalancerMember http://10.0.0.3 loadfactor=10 keepalive=On<br />
+        BalancerMember http://10.0.0.4 loadfactor=10 keepalive=On<br />
+    &lt;/Proxy&gt;<br />
+    ProxyPass / balancer://web/ timeout=2<br />
+    # キャッシュの設定<br />
+    &lt;IfModule mod_cache.c&gt;<br />
+        &lt;IfModule mod_disk_cache.c&gt;<br />
+           CacheRoot /usr/local/apache2/cache<br />
+           CacheIgnoreCacheControl On<br />
+           CacheIgnoreHeaders Set-Cookie<br />
+           CacheEnable disk /bin/my_pic/<br />
+           CacheMaxFileSize 1024000<br />
+           CacheMinFileSize 64<br />
+           CacheDefaultExpire 86400<br />
+           CacheDirLevels 5<br />
+           CacheDirLength 3<br />
+        &lt;/IfModule&gt;<br />
+    &lt;/IfModule&gt;<br />
+&lt;/VirtualHost&gt;<br />
+</code></pre><br />
+<br />
+<br />
+CacheRoot - キャッシュの保存先を設定します<br />
+CacheIgnoreHeaders Set-Cookie - cookieはキャッシュしないようにします<br />
+CacheEnable disk /bin/my_pic/ - キャッシュするディレクトリを指定します<br />
+CacheMaxFileSize 1024000 - キャッシュするファイルの最大サイズを指定します<br />
+CacheMinFileSize 64 - キャッシュするファイルの最小サイズを指定します<br />
+CacheDefaultExpire 86400 - キャッシュがエクスパイアされるまでの時間を指定します<br />
+CacheDirLevels 5 - キャッシュのサブディレクトリの深さを指定します<br />
+CacheDirLength 3 - サブディレクトリ名の文字<br />
+<br />
+こんな感じでキャッシュが使用されるようになります。<br />
+<br />
+最新のファイルなどのアクセス頻度が多い場合には<br />
+ <br />
+/new/ <br />
+<br />
+などと時間で参照先のディレクトリが変わるようにしておいて<br />
+new のディレクトリをキャッシュするようにすると良いかもしれません。<br />
+<br />
+設定は<a href="http://www.amazon.co.jp/exec/obidos/ASIN/B000LPRI9A/">Software Design (ソフトウエア デザイン) 2007年 01月号</a>を参考にしました。<br />
+こちらには mod_mem_cache の設定方法なども詳しく書いてあります
 {% endraw %}

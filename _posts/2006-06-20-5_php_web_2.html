@@ -3,5 +3,168 @@ layout: post
 title: "5分でわかる PHP で書かれた Web サービスの国際化(その2)"
 ---
 {% raw %}
-ジュンヤです。<br /><br /><a href="http://labs.unoh.net/2006/06/5_php_web.html">5分でわかる PHP で書かれた Web サービスの国際化</a> に続いて gettext の話。<br /><br />以下、英語で「Hello」、日本語で「こんにちは」と表示する簡単なプログラム hello.php です。<br /><br /><pre class="source_code"><br />&lt;?php<br />$language = 'en';<br />if (ereg('ja', $_SERVER['HTTP_ACCEPT_LANGUAGE'])) {<br />    $language = 'ja_JP';<br />}<br />// Set locale and default domain.<br />putenv("LANG=$language");<br />setlocale(LC_ALL, $language);<br />$domain = 'messages';<br />bindtextdomain($domain, "/var/www/html/locale");<br />textdomain($domain);<br />// Output<br />echo gettext("Hello");<br />?&gt;<br /></pre><br /><br />日本人がこのページを見たときは日本語で、それ以外は英語で表示するには、以下のように環境変数 HTTP_ACCEPT_LANGUAGE を見て日本語(ja)があれば $language に ja_JP をセットします。<br /><br /><pre class="source_code"><br />$language = 'en';<br />if (ereg('ja', $_SERVER['HTTP_ACCEPT_LANGUAGE'])) {<br />    $language = 'ja_JP';<br />}<br /></pre><br /><br />HTTP_ACCEPT_LANGUAGE には、たとえばIEであれば、[ツール] > [インターネットオプション]　の [言語] で選択されている言語すべてが ja,en のようにカンマ区切りで列挙されます。日本語版のIEを使っていれば、デフォルトの設定で必ず日本語が選択されているので、その場合には日本語を表示するようにしているわけです。<br /><br /><pre class="source_code"><br />putenv("LANG=$language");<br />setlocale(LC_ALL, $language);<br /></pre><br /><br />で環境変数 LANG を ja_JP に、そして ja_JP の影響を受ける範囲を LC_ALL(文字列、数値、日時などすべて)に設定します。<br /><br /><pre class="source_code"><br />$domain = 'messages';<br />bindtextdomain($domain, "/var/www/html/locale");<br />textdomain($domain);<br /></pre><br /><br />bindtextdomain では、以降作成するメッセージファイルの場所を指定し、textdomain でデフォルトで使用するメッセージファイルの名前を messages に指定しています。<br /><br /><pre class="source_code"><br />echo gettext("Hello");<br /></pre><br /><br />最後に Hello をキーとして言語に応じたメッセージを出力しています。<br /><br />さて、プログラムはこれだけですが、それぞれの言語に対応したメッセージを管理するファイルをあらかじめ作成しておく必要があります。<br /><br />bindtextdomain で指定した場所以下に次のような構成でディレクトリをつくります。<br /><br /><pre class="source_code"><br />locale<br />    /en<br />        /LC_MESSAGES<br />    /ja_JP<br />        /LC_MESSAGES<br /></pre><br /><br />次にコマンドラインから<br /><br /><pre class="source_code"><br />xgettext -n hello.php<br /></pre><br /><br />と実行することによりプログラム中で gettext が使われている部分、すなわち言語によって切り替える部分を messages.po というファイルに吐き出します。<br /><br />messages.po は<br /><br /><pre class="source_code"><br /># FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.<br />#<br />#, fuzzy<br />msgid ""<br />msgstr ""<br />"Project-Id-Version: PACKAGE VERSION\n"<br />"Report-Msgid-Bugs-To: \n"<br />"POT-Creation-Date: 2006-06-20 17:44+0900\n"<br />"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"<br />"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"<br />"Language-Team: LANGUAGE <LL@li.org>\n"<br />"MIME-Version: 1.0\n"<br />"Content-Type: text/plain; charset=CHARSET\n"<br />"Content-Transfer-Encoding: 8bit\n"<br /><br />#: gettext.php:13<br />msgid "Hello"<br />msgstr ""<br /></pre><br /><br />といった内容になっています。<br /><br />これを各言語用に LC_MESSAGES の下にコピーして、msgstr の中に各言語のメッセージを入力します。つまり、ja_JP の下の messages.po は<br /><br /><pre class="source_code"><br />#: gettext.php:12<br />msgid "Hello"<br />msgstr "こんにちは"<br /></pre><br /><br />en 以下の messages.po　は<br /><br /><pre class="source_code"><br />#: gettext.php:12<br />msgid "Hello"<br />msgstr "Hello"<br /></pre><br /><br />にします。<br /><br />それと、<br /><br /><pre class="source_code"><br />"Content-Type: text/plain; charset=CHARSET\n"<br /></pre><br /><br />の部分は<br /><br /><pre class="source_code"><br />"Content-Type: text/plain; charset=utf-8\n"<br /></pre><br /><br />と文字コードを指定しておかないと、次に実行する msgfmt でエラーが表示されます。messages.po はここで指定した文字コードで保存しておく必要があるので注意してください。<br /><br />これだけでは gettext はうまくメッセージを読み込んでくれなくて、うまく読み込むようにするには、それぞれの messages.po に対してコマンドライン上で、<br /><br /><pre class="source_code"><br />msgfmt messages.po<br /></pre><br /><br />と実行します。すると gettext が理解できる形になった messages.mo というファイルができあがります。<br /><br />最終的には、以下のようにファイルが配置された形になります。<br /><br /><pre class="source_code"><br />locale<br />    /en<br />        /LC_MESSAGES<br />             messages.po<br />             messages.mo<br />    /ja_JP<br />        /LC_MESSAGES<br />             messages.po<br />             messages.mo<br /></pre><br /><br />これで hello.php にアクセスするとめでたくブラウザの言語設定に応じて表示される内容が切り替わります。<br /><br />以上が gettext の基本的な仕組みです。なお <a href="http://photozou.jp">フォト蔵</a>とその英語版 <a href="http://photozou.com">PhotoZou.com</a> では独自の仕組みでメッセージを切り替えているのですが、その仕組みはほとんどこの <a href="http://au3.php.net/gettext">gettext</a> と同じです。<br /><br />次回以降はもう少し複雑なメッセージの切り替え方法や実際にフォト蔵を英語化したときの事例などを紹介していきたいと思います。<br /><br />参考：<ul><li><a href="http://www.onlamp.com/pub/a/php/2002/06/13/php.html" target="_blank">ONLamp.com -- Gettext</a></li><br /><li><a href="http://au3.php.net/gettext" target="_blank">PHP: Gettext - Manual</a></li><br /><li><a href="http://www.gnu.org/software/gettext/gettext.html" target="_blank">GNU gettext</a></li></ul><br />
+ジュンヤです。<br />
+<br />
+<a href="http://labs.unoh.net/2006/06/5_php_web.html">5分でわかる PHP で書かれた Web サービスの国際化</a> に続いて gettext の話。<br />
+<br />
+以下、英語で「Hello」、日本語で「こんにちは」と表示する簡単なプログラム hello.php です。<br />
+<br />
+<pre class="source_code"><br />
+&lt;?php<br />
+$language = 'en';<br />
+if (ereg('ja', $_SERVER['HTTP_ACCEPT_LANGUAGE'])) {<br />
+    $language = 'ja_JP';<br />
+}<br />
+// Set locale and default domain.<br />
+putenv("LANG=$language");<br />
+setlocale(LC_ALL, $language);<br />
+$domain = 'messages';<br />
+bindtextdomain($domain, "/var/www/html/locale");<br />
+textdomain($domain);<br />
+// Output<br />
+echo gettext("Hello");<br />
+?&gt;<br />
+</pre><br />
+<br />
+日本人がこのページを見たときは日本語で、それ以外は英語で表示するには、以下のように環境変数 HTTP_ACCEPT_LANGUAGE を見て日本語(ja)があれば $language に ja_JP をセットします。<br />
+<br />
+<pre class="source_code"><br />
+$language = 'en';<br />
+if (ereg('ja', $_SERVER['HTTP_ACCEPT_LANGUAGE'])) {<br />
+    $language = 'ja_JP';<br />
+}<br />
+</pre><br />
+<br />
+HTTP_ACCEPT_LANGUAGE には、たとえばIEであれば、[ツール] > [インターネットオプション]　の [言語] で選択されている言語すべてが ja,en のようにカンマ区切りで列挙されます。日本語版のIEを使っていれば、デフォルトの設定で必ず日本語が選択されているので、その場合には日本語を表示するようにしているわけです。<br />
+<br />
+<pre class="source_code"><br />
+putenv("LANG=$language");<br />
+setlocale(LC_ALL, $language);<br />
+</pre><br />
+<br />
+で環境変数 LANG を ja_JP に、そして ja_JP の影響を受ける範囲を LC_ALL(文字列、数値、日時などすべて)に設定します。<br />
+<br />
+<pre class="source_code"><br />
+$domain = 'messages';<br />
+bindtextdomain($domain, "/var/www/html/locale");<br />
+textdomain($domain);<br />
+</pre><br />
+<br />
+bindtextdomain では、以降作成するメッセージファイルの場所を指定し、textdomain でデフォルトで使用するメッセージファイルの名前を messages に指定しています。<br />
+<br />
+<pre class="source_code"><br />
+echo gettext("Hello");<br />
+</pre><br />
+<br />
+最後に Hello をキーとして言語に応じたメッセージを出力しています。<br />
+<br />
+さて、プログラムはこれだけですが、それぞれの言語に対応したメッセージを管理するファイルをあらかじめ作成しておく必要があります。<br />
+<br />
+bindtextdomain で指定した場所以下に次のような構成でディレクトリをつくります。<br />
+<br />
+<pre class="source_code"><br />
+locale<br />
+    /en<br />
+        /LC_MESSAGES<br />
+    /ja_JP<br />
+        /LC_MESSAGES<br />
+</pre><br />
+<br />
+次にコマンドラインから<br />
+<br />
+<pre class="source_code"><br />
+xgettext -n hello.php<br />
+</pre><br />
+<br />
+と実行することによりプログラム中で gettext が使われている部分、すなわち言語によって切り替える部分を messages.po というファイルに吐き出します。<br />
+<br />
+messages.po は<br />
+<br />
+<pre class="source_code"><br />
+# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.<br />
+#<br />
+#, fuzzy<br />
+msgid ""<br />
+msgstr ""<br />
+"Project-Id-Version: PACKAGE VERSION\n"<br />
+"Report-Msgid-Bugs-To: \n"<br />
+"POT-Creation-Date: 2006-06-20 17:44+0900\n"<br />
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"<br />
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"<br />
+"Language-Team: LANGUAGE <LL@li.org>\n"<br />
+"MIME-Version: 1.0\n"<br />
+"Content-Type: text/plain; charset=CHARSET\n"<br />
+"Content-Transfer-Encoding: 8bit\n"<br />
+<br />
+#: gettext.php:13<br />
+msgid "Hello"<br />
+msgstr ""<br />
+</pre><br />
+<br />
+といった内容になっています。<br />
+<br />
+これを各言語用に LC_MESSAGES の下にコピーして、msgstr の中に各言語のメッセージを入力します。つまり、ja_JP の下の messages.po は<br />
+<br />
+<pre class="source_code"><br />
+#: gettext.php:12<br />
+msgid "Hello"<br />
+msgstr "こんにちは"<br />
+</pre><br />
+<br />
+en 以下の messages.po　は<br />
+<br />
+<pre class="source_code"><br />
+#: gettext.php:12<br />
+msgid "Hello"<br />
+msgstr "Hello"<br />
+</pre><br />
+<br />
+にします。<br />
+<br />
+それと、<br />
+<br />
+<pre class="source_code"><br />
+"Content-Type: text/plain; charset=CHARSET\n"<br />
+</pre><br />
+<br />
+の部分は<br />
+<br />
+<pre class="source_code"><br />
+"Content-Type: text/plain; charset=utf-8\n"<br />
+</pre><br />
+<br />
+と文字コードを指定しておかないと、次に実行する msgfmt でエラーが表示されます。messages.po はここで指定した文字コードで保存しておく必要があるので注意してください。<br />
+<br />
+これだけでは gettext はうまくメッセージを読み込んでくれなくて、うまく読み込むようにするには、それぞれの messages.po に対してコマンドライン上で、<br />
+<br />
+<pre class="source_code"><br />
+msgfmt messages.po<br />
+</pre><br />
+<br />
+と実行します。すると gettext が理解できる形になった messages.mo というファイルができあがります。<br />
+<br />
+最終的には、以下のようにファイルが配置された形になります。<br />
+<br />
+<pre class="source_code"><br />
+locale<br />
+    /en<br />
+        /LC_MESSAGES<br />
+             messages.po<br />
+             messages.mo<br />
+    /ja_JP<br />
+        /LC_MESSAGES<br />
+             messages.po<br />
+             messages.mo<br />
+</pre><br />
+<br />
+これで hello.php にアクセスするとめでたくブラウザの言語設定に応じて表示される内容が切り替わります。<br />
+<br />
+以上が gettext の基本的な仕組みです。なお <a href="http://photozou.jp">フォト蔵</a>とその英語版 <a href="http://photozou.com">PhotoZou.com</a> では独自の仕組みでメッセージを切り替えているのですが、その仕組みはほとんどこの <a href="http://au3.php.net/gettext">gettext</a> と同じです。<br />
+<br />
+次回以降はもう少し複雑なメッセージの切り替え方法や実際にフォト蔵を英語化したときの事例などを紹介していきたいと思います。<br />
+<br />
+参考：<ul><li><a href="http://www.onlamp.com/pub/a/php/2002/06/13/php.html" target="_blank">ONLamp.com -- Gettext</a></li><br />
+<li><a href="http://au3.php.net/gettext" target="_blank">PHP: Gettext - Manual</a></li><br />
+<li><a href="http://www.gnu.org/software/gettext/gettext.html" target="_blank">GNU gettext</a></li></ul><br />
+
 {% endraw %}

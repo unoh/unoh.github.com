@@ -3,5 +3,36 @@ layout: post
 title: "Merbで Ruby on Rails の pluginを使用する"
 ---
 {% raw %}
-こんにちは satoです。<br /><br /><p>最近何かと話題な Rubyでできた新しいwebフレームワーク Merbですが、Merbから railsのプラグインを使用する際に、必要なことをまとめてみました。Merbの詳細な説明やインストールは以下を参考にしました。</p><br /><br /><p><a href="http://wota.jp/ac/?date=20070917">優しい Merb の育て方</a></p><br /><br /><p>Rails のプラグインを使用するには まず merb_has_rails_plugins を gem でインストールします</p><br /><br /><pre class="code">gem install merb_has_rails_plugins</pre><br /><br /><p>次に ./config/dependencies.rb に 以下を加えます。</p><br /><br /><pre class="code">dependencies "merb_has_rails_plugins"</pre><br /><br /><p>さらに ./plugin というディレクトリを作成し、そこに railsのプラグインを設置します。一応これだけで、多くのプラグインは動くようになるのですが、以下の場合には設定の変更かプラグイン自体の修正が必要です。</p><br /><br /><h3>1) ActionController などを拡張する形のプラグインである</h3><br /><p>　ActionController::Base.module_eval や ActionController::AbstractRequest.module_eval などの形で actionコントローラなどを拡張する形のプラグインは 該当箇所を Merb::Controller.module_eval や Merb::Request.module_eval などに置き換える必要があります。</p><br /><br /><h3>2) cookie や session を 扱うプラグインである</h3><br /><p>　Railsでは ActionController::Cookies を通して行いますが、 Merbでは Merb :: ControllerMixin::set_cookie などで行います。 sessionも同様です。</p><br /> <br /><h3>3) メールを扱う、またはプラグイン中でメールを送信する</h3><br /><p>　Rails では ActiveMailer を使用するのに対して、Merbでは Merb :: MailController/Mailer を使用します。 </p><br /><br /><h3>4) generate 系のプラグインである</h3><br /><p>　Merbは まだ 0.x の段階なので まだまだ、Rails互換の generate や それに代わる機能が足りない部分があります。</p><br /><br /><h3>5) その他 ActiveSupport や ActiveRecord等を拡張したり使用するプラグイン</h3><br /><p>　Merbには 初期状態で ActiveSupport や ActiveRecordを使用しないため、dependenciesなどで使用するよう設定しないと、そのままの状態では使えません。<p><br /><br /><p>まだありそうですが、手元で使用しているプラグインは以上で動くようになりました。テストで Merb は Rails の平均3倍程度のパフォーマンスが出るので(データベースへのアクセスが増えるに従って差がなくなっていく)、Web画面はRallsで作成し、アクセスが多いAPIなどは Merbで開発するなどの使用方法も考えられると思います。 </p>
+こんにちは satoです。<br />
+<br />
+<p>最近何かと話題な Rubyでできた新しいwebフレームワーク Merbですが、Merbから railsのプラグインを使用する際に、必要なことをまとめてみました。Merbの詳細な説明やインストールは以下を参考にしました。</p><br />
+<br />
+<p><a href="http://wota.jp/ac/?date=20070917">優しい Merb の育て方</a></p><br />
+<br />
+<p>Rails のプラグインを使用するには まず merb_has_rails_plugins を gem でインストールします</p><br />
+<br />
+<pre class="code">gem install merb_has_rails_plugins</pre><br />
+<br />
+<p>次に ./config/dependencies.rb に 以下を加えます。</p><br />
+<br />
+<pre class="code">dependencies "merb_has_rails_plugins"</pre><br />
+<br />
+<p>さらに ./plugin というディレクトリを作成し、そこに railsのプラグインを設置します。一応これだけで、多くのプラグインは動くようになるのですが、以下の場合には設定の変更かプラグイン自体の修正が必要です。</p><br />
+<br />
+<h3>1) ActionController などを拡張する形のプラグインである</h3><br />
+<p>　ActionController::Base.module_eval や ActionController::AbstractRequest.module_eval などの形で actionコントローラなどを拡張する形のプラグインは 該当箇所を Merb::Controller.module_eval や Merb::Request.module_eval などに置き換える必要があります。</p><br />
+<br />
+<h3>2) cookie や session を 扱うプラグインである</h3><br />
+<p>　Railsでは ActionController::Cookies を通して行いますが、 Merbでは Merb :: ControllerMixin::set_cookie などで行います。 sessionも同様です。</p><br />
+ <br />
+<h3>3) メールを扱う、またはプラグイン中でメールを送信する</h3><br />
+<p>　Rails では ActiveMailer を使用するのに対して、Merbでは Merb :: MailController/Mailer を使用します。 </p><br />
+<br />
+<h3>4) generate 系のプラグインである</h3><br />
+<p>　Merbは まだ 0.x の段階なので まだまだ、Rails互換の generate や それに代わる機能が足りない部分があります。</p><br />
+<br />
+<h3>5) その他 ActiveSupport や ActiveRecord等を拡張したり使用するプラグイン</h3><br />
+<p>　Merbには 初期状態で ActiveSupport や ActiveRecordを使用しないため、dependenciesなどで使用するよう設定しないと、そのままの状態では使えません。<p><br />
+<br />
+<p>まだありそうですが、手元で使用しているプラグインは以上で動くようになりました。テストで Merb は Rails の平均3倍程度のパフォーマンスが出るので(データベースへのアクセスが増えるに従って差がなくなっていく)、Web画面はRallsで作成し、アクセスが多いAPIなどは Merbで開発するなどの使用方法も考えられると思います。 </p>
 {% endraw %}

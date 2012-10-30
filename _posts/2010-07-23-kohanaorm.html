@@ -3,5 +3,94 @@ layout: post
 title: "簡単で見やすいKohanaのORM"
 ---
 {% raw %}
-<p>こんにちは、6月にウノウに入社したj-nasuです。</p><br /><br /><br /><p><br />入って一カ月でまさかウノウラボを書く事になるとは夢にも出てきませんでしたので、<br /><br />自分の引き出しの少なさに絶望しています。<br /></p><br /><p><br />入社してからというもの、unohの技術レベルの高さに驚愕しながらも、<br /><br />必死に食らいついていこうと、勉強させて頂いてる毎日です。<br /><br />ウノウは今まで居た環境では知りえなかった知識や技を学べるので、<br /><br />賢くなった気になって、とてもおめでたい感じになっています。<br /><br />そしてメールでコードが五月雨に飛んでくるので、コード天国です。<br /></p><br /><br /><br /><br /><p><br />というわけで、今回は簡単かつMVCモデルの入門にも最適なPHPフレームワーク<br />KohanaのORMを紹介したいと思います。<br /></p><br /><br /><br /><br /><p><br />最初手を付けるなら、割と簡単で有名なCodeigniter(以下CI)というフレームワークの派生で、<br /><br />(喧嘩別れという噂です）<br /><br />ディレクトリ構成やデータの受け渡しもCIと似ています。<br /><br />前職場に入社した際、でCIとCakeしか使った事が無かった私だったんですが、<br /><br />そこの職場ではkohanaという聞き慣れないものを使っていると言われ、<br /><br />英語が分からないのに英語のドキュメントしか無く、とても困惑した事を、<br /><br />今でも鮮明に覚えています。<br /></p><br /><br /><br /><br /><p><br />という事でkohana ORMです<br /></p><br /><p><br />&gt;models/user.php&lt;<br /></p><br /><pre class="code"><br />class User_Model extends Base_Model<br />{<br />    protected $table_name='users';<br />    protected $primary_key='user_id';<br />    protected $table_columns=array(<br />        'user_id'=>'user_id',<br />        'category_id'=>'category_id',<br />        'status' =>'status',<br />        'type'   =>'type'<br />    );    <br />    protected $foreign_key=array('category_id');<br />    protected $has_one=array('user_profile'); //一対一のテーブル(モデル)を定義<br />    protected $has_many('user_item'); //一対多のテーブル(モデル)を定義<br />    const USER_STATUS_ACTIVE = 1;<br />    const USER_TYPE_ONE = 1;    <br />    //カラムのカプセル化<br />    public function get_user_id() {<br />        return $this->item_id;<br />    }<br />}<br /></pre><br /><br /><p><br />みたいなファイルをテーブルの数だけ増やしていきます。<br /></p><br />&gt;controllers/user.php&lt;<br /><pre class="code"><br />//一件のレコードを取得<br />$user_model = new User_Model();<br />$user = $user_model->where(array('user_id'=>$user_id))->find();<br />$user_id = $user->get_user_id(); <br />//複数のレコードを取得<br />$user_model = new User_Model();<br />$users = $user_model->where(array('status'=>User_Model::USER_STATUS_ACTIVE))->find_all();<br />//レコードをカウント<br />$user_model = new User_Model();<br />$users = $user_model->where(array('status'=>User_Model::USER_STATUS_ACTIVE))->count_all());<br />//クエリの連結<br />$user_model = new User_Model();<br />$user_model->where(array('status'=>User_Model::USER_STATUS_ACTIVE));<br />$user_model->where(array('type'=>User_Model::USER_TYPE_ONE));<br />$user_model->order_by('user_id','DESC');<br />$users = $user_model->find_all();<br /></pre><br /><br /><p><br />命名規則がウノウのコーディング規約から外れるので、ウノウでは使えないかも<br /><br />しれませんが、find_allとか見たまんまなコードなので、MVC入門的な感じなら<br /><br />使いやすいかもしれません。<br />ただし、2010年現在、ちゃんとしたドキュメントは英語しかありません。<br /></p>
+<p>こんにちは、6月にウノウに入社したj-nasuです。</p><br />
+<br /><br />
+<p><br />
+入って一カ月でまさかウノウラボを書く事になるとは夢にも出てきませんでしたので、<br /><br />
+自分の引き出しの少なさに絶望しています。<br />
+</p><br />
+<p><br />
+入社してからというもの、unohの技術レベルの高さに驚愕しながらも、<br /><br />
+必死に食らいついていこうと、勉強させて頂いてる毎日です。<br /><br />
+ウノウは今まで居た環境では知りえなかった知識や技を学べるので、<br /><br />
+賢くなった気になって、とてもおめでたい感じになっています。<br /><br />
+そしてメールでコードが五月雨に飛んでくるので、コード天国です。<br />
+</p><br />
+<br /><br />
+<br />
+<p><br />
+というわけで、今回は簡単かつMVCモデルの入門にも最適なPHPフレームワーク<br />
+KohanaのORMを紹介したいと思います。<br />
+</p><br />
+<br /><br />
+<br />
+<p><br />
+最初手を付けるなら、割と簡単で有名なCodeigniter(以下CI)というフレームワークの派生で、<br /><br />
+(喧嘩別れという噂です）<br /><br />
+ディレクトリ構成やデータの受け渡しもCIと似ています。<br /><br />
+前職場に入社した際、でCIとCakeしか使った事が無かった私だったんですが、<br /><br />
+そこの職場ではkohanaという聞き慣れないものを使っていると言われ、<br /><br />
+英語が分からないのに英語のドキュメントしか無く、とても困惑した事を、<br /><br />
+今でも鮮明に覚えています。<br />
+</p><br />
+<br /><br />
+<br />
+<p><br />
+という事でkohana ORMです<br />
+</p><br />
+<p><br />
+&gt;models/user.php&lt;<br />
+</p><br />
+<pre class="code"><br />
+class User_Model extends Base_Model<br />
+{<br />
+    protected $table_name='users';<br />
+    protected $primary_key='user_id';<br />
+    protected $table_columns=array(<br />
+        'user_id'=>'user_id',<br />
+        'category_id'=>'category_id',<br />
+        'status' =>'status',<br />
+        'type'   =>'type'<br />
+    );    <br />
+    protected $foreign_key=array('category_id');<br />
+    protected $has_one=array('user_profile'); //一対一のテーブル(モデル)を定義<br />
+    protected $has_many('user_item'); //一対多のテーブル(モデル)を定義<br />
+    const USER_STATUS_ACTIVE = 1;<br />
+    const USER_TYPE_ONE = 1;    <br />
+    //カラムのカプセル化<br />
+    public function get_user_id() {<br />
+        return $this->item_id;<br />
+    }<br />
+}<br />
+</pre><br />
+<br />
+<p><br />
+みたいなファイルをテーブルの数だけ増やしていきます。<br />
+</p><br />
+&gt;controllers/user.php&lt;<br />
+<pre class="code"><br />
+//一件のレコードを取得<br />
+$user_model = new User_Model();<br />
+$user = $user_model->where(array('user_id'=>$user_id))->find();<br />
+$user_id = $user->get_user_id(); <br />
+//複数のレコードを取得<br />
+$user_model = new User_Model();<br />
+$users = $user_model->where(array('status'=>User_Model::USER_STATUS_ACTIVE))->find_all();<br />
+//レコードをカウント<br />
+$user_model = new User_Model();<br />
+$users = $user_model->where(array('status'=>User_Model::USER_STATUS_ACTIVE))->count_all());<br />
+//クエリの連結<br />
+$user_model = new User_Model();<br />
+$user_model->where(array('status'=>User_Model::USER_STATUS_ACTIVE));<br />
+$user_model->where(array('type'=>User_Model::USER_TYPE_ONE));<br />
+$user_model->order_by('user_id','DESC');<br />
+$users = $user_model->find_all();<br />
+</pre><br />
+<br />
+<p><br />
+命名規則がウノウのコーディング規約から外れるので、ウノウでは使えないかも<br /><br />
+しれませんが、find_allとか見たまんまなコードなので、MVC入門的な感じなら<br /><br />
+使いやすいかもしれません。<br />
+ただし、2010年現在、ちゃんとしたドキュメントは英語しかありません。<br />
+</p>
 {% endraw %}

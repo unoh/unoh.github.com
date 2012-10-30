@@ -3,5 +3,29 @@ layout: post
 title: "英語のブログを構築するための Tips"
 ---
 {% raw %}
-<p>こんにちは、ジュンヤです。</p><br /><br /><p>英語で発信するブログを準備中なのですが、そのときにわかったちょっとした Tips を書き留めておきます。</p><br /><br /><p>Movable Type の日本語版を使っているのですが、英語のテンプレートを用意するのにしばし悩みました。Movable Type の英語版を別にインストールしてテンプレートをコピーすればいいのか、Six Apart のサイトで用意されているものをダウンロードすればよいのかなど考えたのですが、何のことはない、「投稿者」の使用言語を英語に設定してから新規ブログを作成すればUIが英語のブログを作成できました。</p><br /><br /><p>また、英語ブログに良く見られる、「del.icio.us する」「digg する」というリンクの書き方ですが、<br /><br /><a href="http://www.exploding-boy.com/2006/01/09/add-links-for-delicious-digg-and-more-to-blog-posts/">Add Links for Del.icio.us, Digg, and More to Blog Posts</a><br /><br /><a href="http://www.intelliot.com/blog/archives/2006/04/02/digg-this-post-with-wordpress/">Digg this post with WordPress at Elliot Lee</a><br /><br />を参考にして以下の通り作成しました。<br /><br /><p><b>del.icio.us it!</b><br><br />&lt;a href="http://del.icio.us/post?url=&lt;$MTEntryPermalink encode_url="1"$>&title=&lt;$MTEntryTitle encode_url="1"$&gt;" title="bookmark this post in del.icio.us">del.icio.us it!&lt;/a&gt;<br /></p><br /><br /><p><b>digg it!</b><br><br />&lt;a href="http://digg.com/submit?phase=3&url=&lt;$MTEntryPermalink encode_url="1"$&gt;&title=<$MTEntryTitle encode_url="1"$&gt;" title="digg this post"&gt;digg it!&lt;/a&gt;<br /></p><br /><br /><p>検索してヒットするのは WordPress の情報ばかりで、英語圏ではいまや MovableType よりも WordPress の方が使われているんだなあ、ということを実感しました。</p><br /><br />
+<p>こんにちは、ジュンヤです。</p><br />
+<br />
+<p>英語で発信するブログを準備中なのですが、そのときにわかったちょっとした Tips を書き留めておきます。</p><br />
+<br />
+<p>Movable Type の日本語版を使っているのですが、英語のテンプレートを用意するのにしばし悩みました。Movable Type の英語版を別にインストールしてテンプレートをコピーすればいいのか、Six Apart のサイトで用意されているものをダウンロードすればよいのかなど考えたのですが、何のことはない、「投稿者」の使用言語を英語に設定してから新規ブログを作成すればUIが英語のブログを作成できました。</p><br />
+<br />
+<p>また、英語ブログに良く見られる、「del.icio.us する」「digg する」というリンクの書き方ですが、<br />
+<br />
+<a href="http://www.exploding-boy.com/2006/01/09/add-links-for-delicious-digg-and-more-to-blog-posts/">Add Links for Del.icio.us, Digg, and More to Blog Posts</a><br />
+<br />
+<a href="http://www.intelliot.com/blog/archives/2006/04/02/digg-this-post-with-wordpress/">Digg this post with WordPress at Elliot Lee</a><br />
+<br />
+を参考にして以下の通り作成しました。<br />
+<br />
+<p><b>del.icio.us it!</b><br><br />
+&lt;a href="http://del.icio.us/post?url=&lt;$MTEntryPermalink encode_url="1"$>&title=&lt;$MTEntryTitle encode_url="1"$&gt;" title="bookmark this post in del.icio.us">del.icio.us it!&lt;/a&gt;<br />
+</p><br />
+<br />
+<p><b>digg it!</b><br><br />
+&lt;a href="http://digg.com/submit?phase=3&url=&lt;$MTEntryPermalink encode_url="1"$&gt;&title=<$MTEntryTitle encode_url="1"$&gt;" title="digg this post"&gt;digg it!&lt;/a&gt;<br />
+</p><br />
+<br />
+<p>検索してヒットするのは WordPress の情報ばかりで、英語圏ではいまや MovableType よりも WordPress の方が使われているんだなあ、ということを実感しました。</p><br />
+<br />
+
 {% endraw %}

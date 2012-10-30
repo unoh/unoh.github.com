@@ -3,5 +3,119 @@ layout: post
 title: "PEAR::Pagerで生成されるリンクを並び替える"
 ---
 {% raw %}
-bokkoです。<br /><br />Webアプリケーションではページングの処理を行うことがよくありますが、実際にこの仕組みを作るには少々手間がかかるので、この処理を肩代わりしてくれるライブラリがほしいところです。<br /><br /><br />この手のライブラリは、PHPではPEAR::Pagerが有名かと思います。<br /><br /><br /><h3>簡単な例</h3><br /><br />とりあえず、使ってみましょう。(動作確認したVersionは2.4.4です)<br /><br /><pre class="code"><br />require_once('Pager/Pager.php');<br />$params = array(<br />                'mode' => 'sliding',<br />                'delta' => 5,<br />                'perPage' => 5,<br />                'prevImg' => '&lt;&lt;',<br />                'nextImg' => '&gt;&gt;',<br />                'totalItems' => '1000'<br />                ); <br />$pager =& Pager::factory($params);<br />echo $pager->links;<br /></pre><br /><br />上記のphpスクリプトをブラウザで表示すると、以下のように表示されます。<br /><img alt="pager_first.PNG" src="http://labs.unoh.net/download/pager_first.PNG" width="500" height="31" /><br /><br />8ページ目に移動してみます。<br /><br /><img alt="pager_first8.PNG" src="http://labs.unoh.net/download/pager_first8.PNG" width="500" height="33" /><br /><br />表示するページ番号などもちゃんと変更されていて、前のページへのリンク(<<)もついています。とても便利です。しかし、ちょっと生成されるリンクテキストをよく見てみましょう。<br /><br /><br />[最初のページ] 前のページ  n～m番目のページ 次のページ [最後のページ]<br /><br /><br />という順にならんでいます。もしかしたら、人によっては↓のように並んでいる方がわかりやすいかもしれません。<br /><br /><img alt="pager_next.PNG" src="http://labs.unoh.net/download/pager_next.PNG" width="500" height="35" /><br /><br />PEAR::Pagerでは最初にインスタンスを生成する際にいろんなオプションを指定できるのですが、この並び順を入れ替えるオプションはありません。(多分)<br /><br />でも、どうにかして順番を入れ替えたいので、うまい方法を探してみましょう。<br /><br /><br /><h3>PEAR::Pagerのソースを読んでみる</h3><br /><br /><br />PEAR::Pagerのソースを読んでみると、Parger.phpのほかにCommon.php、HtmlWidgets.php、Jumping.php、Sliding.phpなどがあります。Common.phpはファイル名が抽象的なのに対して、ほかのファイル名はより具体的です。また、PEAR::Pagerはページングのためのライブラリです。よって、コアとなる処理はCommon.phpにあると考えられます。そして、そのままCommon.phpを眺めていくと、buildという関数があります。<br /><br /><pre class="code"><br />function build()<br />{<br />    //reset<br />    $this->_pageData = array();<br />    $this->links = '';<br />    <br />    $this->_generatePageData();<br />    $this->_setFirstLastText();<br />    <br />    if ($this->_totalPages > (2 * $this->_delta + 1)) {<br />        $this->links .= $this->_printFirstPage();<br />    }<br />    <br />    $this->links .= $this->_getBackLink();<br />    $this->links .= $this->_getPageLinks();<br />    $this->links .= $this->_getNextLink();<br />    <br />    $this->linkTags .= $this->_getFirstLinkTag();<br />    $this->linkTags .= $this->_getPrevLinkTag();<br />    $this->linkTags .= $this->_getNextLinkTag();<br />    $this->linkTags .= $this->_getLastLinkTag();<br />    <br />    if ($this->_totalPages > (2 * $this->_delta + 1)) {<br />        $this->links .= $this->_printLastPage();<br />    }<br />}</pre><br /><br />linksという変数にgetにょろにょろLinksという関数の値をどんどん連結していってるところを見ると、これがリンクテキストを生成している部分だと想像できます。そして、_printFirstPage関数が呼ばれた後に_getBackLink関数が呼ばれていて、また、_getNextLink関数の後に_printLastPage関数が呼ばれているのが確認できます。ということはこの順序を入れ替えてやればうまくいきそうです。<br /><br /><p>書き換え後のbuild関数</p><br /><br /><pre class="code"><br />function build()<br />{<br />    //reset<br />    $this->_pageData = array();<br />    $this->links = '';<br />    <br />    $this->_generatePageData();<br />    $this->_setFirstLastText();<br />    <br />    $this->links .= $this->_getBackLink();<br />    if ($this->_totalPages > (2 * $this->_delta + 1)) {<br />        $this->links .= $this->_printFirstPage();<br />    }<br />    <br />    $this->links .= $this->_getPageLinks();<br />    <br />    $this->linkTags .= $this->_getFirstLinkTag();<br />    $this->linkTags .= $this->_getPrevLinkTag();<br />    $this->linkTags .= $this->_getNextLinkTag();<br />    $this->linkTags .= $this->_getLastLinkTag();<br />    <br />    if ($this->_totalPages > (2 * $this->_delta + 1)) {<br />        $this->links .= $this->_printLastPage();<br />    }<br />    $this->links .= $this->_getNextLink();<br />}</pre><br /><br />これでリンクを並び替えることができます。<br />
+bokkoです。<br />
+<br />
+Webアプリケーションではページングの処理を行うことがよくありますが、実際にこの仕組みを作るには少々手間がかかるので、この処理を肩代わりしてくれるライブラリがほしいところです。<br />
+<br />
+<br />
+この手のライブラリは、PHPではPEAR::Pagerが有名かと思います。<br />
+<br />
+<br />
+<h3>簡単な例</h3><br />
+<br />
+とりあえず、使ってみましょう。(動作確認したVersionは2.4.4です)<br />
+<br />
+<pre class="code"><br />
+require_once('Pager/Pager.php');<br />
+$params = array(<br />
+                'mode' => 'sliding',<br />
+                'delta' => 5,<br />
+                'perPage' => 5,<br />
+                'prevImg' => '&lt;&lt;',<br />
+                'nextImg' => '&gt;&gt;',<br />
+                'totalItems' => '1000'<br />
+                ); <br />
+$pager =& Pager::factory($params);<br />
+echo $pager->links;<br />
+</pre><br />
+<br />
+上記のphpスクリプトをブラウザで表示すると、以下のように表示されます。<br />
+<img alt="pager_first.PNG" src="http://labs.unoh.net/download/pager_first.PNG" width="500" height="31" /><br />
+<br />
+8ページ目に移動してみます。<br />
+<br />
+<img alt="pager_first8.PNG" src="http://labs.unoh.net/download/pager_first8.PNG" width="500" height="33" /><br />
+<br />
+表示するページ番号などもちゃんと変更されていて、前のページへのリンク(<<)もついています。とても便利です。しかし、ちょっと生成されるリンクテキストをよく見てみましょう。<br />
+<br />
+<br />
+[最初のページ] 前のページ  n～m番目のページ 次のページ [最後のページ]<br />
+<br />
+<br />
+という順にならんでいます。もしかしたら、人によっては↓のように並んでいる方がわかりやすいかもしれません。<br />
+<br />
+<img alt="pager_next.PNG" src="http://labs.unoh.net/download/pager_next.PNG" width="500" height="35" /><br />
+<br />
+PEAR::Pagerでは最初にインスタンスを生成する際にいろんなオプションを指定できるのですが、この並び順を入れ替えるオプションはありません。(多分)<br />
+<br />
+でも、どうにかして順番を入れ替えたいので、うまい方法を探してみましょう。<br />
+<br />
+<br />
+<h3>PEAR::Pagerのソースを読んでみる</h3><br />
+<br />
+<br />
+PEAR::Pagerのソースを読んでみると、Parger.phpのほかにCommon.php、HtmlWidgets.php、Jumping.php、Sliding.phpなどがあります。Common.phpはファイル名が抽象的なのに対して、ほかのファイル名はより具体的です。また、PEAR::Pagerはページングのためのライブラリです。よって、コアとなる処理はCommon.phpにあると考えられます。そして、そのままCommon.phpを眺めていくと、buildという関数があります。<br />
+<br />
+<pre class="code"><br />
+function build()<br />
+{<br />
+    //reset<br />
+    $this->_pageData = array();<br />
+    $this->links = '';<br />
+    <br />
+    $this->_generatePageData();<br />
+    $this->_setFirstLastText();<br />
+    <br />
+    if ($this->_totalPages > (2 * $this->_delta + 1)) {<br />
+        $this->links .= $this->_printFirstPage();<br />
+    }<br />
+    <br />
+    $this->links .= $this->_getBackLink();<br />
+    $this->links .= $this->_getPageLinks();<br />
+    $this->links .= $this->_getNextLink();<br />
+    <br />
+    $this->linkTags .= $this->_getFirstLinkTag();<br />
+    $this->linkTags .= $this->_getPrevLinkTag();<br />
+    $this->linkTags .= $this->_getNextLinkTag();<br />
+    $this->linkTags .= $this->_getLastLinkTag();<br />
+    <br />
+    if ($this->_totalPages > (2 * $this->_delta + 1)) {<br />
+        $this->links .= $this->_printLastPage();<br />
+    }<br />
+}</pre><br />
+<br />
+linksという変数にgetにょろにょろLinksという関数の値をどんどん連結していってるところを見ると、これがリンクテキストを生成している部分だと想像できます。そして、_printFirstPage関数が呼ばれた後に_getBackLink関数が呼ばれていて、また、_getNextLink関数の後に_printLastPage関数が呼ばれているのが確認できます。ということはこの順序を入れ替えてやればうまくいきそうです。<br />
+<br />
+<p>書き換え後のbuild関数</p><br />
+<br />
+<pre class="code"><br />
+function build()<br />
+{<br />
+    //reset<br />
+    $this->_pageData = array();<br />
+    $this->links = '';<br />
+    <br />
+    $this->_generatePageData();<br />
+    $this->_setFirstLastText();<br />
+    <br />
+    $this->links .= $this->_getBackLink();<br />
+    if ($this->_totalPages > (2 * $this->_delta + 1)) {<br />
+        $this->links .= $this->_printFirstPage();<br />
+    }<br />
+    <br />
+    $this->links .= $this->_getPageLinks();<br />
+    <br />
+    $this->linkTags .= $this->_getFirstLinkTag();<br />
+    $this->linkTags .= $this->_getPrevLinkTag();<br />
+    $this->linkTags .= $this->_getNextLinkTag();<br />
+    $this->linkTags .= $this->_getLastLinkTag();<br />
+    <br />
+    if ($this->_totalPages > (2 * $this->_delta + 1)) {<br />
+        $this->links .= $this->_printLastPage();<br />
+    }<br />
+    $this->links .= $this->_getNextLink();<br />
+}</pre><br />
+<br />
+これでリンクを並び替えることができます。<br />
+
 {% endraw %}
