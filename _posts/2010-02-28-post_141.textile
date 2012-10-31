@@ -116,8 +116,3 @@ me, too <-> me, neither(or either) / so do I <-> neither do I
 自分が後に来る場合はI、最初に来る場合はmeになります。
 
 これらはスラングとまったく無関係ですし、間違えても意味は通じますが、本当に間違えている人が多いので間違えずに使うことで出来る！と思わせることが出来るかもしれません。
-
-<div style="margin:0;padding:.5em;border:2px solid 
-#ccc">ウノウでは特に最近、積極的にエンジニアを採用しています。<br /><a
-href="http://www.unoh.net/recruit.html"> 採用ページ</a>をご覧になり興味のある方、ぜひご応募ください。<br/><a
-href="http://www.find-job.net/fj/showjob.cgi?id=50212">Find Job!</a>でも募集してます！</div>
