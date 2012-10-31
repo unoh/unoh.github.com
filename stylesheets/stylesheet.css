@@ -68,6 +68,14 @@ header h2 {
   color: #666;
 }
 
+header p.date {
+  font-size: 12px;
+  text-align: right;
+  color: #666;
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
 #downloads .btn {
   display: inline-block;
   text-align: center;
