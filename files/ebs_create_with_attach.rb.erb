@@ -1,0 +1,115 @@
+#!/usr/bin/env ruby
+
+require 'yaml'
+require 'pp'
+require 'optparse'
+require 'rubygems'
+require 'right_aws'
+
+@options = {}  # OptionParse
+@parser = OptionParser.new do |parser|
+  parser.banner = "#{File.basename(__FILE__, '.rb')}
+    Usage: #{File.basename(__FILE__, '.rb')} [options] args"
+  parser.separator "options:"
+  parser.on('-s', '--size=SIZE', "EBS Allocate size(GB)") {|v| @options[:size] = v}
+  parser.on('-D', '--md-device=DEVICE', "MD Device name") {|v| @options[:md_device] = v}
+  parser.on('-L', '--raid-level=LEVEL', "MD Raid level[0 | 1 | 5 | 10]") {|v| @options[:raid_level] = v}
+  parser.on('-h', '--help', "show this message") {
+    puts parser
+    exit
+  }
+end
+
+TIMEOUT = 180
+# AWS Ec2 Env variables
+S3CONF_FILE = "#{ENV['HOME']}/.s3conf/s3config.yml"
+
+# Load AWS KEYS
+begin
+  auth = open(S3CONF_FILE) {|f| YAML.load(f)}
+rescue => e
+  warn e.pretty_inspect
+  warn e.backtrace
+  exit 0
+else
+  ENV['AWS_ACCESS_KEY_ID'] = auth["aws_access_key_id"]
+  ENV['AWS_SECRET_ACCESS_KEY'] = auth["aws_secret_access_key"]
+  @instance_id = <%= ec2_instance_id %>
+  @az = <%= ec2_placement_availability_zone %>
+  ENV['EC2_URL'] = "https://ec2.#{@az.chop}.amazonaws.com"
+
+  @ec2 = RightAws::Ec2.new
+end
+
+# Wait EBS Volume status
+# === Params
+#   aws_id  EBS Volume id
+#   timeout waiting time
+#   status[:name] Wating status name
+#   status[:value] Wating status value
+def wait_vol_status(aws_id, timeout, status)
+  puts "waiting state: #{status.pretty_inspect}"
+  Timeout.timeout(timeout) do |i|
+    loop do
+      sleep 2
+      wait_vol = @ec2.describe_volumes(aws_id).first
+      break if wait_vol[status[:name]] == status[:value]
+      puts "EBS Volume state #{wait_vol[status[:name]]}: waiting..."
+    end
+    if block_given?
+      puts "Check Created Block device"
+      loop do
+        sleep 2
+        break if yield
+      end
+    end
+  end
+rescue Timeout::Error => e
+  warn e.pretty_inspect
+  warn e.backtrace
+  puts "EBS Volume #{aws_id} deleting..."
+  @ec2.delete_volume(aws_id)
+  raise StandardError, "waiting #{status.pretty_inspect} EBS Volume #{aws_id}: Timeout!!"
+end
+
+# Create EBS Volume
+def create_ebs_volume_with_attach(device_name)
+  vol = @ec2.create_volume(nil, @options[:size], @az)  # snapshot_id, size, availability_zone
+  puts "Creating EBS Volume #{vol[:aws_id]}..."
+  wait_vol_status(vol[:aws_id], TIMEOUT, :name => :aws_status, :value => "available")
+  puts "Created EBS Volume #{vol[:aws_id]}: Complete!!"
+  result = @ec2.attach_volume(vol[:aws_id], @instance_id, device_name)  # vol_id, instance_id, device_name
+  puts "Attaching EBS Volume #{vol[:aws_id]}..."
+  wait_vol_status(vol[:aws_id], TIMEOUT, :name => :aws_attachment_status, :value => "attached") {File.blockdev?(device_name)}
+  puts "Attached EBS Volume #{vol[:aws_id]}: Complete!!"
+rescue => e
+  warn e.pretty_inspect
+  warn e.backtrace
+  puts "EBS Volume #{vol[:aws_id]} deleting..."
+  @ec2.delete_volume(vol[:aws_id]) unless vol[:aws_id].nil?
+  exit 0
+end
+
+# Entory point
+# === Params
+#   -s, --size  EBS Volume size (GB)
+#   -D, --md-device  MD Device name
+#   -L, --raid-level  RAID Level[0 | 1 | 5 | 10]
+#   ARGV  EBS Mount devices (/dev/sdj, /dev/sdk, /dev/sdl, etc)
+# === Examples
+#   ruby new_ebs_volume_attach.rb 200 /dev/sdj
+if __FILE__ == $0
+  @parser.parse!
+  if ARGV.size < 1
+    warn "No Devieces: Wrong number of arguments (#{ARGV.size} for >=1)"
+    exit 0
+  end
+  # Create EBS Volume with attach instance
+  ARGV.each do |dev|
+    create_ebs_volume_with_attach(dev)
+  end
+  # Crate md raid
+  if @options.has_key?(:md_device) && @options.has_key?(:raid_level)
+    system("/sbin/mdadm -C #{@options[:md_device]} --level=raid#{@options[:raid_level]} --raid-devices=#{ARGV.size} -f #{ARGV.join(' ')}")
+  end
+end

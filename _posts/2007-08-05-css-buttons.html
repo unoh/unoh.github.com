@@ -70,10 +70,10 @@ CSSでいつも悩まされるのはクロスブラウザですけど、フォ�
 
 もうひとつ重要な鍵は、<span style="FONT-WEIGHT:bold">button要素では中にほかのHTML要素を入れてあげられること</span>です。<br/><br/>たとえば、
 <pre class="code">
-&lt;button type="submit"&gt;&lt;img alt="print.png" src="http://labs.unoh.net/print.png" width="16" height="16" /&gt;プリント&lt;/button&gt;
+&lt;button type="submit"&gt;&lt;img alt="print.png" src="/files/print.png" width="16" height="16" /&gt;プリント&lt;/button&gt;
 </pre>
 
-<button type="submit"><img alt="print.png" src="http://labs.unoh.net/print.png" width="16" height="16" />プリント</button><br />
+<button type="submit"><img alt="print.png" src="/files/print.png" width="16" height="16" />プリント</button><br />
 などとアイコンを入れたりというのも、これで可能になるわけです（全くスタイルしてない状態なのでずれてますが、ご勘弁ください）。<br /><br />
 
 そしてもちろん、<span style="FONT-WEIGHT:bold">CSSや画像がアクティブになっていなくても、buttonタグの行動は変わりません</span>。<br /><br />
