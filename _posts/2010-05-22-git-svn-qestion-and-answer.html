@@ -11,10 +11,10 @@ categories:
 こんにちは。murahashiです。<br />
 gitやgit-svnを使うにあたり、試したことや引っかかったことについて、yukiのエントリ <a href="http://labs.unoh.net/2010/04/subversiongitgit-svn.html">ウノウラボ Unoh Labs: subversionリポジトリでもgitが使えるgit-svn</a> のつづきを書いてみました。<br />
 <br />
-<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_bad_200x280.jpg" src="http://labs.unoh.net/git_svn_bad_200x280.jpg" width="200" height="280" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>Q. ブランチ名を長くしてしまったので手打ちするのが大変です<br />
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_bad_200x280.jpg" src="/files/git_svn_bad_200x280.jpg" width="200" height="280" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>Q. ブランチ名を長くしてしまったので手打ちするのが大変です<br />
 <br style="clear:left" /><br />
 <br />
-<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_good_200x289.jpg" src="http://labs.unoh.net/git_svn_good_200x289.jpg" width="200" height="289" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>A. bashでgitコマンドを補完します<br />
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_good_200x289.jpg" src="/files/git_svn_good_200x289.jpg" width="200" height="289" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>A. bashでgitコマンドを補完します<br />
 <br />
 gitのコマンド補完は git-completion.bash が便利です。<br />
 fedoraにyumでgitを入れた場合には下記場所にあります。<br />
@@ -25,30 +25,30 @@ fedoraにyumでgitを入れた場合には下記場所にあります。<br />
 に入っているので.bashrcのなかで読み込みましょう。補完が効くようになります。<br />
 <br style="clear:left" /><br />
 <hr /><br />
-<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_bad_50x70.jpg" src="http://labs.unoh.net/git_svn_bad_50x70.jpg" width="50" height="70" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>Q. 除外設定にしていたファイルがコミットされてしまいます<br />
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_bad_50x70.jpg" src="/files/git_svn_bad_50x70.jpg" width="50" height="70" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>Q. 除外設定にしていたファイルがコミットされてしまいます<br />
 <br style="clear:left" /><br />
 <br />
-<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_good_50x72.jpg" src="http://labs.unoh.net/git_svn_good_50x72.jpg" width="50" height="72" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>A. .git/info/exclude に書きましょう<br />
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_good_50x72.jpg" src="/files/git_svn_good_50x72.jpg" width="50" height="72" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>A. .git/info/exclude に書きましょう<br />
 <pre class="code">$ git svn show-ignore >> .git/info/exclude</pre><br />
 <br />
 svn:ignoreと.gitignoreで混乱しないようにしましょう。<br />
 <br style="clear:left" /><br />
 <hr /><br />
 <br />
-<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_bad_50x70.jpg" src="http://labs.unoh.net/git_svn_bad_50x70.jpg" width="50" height="70" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>Q. 中身が空のディレクトリが作られません<br />
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_bad_50x70.jpg" src="/files/git_svn_bad_50x70.jpg" width="50" height="70" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>Q. 中身が空のディレクトリが作られません<br />
 <br style="clear:left" /><br />
 <br />
-<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_good_50x72.jpg" src="http://labs.unoh.net/git_svn_good_50x72.jpg" width="50" height="72" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>A. 自分で作りましょう<br />
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_good_50x72.jpg" src="/files/git_svn_good_50x72.jpg" width="50" height="72" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>A. 自分で作りましょう<br />
 <br />
 gitだけを使ったプロジェクトで空ディレクトリ作りたいときは空の.gitignore ファイルをいれておくのが定番です。<br />
 git-svn利用時に.gitignoreをコミットしていいかについては話し合いましょう。<br />
 <br style="clear:left" /><br />
 <hr /><br />
 <br />
-<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_bad_50x70.jpg" src="http://labs.unoh.net/git_svn_bad_50x70.jpg" width="50" height="70" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>Q. svn externals を自動で取得してくれません<br />
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_bad_50x70.jpg" src="/files/git_svn_bad_50x70.jpg" width="50" height="70" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>Q. svn externals を自動で取得してくれません<br />
 <br style="clear:left" /><br />
 <br />
-<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_good_50x72.jpg" src="http://labs.unoh.net/git_svn_good_50x72.jpg" width="50" height="72" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>A. git-svn-clone-externals を使いましょう<br />
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_good_50x72.jpg" src="/files/git_svn_good_50x72.jpg" width="50" height="72" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>A. git-svn-clone-externals を使いましょう<br />
 <br />
 <a href="http://stackoverflow.com/questions/350651/how-do-i-keep-an-svnexternal-up-to-date-using-git-svn">How do I keep an svn:external up to date using git-svn? - Stack Overflow</a><br />
 <a href="http://github.com/andrep/git-svn-clone-externals">andrep's git-svn-clone-externals at master - GitHub</a><br />
@@ -56,10 +56,10 @@ git-svn利用時に.gitignoreをコミットしていいかについては話し
 <br style="clear:left" /><br />
 <hr /><br />
 <br />
-<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_bad_50x70.jpg" src="http://labs.unoh.net/git_svn_bad_50x70.jpg" width="50" height="70" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>Q. git-svn-clone-externals 動かないのですが<br />
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_bad_50x70.jpg" src="/files/git_svn_bad_50x70.jpg" width="50" height="70" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>Q. git-svn-clone-externals 動かないのですが<br />
 <br style="clear:left" /><br />
 <br />
-<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_good_50x72.jpg" src="http://labs.unoh.net/git_svn_good_50x72.jpg" width="50" height="72" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>A. show-externals、みえていますか<br />
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_good_50x72.jpg" src="/files/git_svn_good_50x72.jpg" width="50" height="72" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>A. show-externals、みえていますか<br />
 <br />
 <pre class="code">$ git svn show-externals</pre><br />
 <br />
@@ -74,10 +74,10 @@ $ git config --add svn-remote.svn.fetch :refs/remotes/git-svn</pre><br />
 <br style="clear:left" /><br />
 <hr /><br />
 <br />
-<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_bad_50x70.jpg" src="http://labs.unoh.net/git_svn_bad_50x70.jpg" width="50" height="70" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>Q. svnリポジトリにコミットしたいです<br />
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_bad_50x70.jpg" src="/files/git_svn_bad_50x70.jpg" width="50" height="70" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>Q. svnリポジトリにコミットしたいです<br />
 <br style="clear:left" /><br />
 <br />
-<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_good_50x72.jpg" src="http://labs.unoh.net/git_svn_good_50x72.jpg" width="50" height="72" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>A. mergeしてdcommitするのが堅いです<br />
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_good_50x72.jpg" src="/files/git_svn_good_50x72.jpg" width="50" height="72" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>A. mergeしてdcommitするのが堅いです<br />
 <br />
 ローカルのgitリポジトリにコミットしたあと、<br />
 <br />
@@ -103,10 +103,10 @@ no-commitは自分でdiffとつき合わせてコミットログを書きたい�
 <br style="clear:left" /><br />
 <hr /><br />
 <br />
-<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_bad_50x70.jpg" src="http://labs.unoh.net/git_svn_bad_50x70.jpg" width="50" height="70" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>Q. svnのあれがgitで<br />
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_bad_50x70.jpg" src="/files/git_svn_bad_50x70.jpg" width="50" height="70" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>Q. svnのあれがgitで<br />
 <br style="clear:left" /><br />
 <br />
-<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_good_50x72.jpg" src="http://labs.unoh.net/git_svn_good_50x72.jpg" width="50" height="72" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>A. あるていどは割り切りましょう<br />
+<span class="mt-enclosure mt-enclosure-image" style="display: inline;"><img alt="git_svn_good_50x72.jpg" src="/files/git_svn_good_50x72.jpg" width="50" height="72" class="mt-image-left" style="float: left; margin: 0 20px 20px 0;" /></span>A. あるていどは割り切りましょう<br />
 <br />
 結局のところ何でもかんでもすべてをgitやgit-svnでやろうとするのは無理があるので、こみいったところはsvnコマンドたたくほうがよいと思います。ほかにもtortoiseSVNとtortoiseGitの違いとかwindowsでgitとかいろいろあると思います。<br />
 <br style="clear:left" /><br />
