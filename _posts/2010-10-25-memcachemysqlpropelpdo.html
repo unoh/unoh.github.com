@@ -46,11 +46,11 @@ class UserPeer extends BaseUserPeer
 
 <p>ただし、ソーシャルゲームのように、2人以上のユーザーが同じテーブルを参照する場合、MemcacheとMySQLのデータ不整合に気をつけないといけません。</p>
 
-<img src="http://labs.unoh.net/bad.png" alt="bad.png" class="mt-image-center" style="text-align: center; display: block; margin: 0 auto 20px;" />
+<img src="/files/bad.png" alt="bad.png" class="mt-image-center" style="text-align: center; display: block; margin: 0 auto 20px;" />
 
 <p>このように、トランザクションのcommit前に別のユーザーからアクセスされると、CacheとMySQLのデータに不整合が起こります。</p>
 
-<img src="http://labs.unoh.net/good.png" alt="good.png" class="mt-image-center" style="text-align: center; display: block; margin: 0 auto 20px;" />
+<img src="/files/good.png" alt="good.png" class="mt-image-center" style="text-align: center; display: block; margin: 0 auto 20px;" />
 
 <p>正しくは、このようにcommit後にキャッシュを削除しなければなりません。</p>
 
