@@ -162,9 +162,9 @@ class MigemoTest extends \PHPUnit_Framework_TestCase{
   [  --enable-migemo      Enable "migemo" extension support])
 
 if test $PHP_MIGEMO != "no"; then
-  export CFLAGS="$CFLAGS -lmigemo"
-  PHP_SUBST(MIGEMO_SHARED_LIBADD)
   PHP_NEW_EXTENSION(migemo, migemo.c, $ext_shared)
+  PHP_ADD_LIBRARY(migemo,, MIGEMO_SHARED_LIBADD)
+  PHP_SUBST(MIGEMO_SHARED_LIBADD)
 fi</pre>
 
 <p>phpizeというビルド環境をチェックしつつコンパイルに必要な設定を書いてくれるconfig.m4というマクロファイルを書きます。とりあえずこう書けばOK</p>
@@ -203,7 +203,7 @@ PHPAPI zend_class_entry *migemo_class_entry;
 
 <pre class="code">#include "php_migemo.h"
 
-PHPAPI function_entry php_migemo_methods[] = {
+static zend_function_entry php_migemo_methods[] = {
     {NULL, NULL, NULL}
 };
 
@@ -213,7 +213,6 @@ PHP_MINIT_FUNCTION(migemo) {
 
 PHP_MINFO_FUNCTION(migemo)
 {
-    return SUCCESS;
 }
 
 zend_module_entry migemo_module_entry = {
@@ -308,7 +307,7 @@ class Migemo{}
 で宣言しておいたのでPHP_MINIT_FUNCTIONで使うことができます。</p>
 
 <p>INIT_CLASS_ENTRYは一番目にzend_class_entry、2番目にクラス名、3番目にクラスに
-対応したfunction_entryを渡せばOKです。</p>
+対応したzend_function_entryを渡せばOKです。</p>
 
 <p>それでは再度コンパイルしてチェックしてみましょう。</p>
 
@@ -342,13 +341,13 @@ Tests: 5, Assertions: 3, Failures: 1, Incomplete: 2.
 <p>メソッドの追加は先程`INIT_CLASS_ENTRY`で指定した`php_migemo_methods`に
 どんなメソッドがあるかを追加しておけばOKです。</p>
 
-<pre class="code">PHPAPI function_entry php_migemo_methods[] = {
+<pre class="code">static zend_function_entry php_migemo_methods[] = {
     <span style="background:green">PHP_ME(migemo, query, arginfo_migemo_query, ZEND_ACC_PUBLIC)</span>
     {NULL, NULL, NULL}
 };
 </pre>
 
-<p>function_entry配列のお約束は最後は必ず{NULL,NULL,NULL}で締める、という事を守っておけばOK。PHP_MEなどのfunction_entry用マクロのあとは
+<p>zend_function_entry配列のお約束は最後は必ず{NULL,NULL,NULL}で締める、という事を守っておけばOK。PHP_MEなどのzend_function_entry用マクロのあとは
 ,は必要ありません。大体一緒なので雰囲気で書いちゃいましょう。</p>
 
 <p>これでMigemoクラスにはqueryというメソッドがあるよ！というのを定義出来ました。
@@ -473,7 +472,7 @@ zend_object_value <span style="background:green">php_migemo_new</span>(zend_clas
 
 <p>コンストラクタを追加したのでメソッド定義とクラスの初期化部分に少し手を入れます。</p>
 
-<pre class="code">PHPAPI function_entry php_migemo_methods[] = {
+<pre class="code">static zend_function_entry php_migemo_methods[] = {
     PHP_ME(migemo, __construct, NULL, ZEND_ACC_PUBLIC)
     <span style="background:green">PHP_ME(migemo, query, arginfo_migemo_query, ZEND_ACC_PUBLIC)</span>
     {NULL, NULL, NULL}
