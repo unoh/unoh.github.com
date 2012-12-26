@@ -247,7 +247,7 @@ def make_map():
 
 <h3> テンプレートの作成</h3>
 <p>テンプレートは、cocowiki/templatesに配置します。現在のPylonsの標準テンプレートエンジンはMakoで、上述のrenderメソッドを使った場合、render('show')ならばcocowiki/templates/show.makが使用されます。</p>
-<p>Makoの構文は<a href="http://labs.unoh.net/2007/05/python_1.html" target="_blank">以前簡単に紹介した</a>とおりですが、今回は継承機能を使ってみました。Makoの継承機能については<a href="http://d.hatena.ne.jp/perezvon/20070616/1181978006" target="_blank">こちらのメモ</a>もご覧下さい。</p>
+<p>Makoの構文は<a href="http://unoh.github.com/2007/05/15/python_1.html" target="_blank">以前簡単に紹介した</a>とおりですが、今回は継承機能を使ってみました。Makoの継承機能については<a href="http://d.hatena.ne.jp/perezvon/20070616/1181978006" target="_blank">こちらのメモ</a>もご覧下さい。</p>
 <p>実際のcocowiki/templates/show.makは次のようになっています。</p>
 <pre class="code"><code>&lt;%inherit file=&quot;base.mak&quot; /&gt;
 &lt;%def name=&quot;title()&quot;&gt;${c.page.word | h}&lt;/%def&gt;

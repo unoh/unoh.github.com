@@ -15,7 +15,7 @@ categories:
 Software Designには去年にも<a href="http://gihyo.jp/magazine/SD/archive/2008/200810">「ソースを読み，パッチを作成してみよう～GNU GLOBAL，diff，patchの使い方～」</a>という記事を執筆する機会を頂いたので、本誌に執筆するのはこれが二度目になります。<br />
 <br />
 <br />
-今回の内容は以前当ブログに書いた「<a href="http://labs.unoh.net/2008/11/diff_with_c.html">diff with C++</a>」の記事をもっと濃くした感じになっていて、編集距離やLCS、SESの解説に始まり、<a href="http://subversion.tigris.org/">Subversion</a>のdiffエンジンや拙作の<a href="http://code.google.com/p/dtl-cpp/">dtl</a>で使われているWuのO(NP)差分アルゴリズムについて解説しています。<br />
+今回の内容は以前当ブログに書いた「<a href="http://unoh.github.com/2008/11/13/diff_with_c.html">diff with C++</a>」の記事をもっと濃くした感じになっていて、編集距離やLCS、SESの解説に始まり、<a href="http://subversion.tigris.org/">Subversion</a>のdiffエンジンや拙作の<a href="http://code.google.com/p/dtl-cpp/">dtl</a>で使われているWuのO(NP)差分アルゴリズムについて解説しています。<br />
 <br />
 <br />
 WuのO(NP)アルゴリズム(以下Wuのアルゴリズム)や、それによく似たMyersのO(ND)アルゴリズムをはじめとするエディットグラフを使って差分を求めるアルゴリズムは普段何気なく使っているdiffコマンドや各種バージョン管理システムで使われていることからもわかるようにとても有用であり、アルゴリズム自体の美しさやスマートさにも目を見張るものがあります。興味がある方はぜひ手にとって読んでみてください。本記事を通してdiffのアルゴリズムのおもしろさが伝われば幸いです。<br />
