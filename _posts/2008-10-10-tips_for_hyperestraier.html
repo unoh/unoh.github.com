@@ -76,7 +76,7 @@ HEのP2P機能やノードAPIを使ってアプリケーションを作成する
  $ estmaster start casket
 </pre><br />
 <br />
-バックグラウンドで走らせるには-bgオプションを指定します。ただ、estmasterから検索を行う場合、estmasterが落ちてしまうと何もできなくなってしまうので、対策が必要になります。前回の<a href="http://labs.unoh.net/2008/07/daemontools.html">daemontoolsの解説</a>でも述べましたが、フォト蔵ではestmasterの管理にdaemontoolsを活用しています。起動スクリプトは単純ですが、estmasterを扱う場合、例えば↓のような記述が必要になります。<br />
+バックグラウンドで走らせるには-bgオプションを指定します。ただ、estmasterから検索を行う場合、estmasterが落ちてしまうと何もできなくなってしまうので、対策が必要になります。前回の<a href="http://unoh.github.com/2008/07/24/daemontools.html">daemontoolsの解説</a>でも述べましたが、フォト蔵ではestmasterの管理にdaemontoolsを活用しています。起動スクリプトは単純ですが、estmasterを扱う場合、例えば↓のような記述が必要になります。<br />
 <br />
 <pre class="code">
 SERVER_ROOT=/var/casket
