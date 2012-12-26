@@ -12,7 +12,7 @@ categories:
 今年の春頃からトリプルディスプレイで仕事しているbokkoです。なんだか同僚の視線が気になりますが、あえて空気を読まないことにしています。<br />
 <br />
 <br />
-前に「<a href="http://labs.unoh.net/2008/01/emacstips.html">EmacsLispを自分で拡張する際のTips</a>」という記事を書きましたが、今回はその続きです。<br />
+前に「<a href="http://unoh.github.com/2008/01/22/emacstips.html">EmacsLispを自分で拡張する際のTips</a>」という記事を書きましたが、今回はその続きです。<br />
 <br />
 <h3> EmacsLispは難しい？</h3><br />
 <br />
@@ -94,7 +94,7 @@ C-xC-f(find-file)でファイルを開くとき、Emacsでは補完入力がで�
    tags-file-list nil t "")) 
 </pre><br />
 <br />
-タブキーを押すと「eigaseikatu」と「photozou」が候補リストに表示されるようになり、入力した方の値がfileという変数に代入されます。<a href="http://labs.unoh.net/2008/01/emacstips.html">前回</a>紹介したvisit-tags-table-key.elではこの補完入力を行っていなかったため、毎回自分で正確に入力する必要がありましたが、今は上記のようにcompleting-readを使って補完入力をするようにしました。<br />
+タブキーを押すと「eigaseikatu」と「photozou」が候補リストに表示されるようになり、入力した方の値がfileという変数に代入されます。<a href="http://unoh.github.com/2008/01/22/emacstips.html">前回</a>紹介したvisit-tags-table-key.elではこの補完入力を行っていなかったため、毎回自分で正確に入力する必要がありましたが、今は上記のようにcompleting-readを使って補完入力をするようにしました。<br />
 <br />
 <h3>elispで使う正規表現</h3><br />
 <br />
@@ -186,11 +186,11 @@ C言語でプログラムを書く際、関数の宣言と定義を分離する�
 </pre><br />
 <br />
 この関数を実行すると、今編集しているファイルがtest.cというファイルの場合、test.hを別のバッファで開くことができます。最初にどう開くのかを数字で指定して、1の場合はelscreenを使って別のバッファで開くようにし、2の場合はウインドウを縦に分割して新しくできたバッファに対応するファイルを読み込みます。また、ソースファイルとヘッダファイルだけでなく、アセンブリコードのファイル(.s)も開けるようにしています(ただし、ヘッダファイルがある場合はそちらを優先します)。<br />
-上記のelscreen-switch-or-createは<a href="http://labs.unoh.net/2008/01/emacstips.html">前回</a>紹介したswitch-to-elscreen-createと同じものです。<br />
+上記のelscreen-switch-or-createは<a href="http://unoh.github.com/2008/01/22/emacstips.html">前回</a>紹介したswitch-to-elscreen-createと同じものです。<br />
 <br />
 追記(2009-01-05):<br />
 <br />
-拡張子の直前以外で「.」があるとうまく関連ファイルを開けないバグを修正しました。<a href="http://labs.unoh.net/2009/01/ccelisp.html">ソース</a>はこちら。<br />
+拡張子の直前以外で「.」があるとうまく関連ファイルを開けないバグを修正しました。<a href="http://unoh.github.com/2009/01/05/ccelisp.html">ソース</a>はこちら。<br />
 <br />
 <h3>elファイルを再帰的にバイトコンパイルする</h3><br />
 <br />
