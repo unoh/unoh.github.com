@@ -1,6 +1,6 @@
 ---
 layout: post
-permalink: /2009/05/15/sinatra.textile
+permalink: /2009/05/15/sinatra.html
 title: "Sinatra気に入った"
 date: 2009-05-15T18:12:16.00+09:00
 tags:
