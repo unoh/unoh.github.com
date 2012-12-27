@@ -1,6 +1,6 @@
 ---
 layout: post
-permalink: /2010/02/28/post_141.textile
+permalink: /2010/02/28/post_141.html
 title: "英語が出来るように思わせてみる"
 date: 2010-02-28T11:00:00.00+09:00
 tags:

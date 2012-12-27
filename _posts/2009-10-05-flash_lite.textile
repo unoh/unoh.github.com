@@ -1,6 +1,6 @@
 ---
 layout: post
-permalink: /2009/10/05/flash_lite.textile
+permalink: /2009/10/05/flash_lite.html
 title: "Flash Lite ことはじめ。"
 date: 2009-10-05T00:18:18.00+09:00
 tags:
